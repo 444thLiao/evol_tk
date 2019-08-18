@@ -5,23 +5,29 @@
 #################################################################################
 import sys
 import os
+from os.path import dirname
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, dirname(dirname(__file__)))
 import pandas as pd
 from Bio import SeqIO
 from os.path import join, dirname
 import click
-from utils import get_dict, get_protein, get_single_copy, get_summary_statistic
+from toolkit.utils import get_dict, get_protein, get_single_copy, get_summary_statistic
 from tqdm import tqdm
+
 
 def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
                     ):
-    os.makedirs(output_dir,exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     if type(OG) == str:
         OG = [OG]
     thisdir = dirname(orthogroups_path)
     SeqID_file = join(thisdir, "SequenceIDs.txt")
     SpeID_file = join(thisdir, "SpeciesIDs.txt")
+    if not os.path.exists(SeqID_file):
+        thisdir = join(dirname(orthogroups_path), 'WorkingDirectory')
+        SeqID_file = join(thisdir, "SequenceIDs.txt")
+        SpeID_file = join(thisdir, "SpeciesIDs.txt")
     id2seq, seq2id = get_dict(SeqID_file)
     id2spe, spe2id = get_dict(SpeID_file)
     if single_copy:
@@ -41,7 +47,7 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     for og in tqdm(OG):
         with open(join(output_dir, og + '.faa'), 'w') as f1:
             seqs = []
-            for speid,seq_id in sub_data.loc[og, :].items():
+            for speid, seq_id in sub_data.loc[og, :].items():
                 spe_file = species_path_temp.format(speid=speid)
                 genomes_fullname = id2spe[speid]
 
@@ -60,33 +66,40 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
 
 
 @click.command()
-@click.option("-i", "infile")
+@click.option("-i", "infile", help='normaly is the file called `Orthogroups.csv`')
 @click.option("-og", "OG", help='file or long COMMA separator string,could be None', default=None)
 @click.option("-o", "output_dir", help="the directory you want to output to")
-@click.option("-single", is_flag=True, default=True,help="You want to use a single copy or not? default is True")
+@click.option("-single", is_flag=True, default=False, help="You want to use a single copy or not? default is True")
+@click.option("-all_g",'contain_all_g',is_flag=True,default=False)
 @click.option("-t", "topnumber", help='the minimum number of genomes for each output OG', default=None)
-@click.option("-i2","genomes_list",help="input a file contains the genomes name",default=None)
-def main(infile, OG, output_dir, single, topnumber,genomes_list):
+@click.option("-i2", "genomes_list", help="input a file contains the genomes name", default=None)
+def main(infile, OG, output_dir, single, topnumber, genomes_list,contain_all_g):
     if OG is None:
         single_copy_df = get_single_copy(infile)
+        number_genomes_presence = get_summary_statistic(single_copy_df)
+        # give a number to indicate minimum required genomes it need to cover
         if topnumber is not None and genomes_list is not None:
             raise Exception("weird input, -t and -i2 just input one of them. don't specify them both")
+        if contain_all_g:
+            OG = list(number_genomes_presence.index[number_genomes_presence==single_copy_df.shape[1]])
         if topnumber is not None:
-            number_genomes_presence = get_summary_statistic(single_copy_df)
-            # give a number to indicate minimum required genomes it need to cover
+            if OG is not None:
+                raise Exception("Overwriting! be careful the input option")
             OG = list(number_genomes_presence.index[:topnumber])
 
         if genomes_list is not None:
+            if OG is not None:
+                raise Exception("Overwriting! be careful the input option")
             # give a genomes list file to indicate required genomes
             if not os.path.exists(genomes_list):
                 raise Exception("File %s doesn't exist" % genomes_list)
-            genomes_list = open(genomes_list,'r').read().split('\n')
+            genomes_list = open(genomes_list, 'r').read().split('\n')
             genomes_list = [_ for _ in genomes_list if _]
             # remove empty string
             weird_names = set(genomes_list).difference(set(single_copy_df.columns))
             if weird_names:
                 raise Exception("file you provide contains some weird name, e.g like %s" % '\n'.join(weird_names))
-            sub_df = single_copy_df.loc[:,genomes_list]
+            sub_df = single_copy_df.loc[:, genomes_list]
             OG = list(sub_df.index[~sub_df.isna().any(1)])
     elif os.path.exists(OG):
         OG = open(OG, 'r').read().split('\n')

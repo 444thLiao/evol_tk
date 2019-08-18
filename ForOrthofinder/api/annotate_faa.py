@@ -10,7 +10,7 @@ import os
 from tqdm import tqdm
 import pandas as pd
 import io
-from hmmparser import HMMparser
+from toolkit.hmmparser import HMMparser
 from collections import Counter
 from pandas.errors import EmptyDataError
 
@@ -78,7 +78,7 @@ def process_table(table: pd.DataFrame):
 
 
 @click.command()
-@click.option("-i", "inpath", help="single file or a directory")
+@click.option("-i", "inpath", help="single file(protein seqeunce) or a directory")
 @click.option("-s", "suffix", help="suffix when -i is a directory", default='faa')
 @click.option("-o", "output", default=None, help="optional")
 @click.option("-n", "cpu", default=2)

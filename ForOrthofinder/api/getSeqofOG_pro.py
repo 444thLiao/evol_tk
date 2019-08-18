@@ -6,18 +6,18 @@
 #################################################################################
 import sys
 import os
-
-sys.path.insert(0, os.path.dirname(__file__))
+from os.path import dirname
+sys.path.insert(0, dirname(dirname(__file__)))
 import pandas as pd
 from Bio import SeqIO
 from os.path import join, dirname, abspath
 import click
-from utils import get_dict, get_protein, get_single_copy, get_summary_statistic
+from toolkit.utils import get_dict, get_protein, get_single_copy, get_summary_statistic
 from tqdm import tqdm
 from collections import Counter
-from getSeqofOG import get_seq_with_OG
+from api.getSeqofOG import get_seq_with_OG
 from glob import glob
-from utils import run_cmd
+from toolkit.utils import run_cmd
 
 
 def choose_paralog():
