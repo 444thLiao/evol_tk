@@ -1,0 +1,235 @@
+>Feature AF338467.2
+1	165	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00001
+			product	hypothetical protein
+195	416	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00002
+			product	hypothetical protein
+454	612	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00003
+			product	hypothetical protein
+821	1018	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00004
+			product	hypothetical protein
+1191	1430	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00005
+			product	hypothetical protein
+1472	1960	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00006
+			product	hypothetical protein
+1965	4307	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00007
+			product	hypothetical protein
+4307	4471	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00008
+			product	hypothetical protein
+4468	4677	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00009
+			product	hypothetical protein
+4725	5306	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00010
+			product	hypothetical protein
+5311	5565	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00011
+			product	hypothetical protein
+5562	5912	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00012
+			product	hypothetical protein
+6021	7616	CDS
+			EC_number	3.6.4.12
+			gene	dnaB
+			inference	ab initio prediction:Prodigal:2.6
+			inference	similar to AA sequence:UniProtKB:O25916
+			locus_tag	NNMKLFPE_00013
+			product	Replicative DNA helicase
+7603	7866	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00014
+			product	hypothetical protein
+7850	9613	CDS
+			EC_number	2.7.7.7
+			gene	polA
+			inference	ab initio prediction:Prodigal:2.6
+			inference	similar to AA sequence:UniProtKB:P00582
+			locus_tag	NNMKLFPE_00015
+			product	DNA polymerase I
+9989	10720	CDS
+			EC_number	3.1.11.-
+			inference	ab initio prediction:Prodigal:2.6
+			inference	similar to AA sequence:UniProtKB:P9WNU3
+			locus_tag	NNMKLFPE_00016
+			product	5'-3' exonuclease
+10717	10959	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00017
+			product	hypothetical protein
+10943	11113	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00018
+			product	hypothetical protein
+11315	11671	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00019
+			product	hypothetical protein
+11671	13899	CDS
+			EC_number	1.17.4.2
+			gene	rtpR
+			inference	ab initio prediction:Prodigal:2.6
+			inference	similar to AA sequence:UniProtKB:Q59490
+			locus_tag	NNMKLFPE_00020
+			product	Adenosylcobalamin-dependent ribonucleoside-triphosphate reductase
+13896	14072	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00021
+			product	hypothetical protein
+14074	14358	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00022
+			product	hypothetical protein
+14358	16025	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00023
+			product	hypothetical protein
+15970	16209	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00024
+			product	hypothetical protein
+16215	17057	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00025
+			product	hypothetical protein
+17256	18275	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00026
+			product	hypothetical protein
+18333	18938	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00027
+			product	hypothetical protein
+18938	21706	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00028
+			product	hypothetical protein
+21690	22154	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00029
+			product	hypothetical protein
+22139	22777	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00030
+			product	hypothetical protein
+22885	25779	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00031
+			product	hypothetical protein
+25789	30708	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00032
+			product	hypothetical protein
+30712	33078	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00033
+			product	hypothetical protein
+33062	33361	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00034
+			product	hypothetical protein
+33352	34029	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00035
+			product	hypothetical protein
+33977	34324	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00036
+			product	hypothetical protein
+34317	34547	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00037
+			product	hypothetical protein
+34549	34782	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00038
+			product	hypothetical protein
+34782	35060	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00039
+			product	hypothetical protein
+35337	35585	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00040
+			product	hypothetical protein
+35582	36538	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00041
+			product	hypothetical protein
+36538	36966	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00042
+			product	hypothetical protein
+36969	37199	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00043
+			product	hypothetical protein
+37251	37466	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00044
+			product	hypothetical protein
+37560	37928	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00045
+			product	hypothetical protein
+37925	38500	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00046
+			product	hypothetical protein
+38503	40278	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00047
+			product	hypothetical protein
+40278	41999	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00048
+			product	hypothetical protein
+42128	42835	CDS
+			EC_number	2.1.1.148
+			gene	thyX
+			inference	ab initio prediction:Prodigal:2.6
+			inference	similar to AA sequence:UniProtKB:Q9WYT0
+			locus_tag	NNMKLFPE_00049
+			product	Flavin-dependent thymidylate synthase
+42832	42978	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00050
+			product	hypothetical protein
+43365	43601	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00051
+			product	hypothetical protein
+43617	44051	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00052
+			product	hypothetical protein
+44179	45195	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00053
+			product	hypothetical protein
+45304	45612	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00054
+			product	hypothetical protein
+45683	45934	CDS
+			inference	ab initio prediction:Prodigal:2.6
+			locus_tag	NNMKLFPE_00055
+			product	hypothetical protein

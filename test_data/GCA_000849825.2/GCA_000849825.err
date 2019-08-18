@@ -1,0 +1,336 @@
+Discrepancy Report Results
+
+Summary
+FATAL: MISSING_PROTEIN_ID:55 proteins have invalid IDs.
+DISC_SOURCE_QUALS_ASNDISC:strain (all present, all unique)
+DISC_SOURCE_QUALS_ASNDISC:taxname (all present, all unique)
+DISC_FEATURE_COUNT:CDS: 55 present
+DISC_COUNT_NUCLEOTIDES:1 nucleotide Bioseqs are present
+FEATURE_LOCATION_CONFLICT:55 features have inconsistent gene locations.
+DISC_QUALITY_SCORES:Quality scores are missing on all sequences.
+ONCALLER_COMMENT_PRESENT:1 comment descriptors were found (all same)
+SHORT_PROT_SEQUENCES:1 protein sequences are shorter than 50 aa.
+MISSING_GENOMEASSEMBLY_COMMENTS:1 bioseqs are missing GenomeAssembly structured comments
+MOLTYPE_NOT_MRNA:1 molecule types are not set as mRNA.
+TECHNIQUE_NOT_TSA:1 technique are not set as TSA
+MISSING_STRUCTURED_COMMENT:1 sequences do not include structured comments.
+MISSING_PROJECT:56 sequences do not include project.
+DISC_INCONSISTENT_MOLINFO_TECH:Molinfo Technique Report (some missing, all same)
+
+
+Detailed Report
+
+FATAL: DiscRep_ALL:MISSING_PROTEIN_ID::55 proteins have invalid IDs.
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_1 (length 54)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_2 (length 73)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_3 (length 52)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_4 (length 65)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_5 (length 79)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_6 (length 162)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_7 (length 780)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_8 (length 54)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_9 (length 69)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_10 (length 193)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_11 (length 84)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_12 (length 116)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_13 (length 531)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_14 (length 87)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_15 (length 587)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_16 (length 243)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_17 (length 80)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_18 (length 56)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_19 (length 118)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_20 (length 742)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_21 (length 58)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_22 (length 94)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_23 (length 555)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_24 (length 79)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_25 (length 280)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_26 (length 339)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_27 (length 201)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_28 (length 922)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_29 (length 154)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_30 (length 212)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_31 (length 964)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_32 (length 1639)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_33 (length 788)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_34 (length 99)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_35 (length 225)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_36 (length 115)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_37 (length 76)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_38 (length 77)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_39 (length 92)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_40 (length 82)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_41 (length 318)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_42 (length 142)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_43 (length 76)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_44 (length 71)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_45 (length 122)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_46 (length 191)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_47 (length 591)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_48 (length 573)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_49 (length 235)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_50 (length 48)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_51 (length 78)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_52 (length 144)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_53 (length 338)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_54 (length 102)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_55 (length 83)
+
+DiscRep_ALL:DISC_SOURCE_QUALS_ASNDISC::strain (all present, all unique)
+DiscRep_SUB:DISC_SOURCE_QUALS_ASNDISC::1 sources have unique values for strain
+DiscRep_ALL:DISC_SOURCE_QUALS_ASNDISC::taxname (all present, all unique)
+DiscRep_SUB:DISC_SOURCE_QUALS_ASNDISC::1 sources have unique values for taxname
+DiscRep_ALL:DISC_FEATURE_COUNT::CDS: 55 present
+DiscRep_ALL:DISC_COUNT_NUCLEOTIDES::1 nucleotide Bioseqs are present
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
+DiscRep_ALL:FEATURE_LOCATION_CONFLICT::55 features have inconsistent gene locations.
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:1-165	NNMKLFPE_00001
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:195-416	NNMKLFPE_00002
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:454-612	NNMKLFPE_00003
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:821-1018	NNMKLFPE_00004
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:1191-1430	NNMKLFPE_00005
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:1472-1960	NNMKLFPE_00006
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:1965-4307	NNMKLFPE_00007
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:4307-4471	NNMKLFPE_00008
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:4468-4677	NNMKLFPE_00009
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:4725-5306	NNMKLFPE_00010
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:5311-5565	NNMKLFPE_00011
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:5562-5912	NNMKLFPE_00012
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	Replicative DNA helicase	AF338467.2:6021-7616	NNMKLFPE_00013
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:7603-7866	NNMKLFPE_00014
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	DNA polymerase I	AF338467.2:7850-9613	NNMKLFPE_00015
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	5'-3' exonuclease	AF338467.2:9989-10720	NNMKLFPE_00016
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:10717-10959	NNMKLFPE_00017
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:10943-11113	NNMKLFPE_00018
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:11315-11671	NNMKLFPE_00019
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	Adenosylcobalamin-dependent ribonucleoside-triphosphate reductase	AF338467.2:11671-13899	NNMKLFPE_00020
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:13896-14072	NNMKLFPE_00021
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:14074-14358	NNMKLFPE_00022
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:14358-16025	NNMKLFPE_00023
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:15970-16209	NNMKLFPE_00024
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:16215-17057	NNMKLFPE_00025
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:17256-18275	NNMKLFPE_00026
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:18333-18938	NNMKLFPE_00027
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:18938-21706	NNMKLFPE_00028
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:21690-22154	NNMKLFPE_00029
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:22139-22777	NNMKLFPE_00030
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:22885-25779	NNMKLFPE_00031
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:25789-30708	NNMKLFPE_00032
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:30712-33078	NNMKLFPE_00033
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:33062-33361	NNMKLFPE_00034
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:33352-34029	NNMKLFPE_00035
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:33977-34324	NNMKLFPE_00036
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:34317-34547	NNMKLFPE_00037
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:34549-34782	NNMKLFPE_00038
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:34782-35060	NNMKLFPE_00039
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:35337-35585	NNMKLFPE_00040
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:35582-36538	NNMKLFPE_00041
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:36538-36966	NNMKLFPE_00042
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:36969-37199	NNMKLFPE_00043
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:37251-37466	NNMKLFPE_00044
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:37560-37928	NNMKLFPE_00045
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:37925-38500	NNMKLFPE_00046
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:38503-40278	NNMKLFPE_00047
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:40278-41999	NNMKLFPE_00048
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	Flavin-dependent thymidylate synthase	AF338467.2:42128-42835	NNMKLFPE_00049
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:42832-42978	NNMKLFPE_00050
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:43365-43601	NNMKLFPE_00051
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:43617-44051	NNMKLFPE_00052
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:44179-45195	NNMKLFPE_00053
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:45304-45612	NNMKLFPE_00054
+
+DiscRep_SUB:FEATURE_LOCATION_CONFLICT::Coding region xref gene does not exist
+./prokka_o/GCA_000849825.2/GCA_000849825:CDS	hypothetical protein	AF338467.2:45683-45934	NNMKLFPE_00055
+
+DiscRep_ALL:DISC_QUALITY_SCORES::Quality scores are missing on all sequences.
+
+DiscRep_ALL:ONCALLER_COMMENT_PRESENT::1 comment descriptors were found (all same)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2:Annotated using prokka 1.12 from https://github.com/tseemann/prokka
+
+DiscRep_ALL:SHORT_PROT_SEQUENCES::1 protein sequences are shorter than 50 aa.
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_50 (length 48)
+
+DiscRep_ALL:MISSING_GENOMEASSEMBLY_COMMENTS::1 bioseqs are missing GenomeAssembly structured comments
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
+DiscRep_ALL:MOLTYPE_NOT_MRNA::1 molecule types are not set as mRNA.
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
+DiscRep_ALL:TECHNIQUE_NOT_TSA::1 technique are not set as TSA
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
+DiscRep_ALL:MISSING_STRUCTURED_COMMENT::1 sequences do not include structured comments.
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
+DiscRep_ALL:MISSING_PROJECT::56 sequences do not include project.
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_1 (length 54)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_2 (length 73)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_3 (length 52)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_4 (length 65)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_5 (length 79)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_6 (length 162)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_7 (length 780)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_8 (length 54)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_9 (length 69)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_10 (length 193)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_11 (length 84)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_12 (length 116)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_13 (length 531)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_14 (length 87)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_15 (length 587)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_16 (length 243)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_17 (length 80)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_18 (length 56)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_19 (length 118)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_20 (length 742)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_21 (length 58)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_22 (length 94)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_23 (length 555)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_24 (length 79)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_25 (length 280)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_26 (length 339)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_27 (length 201)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_28 (length 922)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_29 (length 154)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_30 (length 212)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_31 (length 964)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_32 (length 1639)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_33 (length 788)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_34 (length 99)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_35 (length 225)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_36 (length 115)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_37 (length 76)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_38 (length 77)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_39 (length 92)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_40 (length 82)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_41 (length 318)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_42 (length 142)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_43 (length 76)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_44 (length 71)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_45 (length 122)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_46 (length 191)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_47 (length 591)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_48 (length 573)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_49 (length 235)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_50 (length 48)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_51 (length 78)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_52 (length 144)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_53 (length 338)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_54 (length 102)
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2_55 (length 83)
+
+DiscRep_ALL:DISC_INCONSISTENT_MOLINFO_TECH::Molinfo Technique Report (some missing, all same)
+DiscRep_SUB:DISC_INCONSISTENT_MOLINFO_TECH::technique (all missing)
+DiscRep_SUB:DISC_INCONSISTENT_MOLINFO_TECH::1 Molinfos are missing field technique
+./prokka_o/GCA_000849825.2/GCA_000849825:AF338467.2 (length 46675)
+
