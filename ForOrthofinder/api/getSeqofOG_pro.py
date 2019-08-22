@@ -46,10 +46,10 @@ def select_OG(data, rr, rn, total, group_info):
     print("require at least cover %s genomes" % rn)
     if group_info is None:
         count_series = data.count(1)
-        selected_OG = list(count_series.index[count_series >= rn])
-        selected_genomes = data.loc[select_OG,:]
+        keep_OG = list(count_series.index[count_series >= rn])
+        selected_genomes = data.loc[keep_OG,:]
         selected_genomes = list(selected_genomes.loc[:, ~selected_genomes.isna().all(0)].columns)
-        return selected_OG, selected_genomes
+        return keep_OG, selected_genomes
     else:
         num_each_g = group_info.value_counts()
         num_each_g = num_each_g.drop(detect_too_lowgroup(num_each_g))
