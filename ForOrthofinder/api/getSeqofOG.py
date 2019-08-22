@@ -25,7 +25,7 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     SeqID_file = join(thisdir, "SequenceIDs.txt")
     SpeID_file = join(thisdir, "SpeciesIDs.txt")
     if not os.path.exists(SeqID_file):
-        thisdir = join(dirname(orthogroups_path), 'WorkingDirectory')
+        thisdir = join(dirname(dirname(orthogroups_path)), 'WorkingDirectory')
         SeqID_file = join(thisdir, "SequenceIDs.txt")
         SpeID_file = join(thisdir, "SpeciesIDs.txt")
     id2seq, seq2id = get_dict(SeqID_file)
