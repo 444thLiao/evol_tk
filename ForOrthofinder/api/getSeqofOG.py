@@ -104,6 +104,8 @@ def main(infile, OG, output_dir, single, topnumber, genomes_list,contain_all_g):
     elif os.path.exists(OG):
         OG = open(OG, 'r').read().split('\n')
         OG = [_ for _ in OG if _]
+    if OG is None:
+        raise Exception("you must specify some reliable parameters, OG now still is NONE")
     get_seq_with_OG(infile, OG, output_dir, single_copy=single)
 
 

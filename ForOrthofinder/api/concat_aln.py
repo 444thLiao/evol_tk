@@ -11,7 +11,7 @@ import click
 def generate_partition_file(outfile, record_pos_info):
     with open(outfile, 'w') as f1:
         for name, start, end in record_pos_info:
-            f1.write(f"Protein, {name} = {start}-{end}\n")
+            f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
