@@ -42,18 +42,12 @@ def rename(records, id2genome_name):
 
 @click.command()
 @click.option("-i", "xmfa", default="./parsnp.xmfa", required=False)
-@click.option("-o", "output", required=False, default=None)
-def main(xmfa, output):
+def main(xmfa):
     xmfa = os.path.abspath(xmfa)
     input_f = open(xmfa, 'r')
-    if output is None:
-        output_f = open(os.path.join(os.path.dirname(xmfa),
-                                     "mauve_out.xmfa.renamed"),
-                        "w")
-    else:
-        odir = os.path.dirname(output)
-        os.makedirs(odir, exist_ok=True)
-        output_f = open(os.path.abspath(output), 'w')
+    output_f = open(os.path.join(os.path.dirname(xmfa),
+                                 "mauve_out.xmfa.renamed"),
+                    "w")
 
     # load sequence ids
     input_contents = input_f.read().split("\n")

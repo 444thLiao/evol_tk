@@ -14,20 +14,20 @@ subset_interval = 5  # interval of subset size when perform EM inference of Ne
 rfiles = []
 for ffile in os.listdir(ddir):
     if ffile.endswith(".phase") and ffile.startswith("bialle_SNP.ref_"):
-        rfiles.append(ffile.replace(".phase", ".recfile"))
+	rfiles.append(ffile.replace(".phase", ".recfile"))
 
 # get number of individuals from one phase file
 num_indv = 0
 with open("%s/%s" % (ddir, rfiles[0].replace(".recfile", ".phase"))) as f:
     f.readline()
-    num_indv = int(f.readline()[:-1])
+    num_indv = int(f.readline()[:-1]) 
 
 # get list of Ne files output 
 with open("%s/my_Ne_est_list.txt"%ddir, "w") as  f:
     for rfile in rfiles:
-        for ind in range(subset_interval,num_indv,subset_interval): #the same subset as estimating Ne in previous step
-            emfile = "%s/%s.ind%d.EMprobs.out" % (ddir, rfile, ind)
-            f.write("%s %s\n" % (rfile, emfile))
+	for ind in range(subset_interval,num_indv,subset_interval): #the same subset as estimating Ne in previous step
+	    emfile = "%s/%s.ind%d.EMprobs.out" % (ddir, rfile, ind)
+	    f.write("%s %s\n" % (rfile, emfile))
 
 
 with open(script, "w") as f:

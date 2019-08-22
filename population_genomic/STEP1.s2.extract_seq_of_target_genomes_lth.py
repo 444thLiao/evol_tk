@@ -21,6 +21,10 @@ def filter_genomes(records, genome_set):
     return new_records
 
 
+# xmfa = "mauve_out.xmfa.renamed"
+# genome_files = ["target_genomes.txt", "ref_genome.txt"]
+
+
 @click.command()
 @click.option("-i", "xmfa", required=False, default="./mauve_out.xmfa.renamed")
 @click.option("-g", "genome_files", multiple=True, required=False, default=["target_genomes.txt", "ref_genome.txt"])
