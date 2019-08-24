@@ -28,7 +28,6 @@ def get_locusID(module_dict, locusID_list_output):
     # problematic case:
     # K00372+K00360
     # assimilatory nitrate reductase [EC:1.7.99.-] [RN:R00798]
-
     ofile = locusID_list_output
     # ofile = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
     f = open(ofile, 'w')
@@ -49,7 +48,6 @@ def get_locusID(module_dict, locusID_list_output):
                     locus_list = [[':'.join([k.lower(), paralog]) for paralog in v.split(' ')]
                                   for k, v in org2locus.items()]
                     for locus_paralogs in locus_list:
-
                         for paralog_locus in locus_paralogs:
                             other_paralog_locus = set(locus_paralogs).difference({paralog_locus})
                             other_paralog_locus = ';'.join(list(other_paralog_locus))
@@ -57,12 +55,6 @@ def get_locusID(module_dict, locusID_list_output):
                                 paralog_locus = paralog_locus.partition('(')[0]
                             if paralog_locus not in locus2info:
                                 print(paralog_locus, file=f)
-                            # if paralog_locus in locus2info:
-                            #     print('!!!', locus2info[paralog_locus], [other_paralog_locus,
-                            #                                              ';'.join(_cache_dict.get('NAME')),
-                            #                                              '+'.join(each_names),
-                            #                                              same_func_name,
-                            #                                              ])
                             locus2info[paralog_locus].append((other_paralog_locus,
                                                               ';'.join(_cache_dict.get('NAME')),
                                                               '+'.join(each_names),
