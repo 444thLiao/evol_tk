@@ -42,7 +42,6 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     species_path_temp = join(thisdir, "Species{speid}.fa")
 
     for og in tqdm(OG):
-
         with open(join(output_dir, og + '.faa'), 'w') as f1:
             seqs = []
             for speid, seq_id in sub_data.loc[og, :].items():
@@ -51,7 +50,7 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
                     _cache = spe_file.rpartition('WorkingDirectory')
                     spe_file = _cache[0] + _cache[2]
                     _cache = spe_file.rpartition('WorkingDirectory')
-                    spe_file = _cache[0] + _cache[2]
+                    spe_file = _cache[0] + '/WorkingDirectory/' + _cache[2]
                 genomes_fullname = id2spe[speid]
                 if seq_id == 'nan':
                     continue
