@@ -79,7 +79,9 @@ def select_OG(data, rr, rn,rgf, total, group_info):
             return keep_OG, list(selected_subset.columns)
     else:
         selected_genomes = open(rgf).read().split('\n')
-        selected_genomes = [_ for _ in selected_genomes if _ and _ in data.columns]
+        selected_genomes = [_
+                            for _ in selected_genomes
+                            if _ and _ in data.columns]
 
         keep_OG = data.loc[:,selected_genomes]
         keep_OG = list(keep_OG.loc[~keep_OG.isna().any(1), ].index)

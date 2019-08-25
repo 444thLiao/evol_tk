@@ -16,7 +16,7 @@ from toolkit.utils import get_dict, get_protein, get_single_copy, get_summary_st
 from tqdm import tqdm
 
 
-def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
+def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_copy=True,
                     ):
     os.makedirs(output_dir, exist_ok=True)
     if type(OG) == str:
@@ -34,6 +34,9 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     if set(OG).difference(set(data.index)):
         raise Exception("Some OG is not presented at the index of data")
     sub_data = data.loc[OG, :]
+    if genomes_list is not None:
+        gids = [_ for _ in open(genomes_list).read().split('\n') if _]
+        sub_data = data.loc[OG,gids]
     sub_data = sub_data.loc[:, ~sub_data.isna().all(0)]
     # remove all nan genomes
     # open these genomes
@@ -45,6 +48,7 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
         with open(join(output_dir, og + '.faa'), 'w') as f1:
             seqs = []
             for speid, seq_id in sub_data.loc[og, :].items():
+                speid = seq_id.split('_')[0]
                 spe_file = species_path_temp.format(speid=speid)
                 if not os.path.exists(spe_file):
                     _cache = spe_file.rpartition('WorkingDirectory')
@@ -105,7 +109,7 @@ def main(infile, OG, output_dir, single, topnumber, genomes_list,contain_all_g):
         OG = [_ for _ in OG if _]
     if OG is None:
         raise Exception("you must specify some reliable parameters, OG now still is NONE")
-    get_seq_with_OG(infile, OG, output_dir, single_copy=single)
+    get_seq_with_OG(infile, OG, output_dir, genomes_list,single_copy=single)
 
 
 if __name__ == '__main__':
