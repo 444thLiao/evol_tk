@@ -57,7 +57,6 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
                 record = get_protein(spe_file, seq_id)
                 if record is not None:
                     record_fullname = id2seq[record.id]
-
                     record.id = genomes_fullname.split('.')[0] + ' ' + record_fullname
                     seqs.append(record)
                 else:
