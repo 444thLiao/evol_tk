@@ -21,13 +21,10 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     os.makedirs(output_dir, exist_ok=True)
     if type(OG) == str:
         OG = [OG]
-    thisdir = dirname(orthogroups_path)
+
+    thisdir = join(dirname(dirname(orthogroups_path)), 'WorkingDirectory')
     SeqID_file = join(thisdir, "SequenceIDs.txt")
     SpeID_file = join(thisdir, "SpeciesIDs.txt")
-    if not os.path.exists(SeqID_file):
-        thisdir = join(dirname(dirname(orthogroups_path)), 'WorkingDirectory')
-        SeqID_file = join(thisdir, "SequenceIDs.txt")
-        SpeID_file = join(thisdir, "SpeciesIDs.txt")
     id2seq, seq2id = get_dict(SeqID_file)
     id2spe, spe2id = get_dict(SpeID_file)
     if single_copy:
@@ -45,15 +42,19 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     species_path_temp = join(thisdir, "Species{speid}.fa")
 
     for og in tqdm(OG):
+
         with open(join(output_dir, og + '.faa'), 'w') as f1:
             seqs = []
             for speid, seq_id in sub_data.loc[og, :].items():
                 spe_file = species_path_temp.format(speid=speid)
+                if not os.path.exists(spe_file):
+                    _cache = spe_file.rpartition('WorkingDirectory')
+                    spe_file = _cache[0] + _cache[2]
+                    _cache = spe_file.rpartition('WorkingDirectory')
+                    spe_file = _cache[0] + _cache[2]
                 genomes_fullname = id2spe[speid]
-
                 if seq_id == 'nan':
                     continue
-
                 record = get_protein(spe_file, seq_id)
                 if record is not None:
                     record_fullname = id2seq[record.id]

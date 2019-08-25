@@ -70,7 +70,7 @@ def process_table(table: pd.DataFrame):
     count_ = Counter(collect_id)
     most_id = list(sorted(count_, key=lambda x: count_[x]))[-1]
     _cache = table.loc[table.loc[:, 1] == most_id, 18]
-    if _cache.shape[0] !=0:
+    if _cache.shape[0] != 0:
         gene_name = list(_cache)[0].strip(':')
     else:
         gene_name = "?"

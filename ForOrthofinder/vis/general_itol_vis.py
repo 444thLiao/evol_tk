@@ -3,12 +3,10 @@ import os, click
 
 base_dir = os.path.dirname(__file__)
 
-family_colors_dict = {  # "Prochloraceae": '#71CE37',
-    # "Synechococcaceae": "#FF0000",
-    "Podoviridae": "#1D2C4D",
-    "Myoviridae": "#2C4066",
-    "Siphoviridae": "#26547C",
-    'Other/Unclassified': "#3594B7"}
+family_colors_dict = {"Podoviridae": "#1D2C4D",
+                      "Myoviridae": "#2C4066",
+                      "Siphoviridae": "#26547C",
+                      'Other/Unclassified': "#3594B7"}
 
 host_colors_dict = {"Prochlorococcus": '#71CE37',
                     "Synechococcus": "#FF0000",
@@ -42,11 +40,15 @@ def get_annotated_text(data_file,
     legend_colors = ','.join([l2c[_]
                               for _ in l2c.keys()])
     legend_labels = ','.join(list(l2c.keys()))
-    legend_text = f"""
+    legend_text = """
 LEGEND_TITLE,{legend_title}
 LEGEND_SHAPES,{legend_shape}
 LEGEND_COLORS,{legend_colors}
-LEGEND_LABELS,{legend_labels}"""
+LEGEND_LABELS,{legend_labels}""".format(legend_title=legend_title,
+                                            legend_shape=legend_shape,
+                                            legend_colors=legend_colors,
+                                            legend_labels=legend_labels)
+
     annotate_text = ''
     annotate_branch_text = ""
     for rid, row in nuc_df.iterrows():
@@ -60,7 +62,7 @@ LEGEND_LABELS,{legend_labels}"""
             color = l2c[row[annotate_column]]
         annotate_text += ','.join(map(str, [id,
                                             color])) + '\n'
-        annotate_branch_text += f"{id},clade,{color},normal,2\n"
+        annotate_branch_text += "{id},clade,{color},normal,2\n".format(id=id,color=color)
 
     with open(output_file, 'w') as f1:
         f1.write(template_t.format(legend_text=legend_text,
@@ -76,7 +78,7 @@ def relabels_text(data_file,
                   output_file,
                   template_file=os.path.join(base_dir, 'labels_template.txt'),
                   ):
-    nuc_df = pd.read_csv(data_file, index_col=None,sep=',')
+    nuc_df = pd.read_csv(data_file, index_col=None, sep=',')
     template_t = open(template_file).read()
     annotate_text = ''
     for rid, row in nuc_df.iterrows():

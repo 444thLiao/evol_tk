@@ -1,3 +1,7 @@
+"""
+Take multiple-fasta file to construct a tree with iqtree / FastrTree
+
+"""
 import click
 from subprocess import check_call
 import os
