@@ -35,8 +35,8 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_c
         raise Exception("Some OG is not presented at the index of data")
     sub_data = data.loc[OG, :]
     if genomes_list is not None:
-        gids = [_ for _ in open(genomes_list).read().split('\n') if _]
-        sub_data = data.loc[OG,gids]
+        #gids = [_ for _ in open(genomes_list).read().split('\n') if _]
+        sub_data = data.loc[OG,genomes_list]
     sub_data = sub_data.loc[:, ~sub_data.isna().all(0)]
     # remove all nan genomes
     # open these genomes
@@ -48,7 +48,8 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_c
         with open(join(output_dir, og + '.faa'), 'w') as f1:
             seqs = []
             for speid, seq_id in sub_data.loc[og, :].items():
-                speid = seq_id.split('_')[0]
+                if speid != seq_id.split('_')[0] and seq_id != 'nan':
+                    speid = seq_id.split('_')[0]
                 spe_file = species_path_temp.format(speid=speid)
                 if not os.path.exists(spe_file):
                     _cache = spe_file.rpartition('WorkingDirectory')

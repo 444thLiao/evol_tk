@@ -144,6 +144,7 @@ def main(infile,
         tqdm.write("Extracting required %s OG" % len(get_OGs))
         get_seq_with_OG(infile,
                         get_OGs,
+                        genomes_list=result_genome,
                         output_dir=output_dir)
         if doMSA:
             tqdm.write("performing the MSA process")
