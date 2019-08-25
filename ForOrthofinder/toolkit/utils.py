@@ -12,7 +12,7 @@ def get_dict(file):
         id, sep, name = _.partition(":")
         full_name = name.strip()
         name = full_name.split('.')[0]
-        #name = name.split(' ')[0]
+        name = name.split(' ')[0]
         if name and id:
             return_dict[id] = full_name
             rev_dict[name] = id

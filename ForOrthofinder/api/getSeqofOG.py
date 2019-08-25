@@ -38,7 +38,7 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, single_copy=True,
     # remove all nan genomes
     # open these genomes
     sub_data.columns = [spe2id[_] for _ in sub_data.columns]
-    sub_data = sub_data.applymap(lambda x: seq2id.get(str(x).split('.')[0], 'nan'))
+    sub_data = sub_data.applymap(lambda x: seq2id.get(str(x).split('.')[0].split(' ')[0], 'nan'))
     species_path_temp = join(thisdir, "Species{speid}.fa")
 
     for og in tqdm(OG):
