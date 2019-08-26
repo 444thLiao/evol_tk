@@ -29,7 +29,7 @@ def remove_identical_seqs(filename, seed=None):
             new_records.append(random.choice(records))
             group_name = 'group%s' % count_
             for r in records:
-                print("%s\t%s\n" % (group_name, r.id))
+                print("%s\t%s\n" % (group_name, r.id),file=group_info)
             count_ += 1
     if len(new_records) == ori_length:
         print("No identical records found")
