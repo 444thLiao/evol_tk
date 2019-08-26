@@ -18,13 +18,19 @@ def remove_identical_seqs(filename, seed=None):
     ori_length = len(records)
     for record in records:
         groups_dict[str(record.seq)].append(record)
+    group_info = open(join(os.path.dirname(filename), "identical_groups.list"), 'w')
 
+    count_ = 0
     new_records = []
     for _, records in groups_dict.items():
         if len(records) == 1:
             new_records.append(records[0])
         else:
             new_records.append(random.choice(records))
+            group_name = 'group%s' % count_
+            for r in records:
+                print("%s\t%s\n" % (group_name, r.id))
+            count_ += 1
     if len(new_records) == ori_length:
         print("No identical records found")
     else:
