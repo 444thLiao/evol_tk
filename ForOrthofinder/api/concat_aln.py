@@ -2,10 +2,36 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(__file__))
-from Bio import AlignIO
+from Bio import AlignIO, SeqIO
 from glob import glob
 from os.path import join
 import click
+import random
+from collections import defaultdict
+
+
+def remove_identical_seqs(filename, seed=None):
+    if seed is not None:
+        random.seed(seed)
+    groups_dict = defaultdict(list)
+    records = list(SeqIO.parse(filename, format='fasta'))
+    ori_length = len(records)
+    for record in records:
+        groups_dict[str(record.seq)].append(record)
+
+    new_records = []
+    for _, records in groups_dict.items():
+        if len(records) == 1:
+            new_records.append(records[0])
+        else:
+            new_records.append(random.choice(records))
+    if len(new_records) == ori_length:
+        print("No identical records found")
+    else:
+        print("Detect identical records, and now dereplicated into single one. From %s to %s" % (ori_length,
+                                                                                                 len(new_records)))
+    with open(filename, 'w') as f1:
+        SeqIO.write(new_records, f1, format='fasta-2line')
 
 
 def generate_partition_file(outfile, record_pos_info):
@@ -15,10 +41,12 @@ def generate_partition_file(outfile, record_pos_info):
 
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
-@click.option("-i", "indir",help="The input directory which contains all separate aln files")
+@click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-s", "suffix", default='aln')
-@click.option("-gl", "genome_list", default=None,help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-def main(indir, genome_list, suffix='aln'):
+@click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
+@click.option("-rm_I", "remove_identical", is_flag=True, default=False)
+@click.option("-seed", "seed", help='random seed when removing the identical sequences')
+def main(indir, genome_list, remove_identical, seed, suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -46,6 +74,8 @@ def main(indir, genome_list, suffix='aln'):
         for gid, seq in gid2record.items():
             f1.write(f'>{gid}\n')
             f1.write(f'{seq}\n')
+    if remove_identical:
+        remove_identical_seqs(join(indir, 'concat_aln.aln'), seed=seed)
     generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
 
 
