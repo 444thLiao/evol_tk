@@ -4,7 +4,6 @@ import pandas as pd
 from tqdm import tqdm
 import click
 import os
-import multiprocessing as mp
 
 
 def parse_id(ID, max_try=5):
@@ -35,13 +34,21 @@ def parse_id(ID, max_try=5):
     return return_dict
 
 
-def get_KO_info(ID):
-    info_dict = kegg.parse(kegg.get(ID))
+def get_KO_info(ID, max_try=5):
+    info_dict = 0
+    count_ = 0
+    while isinstance(info_dict, int):
+        info_dict = kegg.parse(kegg.get(ID))
+        # if failed, it will return 400 or 403. still an int
+        count_ += 1
+        if count_ >= max_try:
+            return ID
     gene_name = ';'.join(info_dict.get('NAME', ['']))
     definition = info_dict['DEFINITION']
     reference_t = ''
     if "REFERENCE" in info_dict:
-        reference_t = ';'.join([_dict.get('title') for _dict in info_dict.get('REFERENCE')])
+        reference_t = ';'.join([_dict.get('TITLE', '')
+                                for _dict in info_dict.get('REFERENCE')])
 
     return_dict = dict(gene_name=gene_name,
                        definition=definition,
@@ -54,43 +61,43 @@ def pack_it_up(ko2info, locus2ko, locus2info):
     for locus, ko_list in locus2ko.items():
         for ko in ko_list:
             ko_info = ko2info[ko]
-            ko_info['ko'] = ko
-            locus_info = locus2info[locus]
-            _sub2 = pd.DataFrame().from_dict({locus: ko_info})
-            _sub1 = pd.DataFrame().from_dict({locus: locus_info})
-            _df = _sub1.join(_sub2)
-            total_df.append(_df)
+            locus_info_list = locus2info[locus]
+            for locus_info in locus_info_list:
+                _sub2 = pd.DataFrame().from_dict({locus: ko_info}, orient='index')
+                _sub1 = pd.DataFrame().from_dict({locus: locus_info}, orient='index')
+                _df = _sub1.join(_sub2, lsuffix=1)
+                total_df = total_df.append(_df)
     return total_df
 
 
 @click.command()
 @click.option("-i", "input_tab")
-def main(input_tab, get_highest, drop_dup_ko, thread=50):
+@click.option("-o", "output_tab")
+@click.option("-no_highest", "get_highest", is_flag=True, default=True)
+@click.option("-drop_dup_ko", "drop_dup_ko", is_flag=True, default=False)
+def main(input_tab, output_tab, get_highest, drop_dup_ko):
+    os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
+                exist_ok=True)
     df = pd.read_csv(input_tab, sep='\t', header=None)
     if get_highest:
         df = df.sort_values([0, 10], ascending=True)
         df = df.drop_duplicates(0)
         # get smallest e-value one, and drop others
+    df = df.iloc[:100, :]
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
     DBlocus2info = {}
     null_ID = []
     for DBlocus in tqdm(unique_DBlocus,
                         total=len(unique_DBlocus)):
-        #todo: use asyncio to improve the speed
+        # todo: use asyncio to improve the speed
         DBlocus_info = parse_id(DBlocus)
         if not isinstance(DBlocus_info, dict):
             null_ID.append(DBlocus_info)
         else:
             DBlocus2info[DBlocus] = DBlocus_info
-
-    locus2info = defaultdict(list)
-    tqdm.write("Start to parse each ID into KO id set... ...")
-    for rid, row in tqdm(df.iterrows(),
-                         total=df.shape[0]):
-        locus = row[0]
-        DBlocus = row[1]
-        locus2info[locus].append(DBlocus2info[DBlocus])
+    locus2info = {row[0]: DBlocus2info[row[1]]
+                  for rid, row in df.iterrows()}
 
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
@@ -123,10 +130,12 @@ def main(input_tab, get_highest, drop_dup_ko, thread=50):
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
     ko2info = {}
-    for ko, locus_list in ko2locus.items():
+    for ko, locus_list in tqdm(ko2locus.items(),
+                               total=len(ko2locus)):
         ko_info = get_KO_info(ko)
         ko2info[ko] = ko_info
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
+    locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
     return locus_df
 
 
