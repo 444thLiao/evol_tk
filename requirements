@@ -1,7 +1,7 @@
 tqdm
 pandas
 numpy
-ploly
+plotly
 Biopython
 bioservices
 click
