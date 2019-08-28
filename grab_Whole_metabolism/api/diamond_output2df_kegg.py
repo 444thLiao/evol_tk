@@ -75,7 +75,8 @@ def pack_it_up(ko2info, locus2ko, locus2info):
 @click.option("-o", "output_tab")
 @click.option("-no_highest", "get_highest", is_flag=True, default=True)
 @click.option("-drop_dup_ko", "drop_dup_ko", is_flag=True, default=False)
-def main(input_tab, output_tab, get_highest, drop_dup_ko):
+@click.option("-test", "test", is_flag=True, default=False)
+def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
                 exist_ok=True)
     df = pd.read_csv(input_tab, sep='\t', header=None)
@@ -83,7 +84,9 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko):
         df = df.sort_values([0, 10], ascending=True)
         df = df.drop_duplicates(0)
         # get smallest e-value one, and drop others
-    df = df.iloc[:100, :]
+    if test:
+        # if use test option. just subtract top 50 to process for saving time.
+        df = df.iloc[:50, :]
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
     DBlocus2info = {}
