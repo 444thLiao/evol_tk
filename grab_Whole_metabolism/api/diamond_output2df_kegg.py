@@ -1,13 +1,21 @@
 from bioservices.kegg import KEGG
-from collections import defaultdict
+from collections import defaultdict, Counter
 import pandas as pd
 from tqdm import tqdm
 import click
 import os
+import multiprocessing as mp
 
 
-def parse_id(ID):
-    info_dict = kegg.parse(kegg.get(ID))
+def parse_id(ID, max_try=5):
+    info_dict = 0
+    count_ = 0
+    while isinstance(info_dict, int):
+        info_dict = kegg.parse(kegg.get(ID))
+        # if failed, it will return 400 or 403. still an int
+        count_ += 1
+        if count_ >= max_try:
+            return ID
     Orthology = info_dict.get("ORTHOLOGY", None)
     if Orthology is not None:
         KO_id = ";".join(sorted(Orthology.keys()))
@@ -18,7 +26,8 @@ def parse_id(ID):
     source_organism = info_dict["ORGANISM"]
     AA_seq = info_dict["AASEQ"].replace(' ', '')
 
-    return_dict = dict(ko=KO_id,
+    return_dict = dict(ID=ID,
+                       ko=KO_id,
                        ncbi_id=NCBI_refID,
                        uniprot_refID=uniprot_refID,
                        source_organism=source_organism,
@@ -40,39 +49,85 @@ def get_KO_info(ID):
     return return_dict
 
 
-def pack_it_up():
-    pass
+def pack_it_up(ko2info, locus2ko, locus2info):
+    total_df = pd.DataFrame()
+    for locus, ko_list in locus2ko.items():
+        for ko in ko_list:
+            ko_info = ko2info[ko]
+            ko_info['ko'] = ko
+            locus_info = locus2info[locus]
+            _sub2 = pd.DataFrame().from_dict({locus: ko_info})
+            _sub1 = pd.DataFrame().from_dict({locus: locus_info})
+            _df = _sub1.join(_sub2)
+            total_df.append(_df)
+    return total_df
 
 
 @click.command()
 @click.option("-i", "input_tab")
-def main(input_tab):
+def main(input_tab, get_highest, drop_dup_ko, thread=50):
     df = pd.read_csv(input_tab, sep='\t', header=None)
-    locus2dict = defaultdict(list)
+    if get_highest:
+        df = df.sort_values([0, 10], ascending=True)
+        df = df.drop_duplicates(0)
+        # get smallest e-value one, and drop others
+    tqdm.write("Get all relative information of the subject locus... ...")
+    unique_DBlocus = set(df.loc[:, 1].unique())
+    DBlocus2info = {}
+    null_ID = []
+    for DBlocus in tqdm(unique_DBlocus,
+                        total=len(unique_DBlocus)):
+        #todo: use asyncio to improve the speed
+        DBlocus_info = parse_id(DBlocus)
+        if not isinstance(DBlocus_info, dict):
+            null_ID.append(DBlocus_info)
+        else:
+            DBlocus2info[DBlocus] = DBlocus_info
+
+    locus2info = defaultdict(list)
     tqdm.write("Start to parse each ID into KO id set... ...")
     for rid, row in tqdm(df.iterrows(),
                          total=df.shape[0]):
         locus = row[0]
-        ID = row[1]
-        locus2dict[locus].append(parse_id(ID))
+        DBlocus = row[1]
+        locus2info[locus].append(DBlocus2info[DBlocus])
 
-    ko2locus = defaultdict(list)
     locus2ko = defaultdict(list)
-    for locus, info_dict_list in locus2dict.items():
+    ko2locus = defaultdict(list)
+    for locus, info_dict_list in locus2info.items():
         for info_dict in info_dict_list:
-            ko_list = info_dict["KO_id"]
+            ko_list = info_dict["ko"]
             if ko_list is not None:
                 ko_list = ko_list.split(';')
             for ko in ko_list:
-                ko2locus[ko].append(locus)
                 locus2ko[locus].append(ko)
-    # filter out ko??
-
+                ko2locus[ko].append(locus)
+    if drop_dup_ko:
+        ko2locus = defaultdict(list)
+        _locus2ko = dict()
+        for locus, ko_list in locus2ko.items():
+            # choose only one ko for each locus.
+            num_ko = len(ko_list)
+            freq_ko = {k: v / num_ko for k, v in Counter(ko_list).items()}
+            lg_60 = [k for k, v in freq_ko.items() if v >= 0.6]
+            if len(lg_60) == 1:
+                ko2locus[lg_60[0]].append(locus)
+                _locus2ko[locus] = [lg_60[0]]
+            elif len(lg_60) >= 2:
+                # impossible....
+                pass
+            else:
+                # no larger than 60%
+                print("no large than 60, locus : {0}".format(locus))
+        locus2ko = _locus2ko
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
-    for ko, in ko2locus.keys():
-        # todo: filter ko. not dealing with all ko
+    ko2info = {}
+    for ko, locus_list in ko2locus.items():
         ko_info = get_KO_info(ko)
+        ko2info[ko] = ko_info
+    locus_df = pack_it_up(ko2info, locus2ko, locus2info)
+    return locus_df
 
 
 if __name__ == '__main__':
