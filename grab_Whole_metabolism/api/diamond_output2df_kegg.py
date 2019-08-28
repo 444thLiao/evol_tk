@@ -71,7 +71,7 @@ def pack_it_up(ko2info, locus2ko, locus2info):
 
 
 @click.command(
-    "This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
+    help="This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
 @click.option("-no_highest", "get_highest", is_flag=True, default=True)
