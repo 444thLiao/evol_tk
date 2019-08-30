@@ -100,6 +100,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
             null_ID.append(DBlocus_info)
         else:
             DBlocus2info[DBlocus] = DBlocus_info
+
     locus2info = {row[0]: DBlocus2info[row[1]]
                   for rid, row in df.iterrows()}
 

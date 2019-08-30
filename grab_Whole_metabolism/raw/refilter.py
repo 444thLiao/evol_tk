@@ -84,20 +84,20 @@ from collections import defaultdict
 
 count_ = 0
 locus2info_dict = defaultdict(dict)
-for locus,g_name in tqdm(locus2name.items(),
-                  total=len(locus2name)):
+for locus, g_name in tqdm(locus2name.items(),
+                          total=len(locus2name)):
     locus_prefix = locus.split('_')[0]
     sname, source = sample2info.loc[locus_prefix, :].values
     if not isinstance(locus2ko[locus], str):
         for rid, v in enumerate(locus2ko[locus]):
             locus2info_df.loc[count_, :] = [locus,
-                                        locus_prefix,
-                                        sname,
-                                        source,
-                                        locus2ko[locus].values[rid],
-                                        g_name,
-                                        locus2completeOrthos[locus].values[rid],
-                                        locus2module[locus].values[rid]]
+                                            locus_prefix,
+                                            sname,
+                                            source,
+                                            locus2ko[locus].values[rid],
+                                            g_name,
+                                            locus2completeOrthos[locus].values[rid],
+                                            locus2module[locus].values[rid]]
             count_ += 1
     else:
         locus2info_df.loc[count_, :] = [locus,
@@ -109,8 +109,141 @@ for locus,g_name in tqdm(locus2name.items(),
                                         locus2completeOrthos[locus],
                                         locus2module[locus]]
         count_ += 1
+# manually curated
+locus2info_df.loc[locus2info_df.loc[:, "Gene name(N metabolism)"] == 'NEUTE1DRAFT_87025', 'Gene name(N metabolism)'] = 'nit-6'
+# for ko = K17877
 locus2info_df.to_csv('./contain_N_relative_locus2info.tsv', sep='\t', index=0)
 
 ############################################################
-# summary
+from os.path import join, exists,dirname, basename
+from subprocess import check_call
+import os
+from glob import glob
+from tqdm import tqdm
+import multiprocessing as mp
 
+
+def run_cmd(cmd):
+    check_call(cmd, shell=True)
+
+
+cmd_template = "/home-user/thliao/bin/kraken2 --quick --db /home-backup/thliao/kraken2_db/k2db --threads 40 --report {outfile} --memory-mapping {infile} --output -"
+
+base_dir = '/home-user/thliao/data/metagenomes/concat_all/'
+for input_fna in tqdm(glob(join(base_dir,'prokka_o','*','*.fna'))):
+    g = basename(dirname(input_fna))
+    os.makedirs(join(base_dir, 'k_output'), exist_ok=True)
+    #input_fna = glob(join(base_dir, 'prokka_o', g, '*.fna'))[0]
+    ofile = join(base_dir, 'k_output', g + '.kout')
+    if not exists(ofile):
+        run_cmd(cmd_template.format(infile=input_fna,
+                                    outfile=ofile))
+kraken2_header = ["percentage_frag",
+                  "num frag",
+                  "num assigned frag",
+                  "rank code",
+                  "NCBI taxid",
+                  "scientific name"]
+levels = ["D", "P", "C", "O", "F", "S"]
+
+
+def parse_kraken2(infile):
+    # todo: check some abnormal situations.
+    df = pd.read_csv(infile, sep='\t', header=None)
+    df.columns = kraken2_header
+    df.loc[:, "scientific name"] = [_.strip()
+                                    for _ in df.loc[:, "scientific name"]]
+    sorted_df = df.sort_values("percentage_frag", ascending=False)
+    # sorted_df = sorted_df.loc[df.loc[:, "rank code"] == "S", :]
+    for l in levels[::-1]:
+        _df = sorted_df.loc[sorted_df.loc[:, 'rank code'] == l, :]
+        if not _df.shape[0]:
+            continue
+        if _df.iloc[0, 0] <= 25:
+            continue
+        return _df
+
+
+from ete3 import NCBITaxa
+
+ncbi = NCBITaxa()
+
+locus2info_df.loc[:, 'superkingdom'] = ''
+locus2info_df.loc[:, 'phylum'] = ''
+locus2info_df.loc[:, 'class'] = ''
+locus2info_df.loc[:, 'order'] = ''
+locus2info_df.loc[:, 'family'] = ''
+locus2info_df.loc[:, 'species'] = ''
+for g in tqdm(contains_N_genomes):
+    ofile = join(base_dir, 'k_output', g + '.kout')
+    df = parse_kraken2(ofile)
+    tid = df.iloc[0, 4]
+    lineage = ncbi.get_lineage(tid)
+    rank = ncbi.get_rank(lineage)
+    rank = {v: k for k, v in rank.items()}
+    names = ncbi.get_taxid_translator(lineage)
+    for c in locus2info_df.columns[-6:]:
+        if c in rank:
+            locus2info_df.at[locus2info_df.loc[:, 'sample name'] == g, c] = names[rank[c]]
+locus2info_df.to_csv('./concat_all/contain_N_relative_locus2info_annotated.tsv', sep='\t', index=0)
+
+############################################################
+# summary
+#
+
+# GET a module based df
+# from collections import Counter
+#
+# t = pd.read_csv("N-relative_genes.tsv", sep='\t')
+# for m in t.loc[:, 'module Name'].unique():
+#     sub_t = t.loc[t.loc[:, 'module Name'] == m, :]
+#     print(m, Counter(sub_t.Name.fillna(0)))
+
+
+# def classified(sub_df):
+#     # for a tax level
+#     idx2module = {0: 'Dissimilatory nitrate reduction, nitrate => ammonia',
+#                   1: 'Denitrification, nitrate => nitrogen',
+#                   2: 'Complete nitrification, comammox, ammonia => nitrite => nitrate',
+#                   3: 'Assimilatory nitrate reduction, nitrate => ammonia',
+#                   4: 'Nitrogen fixation, nitrogen => ammonia',
+#                   5: 'Nitrification, ammonia => nitrite'}
+#
+#     genes = sub_df.loc[:, "Gene name(N metabolism)"]
+#     idx2genes = {4:{'nifH','nifD','nifK',
+#                     'anfH','anfD','anfK','anfG',
+#                     'vnfH','vnfD','vnfK','vnfG'},
+#                  0:{'narH','narG',
+#                     'nasA','nasB',
+#                     'nirA',
+#                     'nrfA'}}
+
+classified = [["Nitrogen Fixation", "nifD", "nifK", "nifH", "anfG"],
+              ["Assimilatory Nitrate Reduction", "narB", "NR", "nasA", "nasB"],
+              ["Assimilatory Nitrite Reduction", "nit-6", "nirA"],
+              ["Dissimilatory Nitrate Reduction", "narG", "narH", "narI", "napA", "napB"],
+              ["Dissimilatory Nitrite Reduction", "nirB", "nirD", "nrfA", "nrfH"],
+              ["Denitrification", "nirK", "nirS", "norB", "norC", "norH", "nosZ"],
+              ["Partial Denitrification (NO2- to NO)", "nirK", "nirS"],
+              ["Partial Denitrification (NO to N2O)", "norB", "norC"],
+              ["Partial Denitrification (N2O to N2)", "nosZ"],
+              ["Nitrification", "amoC", "amoA", "amoB", "hao"],
+              ["Ammonium to Hydroxylamine", "amoC", "amoA", "amoB"]]
+
+# bar plot for phylum
+import plotly
+from plotly import graph_objs as go
+
+level = 'phylum'
+
+fig = go.Figure()
+sub_df = locus2info_df.copy()
+sub_df.loc[:, level].replace('', 'unclassified', inplace=True)
+for m in sub_df.loc[:, 'module'].unique():
+    _df = sub_df.loc[sub_df.module == m, :]
+    count_data = _df.loc[:, level].value_counts()
+    total_count = sub_df.loc[:, level].value_counts()
+    freq_data = count_data / total_count * 100
+    fig.add_trace(go.Bar(x=count_data.index,
+                         y=count_data.values,
+                         name=m))
