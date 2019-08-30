@@ -150,6 +150,9 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         ko2info[ko] = ko_info
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
+    if null_locus:
+        with open(output_tab+'.null_id','w') as f1:
+            f1.write('\n'.join(null_locus))
     return locus_df
 
 
