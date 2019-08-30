@@ -101,8 +101,12 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         else:
             DBlocus2info[DBlocus] = DBlocus_info
 
-    locus2info = {row[0]: DBlocus2info[row[1]]
-                  for rid, row in df.iterrows()}
+    locus2info = {row[0]: [DBlocus2info[row[1]]]
+                  for rid, row in df.iterrows()
+                  if row[1] not in null_ID}
+    null_locus = [row[0]
+                  for rid,row in df.iterrows()
+                  if row[1] in null_ID]
 
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
@@ -111,9 +115,14 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
             ko_list = info_dict["ko"]
             if ko_list is not None:
                 ko_list = ko_list.split(';')
-            for ko in ko_list:
-                locus2ko[locus].append(ko)
-                ko2locus[ko].append(locus)
+            if ko_list:
+                # some locus may not assigned with ko
+                for ko in ko_list:
+                    locus2ko[locus].append(ko)
+                    ko2locus[ko].append(locus)
+            else:
+                null_locus.append(locus)
+
     if drop_dup_ko:
         ko2locus = defaultdict(list)
         _locus2ko = dict()
