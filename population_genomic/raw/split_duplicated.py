@@ -92,8 +92,19 @@ def determine_locus(row, genome2order_tuple, locus2group):
     return locus_neighbour_df
 
 
-def group_out():
-    pass
+def split_out(this_df):
+    eu_dist = pd.DataFrame(squareform(pdist(this_df.fillna(0))),
+                           index=this_df.index,
+                           columns=this_df.index)
+    genome_list = [locus.split('_')[0]  # genome name
+                   for locus in eu_dist.index]
+    zip_tuple = list(zip(genome_list, eu_dist.index))
+    # genome_list must be duplicated
+    while len(set(genome_list)) >= 2:
+        g = genome_list[0]
+        remained_g = set(genome_list).difference({g})
+        for rg in remained_g:
+            
 
 
 def main(infile, prokka_o):
@@ -121,7 +132,6 @@ def main(infile, prokka_o):
     for group_id in sub_idx:
         row = total_df.loc[group_id, :]
         locus_neighbour_df = determine_locus(row, genome2order_tuple, locus2group)
-
 
 
 def cli():
