@@ -123,9 +123,11 @@ def main(metabolism_id, locus_id_list):
 
 
 @click.command()
-@click.option
-def cli():
-    pass
+@click.argument("ko_id",help='id of a metabolism. e.g for nitrogen metabolism is ko00910 ')
+@click.option('-o','ofile')
+@click.option("-o_locus","olocus_file")
+def cli(ko_id):
+    main
 
 if __name__ == '__main__':
     kegg = KEGG()
