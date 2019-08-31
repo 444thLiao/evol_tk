@@ -22,9 +22,10 @@ def parse_id(ID, max_try=5):
         KO_id = None
     NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
     uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-    source_organism = info_dict["ORGANISM"]
-    AA_seq = info_dict["AASEQ"].replace(' ', '')
-
+    source_organism = info_dict.get("ORGANISM", 'unknown')
+    AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
+    if not AA_seq:
+        print('No Amine acid sequence detected. weird... for ID:', ID)
     return_dict = dict(ID=ID,
                        ko=KO_id,
                        ncbi_id=NCBI_refID,
@@ -44,11 +45,11 @@ def get_KO_info(ID, max_try=5):
         if count_ >= max_try:
             return ID
     gene_name = ';'.join(info_dict.get('NAME', ['']))
-    definition = info_dict['DEFINITION']
+    definition = info_dict.get('DEFINITION', '')
     reference_t = ''
     if "REFERENCE" in info_dict:
-        reference_t = ';'.join([_dict.get('TITLE', '')
-                                for _dict in info_dict.get('REFERENCE')])
+        reference_t = ';'.join([str(_dict.get('TITLE', ''))
+                                for _dict in info_dict.get('REFERENCE', {})])
 
     return_dict = dict(gene_name=gene_name,
                        definition=definition,
@@ -74,8 +75,8 @@ def pack_it_up(ko2info, locus2ko, locus2info):
     help="This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
-@click.option("-no_highest", "get_highest", is_flag=True, default=True)
-@click.option("-drop_dup_ko", "drop_dup_ko", is_flag=True, default=False)
+@click.option("-no_highest", "get_highest", help='default is getting highest one for annotating.', is_flag=True, default=True)
+@click.option("-drop_dup_ko", "drop_dup_ko", help='drop duplicated ko for single query subject.', is_flag=True, default=False)
 @click.option("-test", "test", is_flag=True, default=False)
 def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
@@ -87,7 +88,8 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         # get smallest e-value one, and drop others
     if test:
         # if use test option. just subtract top 50 to process for saving time.
-        df = df.iloc[:50, :]
+        random50 = pd.np.random.choice(df.index, 50)
+        df = df.loc[random50, :]
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
     DBlocus2info = {}
@@ -105,7 +107,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
                   for rid, row in df.iterrows()
                   if row[1] not in null_ID}
     null_locus = [row[0]
-                  for rid,row in df.iterrows()
+                  for rid, row in df.iterrows()
                   if row[1] in null_ID]
 
     locus2ko = defaultdict(list)
@@ -151,7 +153,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
     if null_locus:
-        with open(output_tab+'.null_id','w') as f1:
+        with open(output_tab + '.null_id', 'w') as f1:
             f1.write('\n'.join(null_locus))
     return locus_df
 

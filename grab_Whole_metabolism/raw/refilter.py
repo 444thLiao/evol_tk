@@ -115,7 +115,7 @@ locus2info_df.loc[locus2info_df.loc[:, "Gene name(N metabolism)"] == 'NEUTE1DRAF
 locus2info_df.to_csv('./contain_N_relative_locus2info.tsv', sep='\t', index=0)
 
 ############################################################
-from os.path import join, exists,dirname, basename
+from os.path import join, exists, dirname, basename
 from subprocess import check_call
 import os
 from glob import glob
@@ -130,10 +130,10 @@ def run_cmd(cmd):
 cmd_template = "/home-user/thliao/bin/kraken2 --quick --db /home-backup/thliao/kraken2_db/k2db --threads 40 --report {outfile} --memory-mapping {infile} --output -"
 
 base_dir = '/home-user/thliao/data/metagenomes/concat_all/'
-for input_fna in tqdm(glob(join(base_dir,'prokka_o','*','*.fna'))):
+for input_fna in tqdm(glob(join(base_dir, 'prokka_o', '*', '*.fna'))):
     g = basename(dirname(input_fna))
     os.makedirs(join(base_dir, 'k_output'), exist_ok=True)
-    #input_fna = glob(join(base_dir, 'prokka_o', g, '*.fna'))[0]
+    # input_fna = glob(join(base_dir, 'prokka_o', g, '*.fna'))[0]
     ofile = join(base_dir, 'k_output', g + '.kout')
     if not exists(ofile):
         run_cmd(cmd_template.format(infile=input_fna,
@@ -159,7 +159,7 @@ def parse_kraken2(infile):
         _df = sorted_df.loc[sorted_df.loc[:, 'rank code'] == l, :]
         if not _df.shape[0]:
             continue
-        if _df.iloc[0, 0] <= 25:
+        if _df.iloc[0, 0] <= 20:
             continue
         return _df
 
@@ -168,24 +168,105 @@ from ete3 import NCBITaxa
 
 ncbi = NCBITaxa()
 
-locus2info_df.loc[:, 'superkingdom'] = ''
-locus2info_df.loc[:, 'phylum'] = ''
-locus2info_df.loc[:, 'class'] = ''
-locus2info_df.loc[:, 'order'] = ''
-locus2info_df.loc[:, 'family'] = ''
-locus2info_df.loc[:, 'species'] = ''
-for g in tqdm(contains_N_genomes):
+sample2infos = pd.read_csv('/home-user/thliao/data/metagenomes/concat_all/sample2infos.tsv', sep='\t', index_col=0)
+sample2infos = sample2infos.reindex(columns=['locus_prefix',
+                                             'source',
+                                             'superkingdom',
+                                             'phylum',
+                                             'class',
+                                             'order',
+                                             'family',
+                                             "genus",
+                                             'species',
+                                             'superkingdom(from metadata)',
+                                             'phylum(from metadata)',
+                                             'class(from metadata)',
+                                             'order(from metadata)',
+                                             'family(from metadata)',
+                                             'genus(from metadata)',
+                                             'species(from metadata)', ])
+
+for g in tqdm(sample2infos.index):
     ofile = join(base_dir, 'k_output', g + '.kout')
     df = parse_kraken2(ofile)
+    if df is None:
+        continue
     tid = df.iloc[0, 4]
     lineage = ncbi.get_lineage(tid)
     rank = ncbi.get_rank(lineage)
     rank = {v: k for k, v in rank.items()}
     names = ncbi.get_taxid_translator(lineage)
-    for c in locus2info_df.columns[-6:]:
+    for c in ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']:
         if c in rank:
-            locus2info_df.at[locus2info_df.loc[:, 'sample name'] == g, c] = names[rank[c]]
-locus2info_df.to_csv('./concat_all/contain_N_relative_locus2info_annotated.tsv', sep='\t', index=0)
+            sample2infos.loc[g, c] = names[rank[c]]
+
+s2df = {}
+for source in sample2infos.source.unique():
+    target_file = f'/home-user/thliao/data/metagenomes/{source}/metadata.csv'
+    if exists(target_file):
+        metadata = pd.read_csv(target_file, sep='\t')
+    else:
+        metadata = None
+    s2df[source] = metadata
+no_metadata = """19_Stewart
+17_lee
+18_Delmont
+"""
+
+tid_levels = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+for source, df in s2df.items():
+    if df is not None:
+        for _, row in tqdm(df.iterrows(), total=df.shape[0]):
+            sid = row['assembly_accession']
+            tid = row['taxid']
+            lineage = ncbi.get_lineage(tid)
+            rank = ncbi.get_rank(lineage)
+            rank = {v: k for k, v in rank.items()}
+            names = ncbi.get_taxid_translator(lineage)
+            for tlevel in tid_levels:
+                if tlevel in rank:
+                    sample2infos.loc[sample2infos.index.str.startswith(sid),
+                                     tlevel + '(from metadata)'] = names[rank[tlevel]]
+
+##  manually assigned......tired
+t = pd.read_excel('19_Stewart/metadata.xlsx')
+tids = [row['original_bin']
+        for rid, row in tqdm(t.iterrows())]
+t = t.set_index('original_bin')
+t = t.iloc[:,[11,12,13,14,15,16,17]]
+t = pd.DataFrame(t.values,
+                 columns= ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
+                 index=t.index)
+print(sample2infos.index[sample2infos.source == '19_Stewart'].difference(set(tids)))
+tids = sample2infos.index[sample2infos.source == '19_Stewart'].intersection(set(tids))
+
+sample2infos.loc[tids,
+                 [tlevel + '(from metadata)'
+                  for tlevel in tid_levels]] = t.loc[tids, tid_levels].values
+##
+t = pd.read_excel('17_lee/metadata.xlsx', sheet_name=1,header=1)
+t = t.iloc[:, [0, 17, 18, 19, 20, 21, 22, 23]]
+t.columns = ['bin_id', 'superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+t = t.set_index('bin_id')
+tids = [_+'-contigs' for _ in list(t.index)]
+t.index = tids
+print(sample2infos.index[sample2infos.source == '17_lee'].difference(set(tids)))
+tids = sample2infos.index[sample2infos.source == '17_lee'].intersection(set(tids))
+
+sample2infos.loc[tids,
+                 [tlevel + '(from metadata)'
+                  for tlevel in tid_levels]] = t.loc[tids, tid_levels].values
+##
+t = pd.read_excel('18_Delmont/MAG_metadata(new).xlsx', sheet_name=0)
+t = t.iloc[:, [0, 15, 16, 17, 18, 19, 20, 21]]
+t.columns = ['bin_id', 'superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+t = t.set_index('bin_id')
+tids= list(t.index)
+print(sample2infos.index[sample2infos.source == '18_Delmont'].difference(set(tids)))
+tids = sample2infos.index[sample2infos.source == '18_Delmont'].intersection(set(tids))
+sample2infos.loc[tids,
+                 [tlevel + '(from metadata)'
+                  for tlevel in tid_levels]] = t.loc[tids, tid_levels].values
 
 ############################################################
 # summary
