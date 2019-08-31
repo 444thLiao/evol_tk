@@ -104,7 +104,7 @@ def split_out(this_df):
         g = genome_list[0]
         remained_g = set(genome_list).difference({g})
         for rg in remained_g:
-            
+            pass
 
 
 def main(infile, prokka_o):
