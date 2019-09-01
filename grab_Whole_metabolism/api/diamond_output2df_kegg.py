@@ -58,8 +58,9 @@ def get_KO_info(ID, max_try=5):
 
 
 def pack_it_up(ko2info, locus2ko, locus2info):
-    total_df = pd.DataFrame()
-    for locus, ko_list in locus2ko.items():
+    tqdm.write("pack the result into a big dataframe")
+    df_list = []
+    for locus, ko_list in tqdm(locus2ko.items()):
         for ko in ko_list:
             ko_info = ko2info[ko]
             locus_info_list = locus2info[locus]
@@ -67,7 +68,8 @@ def pack_it_up(ko2info, locus2ko, locus2info):
                 _sub2 = pd.DataFrame().from_dict({locus: ko_info}, orient='index')
                 _sub1 = pd.DataFrame().from_dict({locus: locus_info}, orient='index')
                 _df = _sub1.join(_sub2, lsuffix=1)
-                total_df = total_df.append(_df)
+                df_list.append(_df)
+    total_df = pd.concat(df_list, axis=0)
     return total_df
 
 

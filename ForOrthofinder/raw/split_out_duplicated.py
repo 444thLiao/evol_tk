@@ -7,6 +7,7 @@ from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import NearestNeighbors
 import click
+import pickle
 
 
 def preprocess_locus_name(locus):
@@ -20,9 +21,9 @@ def read_gff(gff_file):
     if not exists(odb_file):
         db = gffutils.create_db(gff_file,
                                 odb_file,
-                                force=True, )
+                                force=True, sort_attribute_values=True)
     else:
-        db = gffutils.FeatureDB(odb_file, keep_order=True)
+        db = gffutils.FeatureDB(odb_file, keep_order=True, sort_attribute_values=True)
     return db
 
 
@@ -164,29 +165,36 @@ def get_locus2group(df):
 def main(infile, prokka_o):
     if not exists(abspath(prokka_o)):
         raise Exception("wrong prokka output directory")
-    total_df = pd.read_csv(infile, sep='\t', index_col=0)
+    OG_df = pd.read_csv(infile, sep='\t', index_col=0)
     # get all index which contains duplicated genes
-
     genomes_files = [join(prokka_o, _, '%s.gff' % _)
-                     for _ in total_df.columns]
-
-    genome2gene_info = {}
-    genome2order_tuple = {}
-    tqdm.write('iterating all gff for collecting positional informations')
-    for genome_file in tqdm(genomes_files):
-        genome_name = basename(dirname(genome_file))
-        _gene_info, _order_tuple = get_all_gene_pos(genome_file)
-        if _gene_info is not None:
-            genome2gene_info[genome_name] = _gene_info
-            genome2order_tuple[genome_name] = _order_tuple
-    total_df = total_df.loc[:, list(genome2gene_info.keys())]
-    sub_idx = total_df.index[total_df.applymap(lambda x: ',' in str(x)).any(1)]
+                     for _ in OG_df.columns]
+    if exists('./tmp/genome2gene_info'):
+        tqdm.write('detect previous intermediated file, used it to process')
+        genome2gene_info = pickle.load(open('./tmp/genome2gene_info', 'rb'))
+        genome2order_tuple = pickle.load(open('./tmp/genome2order_tuple', 'rb'))
+    else:
+        genome2gene_info = {}
+        genome2order_tuple = {}
+        tqdm.write('iterating all gff for collecting positional information')
+        for genome_file in tqdm(genomes_files):
+            genome_name = basename(dirname(genome_file))
+            _gene_info, _order_tuple = get_all_gene_pos(genome_file)
+            if _gene_info is not None:
+                genome2gene_info[genome_name] = _gene_info
+                genome2order_tuple[genome_name] = _order_tuple
+        # storge temp data
+        pickle.dump(genome2gene_info, open('./tmp/genome2gene_info', 'wb'))
+        pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
+    OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
+    OG_df = OG_df.loc[~OG_df.isna().all(1), :]
+    sub_idx = OG_df.index[OG_df.applymap(lambda x: ',' in str(x)).any(1)]
     tqdm.write('detect %s of duplicated row' % len(sub_idx))
-    locus2group = get_locus2group(total_df)
-    modify_df = total_df.copy()
+    locus2group = get_locus2group(OG_df)
+    modify_df = OG_df.copy()
     tqdm.write('collecting all required info, start to split duplicated OG')
     for group_id in tqdm(sub_idx):
-        row = total_df.loc[group_id, :]
+        row = OG_df.loc[group_id, :]
         new_group2info = split_out(row, genome2order_tuple, locus2group)
         new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
         new_df.index = [group_id + '_%s' % _
@@ -194,6 +202,11 @@ def main(infile, prokka_o):
         new_df = new_df.applymap(lambda x: '%s|%s' % (x.split('_')[0], x) if '_' in str(x) else x)
         modify_df = modify_df.drop(group_id)
         modify_df = modify_df.append(new_df, sort=True)
+
+    # sort the genome with the number of contigs
+    order_columns = sorted(modify_df.columns,
+                           key=lambda x: len(genome2order_tuple[x]))
+    modify_df = modify_df.reindex(columns=order_columns)
     return modify_df
 
 
