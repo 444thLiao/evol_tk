@@ -5,3 +5,5 @@ plotly
 Biopython
 bioservices
 click
+scikit-learn
+scipy
