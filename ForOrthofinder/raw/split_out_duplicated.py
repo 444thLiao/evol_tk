@@ -198,7 +198,7 @@ def main(infile, prokka_o):
         pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
-    if OG_df.str.contains('|').any().any():
+    if OG_df.applymap(lambda x: ',' in str(x)).any().any():
         remained_bar = True
     else:
         remained_bar = False
