@@ -228,7 +228,7 @@ def main(infile, prokka_o):
     return modify_df
 
 
-@click.command(help="This script is mainly for splitting duplicated Orthogroup according to the similarity of neighbours.")
+@click.command(help="This script is mainly for splitting duplicated Orthogroups according to the similarity of their neighbours.")
 @click.option("-i", "infile", help='input file. normally is the concated orthfinder output')
 @click.option("-o", "ofile", help='output file')
 @click.option("-p", "prokka_dir", help='path of prokka output')

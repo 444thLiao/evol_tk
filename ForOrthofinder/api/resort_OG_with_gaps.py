@@ -56,8 +56,8 @@ def main(infile, backbone_column_idx=0):
     return final_OG_df
 
 
-@click.command()
-@click.option("-i", "infile", help="input file. must be file after splitting duplicated.")
+@click.command(help="resort the orthlogroups table. Default with the first columns as a backbone and reinsert the others orthlogroups into the centre of their neighbours")
+@click.option("-i", "infile", help="input file. The file must be file after splitting duplicated.")
 @click.option("-o", "ofile", help='output file')
 @click.option("-bc", "backbone_column", help='which columns you want to taken as backbone. default is the first one', default=0)
 def cli(infile, ofile, backbone_column):
