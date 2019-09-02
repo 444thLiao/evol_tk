@@ -13,6 +13,7 @@ from glob import glob
 
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1]
+    locus = locus.strip()
     return locus
 
 
@@ -87,16 +88,18 @@ def get_neighbour(target_locus,
     return left_n, right_n
 
 
-def split_out(row, genome2order_tuple, locus2group):
+def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
     # core function for splitting the group apart
     # convert neighbours of each target_locus into a counter matrix
     collect_df = []
+    locus2genome = {}
     for genome, locus in row.items():
         if locus == 'nan' or pd.isna(locus):
             continue
         for locus in locus.split(','):
             target_locus = preprocess_locus_name(locus)
             _order_tuple = genome2order_tuple[genome]
+            locus2genome[locus] = genome
             left_n, right_n = get_neighbour(target_locus,
                                             _order_tuple,
                                             locus2group,
@@ -107,6 +110,7 @@ def split_out(row, genome2order_tuple, locus2group):
                 continue
             _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
             collect_df.append(_df)
+
     this_df = pd.concat(collect_df, axis=0, sort=True)
     # calculated the euclidean distance and use nearestNeighbors to get the nearestNeighbors
     # for each locus
@@ -120,27 +124,28 @@ def split_out(row, genome2order_tuple, locus2group):
     target_l2neighbours = dict(zip(this_df.index,
                                    order_neighbors))
     # get the name instead of index.
-    remained_genomes = set([_.split('_')[0]
+    remained_genomes = set([locus2genome[_]
                             for _ in target_l2neighbours.keys()])
     group2infos = defaultdict(dict)
     group_num = 1
     while len(remained_genomes) >= 2:
         target_locus = list(target_l2neighbours.keys())[0]
-        target_genome = target_locus.split('_')[0]
+        target_genome = locus2genome[target_locus]
         target_neighbours = target_l2neighbours.pop(target_locus)
         # use pop, also drop the target_locus
         others_genomes = remained_genomes.difference({target_genome})
-        group2infos[group_num][target_genome] = target_locus
+
+        group2infos[group_num][target_genome] = "%s|%s" % (target_genome, target_locus) if remained_bar else target_locus
         for other_g in others_genomes:
             _cache = [other_l
                       for other_l in target_neighbours
                       if other_l in target_l2neighbours and other_l.startswith(other_g)
                       ]
             # in theory, _cache won't empty?
-            group2infos[group_num][other_g] = _cache[0]
+            group2infos[group_num][other_g] = "%s|%s" % (locus2genome[_cache[0]], _cache[0]) if remained_bar else _cache[0]
             # print(_cache[0]) # debug for
             target_l2neighbours.pop(_cache[0])
-            remained_genomes = set([_.split('_')[0]
+            remained_genomes = set([locus2genome[_]
                                     for _ in target_l2neighbours.keys()])
         group_num += 1
 
@@ -148,7 +153,7 @@ def split_out(row, genome2order_tuple, locus2group):
         genome = list(remained_genomes)[0]
         remained_locus = list(target_l2neighbours)
         for locus in remained_locus:
-            group2infos[group_num][genome] = locus
+            group2infos[group_num][genome] = "%s|%s" % (locus2genome[locus], locus) if remained_bar else locus
             group_num += 1
     return group2infos
 
@@ -193,6 +198,10 @@ def main(infile, prokka_o):
         pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
+    if OG_df.str.contains('|').any().any():
+        remained_bar = True
+    else:
+        remained_bar = False
     sub_idx = OG_df.index[OG_df.applymap(lambda x: ',' in str(x)).any(1)]
     tqdm.write('detect %s of duplicated row' % len(sub_idx))
     locus2group = get_locus2group(OG_df)
@@ -200,7 +209,7 @@ def main(infile, prokka_o):
     tqdm.write('collecting all required info, start to split duplicated OG')
     for group_id in tqdm(sub_idx):
         row = OG_df.loc[group_id, :]
-        new_group2info = split_out(row, genome2order_tuple, locus2group)
+        new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
         new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
         new_df.index = [group_id + '_%s' % _
                         for _ in new_df.index]
