@@ -99,7 +99,7 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
         for locus in locus.split(','):
             target_locus = preprocess_locus_name(locus)
             _order_tuple = genome2order_tuple[genome]
-            locus2genome[locus] = genome
+            locus2genome[target_locus] = genome
             left_n, right_n = get_neighbour(target_locus,
                                             _order_tuple,
                                             locus2group,
@@ -110,7 +110,11 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
                 continue
             _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
             collect_df.append(_df)
-
+    # make the concat slower actually. leave it as a failed tried???
+    # final_columns = set([c for df in collect_df
+    #                      for c in df.columns])
+    # collect_df = [df.reindex(columns=final_columns)
+    #               for df in collect_df]
     this_df = pd.concat(collect_df, axis=0, sort=True)
     # calculated the euclidean distance and use nearestNeighbors to get the nearestNeighbors
     # for each locus
@@ -137,12 +141,13 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
 
         group2infos[group_num][target_genome] = "%s|%s" % (target_genome, target_locus) if remained_bar else target_locus
         for other_g in others_genomes:
-            _cache = [other_l
-                      for other_l in target_neighbours
-                      if other_l in target_l2neighbours and other_l.startswith(other_g)
+            _cache = [other_locus
+                      for other_locus in target_neighbours
+                      if other_locus in target_l2neighbours and locus2genome[other_locus] == other_g
                       ]
             # in theory, _cache won't empty?
-            group2infos[group_num][other_g] = "%s|%s" % (locus2genome[_cache[0]], _cache[0]) if remained_bar else _cache[0]
+            group2infos[group_num][other_g] = "%s|%s" % (locus2genome[_cache[0]],
+                                                         _cache[0]) if remained_bar else _cache[0]
             # print(_cache[0]) # debug for
             target_l2neighbours.pop(_cache[0])
             remained_genomes = set([locus2genome[_]
@@ -198,7 +203,7 @@ def main(infile, prokka_o):
         pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
-    if OG_df.applymap(lambda x: ',' in str(x)).any().any():
+    if OG_df.applymap(lambda x: '|' in str(x)).any().any():
         remained_bar = True
     else:
         remained_bar = False
@@ -206,14 +211,13 @@ def main(infile, prokka_o):
     tqdm.write('detect %s of duplicated row' % len(sub_idx))
     locus2group = get_locus2group(OG_df)
     modify_df = OG_df.copy()
-    tqdm.write('collecting all required info, start to split duplicated OG')
+    tqdm.write('collecting all required info, start to split duplicated OG. More duplications would make it slower.')
     for group_id in tqdm(sub_idx):
         row = OG_df.loc[group_id, :]
         new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
         new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
         new_df.index = [group_id + '_%s' % _
                         for _ in new_df.index]
-        new_df = new_df.applymap(lambda x: '%s|%s' % (x.split('_')[0], x) if '_' in str(x) else x)
         modify_df = modify_df.drop(group_id)
         modify_df = modify_df.append(new_df, sort=True)
 
