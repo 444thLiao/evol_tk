@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import NearestNeighbors
 import click
 import pickle
+from glob import glob
 
 
 def preprocess_locus_name(locus):
@@ -29,7 +30,7 @@ def read_gff(gff_file):
 
 def get_all_gene_pos(genome_file, CDS_names=None):
     if not exists(genome_file):
-        tqdm.write('wrong file path... pass it')
+        tqdm.write('wrong file path[%s]... pass it' % genome_file)
         return None, None
     db = read_gff(genome_file)
     if CDS_names is None:
@@ -167,8 +168,9 @@ def main(infile, prokka_o):
         raise Exception("wrong prokka output directory")
     OG_df = pd.read_csv(infile, sep='\t', index_col=0)
     # get all index which contains duplicated genes
-    genomes_files = [join(prokka_o, _, '%s.gff' % _)
+    genomes_files = [glob(join(prokka_o, _ + '*', '%s.gff' % _))[0]
                      for _ in OG_df.columns]
+    # use glob and wildcard to capture all real gff files
     if exists('./tmp/genome2gene_info'):
         tqdm.write('detect previous intermediated file, used it to process')
         genome2gene_info = pickle.load(open('./tmp/genome2gene_info', 'rb'))
@@ -178,12 +180,15 @@ def main(infile, prokka_o):
         genome2order_tuple = {}
         tqdm.write('iterating all gff for collecting positional information')
         for genome_file in tqdm(genomes_files):
-            genome_name = basename(dirname(genome_file))
+            genome_name = basename(genome_file).replace('.gff', '')
+            # use the file name instead of the directory name
+            # prokka may remove some string from directory to construct the genome name
             _gene_info, _order_tuple = get_all_gene_pos(genome_file)
             if _gene_info is not None:
                 genome2gene_info[genome_name] = _gene_info
                 genome2order_tuple[genome_name] = _order_tuple
         # storge temp data
+        os.makedirs('./tmp', exist_ok=True)
         pickle.dump(genome2gene_info, open('./tmp/genome2gene_info', 'wb'))
         pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
