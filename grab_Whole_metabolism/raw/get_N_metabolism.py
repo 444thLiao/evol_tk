@@ -4,6 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import click
 
+
 def get_module_info(metabolism_id):
     # N_pathway_id = "ko00910"  # id of N-metabolism
 
@@ -17,7 +18,25 @@ def get_module_info(metabolism_id):
         module_data = kegg.parse(kegg.get(m))
         module_dict[m]['data'] = module_data
         module_dict[m]['metadata'] = list_module[m]
+    module_dict['others'] = {}
+    module_dict['others']['data'] = {}
+    module_dict['others']['data']['ORTHOLOGY'] = dict_data['ORTHOLOGY']
+    module_dict['others']['data']['NAME'] = ['Others']
     return module_dict
+
+
+def assign_ko2info(total_ko2info, ko2info, ko_id):
+    if ko_id not in total_ko2info:
+        total_ko2info[ko_id]['gene name'] = ';'.join(ko2info.get('NAME', ''))
+        total_ko2info[ko_id]['gene definition'] = ko2info.get('DEFINITION', '')
+        total_ko2info[ko_id]['reference '] = ';'.join([ref.get('TITLE', '')
+                                                       for ref in ko2info.get('REFERENCE', [{}])])
+        _cache = list(ko2info.get('MODULE', {}).values())
+        if _cache:
+            total_ko2info[ko_id]['module'] = ';'.join(_cache)
+    else:
+        return
+    return total_ko2info
 
 
 def get_locusID(module_dict, locusID_list_output):
@@ -30,23 +49,29 @@ def get_locusID(module_dict, locusID_list_output):
     # ofile = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
     f = open(ofile, 'w')
     locus2info = defaultdict(list)
+    total_ko2info = defaultdict(dict)
     for m, mdata in module_dict.items():
         # m: module id ,e.g M00804
         # mdata: dict with "data" & "metadata"
         #   metadata just the name
         #   data contains full informations
         _cache_dict = mdata['data']
-        names = [_.split('+')
-                 for _ in _cache_dict['ORTHOLOGY']]
+        names = [ko_complete.split('+')
+                 for ko_complete in _cache_dict['ORTHOLOGY']]
         # names is a list of list
         # each_names is a list of ids. e.g ['K10944','K10945','K10946']
         subunit_ids = [(same_func_unit, subunit_id, full_enzyme_ids)
                        for full_enzyme_ids in names
                        for subunit_id in full_enzyme_ids
                        for same_func_unit in subunit_id.split(',')]
-
+        tqdm.write("processing module %s, it contains %s subunits" % (m, len(subunit_ids)))
         for (same_func_unit, subunit_id, full_enzyme_ids) in tqdm(subunit_ids):
-            org2locus = kegg.parse(kegg.get(same_func_unit.strip()))['GENES']
+            ko2info = kegg.parse(kegg.get(same_func_unit.strip()))
+
+            new_dict = assign_ko2info(total_ko2info, ko2info, ko_id=same_func_unit)
+            if new_dict is not None:
+                total_ko2info.update(new_dict)
+            org2locus = ko2info['GENES']
             locus_list = [[':'.join([org.lower(), paralog])
                            for paralog in genes.split(' ')]
                           for org, genes in org2locus.items()]
@@ -65,7 +90,7 @@ def get_locusID(module_dict, locusID_list_output):
                                                       same_func_unit,
                                                       ))
     f.close()
-    return locus2info
+    return locus2info, total_ko2info
 
 
 def get_locusDetailedInfo(locus2info):
@@ -114,12 +139,15 @@ def get_locusDetailedInfo(locus2info):
     return genes_df
 
 
-
 def main(metabolism_id, locus_id_list):
+    tqdm.write("getting module information")
     module_dict = get_module_info(metabolism_id)
-    locus2info = get_locusID(module_dict, locus_id_list)
+    tqdm.write("For each module, getting it locus/gene ID and sequence")
+    locus2info, all_ko2info = get_locusID(module_dict, locus_id_list)
+    ko_df = pd.DataFrame.from_dict(all_ko2info, orient='index')
+    tqdm.write("get locus infomation from database, and also get sequence")
     genes_df = get_locusDetailedInfo(locus2info)
-    return genes_df
+    return genes_df, ko_df
 
 
 @click.command()
@@ -127,10 +155,12 @@ def main(metabolism_id, locus_id_list):
 def cli():
     pass
 
+
 if __name__ == '__main__':
     kegg = KEGG()
     metabolism_id = "ko00910"  # id of N-metabolism
     locus_id_list = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
-    genes_df = main(metabolism_id, locus_id_list)
+    genes_df, ko_df = main(metabolism_id, locus_id_list)
+    ko_df.to_csv("/home-user/thliao/data/metagenomes/KO_info.tsv", sep='\t', index=1,index_label="KO number")
     genes_df.to_csv("/home-user/thliao/data/metagenomes/N-relative_genes.tsv", sep='\t', index=0)
     # locus_tag could not used as index, because it has duplicated

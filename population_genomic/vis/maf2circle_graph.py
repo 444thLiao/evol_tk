@@ -97,10 +97,6 @@ def get_pos(seg2info, list_db, ref, polar=True):
     return plot_data
 
 
-def parse_gff():
-    pass
-
-
 def draw_barpolar(plot_data):
     fig = go.Figure()
     fig.add_trace(go.Barpolar(r=plot_data['r'],
