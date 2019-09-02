@@ -1,6 +1,7 @@
 # For processing Orthofinder output
 
 
+
 ## Part description
 ### api
 
@@ -30,6 +31,7 @@ Below I will simple introduce these scripts
     
         `python3 getSeqofOG.py -i Orthogroups.csv -o output_dir -single -i2 genome_list.txt`
         
+2. resort_OG_with_gaps.py & split_out_duplicated.py
 
 ## raw
 
