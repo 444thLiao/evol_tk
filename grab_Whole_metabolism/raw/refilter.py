@@ -164,6 +164,12 @@ def parse_kraken2(infile):
         return _df
 
 
+color2module = {'Nitrogen fixation, nitrogen => ammonia': '#FD3216',
+                'Dissimilatory nitrate reduction, nitrate => ammonia': '#6A76FC',
+                'Assimilatory nitrate reduction, nitrate => ammonia': '#0DF9FF',
+                'Denitrification, nitrate => nitrogen': '#FF7F0E',
+                'Complete nitrification, comammox, ammonia => nitrite => nitrate': '#9D755D',
+                'Nitrification, ammonia => nitrite': '#B279A2'}
 from ete3 import NCBITaxa
 
 ncbi = NCBITaxa()
@@ -233,9 +239,9 @@ t = pd.read_excel('19_Stewart/metadata.xlsx')
 tids = [row['original_bin']
         for rid, row in tqdm(t.iterrows())]
 t = t.set_index('original_bin')
-t = t.iloc[:,[11,12,13,14,15,16,17]]
+t = t.iloc[:, [11, 12, 13, 14, 15, 16, 17]]
 t = pd.DataFrame(t.values,
-                 columns= ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
+                 columns=['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'],
                  index=t.index)
 print(sample2infos.index[sample2infos.source == '19_Stewart'].difference(set(tids)))
 tids = sample2infos.index[sample2infos.source == '19_Stewart'].intersection(set(tids))
@@ -244,11 +250,11 @@ sample2infos.loc[tids,
                  [tlevel + '(from metadata)'
                   for tlevel in tid_levels]] = t.loc[tids, tid_levels].values
 ##
-t = pd.read_excel('17_lee/metadata.xlsx', sheet_name=1,header=1)
+t = pd.read_excel('17_lee/metadata.xlsx', sheet_name=1, header=1)
 t = t.iloc[:, [0, 17, 18, 19, 20, 21, 22, 23]]
 t.columns = ['bin_id', 'superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 t = t.set_index('bin_id')
-tids = [_+'-contigs' for _ in list(t.index)]
+tids = [_ + '-contigs' for _ in list(t.index)]
 t.index = tids
 print(sample2infos.index[sample2infos.source == '17_lee'].difference(set(tids)))
 tids = sample2infos.index[sample2infos.source == '17_lee'].intersection(set(tids))
@@ -261,13 +267,51 @@ t = pd.read_excel('18_Delmont/MAG_metadata(new).xlsx', sheet_name=0)
 t = t.iloc[:, [0, 15, 16, 17, 18, 19, 20, 21]]
 t.columns = ['bin_id', 'superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 t = t.set_index('bin_id')
-tids= list(t.index)
+tids = list(t.index)
 print(sample2infos.index[sample2infos.source == '18_Delmont'].difference(set(tids)))
 tids = sample2infos.index[sample2infos.source == '18_Delmont'].intersection(set(tids))
 sample2infos.loc[tids,
                  [tlevel + '(from metadata)'
                   for tlevel in tid_levels]] = t.loc[tids, tid_levels].values
+############################################################
+import plotly
+from plotly import graph_objs as go
 
+color4module = {'Nitrogen fixation, nitrogen => ammonia': '#FD3216',
+                'Dissimilatory nitrate reduction, nitrate => ammonia': '#6A76FC',
+                'Assimilatory nitrate reduction, nitrate => ammonia': '#0DF9FF',
+                'Denitrification, nitrate => nitrogen': '#FF7F0E',
+                'Complete nitrification, comammox, ammonia => nitrite => nitrate': '#9D755D',
+                'Nitrification, ammonia => nitrite': '#B279A2'}
+level = 'order'
+with pd.ExcelWriter('./MAG_N-relative_genes_summary.xlsx') as writer:
+    for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
+        fig = go.Figure()
+        sub_df = locus2info_df.copy()
+        sub_df.loc[:, 'sort_for'] = sub_df.index + sub_df.module
+        sub_df = sub_df.drop_duplicates('sort_for')
+        sub_df.loc[:, level] = sub_df.loc[:, level].replace('', 'unclassified').fillna('unclassified')
+        # total_count = sub_df.loc[:, level].value_counts()
+        total_count = sample2info_df.loc[:, level].replace('', 'unclassified').fillna('unclassified').value_counts()
+
+        collect_dfs = []
+        for m in sub_df.loc[:, 'module'].unique():
+            _df = sub_df.loc[sub_df.module == m, :]
+            count_data = _df.loc[:, level].value_counts()
+
+            freq_data = count_data / total_count * 100
+            freq_data = freq_data[freq_data >= 0.6]
+            collect_dfs.append(pd.DataFrame(freq_data.values.reshape(-1, 1), columns=[m], index=freq_data.index))
+            fig.add_trace(go.Bar(x=['%s (%s)' % (name, total_count[name]) for name in freq_data.index],
+                                 y=freq_data.values,
+                                 name=m,
+                                 marker=dict(color=color4module[m])))
+            summary_df = pd.concat(collect_dfs, axis=1, sort=True)
+
+        summary_df.index = ['%s (%s)' % (_, total_count[_]) for _ in summary_df.index]
+        summary_df = summary_df.fillna(0)
+        summary_df = summary_df.applymap(lambda x: round(x, 2))
+        summary_df.to_excel(writer, sheet_name=level, index_label=level + ' (in total)')
 ############################################################
 # summary
 #

@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1]
+    locus = locus.strip()
     return locus
 
 
@@ -36,7 +37,7 @@ def main(infile, backbone_column_idx=0):
     backbone_c = order_a_column(backbone_column_ori)
     order_OG_without_gap = list(backbone_c.index)
     order_OG_df = OG_df.reindex(backbone_c.index)
-    tqdm.write("%s OG need to insert into ordered table" % len(gap_OGs))
+    tqdm.write("%s OG need to be reinserted into an ordered table" % len(gap_OGs))
 
     for gap_OG, row in tqdm(gap_OG_df.iterrows(),
                             total=gap_OG_df.shape[0]):
