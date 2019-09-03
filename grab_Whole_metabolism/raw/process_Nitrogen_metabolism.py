@@ -3,9 +3,37 @@ from tqdm import tqdm
 import multiprocessing as mp
 from Bio import SeqIO
 from collections import Counter
+import os
+import time
 
-whole_kegg = 'N_relative_2_whole_kegg_blastp.out'
-N_relative = 'N_relative_blastp.out'
+time.sleep(14400)
+genes_df = pd.read_csv("/home-user/thliao/data/metagenomes/N-relative_genes.tsv", sep='\t')
+with open('/home-user/thliao/data/metagenomes/Nitrogen_relative_gene.fasta', 'w') as f1:
+    for _, row in genes_df.iterrows():
+        aa_seq = row['AA seq']
+        name = row["locus_name"]
+        f1.write(f'>{name}\n')
+        f1.write(f"{aa_seq}\n")
+os.system('diamond makedb --in /home-user/thliao/data/metagenomes/Nitrogen_relative_gene.fasta --db /home-user/thliao/data/metagenomes/N_relative_locus')
+
+base_dir = '/home-user/thliao/data/metagenomes/concat_all'
+os.system(f"diamond blastp -q {base_dir}/all_protein.faa -o {base_dir}/N_relative_blastp.out -d {base_dir}/../N_relative_locus -p 0 -b 5 -c 2")
+
+tmp_df = pd.read_csv(f'{base_dir}/N_relative_blastp.out', sep='\t', header=None)
+records = SeqIO.parse(f'{base_dir}/all_protein.faa', format='fasta')
+used_gids = set(tmp_df.iloc[:, 0])
+collcect_records = []
+for record in tqdm(records,total=50601573):
+    if record.id in used_gids:
+        collcect_records.append(record)
+with open(f'{base_dir}/N_relative_blastp.faa', 'w') as f1:
+    SeqIO.write(collcect_records, f1, format='fasta-2line')
+
+os.system(f"diamond blastp -q {base_dir}/N_relative_blastp.faa -o {base_dir}/N_relative_2_whole_kegg_blastp.out -d /home-user/sswang/db/diamond/kegg/latest/kegg -p 0 -b 5 -c 2")
+
+
+whole_kegg = f'{base_dir}/N_relative_2_whole_kegg_blastp.out'
+N_relative = f'{base_dir}/N_relative_blastp.out'
 
 pre_df = pd.read_csv(N_relative, sep='\t', header=None)
 aft_df = pd.read_csv(whole_kegg, sep='\t', header=None)
@@ -29,10 +57,11 @@ with mp.Pool(processes=50) as tp:
         if locus is not None:
             real_N_metabolism_genes.append(locus)
 
+real_N_metabolism_genes = set(real_N_metabolism_genes)
 records = SeqIO.parse('N_relative_blastp.faa', format='fasta')
-collect_reads = [_ for _ in records if _.id in real_N_metabolism_genes]
+collect_reads = [_ for _ in records if _.id in set(real_N_metabolism_genes)]
 
-with open('real_N_metabolism.faa', 'w') as f1:
+with open('./real_N_metabolism.faa', 'w') as f1:
     SeqIO.write(collect_reads, f1, format='fasta-2line')
 
 locus_list = [_.id for _ in collect_reads]
