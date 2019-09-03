@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import click
 import os
-
+import pickle
 
 def parse_id(ID, max_try=5):
     info_dict = 0
@@ -70,7 +70,7 @@ def pack_it_up(ko2info, locus2ko, locus2info):
                 _df = _sub1.join(_sub2, lsuffix=1)
                 df_list.append(_df)
     tqdm.write("start concatenating......")
-    total_df = pd.concat(df_list, axis=0)
+    total_df = pd.concat(df_list, axis=0, sort=True)
     return total_df
 
 
@@ -146,6 +146,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
                 # no larger than 60%
                 print("no large than 60, locus : {0}".format(locus))
         locus2ko = _locus2ko
+
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
     ko2info = {}
