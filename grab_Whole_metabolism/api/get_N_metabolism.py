@@ -66,8 +66,9 @@ def get_locusID(module_dict, locusID_list_output):
                        for same_func_unit in subunit_id.split(',')]
         tqdm.write("processing module %s, it contains %s subunits" % (m, len(subunit_ids)))
         for (same_func_unit, subunit_id, full_enzyme_ids) in tqdm(subunit_ids):
-            ko2info = kegg.parse(kegg.get(same_func_unit.strip()))
-
+            ko2info = 400
+            while isinstance(ko2info, int):
+                ko2info = kegg.parse(kegg.get(same_func_unit.strip()))
             new_dict = assign_ko2info(total_ko2info, ko2info, ko_id=same_func_unit)
             if new_dict is not None:
                 total_ko2info.update(new_dict)
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     kegg = KEGG()
     # init a engine to fetch kegg id
     cli()
-    # python3 get_N_metabolism.py -locusID ./Nitrogen_cycle_locus.list -koDF ko_info.csv -locusDF locus_info.csv -ko_id KO00910
+    # python3 get_N_metabolism.py -locusID ./Nitrogen_cycle_locus.list -koDF ./ko_info.csv -locusDF ./locus_info.csv -ko_id ko00910
     # metabolism_id = "ko00910"  # id of N-metabolism
     # locus_id_list = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
     # genes_df, ko_df = main(metabolism_id, locus_id_list)
