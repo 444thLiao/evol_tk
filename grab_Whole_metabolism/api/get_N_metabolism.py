@@ -3,7 +3,7 @@ from collections import defaultdict
 import pandas as pd
 from tqdm import tqdm
 import click
-
+import time
 
 def get_module_info(metabolism_id):
     # N_pathway_id = "ko00910"  # id of N-metabolism
@@ -70,6 +70,8 @@ def get_locusID(module_dict, locusID_list_output):
             ko2info = 400
             while isinstance(ko2info, int):
                 ko2info = kegg.parse(kegg.get(same_func_unit.strip()))
+                time.sleep(0.1)
+                # don't make it too fast, or it will block the ip
             new_dict = assign_ko2info(total_ko2info, ko2info, ko_id=same_func_unit)
             if new_dict is not None:
                 total_ko2info.update(new_dict)
