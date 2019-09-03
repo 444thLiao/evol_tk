@@ -1,5 +1,5 @@
 from bioservices.kegg import KEGG
-from collections import defaultdict, Counter
+from collections import defaultdict
 import pandas as pd
 from tqdm import tqdm
 import click
@@ -31,7 +31,7 @@ def assign_ko2info(total_ko2info, ko2info, ko_id):
         total_ko2info[ko_id]['gene definition'] = ko2info.get('DEFINITION', '')
         total_ko2info[ko_id]['reference'] = ';'.join([ref.get('TITLE', '')
                                                       for ref in ko2info.get('REFERENCE', [{}])])
-        total_ko2info[ko_id]['num genes'] = len(ko2info.get("ORTHOLOGY", []))
+        total_ko2info[ko_id]['num genes'] = len(ko2info.get("GENES", []))
         _cache = list(ko2info.get('MODULE', {}).values())
         if _cache:
             total_ko2info[ko_id]['module'] = ';'.join(_cache)
