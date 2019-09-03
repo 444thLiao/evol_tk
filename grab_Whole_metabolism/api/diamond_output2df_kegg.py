@@ -4,7 +4,9 @@ import pandas as pd
 from tqdm import tqdm
 import click
 import os
+from os.path import exists, join
 import pickle
+
 
 def parse_id(ID, max_try=5):
     info_dict = 0
@@ -82,6 +84,8 @@ def pack_it_up(ko2info, locus2ko, locus2info):
 @click.option("-drop_dup_ko", "drop_dup_ko", help='drop duplicated ko for single query subject.', is_flag=True, default=False)
 @click.option("-test", "test", is_flag=True, default=False)
 def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
+    tmp_dir = './tmp'
+    os.makedirs(tmp_dir, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
                 exist_ok=True)
     df = pd.read_csv(input_tab, sep='\t', header=None)
@@ -95,16 +99,22 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         df = df.loc[random50, :]
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
-    DBlocus2info = {}
-    null_ID = []
-    for DBlocus in tqdm(unique_DBlocus,
-                        total=len(unique_DBlocus)):
-        # todo: use asyncio to improve the speed
-        DBlocus_info = parse_id(DBlocus)
-        if not isinstance(DBlocus_info, dict):
-            null_ID.append(DBlocus_info)
-        else:
-            DBlocus2info[DBlocus] = DBlocus_info
+    if not exists(join(tmp_dir, 'dblocus2info')):
+        DBlocus2info = {}
+        null_ID = []
+        for DBlocus in tqdm(unique_DBlocus,
+                            total=len(unique_DBlocus)):
+            # todo: use asyncio to improve the speed
+            DBlocus_info = parse_id(DBlocus)
+            if not isinstance(DBlocus_info, dict):
+                null_ID.append(DBlocus_info)
+            else:
+                DBlocus2info[DBlocus] = DBlocus_info
+        pickle.dump(join(tmp_dir, 'dblocus2info'), 'wb')
+        pickle.dump(join(tmp_dir, 'null_ID'), 'wb')
+    else:
+        DBlocus2info = pickle.load(join(tmp_dir, 'dblocus2info'), 'rb')
+        null_ID = pickle.load(join(tmp_dir, 'null_ID'), 'rb')
 
     locus2info = {row[0]: [DBlocus2info[row[1]]]
                   for rid, row in df.iterrows()
@@ -149,11 +159,15 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
 
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
-    ko2info = {}
-    for ko, locus_list in tqdm(ko2locus.items(),
-                               total=len(ko2locus)):
-        ko_info = get_KO_info(ko)
-        ko2info[ko] = ko_info
+    if not exists(join(tmp_dir, 'dblocus2info')):
+        ko2info = {}
+        for ko, locus_list in tqdm(ko2locus.items(),
+                                   total=len(ko2locus)):
+            ko_info = get_KO_info(ko)
+            ko2info[ko] = ko_info
+        pickle.dump(join(tmp_dir, 'ko2info'), 'wb')
+    else:
+        ko2info = pickle.load(join(tmp_dir, 'ko2info'), 'rb')
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
     if null_locus:
