@@ -146,9 +146,10 @@ def main(metabolism_id, locus_id_list):
     tqdm.write("For each module, getting it locus/gene ID and sequence")
     locus2info, all_ko2info = get_locusID(module_dict, locus_id_list)
     ko_df = pd.DataFrame.from_dict(all_ko2info, orient='index')
-    tqdm.write("get locus infomation from database, and also get sequence")
-    genes_df = get_locusDetailedInfo(locus2info)
-    return genes_df, ko_df
+    return ko_df,locus2info
+    # tqdm.write("get locus infomation from database, and also get sequence")
+    # genes_df = get_locusDetailedInfo(locus2info)
+    # return genes_df, ko_df
 
 
 @click.command()
@@ -157,8 +158,9 @@ def main(metabolism_id, locus_id_list):
 @click.option("-koDF", "koDF_out", help="output table of relative ko number")
 @click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
 def cli(koID, locusID_out, koDF_out, locusDF_out):
-    genes_df, ko_df = main(koID, locusID_out)
+    ko_df, locus2info = main(koID, locusID_out)
     ko_df.to_csv(koDF_out, sep='\t', index=1, index_label="KO number")
+    genes_df = get_locusDetailedInfo(locus2info)
     genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
                                   for ko in genes_df.loc[:, 'Orthology(single)']]
     genes_df.to_csv(locusDF_out, sep='\t', index=0)
