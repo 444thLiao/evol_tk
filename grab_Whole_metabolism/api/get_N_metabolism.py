@@ -151,7 +151,7 @@ def main(metabolism_id, locus_id_list):
 
 
 @click.command()
-@click.argument("ko_id", "koID", help='Whole metabolism or a pathway? e.g ko00910 for nitrogen metabolism')
+@click.option("-ko_id", "koID")
 @click.option("-locusID", "locusID_out", help="output locus ID list")
 @click.option("-koDF", "koDF_out", help="output table of relative ko number")
 @click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
@@ -167,6 +167,7 @@ if __name__ == '__main__':
     kegg = KEGG()
     # init a engine to fetch kegg id
     cli()
+    # python3 get_N_metabolism.py -locusID ./Nitrogen_cycle_locus.list -koDF ko_info.csv -locusDF locus_info.csv -ko_id KO00910
     # metabolism_id = "ko00910"  # id of N-metabolism
     # locus_id_list = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
     # genes_df, ko_df = main(metabolism_id, locus_id_list)
