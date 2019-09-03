@@ -69,6 +69,7 @@ def pack_it_up(ko2info, locus2ko, locus2info):
                 _sub1 = pd.DataFrame().from_dict({locus: locus_info}, orient='index')
                 _df = _sub1.join(_sub2, lsuffix=1)
                 df_list.append(_df)
+    tqdm.write("start concatenating......")
     total_df = pd.concat(df_list, axis=0)
     return total_df
 
