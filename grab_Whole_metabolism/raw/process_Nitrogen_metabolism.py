@@ -6,7 +6,6 @@ from collections import Counter
 import os
 import time
 
-time.sleep(14400)
 genes_df = pd.read_csv("/home-user/thliao/data/metagenomes/N-relative_genes.tsv", sep='\t')
 with open('/home-user/thliao/data/metagenomes/Nitrogen_relative_gene.fasta', 'w') as f1:
     for _, row in genes_df.iterrows():
@@ -38,7 +37,6 @@ N_relative = f'{base_dir}/N_relative_blastp.out'
 pre_df = pd.read_csv(N_relative, sep='\t', header=None)
 aft_df = pd.read_csv(whole_kegg, sep='\t', header=None)
 
-
 def cal_ratio(locus):
     setA = set(pre_df.loc[pre_df.loc[:, 0] == locus, 1])
     setB = set(aft_df.loc[aft_df.loc[:, 0] == locus, 1])
@@ -48,10 +46,9 @@ def cal_ratio(locus):
         # real_N_metabolism_genes.append(locus)
         return locus
 
-
-real_N_metabolism_genes = []
 locus_set = list(set(pre_df.loc[:, 0]))
-with mp.Pool(processes=50) as tp:
+real_N_metabolism_genes = []
+with mp.Pool(processes=64) as tp:
     for locus in tqdm(tp.imap(cal_ratio, locus_set),
                       total=len(locus_set)):
         if locus is not None:

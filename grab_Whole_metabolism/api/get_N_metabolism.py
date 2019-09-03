@@ -151,16 +151,25 @@ def main(metabolism_id, locus_id_list):
 
 
 @click.command()
-@click.option
-def cli():
-    pass
+@click.argument("ko_id", "koID", help='Whole metabolism or a pathway? e.g ko00910 for nitrogen metabolism')
+@click.option("-locusID", "locusID_out", help="output locus ID list")
+@click.option("-koDF", "koDF_out", help="output table of relative ko number")
+@click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
+def cli(koID, locusID_out, koDF_out, locusDF_out):
+    genes_df, ko_df = main(koID, locusID_out)
+    ko_df.to_csv(koDF_out, sep='\t', index=1, index_label="KO number")
+    genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
+                                  for ko in genes_df.loc[:, 'Orthology(single)']]
+    genes_df.to_csv(locusDF_out, sep='\t', index=0)
 
 
 if __name__ == '__main__':
     kegg = KEGG()
-    metabolism_id = "ko00910"  # id of N-metabolism
-    locus_id_list = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
-    genes_df, ko_df = main(metabolism_id, locus_id_list)
-    ko_df.to_csv("/home-user/thliao/data/metagenomes/KO_info.tsv", sep='\t', index=1,index_label="KO number")
-    genes_df.to_csv("/home-user/thliao/data/metagenomes/N-relative_genes.tsv", sep='\t', index=0)
+    # init a engine to fetch kegg id
+    cli()
+    # metabolism_id = "ko00910"  # id of N-metabolism
+    # locus_id_list = '/home-user/thliao/data/metagenomes/N-cycle_locus.list'
+    # genes_df, ko_df = main(metabolism_id, locus_id_list)
+    # ko_df.to_csv("/home-user/thliao/data/metagenomes/KO_info.tsv", sep='\t', index=1,index_label="KO number")
+    # genes_df.to_csv("/home-user/thliao/data/metagenomes/N-relative_genes.tsv", sep='\t', index=0)
     # locus_tag could not used as index, because it has duplicated
