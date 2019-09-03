@@ -167,7 +167,7 @@ def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko):
         removed_ko = set([_ for _ in open(removed_ko).read().split('\n') if _])
         locus2info = {k: v
                       for k, v in locus2info.items()
-                      if v[-1] not in removed_ko}
+                      if v[-1][-1] not in removed_ko}
     genes_df = get_locusDetailedInfo(locus2info)
     genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
                                   for ko in genes_df.loc[:, 'Orthology(single)']]
