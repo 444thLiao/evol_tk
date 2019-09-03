@@ -1,5 +1,5 @@
 from bioservices.kegg import KEGG
-from collections import defaultdict
+from collections import defaultdict, Counter
 import pandas as pd
 from tqdm import tqdm
 import click
@@ -29,8 +29,9 @@ def assign_ko2info(total_ko2info, ko2info, ko_id):
     if ko_id not in total_ko2info:
         total_ko2info[ko_id]['gene name'] = ';'.join(ko2info.get('NAME', ''))
         total_ko2info[ko_id]['gene definition'] = ko2info.get('DEFINITION', '')
-        total_ko2info[ko_id]['reference '] = ';'.join([ref.get('TITLE', '')
-                                                       for ref in ko2info.get('REFERENCE', [{}])])
+        total_ko2info[ko_id]['reference'] = ';'.join([ref.get('TITLE', '')
+                                                      for ref in ko2info.get('REFERENCE', [{}])])
+        total_ko2info[ko_id]['num genes'] = len(ko2info.get("ORTHOLOGY", []))
         _cache = list(ko2info.get('MODULE', {}).values())
         if _cache:
             total_ko2info[ko_id]['module'] = ';'.join(_cache)
@@ -146,7 +147,7 @@ def main(metabolism_id, locus_id_list):
     tqdm.write("For each module, getting it locus/gene ID and sequence")
     locus2info, all_ko2info = get_locusID(module_dict, locus_id_list)
     ko_df = pd.DataFrame.from_dict(all_ko2info, orient='index')
-    return ko_df,locus2info
+    return ko_df, locus2info
     # tqdm.write("get locus infomation from database, and also get sequence")
     # genes_df = get_locusDetailedInfo(locus2info)
     # return genes_df, ko_df
@@ -157,9 +158,16 @@ def main(metabolism_id, locus_id_list):
 @click.option("-locusID", "locusID_out", help="output locus ID list")
 @click.option("-koDF", "koDF_out", help="output table of relative ko number")
 @click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
-def cli(koID, locusID_out, koDF_out, locusDF_out):
+@click.option("-drop_ko", "removed_ko", help="file indicated ko doesn't need", default=None)
+def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko):
     ko_df, locus2info = main(koID, locusID_out)
     ko_df.to_csv(koDF_out, sep='\t', index=1, index_label="KO number")
+
+    if removed_ko is not None:
+        removed_ko = set([_ for _ in open(removed_ko).read().split('\n') if _])
+        locus2info = {k: v
+                      for k, v in locus2info.items()
+                      if v[-1] not in removed_ko}
     genes_df = get_locusDetailedInfo(locus2info)
     genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
                                   for ko in genes_df.loc[:, 'Orthology(single)']]
