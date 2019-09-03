@@ -141,9 +141,14 @@ def get_locusDetailedInfo(locus2info):
     return genes_df
 
 
-def main(metabolism_id, locus_id_list):
+def main(metabolism_id, locus_id_list,extra_ko):
     tqdm.write("getting module information")
     module_dict = get_module_info(metabolism_id)
+    if extra_ko is not None:
+        module_dict['extra'] = {}
+        module_dict['extra']['data'] = {}
+        module_dict['extra']['data']['ORTHOLOGY'] = extra_ko
+        module_dict['extra']['data']['NAME'] = ['Others']
     tqdm.write("For each module, getting it locus/gene ID and sequence")
     locus2info, all_ko2info = get_locusID(module_dict, locus_id_list)
     ko_df = pd.DataFrame.from_dict(all_ko2info, orient='index')
@@ -159,8 +164,11 @@ def main(metabolism_id, locus_id_list):
 @click.option("-koDF", "koDF_out", help="output table of relative ko number")
 @click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
 @click.option("-drop_ko", "removed_ko", help="file indicated ko doesn't need", default=None)
-def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko):
-    ko_df, locus2info = main(koID, locusID_out)
+@click.option("-extra_ko", "extra_ko", help="file indicated extra ko", default=None)
+def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko,extra_ko):
+    if extra_ko is not None:
+        extra_ko = set([_ for _ in open(extra_ko).read().split('\n') if _])
+    ko_df, locus2info = main(koID, locusID_out,extra_ko)
     ko_df.to_csv(koDF_out, sep='\t', index=1, index_label="KO number")
 
     if removed_ko is not None:
