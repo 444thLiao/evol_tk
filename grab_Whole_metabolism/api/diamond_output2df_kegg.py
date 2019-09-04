@@ -95,6 +95,7 @@ def pack_it_up(ko2info, locus2ko, locus2info):
 
 def batch_iter(iter, batch_size):
     # generating batch according batch_size
+    iter = list(iter)
     n_iter = []
     batch_d = 0
     for batch_u in range(0, len(iter), batch_size):
