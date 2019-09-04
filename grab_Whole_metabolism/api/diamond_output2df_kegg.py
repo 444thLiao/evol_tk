@@ -159,7 +159,8 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
 
     locus2info = defaultdict(list)
     for rid, row in df.iterrows():
-        locus2info[row[0]].append(DBlocus2info[row[1]])
+        if row[0] not in null_ID:
+            locus2info[row[0]].append(DBlocus2info[row[1]])
 
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
