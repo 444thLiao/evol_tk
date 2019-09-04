@@ -26,13 +26,14 @@ def parse_id(ID, max_try=10):
             get_dict = parse_id(sub_id)
             return_dict.update(get_dict)
         return return_dict
-
-    assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
-    for locus, info_dict in zip(ID.split('+'),
-                                info_dict_list):
+    for info_dict in info_dict_list:
+        source_organism = info_dict.get("ORGANISM", 'unknown')
+        entry = info_dict.get('ENTRY', 'unknown')
+        locus = [_ for _ in ID.split('+')
+                 if entry in _][0]
         Orthology = info_dict.get("ORTHOLOGY", None)
         if Orthology is not None:
             KO_id = ";".join(sorted(Orthology.keys()))
@@ -40,7 +41,7 @@ def parse_id(ID, max_try=10):
             KO_id = None
         NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
         uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-        source_organism = info_dict.get("ORGANISM", 'unknown')
+
         AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
         if not AA_seq:
             print('No Amine acid sequence detected. weird... for ID:', ID)
@@ -70,13 +71,14 @@ def get_KO_info(ID, max_try=10):
             get_dict = get_KO_info(sub_id)
             return_dict.update(get_dict)
         return return_dict
-    assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
 
-    for ko, info_dict in zip(ID.split('+'),
-                             info_dict_list):
+    for info_dict in info_dict_list:
+        entry = info_dict.get('ENTRY', 'unknown')
+        ko = [_ for _ in ID.split('+')
+              if entry in _][0]
         gene_name = ';'.join(info_dict.get('NAME', ['']))
         definition = info_dict.get('DEFINITION', '')
         reference_t = ''
