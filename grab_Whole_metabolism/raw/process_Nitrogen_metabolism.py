@@ -96,7 +96,6 @@ for locus, ko in tqdm(locus2ko.items()):
 name_counts = Counter([_ for _ in locus2name.values()])
 ############################################################
 sample2info = pd.read_csv('sample2infos.tsv', sep='\t', header=0, index_col=1)
-
 locus2info_df = pd.DataFrame(columns=["locus",
                                       "locus_prefix",
                                       'sample name',
@@ -309,7 +308,7 @@ color4module = {'Nitrogen fixation, nitrogen => ammonia': '#FD3216',
                 'Denitrification, nitrate => nitrogen': '#FF7F0E',
                 'Complete nitrification, comammox, ammonia => nitrite => nitrate': '#9D755D',
                 'Nitrification, ammonia => nitrite': '#B279A2'}
-level = 'order'
+
 with pd.ExcelWriter('./MAG_N-relative_genes_summary.xlsx') as writer:
     for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
         fig = go.Figure()

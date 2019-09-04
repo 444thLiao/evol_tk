@@ -110,8 +110,8 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
                 null_ID.append(DBlocus_info)
             else:
                 DBlocus2info[DBlocus] = DBlocus_info
-        pickle.dump(join(tmp_dir, 'dblocus2info'), 'wb')
-        pickle.dump(join(tmp_dir, 'null_ID'), 'wb')
+        pickle.dump(DBlocus2info, open(join(tmp_dir, 'dblocus2info'), 'wb'))
+        pickle.dump(null_ID, open(join(tmp_dir, 'null_ID'), 'wb'))
     else:
         DBlocus2info = pickle.load(join(tmp_dir, 'dblocus2info'), 'rb')
         null_ID = pickle.load(join(tmp_dir, 'null_ID'), 'rb')
