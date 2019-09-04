@@ -9,7 +9,7 @@ import pickle
 import time
 
 
-def parse_id(ID, max_try=500):
+def parse_id(ID, max_try=10):
     info_str = 0
     count_ = 0
     while count_ <= max_try:
@@ -28,7 +28,6 @@ def parse_id(ID, max_try=500):
     return_dict = {}
     for locus, info_dict in zip(ID.split('+'),
                                 info_dict_list):
-        source_organism = info_dict.get("ORGANISM", 'unknown')
         Orthology = info_dict.get("ORTHOLOGY", None)
         if Orthology is not None:
             KO_id = ";".join(sorted(Orthology.keys()))
@@ -49,7 +48,7 @@ def parse_id(ID, max_try=500):
     return return_dict
 
 
-def get_KO_info(ID, max_try=500):
+def get_KO_info(ID, max_try=10):
     info_str = 0
     count_ = 0
     while count_ <= max_try:
@@ -68,10 +67,10 @@ def get_KO_info(ID, max_try=500):
     return_dict = {}
     for ko, info_dict in zip(ID.split('+'),
                              info_dict_list):
-        gene_name = ';'.join(info_str.get('NAME', ['']))
-        definition = info_str.get('DEFINITION', '')
+        gene_name = ';'.join(info_dict.get('NAME', ['']))
+        definition = info_dict.get('DEFINITION', '')
         reference_t = ''
-        if "REFERENCE" in info_str:
+        if "REFERENCE" in info_dict:
             reference_t = ';'.join([str(_dict.get('TITLE', ''))
                                     for _dict in info_dict.get('REFERENCE', {})])
 
@@ -194,7 +193,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
                 pass
             else:
                 # no larger than 60%
-                print("no large than 60, locus : {0}".format(locus))
+                print("no large than 60, locus : {0} ".format(locus),locus2ko[locus])
         locus2ko = _locus2ko
 
     ########################################################
