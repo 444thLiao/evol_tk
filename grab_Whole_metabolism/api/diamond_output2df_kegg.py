@@ -9,53 +9,66 @@ import pickle
 
 
 def parse_id(ID, max_try=5):
-    info_dict = 0
+    info_str = 0
     count_ = 0
-    while isinstance(info_dict, int):
-        info_dict = kegg.parse(kegg.get(ID))
+    while count_ <= max_try:
+        info_str = kegg.get(ID)
         # if failed, it will return 400 or 403. still an int
+        if isinstance(info_str, str):
+            break
         count_ += 1
-        if count_ >= max_try:
-            return ID
-    Orthology = info_dict.get("ORTHOLOGY", None)
-    if Orthology is not None:
-        KO_id = ";".join(sorted(Orthology.keys()))
-    else:
-        KO_id = None
-    NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
-    uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-    source_organism = info_dict.get("ORGANISM", 'unknown')
-    AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
-    if not AA_seq:
-        print('No Amine acid sequence detected. weird... for ID:', ID)
-    return_dict = dict(ID=ID,
-                       ko=KO_id,
-                       ncbi_id=NCBI_refID,
-                       uniprot_refID=uniprot_refID,
-                       source_organism=source_organism,
-                       AA_seq=AA_seq)
+    info_dict_list = [kegg.parse('ENTRY' + each_str)
+                      for each_str in info_str.split('ENTRY')
+                      if each_str]
+    return_dict = {}
+    for locus, info_dict in zip(ID.split('+'),
+                                info_dict_list):
+        source_organism = info_dict.get("ORGANISM", 'unknown')
+        Orthology = info_dict.get("ORTHOLOGY", None)
+        if Orthology is not None:
+            KO_id = ";".join(sorted(Orthology.keys()))
+        else:
+            KO_id = None
+        NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
+        uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
+        source_organism = info_dict.get("ORGANISM", 'unknown')
+        AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
+        if not AA_seq:
+            print('No Amine acid sequence detected. weird... for ID:', ID)
+        return_dict[locus] = dict(ID=ID,
+                                  ko=KO_id,
+                                  ncbi_id=NCBI_refID,
+                                  uniprot_refID=uniprot_refID,
+                                  source_organism=source_organism,
+                                  AA_seq=AA_seq)
     return return_dict
 
 
 def get_KO_info(ID, max_try=5):
-    info_dict = 0
+    info_str = 0
     count_ = 0
-    while isinstance(info_dict, int):
-        info_dict = kegg.parse(kegg.get(ID))
+    while count_ <= max_try:
+        info_str = kegg.get(ID)
         # if failed, it will return 400 or 403. still an int
+        if isinstance(info_str, str):
+            break
         count_ += 1
-        if count_ >= max_try:
-            return ID
-    gene_name = ';'.join(info_dict.get('NAME', ['']))
-    definition = info_dict.get('DEFINITION', '')
-    reference_t = ''
-    if "REFERENCE" in info_dict:
-        reference_t = ';'.join([str(_dict.get('TITLE', ''))
-                                for _dict in info_dict.get('REFERENCE', {})])
+    info_dict_list = [kegg.parse('ENTRY' + each_str)
+                      for each_str in info_str.split('ENTRY')
+                      if each_str]
+    return_dict = {}
+    for ko, info_dict in zip(ID.split('+'),
+                             info_dict_list):
+        gene_name = ';'.join(info_str.get('NAME', ['']))
+        definition = info_str.get('DEFINITION', '')
+        reference_t = ''
+        if "REFERENCE" in info_str:
+            reference_t = ';'.join([str(_dict.get('TITLE', ''))
+                                    for _dict in info_dict.get('REFERENCE', {})])
 
-    return_dict = dict(gene_name=gene_name,
-                       definition=definition,
-                       reference_t=reference_t)
+        return_dict[ko] = dict(gene_name=gene_name,
+                               definition=definition,
+                               reference_t=reference_t)
     return return_dict
 
 
@@ -78,6 +91,18 @@ def pack_it_up(ko2info, locus2ko, locus2info):
     else:
         total_df = pd.concat(df_list, axis=0, sort=True)
     return total_df
+
+
+def batch_iter(iter, batch_size):
+    # generating batch according batch_size
+    n_iter = []
+    batch_d = 0
+    for batch_u in range(0, len(iter), batch_size):
+        if batch_u != 0:
+            n_iter.append(iter[batch_d:batch_u])
+        batch_d = batch_u
+    n_iter.append(iter[batch_d: len(iter) + 1])
+    return n_iter
 
 
 @click.command(
@@ -103,35 +128,23 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         df = df.loc[random50, :]
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
+    pack10_up = batch_iter(unique_DBlocus, 10)
+    # 10 times faster
     if not exists(join(tmp_dir, 'dblocus2info')):
         DBlocus2info = {}
-        null_ID = []
-        for DBlocus in tqdm(unique_DBlocus,
-                            total=len(unique_DBlocus)):
+        for joined_DBlocus in tqdm(pack10_up, ):
             # todo: use asyncio to improve the speed
-            _count = 0
-            DBlocus_info = 400
-            while _count <= 20:
-                DBlocus_info = parse_id(DBlocus)
-                if isinstance(DBlocus_info, dict):
-                    break
-                _count += 1
-            if not isinstance(DBlocus_info, dict):
-                null_ID.append(DBlocus_info)
-            else:
-                DBlocus2info[DBlocus] = DBlocus_info
+            DBlocus_info = parse_id('+'.join(joined_DBlocus))
+            DBlocus2info.update(DBlocus_info)
         pickle.dump(DBlocus2info, open(join(tmp_dir, 'dblocus2info'), 'wb'))
-        pickle.dump(null_ID, open(join(tmp_dir, 'null_ID'), 'wb'))
+        # pickle.dump(null_ID, open(join(tmp_dir, 'null_ID'), 'wb'))
     else:
         DBlocus2info = pickle.load(open(join(tmp_dir, 'dblocus2info'), 'rb'))
-        null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
+        # null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
 
-    locus2info = {row[0]: [DBlocus2info[row[1]]]
-                  for rid, row in df.iterrows()
-                  if row[1] not in null_ID}
-    null_locus = [row[0]
-                  for rid, row in df.iterrows()
-                  if row[1] in null_ID]
+    locus2info = defaultdict(list)
+    for rid, row in df.iterrows():
+        locus2info[row[0]].append(DBlocus2info[row[1]])
 
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
@@ -140,21 +153,22 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
             ko_list = info_dict["ko"]
             if ko_list is not None:
                 ko_list = ko_list.split(';')
-            if ko_list:
-                # some locus may not assigned with ko
-                for ko in ko_list:
-                    locus2ko[locus].append(ko)
-                    ko2locus[ko].append(locus)
             else:
-                null_locus.append(locus)
+                continue
+            # some locus may not assigned with ko
+            for ko in ko_list:
+                locus2ko[locus].append(ko)
+                ko2locus[ko].append(locus)
 
     if drop_dup_ko:
+        # update locus2ko and ko2locus
         ko2locus = defaultdict(list)
         _locus2ko = dict()
         for locus, ko_list in locus2ko.items():
             # choose only one ko for each locus.
             num_ko = len(ko_list)
-            freq_ko = {k: v / num_ko for k, v in Counter(ko_list).items()}
+            freq_ko = {k: v / num_ko
+                       for k, v in Counter(ko_list).items()}
             lg_60 = [k for k, v in freq_ko.items() if v >= 0.6]
             if len(lg_60) == 1:
                 ko2locus[lg_60[0]].append(locus)
@@ -171,18 +185,16 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
     tqdm.write("collect all KO id, start iterate all KO info")
     if not exists(join(tmp_dir, 'ko2info')):
         ko2info = {}
-        for ko, locus_list in tqdm(ko2locus.items(),
-                                   total=len(ko2locus)):
-            ko_info = get_KO_info(ko)
-            ko2info[ko] = ko_info
+        ko_list = list(ko2locus.keys())
+        pack10_up = batch_iter(ko_list, 10)
+        for ko_list in tqdm(pack10_up):
+            ko_info = get_KO_info('+'.join(ko_list))
+            ko2info.update(ko_info)
         pickle.dump(ko2info, open(join(tmp_dir, 'ko2info'), 'wb'))
     else:
         ko2info = pickle.load(open(join(tmp_dir, 'ko2info'), 'rb'))
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
-    if null_locus:
-        with open(output_tab + '.null_id', 'w') as f1:
-            f1.write('\n'.join(null_locus))
     return locus_df
 
 
