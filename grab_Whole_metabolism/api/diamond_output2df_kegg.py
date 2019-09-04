@@ -72,7 +72,11 @@ def pack_it_up(ko2info, locus2ko, locus2info):
                 _df = _sub1.join(_sub2, lsuffix=1)
                 df_list.append(_df)
     tqdm.write("start concatenating......")
-    total_df = pd.concat(df_list, axis=0, sort=True)
+
+    if len(df_list) == 1:
+        total_df = df_list[0]
+    else:
+        total_df = pd.concat(df_list, axis=0, sort=True)
     return total_df
 
 
@@ -165,7 +169,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
                                    total=len(ko2locus)):
             ko_info = get_KO_info(ko)
             ko2info[ko] = ko_info
-        pickle.dump(ko2info,open(join(tmp_dir, 'ko2info'), 'wb'))
+        pickle.dump(ko2info, open(join(tmp_dir, 'ko2info'), 'wb'))
     else:
         ko2info = pickle.load(open(join(tmp_dir, 'ko2info'), 'rb'))
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
