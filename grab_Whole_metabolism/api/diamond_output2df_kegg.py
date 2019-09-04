@@ -120,19 +120,14 @@ def batch_iter(iter, batch_size):
     help="This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
-@click.option("-no_highest", "get_highest", help='default is getting highest one for annotating.', is_flag=True, default=True)
-@click.option("-drop_dup_ko", "drop_dup_ko", help='drop duplicated ko for single query subject.', is_flag=True, default=False)
 @click.option("-test", "test", is_flag=True, default=False)
-def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
+def main(input_tab, output_tab, test):
     tmp_dir = './tmp'
     os.makedirs(tmp_dir, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
                 exist_ok=True)
     df = pd.read_csv(input_tab, sep='\t', header=None)
-    if get_highest:
-        df = df.sort_values([0, 10], ascending=True)
-        df = df.drop_duplicates(0)
-        # get smallest e-value one, and drop others
+
     if test:
         # if use test option. just subtract top 50 to process for saving time.
         random50 = pd.np.random.choice(df.index, 50)
@@ -157,10 +152,13 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         DBlocus2info = pickle.load(open(join(tmp_dir, 'dblocus2info'), 'rb'))
         null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
 
-    locus2info = defaultdict(list)
+    locus2info = {}
     for rid, row in df.iterrows():
-        if row[1] not in null_ID:
-            locus2info[row[0]].append(DBlocus2info[row[1]])
+        if row[0] in locus2info:
+            continue
+        record = DBlocus2info.get(row[1], None)
+        if record is not None:
+            locus2info[row[0]] = record
 
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
@@ -175,27 +173,6 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
             for ko in ko_list:
                 locus2ko[locus].append(ko)
                 ko2locus[ko].append(locus)
-
-    if drop_dup_ko:
-        # update locus2ko and ko2locus
-        ko2locus = defaultdict(list)
-        _locus2ko = dict()
-        for locus, ko_list in locus2ko.items():
-            # choose only one ko for each locus.
-            num_ko = len(ko_list)
-            freq_ko = {k: v / num_ko
-                       for k, v in Counter(ko_list).items()}
-            lg_60 = [k for k, v in freq_ko.items() if v >= 0.6]
-            if len(lg_60) == 1:
-                ko2locus[lg_60[0]].append(locus)
-                _locus2ko[locus] = [lg_60[0]]
-            elif len(lg_60) >= 2:
-                # impossible....
-                pass
-            else:
-                # no larger than 60%
-                print("no large than 60, locus : {0} ".format(locus),locus2ko[locus])
-        locus2ko = _locus2ko
 
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
