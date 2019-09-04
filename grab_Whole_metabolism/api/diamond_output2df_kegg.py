@@ -39,7 +39,7 @@ def parse_id(ID, max_try=10):
         AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
         if not AA_seq:
             print('No Amine acid sequence detected. weird... for ID:', ID)
-        return_dict[locus] = dict(ID=ID,
+        return_dict[locus] = dict(ID=locus,
                                   ko=KO_id,
                                   ncbi_id=NCBI_refID,
                                   uniprot_refID=uniprot_refID,
@@ -84,7 +84,7 @@ def pack_it_up(ko2info, locus2ko, locus2info):
     tqdm.write("pack the result into a big dataframe")
     df_list = []
     for locus, ko_list in tqdm(locus2ko.items()):
-        for ko in ko_list:
+        for ko in set(ko_list):
             ko_info = ko2info.get(ko, None)
             if ko_info is None:
                 continue
@@ -159,7 +159,7 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
 
     locus2info = defaultdict(list)
     for rid, row in df.iterrows():
-        if row[0] not in null_ID:
+        if row[1] not in null_ID:
             locus2info[row[0]].append(DBlocus2info[row[1]])
 
     locus2ko = defaultdict(list)
