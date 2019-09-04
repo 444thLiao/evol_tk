@@ -159,15 +159,15 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
 
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
-    if not exists(join(tmp_dir, 'dblocus2info')):
+    if not exists(join(tmp_dir, 'ko2info')):
         ko2info = {}
         for ko, locus_list in tqdm(ko2locus.items(),
                                    total=len(ko2locus)):
             ko_info = get_KO_info(ko)
             ko2info[ko] = ko_info
-        pickle.dump(join(tmp_dir, 'ko2info'), 'wb')
+        pickle.dump(ko2info,open(join(tmp_dir, 'ko2info'), 'wb'))
     else:
-        ko2info = pickle.load(join(tmp_dir, 'ko2info'), 'rb')
+        ko2info = pickle.load(open(join(tmp_dir, 'ko2info'), 'rb'))
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
     if null_locus:
