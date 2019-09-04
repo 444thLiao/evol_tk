@@ -153,26 +153,26 @@ def main(input_tab, output_tab, test):
         null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
 
     locus2info = {}
-    for rid, row in df.iterrows():
-        if row[0] in locus2info:
-            continue
-        record = DBlocus2info.get(row[1], None)
-        if record is not None:
-            locus2info[row[0]] = record
-
     locus2ko = defaultdict(list)
     ko2locus = defaultdict(list)
-    for locus, info_dict_list in locus2info.items():
-        for info_dict in info_dict_list:
-            ko_list = info_dict["ko"]
-            if ko_list is not None:
-                ko_list = ko_list.split(';')
-            else:
-                continue
-            # some locus may not assigned with ko
-            for ko in ko_list:
-                locus2ko[locus].append(ko)
-                ko2locus[ko].append(locus)
+    for rid, row in df.iterrows():
+        locus = row[0]
+        DBlocus = row[1]
+        if locus in locus2info:
+            continue
+        record = DBlocus2info.get(DBlocus, None)
+        if record is None:
+            continue
+        if record.get("ko") is None:
+            continue
+
+        locus2info[row[0]] = record
+        ko_list = record['ko']
+        ko_list = ko_list.split(';')
+        # some locus may not assigned with ko
+        for ko in ko_list:
+            locus2ko[locus].append(ko)
+            ko2locus[ko].append(locus)
 
     ########################################################
     tqdm.write("collect all KO id, start iterate all KO info")
