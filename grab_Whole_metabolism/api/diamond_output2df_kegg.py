@@ -109,7 +109,13 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         for DBlocus in tqdm(unique_DBlocus,
                             total=len(unique_DBlocus)):
             # todo: use asyncio to improve the speed
-            DBlocus_info = parse_id(DBlocus)
+            _count = 0
+            DBlocus_info = 400
+            while _count <= 20:
+                DBlocus_info = parse_id(DBlocus)
+                if isinstance(DBlocus_info, dict):
+                    break
+                _count += 1
             if not isinstance(DBlocus_info, dict):
                 null_ID.append(DBlocus_info)
             else:
