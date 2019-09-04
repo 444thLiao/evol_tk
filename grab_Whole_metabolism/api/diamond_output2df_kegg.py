@@ -198,6 +198,16 @@ def main(input_tab, output_tab, test):
     else:
         ko2info = pickle.load(open(join(tmp_dir, 'ko2info'), 'rb'))
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
+    locus_df = locus_df.reindex(columns=['locus_tag',
+                                         'ko',
+                                         'definition',
+                                         'gene_name',
+                                         'ncbi_id',
+                                         'uniprot_refID',
+                                         'source_organism',
+                                         'ID',
+                                         'AA_seq',
+                                         'reference_t'])
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
     with open(output_tab + '.null_ID', 'w') as f1:
         f1.write('\n'.join(null_ID))
