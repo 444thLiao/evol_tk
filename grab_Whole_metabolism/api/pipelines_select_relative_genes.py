@@ -22,13 +22,17 @@ def run_cmd(cmd):
 
 def main(infile, target_fa, oseq,project_name):
     df = pd.read_csv(infile, sep='\t')
-    output_seq_from_df(df, oseq)
-    dbname = abspath(oseq).rpartition('.')[0]
     odir = dirname(oseq)
     if not exists(odir):
         os.makedirs(odir)
+    output_seq_from_df(df, oseq)
+    dbname = abspath(oseq).rpartition('.')[0]
+
     # name
-    o1_tab = join(odir,)
+    o1_tab = join(odir,'first_diamond.out')
+    intermedia_faa = join(odir,'first_extract_seq.faa')
+    o2_tab = join(odir, 'second_diamond.out')
+
 
     run_cmd(f'diamond makedb --in {oseq} --db {dbname}')
     run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2")
@@ -59,7 +63,7 @@ def main(infile, target_fa, oseq,project_name):
             return locus
     locus_set = list(set(pre_df.loc[:, 0]))
     real_N_metabolism_genes = []
-    with mp.Pool(processes=64) as tp:
+    with mp.Pool(processes=20) as tp:
         for locus in tqdm(tp.imap(cal_ratio, locus_set),
                           total=len(locus_set)):
             if locus is not None:
