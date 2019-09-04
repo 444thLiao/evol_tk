@@ -31,7 +31,7 @@ def parse_id(ID, max_try=10):
                       if each_str]
     for info_dict in info_dict_list:
         source_organism = info_dict.get("ORGANISM", 'unknown')
-        entry = info_dict.get('ENTRY', 'unknown')
+        entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
         locus = [_ for _ in ID.split('+')
                  if entry in _][0]
         Orthology = info_dict.get("ORTHOLOGY", None)
@@ -76,7 +76,7 @@ def get_KO_info(ID, max_try=10):
                       if each_str]
 
     for info_dict in info_dict_list:
-        entry = info_dict.get('ENTRY', 'unknown')
+        entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
         ko = [_ for _ in ID.split('+')
               if entry in _][0]
         gene_name = ';'.join(info_dict.get('NAME', ['']))
