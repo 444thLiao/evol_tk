@@ -6,9 +6,10 @@ import click
 import os
 from os.path import exists, join
 import pickle
+import time
 
 
-def parse_id(ID, max_try=5):
+def parse_id(ID, max_try=500):
     info_str = 0
     count_ = 0
     while count_ <= max_try:
@@ -17,6 +18,10 @@ def parse_id(ID, max_try=5):
         if isinstance(info_str, str):
             break
         count_ += 1
+        time.sleep(0.01)
+    if not isinstance(info_str, str):
+        return
+    assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
@@ -44,7 +49,7 @@ def parse_id(ID, max_try=5):
     return return_dict
 
 
-def get_KO_info(ID, max_try=5):
+def get_KO_info(ID, max_try=500):
     info_str = 0
     count_ = 0
     while count_ <= max_try:
@@ -53,6 +58,10 @@ def get_KO_info(ID, max_try=5):
         if isinstance(info_str, str):
             break
         count_ += 1
+        time.sleep(0.01)
+    if not isinstance(info_str, str):
+        return
+    assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
@@ -77,7 +86,9 @@ def pack_it_up(ko2info, locus2ko, locus2info):
     df_list = []
     for locus, ko_list in tqdm(locus2ko.items()):
         for ko in ko_list:
-            ko_info = ko2info[ko]
+            ko_info = ko2info.get(ko, None)
+            if ko_info is None:
+                continue
             locus_info_list = locus2info[locus]
             for locus_info in locus_info_list:
                 _sub2 = pd.DataFrame().from_dict({locus: ko_info}, orient='index')
@@ -130,18 +141,22 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
     tqdm.write("Get all relative information of the subject locus... ...")
     unique_DBlocus = set(df.loc[:, 1].unique())
     pack10_up = batch_iter(unique_DBlocus, 10)
+    null_ID = []
     # 10 times faster
     if not exists(join(tmp_dir, 'dblocus2info')):
         DBlocus2info = {}
         for joined_DBlocus in tqdm(pack10_up, ):
             # todo: use asyncio to improve the speed
             DBlocus_info = parse_id('+'.join(joined_DBlocus))
+            if DBlocus_info is None:
+                null_ID += joined_DBlocus
+                continue
             DBlocus2info.update(DBlocus_info)
         pickle.dump(DBlocus2info, open(join(tmp_dir, 'dblocus2info'), 'wb'))
-        # pickle.dump(null_ID, open(join(tmp_dir, 'null_ID'), 'wb'))
+        pickle.dump(null_ID, open(join(tmp_dir, 'null_ID'), 'wb'))
     else:
         DBlocus2info = pickle.load(open(join(tmp_dir, 'dblocus2info'), 'rb'))
-        # null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
+        null_ID = pickle.load(open(join(tmp_dir, 'null_ID'), 'rb'))
 
     locus2info = defaultdict(list)
     for rid, row in df.iterrows():
@@ -190,12 +205,16 @@ def main(input_tab, output_tab, get_highest, drop_dup_ko, test):
         pack10_up = batch_iter(ko_list, 10)
         for ko_list in tqdm(pack10_up):
             ko_info = get_KO_info('+'.join(ko_list))
+            if ko_info is None:
+                continue
             ko2info.update(ko_info)
         pickle.dump(ko2info, open(join(tmp_dir, 'ko2info'), 'wb'))
     else:
         ko2info = pickle.load(open(join(tmp_dir, 'ko2info'), 'rb'))
     locus_df = pack_it_up(ko2info, locus2ko, locus2info)
     locus_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
+    with open(output_tab + '.null_ID', 'w') as f1:
+        f1.write('\n'.join(null_ID))
     return locus_df
 
 
