@@ -12,20 +12,25 @@ import time
 def parse_id(ID, max_try=10):
     info_str = 0
     count_ = 0
+    return_dict = {}
     while count_ <= max_try:
         info_str = kegg.get(ID)
         # if failed, it will return 400 or 403. still an int
         if isinstance(info_str, str):
             break
         count_ += 1
-        time.sleep(0.01)
     if not isinstance(info_str, str):
-        return
+        if '+' not in ID:
+            return
+        for sub_id in ID.split('+'):
+            get_dict = parse_id(sub_id)
+            return_dict.update(get_dict)
+        return return_dict
+
     assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
-    return_dict = {}
     for locus, info_dict in zip(ID.split('+'),
                                 info_dict_list):
         Orthology = info_dict.get("ORTHOLOGY", None)
@@ -51,20 +56,25 @@ def parse_id(ID, max_try=10):
 def get_KO_info(ID, max_try=10):
     info_str = 0
     count_ = 0
+    return_dict = {}
     while count_ <= max_try:
         info_str = kegg.get(ID)
         # if failed, it will return 400 or 403. still an int
         if isinstance(info_str, str):
             break
         count_ += 1
-        time.sleep(0.01)
     if not isinstance(info_str, str):
-        return
+        if '+' not in ID:
+            return
+        for sub_id in ID.split('+'):
+            get_dict = get_KO_info(sub_id)
+            return_dict.update(get_dict)
+        return return_dict
     assert info_str.count('ENTRY') == len(ID.split('+'))
     info_dict_list = [kegg.parse('ENTRY' + each_str)
                       for each_str in info_str.split('ENTRY')
                       if each_str]
-    return_dict = {}
+
     for ko, info_dict in zip(ID.split('+'),
                              info_dict_list):
         gene_name = ';'.join(info_dict.get('NAME', ['']))
@@ -88,12 +98,11 @@ def pack_it_up(ko2info, locus2ko, locus2info):
             ko_info = ko2info.get(ko, None)
             if ko_info is None:
                 continue
-            locus_info_list = locus2info[locus]
-            for locus_info in locus_info_list:
-                _sub2 = pd.DataFrame().from_dict({locus: ko_info}, orient='index')
-                _sub1 = pd.DataFrame().from_dict({locus: locus_info}, orient='index')
-                _df = _sub1.join(_sub2, lsuffix=1)
-                df_list.append(_df)
+            locus_info = locus2info[locus]
+            _sub2 = pd.DataFrame().from_dict({locus: ko_info}, orient='index')
+            _sub1 = pd.DataFrame().from_dict({locus: locus_info}, orient='index')
+            _df = _sub1.join(_sub2, lsuffix=1)
+            df_list.append(_df)
     tqdm.write("start concatenating......")
 
     if len(df_list) == 1:
