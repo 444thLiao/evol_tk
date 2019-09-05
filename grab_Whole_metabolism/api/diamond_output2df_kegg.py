@@ -26,8 +26,8 @@ def parse_id(ID, max_try=10):
             get_dict = parse_id(sub_id)
             return_dict.update(get_dict)
         return return_dict
-    info_dict_list = [kegg.parse('ENTRY' + each_str)
-                      for each_str in info_str.split('ENTRY')
+    info_dict_list = [kegg.parse('ENTRY ' + each_str)
+                      for each_str in info_str.split('\nENTRY ')
                       if each_str]
     for info_dict in info_dict_list:
         if not isinstance(info_dict, dict):
@@ -79,8 +79,8 @@ def get_KO_info(ID, max_try=10):
             get_dict = get_KO_info(sub_id)
             return_dict.update(get_dict)
         return return_dict
-    info_dict_list = [kegg.parse('ENTRY' + each_str)
-                      for each_str in info_str.split('ENTRY')
+    info_dict_list = [kegg.parse('ENTRY ' + each_str)
+                      for each_str in info_str.split('\nENTRY ')
                       if each_str]
 
     for info_dict in info_dict_list:
