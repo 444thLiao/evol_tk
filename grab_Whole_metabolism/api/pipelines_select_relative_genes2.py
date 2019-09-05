@@ -68,7 +68,8 @@ def main(infile, target_fa, oseq, project_name):
     in_df = pre_df.loc[pre_df.loc[:, 0].isin(aft_list_ID), :]
     collect_seq = defaultdict(dict)  # confirmed seq
     # for in_df
-    for _, row in tqdm(in_df.iterrows()):
+    for _, row in tqdm(in_df.iterrows(),
+                       total=in_df.shape[0]):
         locus = row[0]
         ko_name = row['KO name']
         ko1 = row["KO"]
@@ -82,7 +83,8 @@ def main(infile, target_fa, oseq, project_name):
             collect_seq[locus]['real KO'] = ko2[0]
             collect_seq[locus]['is paralog'] = 'TRUE'
             collect_seq[locus]['likely KO'] = ko1
-
+    # for not_in_df
+    
 
     print("contains %s confirmed sequence" % len(real_N_metabolism_genes))
     real_N_metabolism_genes = set(real_N_metabolism_genes)

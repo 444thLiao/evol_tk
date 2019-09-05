@@ -35,6 +35,10 @@ def parse_id(ID, max_try=10):
             continue
         source_organism = info_dict.get("ORGANISM", 'unknown')
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
+        if entry.startwith('ENTRY'):
+            entry = [_
+                     for _ in info_dict.get('ENTRY', 'unknown').split(' ')
+                     if _][1]
         _cache = [ori for ori, _ in zip(ID.split('+'),
                                         ID.lower().split('+'))
                   if entry.lower() in _]
@@ -82,12 +86,16 @@ def get_KO_info(ID, max_try=10):
     info_dict_list = [kegg.parse('ENTRY ' + each_str)
                       for each_str in info_str.split('\nENTRY ')
                       if each_str]
-
+    # make the first one entry startwith ENTRY instead of original locus.
     for info_dict in info_dict_list:
         if not isinstance(info_dict, dict):
             print(info_dict)
             continue
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
+        if entry.startwith('ENTRY'):
+            entry = [_
+                     for _ in info_dict.get('ENTRY', 'unknown').split(' ')
+                     if _][1]
         _cache = [ori for ori, _ in zip(ID.split('+'),
                                         ID.lower().split('+'))
                   if entry.lower() in _]
