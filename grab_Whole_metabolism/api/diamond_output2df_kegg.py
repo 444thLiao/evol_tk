@@ -56,7 +56,7 @@ def parse_id(ID, max_try=10):
 
         AA_seq = info_dict.get("AASEQ", '').replace(' ', '')
         if not AA_seq:
-            print('No Amine acid sequence detected. weird... for ID:', ID)
+            print('No Amine acid sequence detected. weird... for locus:', locus)
         return_dict[locus] = dict(ID=locus,
                                   ko=KO_id,
                                   ncbi_id=NCBI_refID,

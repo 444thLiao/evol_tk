@@ -1,12 +1,13 @@
-import pandas as pd
-from tqdm import tqdm
 import multiprocessing as mp
-from Bio import SeqIO
-from collections import Counter,defaultdict
 import os
-from os.path import basename, dirname, abspath, exists, join
+from collections import Counter
+from os.path import dirname, abspath, exists, join
 from subprocess import check_call
-
+from collections import defaultdict
+import pandas as pd
+from Bio import SeqIO
+from tqdm import tqdm
+from bioservices import KEGG
 
 def output_seq_from_df(df, oseq):
     with open(oseq, 'w') as f1:
@@ -21,8 +22,20 @@ def run_cmd(cmd):
     check_call(cmd, shell=True)
 
 
-def main(infile, target_fa, oseq, project_name):
-    df = pd.read_csv(infile, sep='\t')
+used_ko = []
+removed_ko = [_ for _ in open('./removed_ko.txt').read().split('\n')
+              if _]
+used_ko += [_.split('\t')[0] for _ in open('./ko_info.csv').read().split('\n')
+            if _ and _.split('\t')[0] != 'KO number']
+used_ko = [_ for _ in used_ko if _ not in removed_ko]
+
+locus2info = './locus_info.csv'
+sample2locus = '../concat_all/sample2infos.tsv'
+target_fa = '../concat_all/all_protein.faa'
+oseq = './output/first_extract_seq.faa'
+
+def main(locus2info,sample2locus, target_fa, oseq):
+    df = pd.read_csv(locus2info, sep='\t')
     odir = dirname(oseq)
     if not exists(odir):
         os.makedirs(odir)
@@ -32,9 +45,10 @@ def main(infile, target_fa, oseq, project_name):
     # name
     o1_tab = join(odir, 'first_diamond.out')
     intermedia_faa = join(odir, 'first_extract_seq.faa')
-    o2_tab = join(odir, 'second_diamond.out')
-    o2_tab = '/home-user/thliao/data/metagenomes/new_grab/output/first_extract_seq_KOfam.out'
+    o2_tab = join(odir, 'first_extract_seq_KOfam.out')
+    # o2_tab = '/home-user/thliao/data/metagenomes/new_grab/output/first_extract_seq_KOfam.out'
     final_faa = join(odir, 'confirmed.faa')
+    final_tsv = join(odir, 'confirmed_locus2info.tsv')
 
     run_cmd(f'diamond makedb --in {oseq} --db {dbname}')
     run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2")
@@ -66,117 +80,125 @@ def main(infile, target_fa, oseq, project_name):
 
     not_in_df = pre_df.loc[~pre_df.loc[:, 0].isin(aft_list_ID), :]
     in_df = pre_df.loc[pre_df.loc[:, 0].isin(aft_list_ID), :]
-    collect_seq = defaultdict(dict)  # confirmed seq
+    confirmed_seq = defaultdict(dict)  # confirmed seq
+
     # for in_df
-    unique_locus_name_indf = list(set(pre_df.loc[:, 0]))
-    for locus in tqdm(unique_locus_name_indf):
-        sub_df = in_df.loc[in_df.loc[:,0]==locus,:]
-        ko_name = list(sub_df['KO name'])
-        ko1 = list(sub_df["KO"])
-        ko2 = aft_dict[locus]
-        if ko1 not in ko2 and len(ko2)>=1:
-            pass
-        elif ko1 in ko2 and len(ko2) == 1:
-            collect_seq[locus]['real KO'] = ko1
-            collect_seq[locus]['KO name'] = ko_name
-        elif ko1 in ko2 and ko2.index(ko1) != 0:
-            collect_seq[locus]['real KO'] = ko2[0]
-            collect_seq[locus]['is paralog'] = 'TRUE'
-            collect_seq[locus]['likely KO'] = ko1
-            collect_seq[locus]['likely KO name'] = ko_name
+    def select_ko(locus):
+        collect_seq = defaultdict(dict)
+        sub_df = in_df.loc[in_df.loc[:, 0] == locus, :]
+        ko_names = list(sub_df['KO name'])
+        ko1_list = list(sub_df["KO"])
+        ko1_set = set(ko1_list)
+        ko1_dict = dict(zip(ko1_list, ko_names))
+        ko2_list = aft_dict.get(locus, [])
+        ko2_set = set(ko2_list)
+        # must not empty
+        if not ko2_set.difference(ko1_set):
+            # within paralog
+            if len(ko2_set) == 1:
+                collect_seq[locus]['real KO'] = ko2_list[0]
+                collect_seq[locus]['KO name'] = ko1_dict[ko2_list[0]]
+                collect_seq[locus]['outside paralog'] = 'NO'
+                collect_seq[locus]['within paralog'] = 'NO'
+            else:
+                # len(ko2_set) >1 ; would not ==0
+                collect_seq[locus]['real KO'] = ko2_list[0] if len(ko2_list) != 0 else ko1_list[0]
+                collect_seq[locus]['KO name'] = ko1_dict[collect_seq[locus]['real KO']]
+                collect_seq[locus]['outside paralog'] = 'NO'
+                collect_seq[locus]['within paralog'] = 'YES'
+                if len(ko2_list) != 0:
+                    collect_seq[locus]['likely KO'] = ';'.join(ko2_list[1:])
+                    collect_seq[locus]['likely KO name'] = ';'.join([ko1_dict[_]
+                                                                     for _ in ko2_list[1:]])
+        else:
+            # with others KO
+            collect_seq[locus]['real KO'] = ko2_list[0] if len(ko2_list) != 0 else ko1_list[0]
+            collect_seq[locus]['KO name'] = ko1_dict.get(collect_seq[locus]['real KO'], 'unknown')
+            if len(ko2_set) == 1:
+                collect_seq[locus]['outside paralog'] = 'NO'
+            else:
+                collect_seq[locus]['outside paralog'] = 'YES'
+                collect_seq[locus]['likely KO'] = ';'.join(ko2_list[1:])
+                collect_seq[locus]['likely KO name'] = ';'.join([ko1_dict.get(_, 'unknown')
+                                                                 for _ in ko2_list[1:]])
+        return collect_seq
+
+    unique_locus_name_indf = list(set(in_df.loc[:, 0]))
+    with mp.Pool(processes=64) as tp:
+        for r in tqdm(tp.imap(select_ko, unique_locus_name_indf),
+                      total=len(unique_locus_name_indf)):
+            confirmed_seq.update(r)
+
     # for not_in_df
-    for _, row in tqdm(not_in_df.iterrows(),
-                       total=not_in_df.shape[0]):
-        ko1 = row["KO"]
-        ko_name = row['KO name']
-        collect_seq[locus]['KO name'] = ko_name
-        if row['cover ratio'] > 0.6 and row[10]<1e-10:
-            collect_seq[locus]['real KO'] = ko1
-            collect_seq[locus]['KO name'] = ko_name
+    not_in_df = not_in_df.loc[(not_in_df.loc[:, 'cover ratio'] >= 0.6) & (not_in_df.loc[:, 10] <= 1e-10), :]
+    unique_locus_not_indf = list(set(not_in_df.loc[:, 0]))
+
+    def select_ko2(locus):
+        collect_seq = defaultdict(dict)
+        sub_df = not_in_df.loc[not_in_df.loc[:, 0] == locus, :].sort_values(10)
+        _cache = list(sub_df.loc[:, 'KO'])
+        _names = list(sub_df.loc[:, 'KO name'])
+        _ko2name = dict(zip(_cache, _names))
+        if len(set(_cache)) == 1:
+            collect_seq[locus]['real KO'] = _cache[0]
+            collect_seq[locus]['KO name'] = _names[0]
+            collect_seq[locus]['outside paralog'] = 'NO'
+            collect_seq[locus]['within paralog'] = 'NO'
+        else:
+            collect_seq[locus]['real KO'] = _cache[0]
+            collect_seq[locus]['KO name'] = _names[0]
+            collect_seq[locus]['outside paralog'] = 'NO'
+            collect_seq[locus]['within paralog'] = 'YES'
+            new_cache = set([_ for _ in _cache[1:] if _ != _cache[0]])
+            names = [_ko2name[_] for _ in new_cache]
+            collect_seq[locus]['likely KO'] = ';'.join(new_cache)
+            collect_seq[locus]['likely KO name'] = ';'.join(names)
+        return collect_seq
+
+    with mp.Pool(processes=64) as tp:
+        for r in tqdm(tp.imap(select_ko2, unique_locus_not_indf),
+                      total=len(unique_locus_not_indf)):
+            confirmed_seq.update(r)
+
+    collect_seq = [_
+                   for _, v in confirmed_seq.items()
+                   if v.get('KO name') != 'unknown']
 
     print("contains %s confirmed sequence" % len(collect_seq))
-    real_N_metabolism_genes = set(collect_seq.keys())
+    confirmed_seq_set = set(collect_seq)
     records = SeqIO.parse(f'{intermedia_faa}', format='fasta')
     collect_reads = [_
                      for _ in records
-                     if _.id in set(real_N_metabolism_genes)]
+                     if _.id in confirmed_seq_set]
 
     with open(f'{final_faa}', 'w') as f1:
         SeqIO.write(collect_reads, f1, format='fasta-2line')
 
-    locus_list = [_.id for _ in collect_reads]
-    locus2gene_df = pd.read_csv(infile, sep='\t', index_col=0)
-    sub_df = pre_df.loc[pre_df.loc[:, 0].isin(locus_list), :]
-
-    locus2ko = dict()
-    locus2module = dict()
-    locus2completeOrthos = dict()
-
-    choose_highest_one = sub_df.sort_values([0, 10]).drop_duplicates(0)
-    for rid, row in tqdm(choose_highest_one.iterrows(),
-                         total=choose_highest_one.shape[0]):
-        locus_tag = row[1]
-        seq_name = row[0]
-        name = locus2gene_df.loc[locus_tag, "Name"]
-        ortho = locus2gene_df.loc[locus_tag, "Orthology(single)"]
-        module = locus2gene_df.loc[locus_tag, "module Name"]
-        completeOrthos = locus2gene_df.loc[locus_tag, "Orthology(total)"]
-
-        locus2ko[seq_name] = ortho
-        locus2module[seq_name] = module
-        locus2completeOrthos[seq_name] = completeOrthos
-
-    locus2name = {}
-    # module_counts = Counter([tuple(sorted(_)) for _ in locus2module.values()])
-    for locus, ko in tqdm(locus2ko.items()):
-        if not isinstance(ko, str):
-            ko = ';'.join(set(list(ko.values)))
-        _sub_df = locus2gene_df.loc[locus2gene_df.loc[:, 'Orthology(single)'] == ko, 'KO name']
-        name = ';'.join(list(set(list(_sub_df))))
-        locus2name[locus] = name
-
-    sample2info = pd.read_csv('/home-user/thliao/data/metagenomes/concat_all/sample2infos.tsv', sep='\t', header=0, index_col=1)
-    locus2info_df = pd.DataFrame(columns=["locus",
-                                          "locus_prefix",
+    sample2info = pd.read_csv(sample2locus, sep='\t', header=0, index_col=1)
+    locus2info_df = pd.DataFrame(columns=["locus_prefix",
                                           'sample name',
                                           'source project',
                                           'ko(single)',
                                           'Gene name(N metabolism)',
-                                          'ko(complete)',
-                                          'module',
+                                          'within paralog',
+                                          'within paralog KO',
+                                          'within paralog KO name',
                                           ])
-    from collections import defaultdict
-
-    count_ = 0
-    locus2info_dict = defaultdict(dict)
-    for locus, g_name in tqdm(locus2name.items(),
-                              total=len(locus2name)):
+    new_dict = defaultdict(dict)
+    for locus in tqdm(confirmed_seq):
+        _dict = confirmed_seq[locus]
+        ko = _dict['real KO']
+        ko_name = _dict['KO name']
         locus_prefix = locus.split('_')[0]
-        sname, source = sample2info.loc[locus_prefix, :].values[:2]
-        if not isinstance(locus2ko[locus], str):
-            for rid, v in enumerate(locus2ko[locus]):
-                locus2info_df.loc[count_, :] = [locus,
-                                                locus_prefix,
-                                                sname,
-                                                source,
-                                                locus2ko[locus].values[rid],
-                                                g_name,
-                                                locus2completeOrthos[locus].values[rid],
-                                                locus2module[locus].values[rid]]
-                count_ += 1
-        else:
-            locus2info_df.loc[count_, :] = [locus,
-                                            locus_prefix,
-                                            sname,
-                                            source,
-                                            locus2ko[locus],
-                                            g_name,
-                                            locus2completeOrthos[locus],
-                                            locus2module[locus]]
-            count_ += 1
+        sname, sproject = sample2info.loc[locus_prefix, ['sample_name', 'source']].values
+        wp, wpk, wpkn = _dict.get('within paralog', 'NO'), _dict.get('likely KO'), _dict.get('likely KO name')
+        for _, v in zip(locus2info_df.columns, [locus_prefix, sname, sproject, ko, ko_name, wp, wpk, wpkn]):
+            new_dict[locus][_] = v
+    locus2info_df = pd.DataFrame.from_dict(new_dict, orient='index')
 
     order_sample2info = sample2info.copy()
-    order_sample2info = order_sample2info.reindex([_.split('_')[0] for _ in locus2info_df.locus])
+    order_sample2info = order_sample2info.reindex([_
+                                                   for _ in locus2info_df.locus_prefix])
     c = ['superkingdom',
          'phylum',
          'class',
@@ -190,44 +212,16 @@ def main(infile, target_fa, oseq, project_name):
          'order(from metadata)',
          'family(from metadata)',
          'genus(from metadata)',
-         'species(from metadata)', ]
+         'species(from metadata)']
     locus2info_df = locus2info_df.reindex(columns=list(locus2info_df.columns) + c)
     locus2info_df.loc[:, c] = order_sample2info.loc[:, c].values
-    locus2info_df.to_csv(join(odir, 'confirmed_locus2info.tsv'), sep='\t', index=0)
+    locus2info_df.to_csv(final_tsv, sep='\t', index=0)
     ############################################################
-    from collections import defaultdict
-    from bioservices import KEGG
-    def count_method(df, level):
-        each_v2num = {}
-        each_v2snames = defaultdict(list)
-        for each_v in df.loc[:, level].unique():
-            _df = df.loc[df.loc[:, level] == each_v, :]
-            num_count = 0
-            counted_samples = []
-            for ko_complete in _df.loc[:, 'ko(complete)'].unique():
-                if ',' not in ko_complete:
-                    _cache = _df.loc[_df.loc[:, 'ko(complete)'] == ko_complete, 'sample name'].unique()
-                    num_count += len([_ for _ in _cache if _ not in counted_samples])
-                    counted_samples += list(_cache)
-                    continue
-
-                for sname in _df.loc[:, 'sample name'].unique():
-                    if sname in counted_samples:
-                        continue
-                    sub_df = _df.loc[_df.loc[:, 'sample name'] == sname, :]
-                    if not set(ko_complete.split('+')).difference(set(sub_df.loc[:, 'ko(single)'].values)):
-                        counted_samples.append(sname)
-                        num_count += 1
-            each_v2snames[each_v] = counted_samples
-            each_v2num[each_v] = num_count
-        each_v2num = pd.DataFrame.from_dict({0: each_v2num}).loc[:, 0].sort_values(ascending=False)
-        return each_v2num, each_v2snames
 
     kegg = KEGG()
     ko2info = pd.read_csv('./ko_info.csv', sep='\t', index_col=0)
     ko2gname = dict(zip(ko2info.index,
                         ko2info.loc[:, 'gene name']))
-    used_ko = locus2info_df.loc[:, 'ko(single)']
     koSingle2name = {}
     rename_dict = {'K20934': 'hzsA',
                    'K20933': 'hzsB',
@@ -243,8 +237,8 @@ def main(infile, target_fa, oseq, project_name):
             result = [[n for n in _.split(' ') if n] for _ in r.split('\n') if 'NAME' in _]
             name = [_[1] for _ in result][0].strip(',')
             koSingle2name[ko] = name
-
-    with pd.ExcelWriter(join(odir, 'relative_genes_summary.xlsx')) as writer:
+    order_columns = ['nirK', 'nirS', 'CYP55', 'hcp', 'norB', 'norC', 'nosZ', 'norV', 'norW', 'narB', 'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'nasB', 'nasA', 'nirA','nirB', 'nirD', 'nrfA', 'nrfH', 'napA', 'napB', 'anfG', 'nifD', 'nifH', 'nifK', 'vnfD', 'vnfG', 'vnfH', 'vnfK', 'hzsA', 'hzsB', 'hzsC', 'hdh', 'pmoA-amoA','pmoB-amoB', 'pmoC-amoC', 'hao', 'hmp, YHB1', 'ncd2, npd']
+    with pd.ExcelWriter(join(odir, 'relative_genes_summary(tax).xlsx')) as writer:
         for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
             sub_df = locus2info_df.copy()
             sub_df.loc[:, level] = sub_df.loc[:, level].replace('', 'unclassified').fillna('unclassified')
@@ -254,9 +248,9 @@ def main(infile, target_fa, oseq, project_name):
             collect_dfs = []
             for m in koSingle2name.keys():
                 _df = sub_df.loc[sub_df.loc[:, 'ko(single)'] == m, :]
-
-                # count_data = _df.loc[:, level].value_counts()
-                count_data, level2snames = count_method(_df, level)
+                _df = _df.drop_duplicates('locus_prefix')
+                count_data = _df.loc[:, level].value_counts()
+                # count_data, level2snames = count_method(_df, level)
                 freq_data = count_data / total_count * 100
                 # freq_data = freq_data[freq_data >= 0.6]
                 collect_dfs.append(pd.DataFrame(freq_data.values.reshape(-1, 1),
@@ -267,5 +261,67 @@ def main(infile, target_fa, oseq, project_name):
             summary_df.index = ['%s (%s)' % (_, total_count[_]) for _ in summary_df.index]
             summary_df = summary_df.fillna(0)
             summary_df = summary_df.applymap(lambda x: round(x, 2))
-            summary_df = summary_df.reindex(columns=sorted(summary_df.columns))
+            summary_df = summary_df.reindex(columns=order_columns)
             summary_df.to_excel(writer, sheet_name=level, index_label=level + ' (in total)')
+
+    project2env = {'19_Stewart': 'rumen',
+                   '17_lee': 'Fecal',
+                   '15_brown': 'subsurface aquifer',
+                   '16_Anantharaman': 'subsurface aquifer',
+                   '16_haroon': 'marine',
+                   '17_jungbluth': 'hydrothermal fluid',
+                   '17_Tully': 'marine',
+                   '17_parks': 'public data',
+                   '18_Tully': 'subsurface aquifer',
+                   '18_probst': 'subsurface aquifer',
+                   '17_Hernsdorf': 'subsurface aquifer',
+                   '18_Woodcroft': 'permafrost',
+                   '18_crits': 'soil',
+                   '18_Vavourakis': 'hypersaline',
+                   '19_Rinke': 'marine',
+                   '19_pedron': 'spring',
+                   '18_Stewart': 'rumen',
+                   '18_Delmont': 'marine'}
+    env_list = set(project2env.values())
+
+    with pd.ExcelWriter(join(odir, 'relative_genes_summary(env).xlsx')) as writer:
+        total_collect = []
+        for env in env_list:
+            projects = [k for k, v in project2env.items() if v == env]
+            sub_df = locus2info_df.copy()
+            sub_df = sub_df.loc[sub_df.loc[:, 'source project'].isin(projects), :]
+            total_count = sample2info.loc[sample2info.source.isin(projects), :].shape[0]
+
+            collect_dfs = []
+            for m in koSingle2name.keys():
+                _df = sub_df.loc[sub_df.loc[:, 'ko(single)'] == m, :]
+                _df = _df.drop_duplicates('locus_prefix')
+                count_data = _df.loc[:, level].shape[0]
+                # count_data, level2snames = count_method(_df, level)
+                freq_data = count_data / total_count * 100
+                # freq_data = freq_data[freq_data >= 0.6]
+                collect_dfs.append(pd.DataFrame(freq_data,
+                                                columns=[koSingle2name[m]],
+                                                index=['%s (%s)' % (env, total_count)]))
+                summary_df = pd.concat(collect_dfs, axis=1, sort=True)
+            total_collect.append(summary_df)
+        summary_df = pd.concat(total_collect)
+        summary_df = summary_df.fillna(0)
+        summary_df = summary_df.applymap(lambda x: round(x, 2))
+        summary_df = summary_df.reindex(columns=order_columns)
+        summary_df.to_excel(writer, index_label='ENV (in total)')
+
+    ############################################################
+    DB_locus2info = pd.read_csv('./locus_info.csv', sep='\t', index_col=0)
+    DB_locus2info = DB_locus2info.drop_duplicates(['source_org', 'KO name'])
+    source_org_list = [_.split(' ')[0] for _ in DB_locus2info.loc[:, 'source_org']]
+    from io import StringIO
+    db_ref = pd.read_csv(StringIO(kegg.list('organism')), sep='\t', header=None)
+    db_ref = db_ref.set_index(1)
+    db_ref = db_ref.reindex(source_org_list)
+    DB_locus2info.loc[:, 'lineage'] = db_ref.loc[:, 3].values
+
+    gname2lineage = dict()
+    for gname in DB_locus2info.loc[:, 'KO name'].unique():
+        sub_df = DB_locus2info.loc[DB_locus2info.loc[:, 'KO name'] == gname, 'lineage']
+        gname2lineage[gname] = list(set(sub_df))
