@@ -68,11 +68,11 @@ def main(infile, target_fa, oseq, project_name):
     in_df = pre_df.loc[pre_df.loc[:, 0].isin(aft_list_ID), :]
     collect_seq = defaultdict(dict)  # confirmed seq
     # for in_df
-    for _, row in tqdm(in_df.iterrows(),
-                       total=in_df.shape[0]):
-        locus = row[0]
-        ko_name = row['KO name']
-        ko1 = row["KO"]
+    unique_locus_name_indf = list(set(pre_df.loc[:, 0]))
+    for locus in tqdm(unique_locus_name_indf):
+        sub_df = in_df.loc[in_df.loc[:,0]==locus,:]
+        ko_name = list(sub_df['KO name'])
+        ko1 = list(sub_df["KO"])
         ko2 = aft_dict[locus]
         if ko1 not in ko2 and len(ko2)>=1:
             pass
@@ -83,13 +83,23 @@ def main(infile, target_fa, oseq, project_name):
             collect_seq[locus]['real KO'] = ko2[0]
             collect_seq[locus]['is paralog'] = 'TRUE'
             collect_seq[locus]['likely KO'] = ko1
+            collect_seq[locus]['likely KO name'] = ko_name
     # for not_in_df
-    
+    for _, row in tqdm(not_in_df.iterrows(),
+                       total=not_in_df.shape[0]):
+        ko1 = row["KO"]
+        ko_name = row['KO name']
+        collect_seq[locus]['KO name'] = ko_name
+        if row['cover ratio'] > 0.6 and row[10]<1e-10:
+            collect_seq[locus]['real KO'] = ko1
+            collect_seq[locus]['KO name'] = ko_name
 
-    print("contains %s confirmed sequence" % len(real_N_metabolism_genes))
-    real_N_metabolism_genes = set(real_N_metabolism_genes)
+    print("contains %s confirmed sequence" % len(collect_seq))
+    real_N_metabolism_genes = set(collect_seq.keys())
     records = SeqIO.parse(f'{intermedia_faa}', format='fasta')
-    collect_reads = [_ for _ in records if _.id in set(real_N_metabolism_genes)]
+    collect_reads = [_
+                     for _ in records
+                     if _.id in set(real_N_metabolism_genes)]
 
     with open(f'{final_faa}', 'w') as f1:
         SeqIO.write(collect_reads, f1, format='fasta-2line')
