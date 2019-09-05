@@ -35,7 +35,7 @@ def parse_id(ID, max_try=10):
             continue
         source_organism = info_dict.get("ORGANISM", 'unknown')
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        if entry.startwiths('ENTRY'):
+        if entry.startswith('ENTRY'):
             entry = [_
                      for _ in info_dict.get('ENTRY', 'unknown').split(' ')
                      if _][1]
@@ -92,7 +92,7 @@ def get_KO_info(ID, max_try=10):
             print(info_dict)
             continue
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        if entry.startwiths('ENTRY'):
+        if entry.startswith('ENTRY'):
             entry = [_
                      for _ in info_dict.get('ENTRY', 'unknown').split(' ')
                      if _][1]
