@@ -30,10 +30,14 @@ def parse_id(ID, max_try=10):
                       for each_str in info_str.split('ENTRY')
                       if each_str]
     for info_dict in info_dict_list:
+        if not isinstance(info_dict, dict):
+            print(info_dict)
+            continue
         source_organism = info_dict.get("ORGANISM", 'unknown')
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        _cache = [_ for _ in ID.split('+')
-                  if entry in _]
+        _cache = [ori for ori, _ in zip(ID.split('+'),
+                                        ID.lower().split('+'))
+                  if entry.lower() in _]
         if len(_cache) == 0:
             print(entry, ID)
             continue
@@ -80,9 +84,13 @@ def get_KO_info(ID, max_try=10):
                       if each_str]
 
     for info_dict in info_dict_list:
+        if not isinstance(info_dict, dict):
+            print(info_dict)
+            continue
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        _cache = [_ for _ in ID.split('+')
-                  if entry in _]
+        _cache = [ori for ori, _ in zip(ID.split('+'),
+                                        ID.lower().split('+'))
+                  if entry.lower() in _]
         if len(_cache) == 0:
             print(entry, ID)
             continue
