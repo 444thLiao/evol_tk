@@ -32,8 +32,12 @@ def parse_id(ID, max_try=10):
     for info_dict in info_dict_list:
         source_organism = info_dict.get("ORGANISM", 'unknown')
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        locus = [_ for _ in ID.split('+')
-                 if entry in _][0]
+        _cache = [_ for _ in ID.split('+')
+                  if entry in _]
+        if len(_cache) == 0:
+            print(entry, ID)
+            continue
+        locus = _cache[0]
         Orthology = info_dict.get("ORTHOLOGY", None)
         if Orthology is not None:
             KO_id = ";".join(sorted(Orthology.keys()))
@@ -77,8 +81,12 @@ def get_KO_info(ID, max_try=10):
 
     for info_dict in info_dict_list:
         entry = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-        ko = [_ for _ in ID.split('+')
-              if entry in _][0]
+        _cache = [_ for _ in ID.split('+')
+                  if entry in _]
+        if len(_cache) == 0:
+            print(entry, ID)
+            continue
+        ko = _cache[0]
         gene_name = ';'.join(info_dict.get('NAME', ['']))
         definition = info_dict.get('DEFINITION', '')
         reference_t = ''
@@ -107,11 +115,12 @@ def pack_it_up(ko2info, locus2ko, locus2info):
             df_list.append(_df)
     tqdm.write("start concatenating......")
 
-    if len(df_list) == 1:
-        total_df = df_list[0]
-    else:
-        total_df = pd.concat(df_list, axis=0, sort=True)
-    return total_df
+    if len(df_list) == 1: z
+    total_df = df_list[0]
+
+else:
+total_df = pd.concat(df_list, axis=0, sort=True)
+return total_df
 
 
 def batch_iter(iter, batch_size):
