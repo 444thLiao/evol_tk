@@ -115,12 +115,11 @@ def pack_it_up(ko2info, locus2ko, locus2info):
             df_list.append(_df)
     tqdm.write("start concatenating......")
 
-    if len(df_list) == 1: z
-    total_df = df_list[0]
-
-else:
-total_df = pd.concat(df_list, axis=0, sort=True)
-return total_df
+    if len(df_list) == 1:
+        total_df = df_list[0]
+    else:
+        total_df = pd.concat(df_list, axis=0, sort=True)
+    return total_df
 
 
 def batch_iter(iter, batch_size):
