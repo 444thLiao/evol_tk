@@ -1,12 +1,17 @@
+#################################################################################
+#### get relative ko with diamond output against kegg database.
+####
+####
+#################################################################################
+
 from bioservices.kegg import KEGG
-from collections import defaultdict, Counter
+from collections import defaultdict
 import pandas as pd
 from tqdm import tqdm
 import click
 import os
 from os.path import exists, join
 import pickle
-import time
 
 
 def parse_id(ID, max_try=10):
