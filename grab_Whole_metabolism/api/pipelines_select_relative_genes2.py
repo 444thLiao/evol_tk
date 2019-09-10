@@ -215,7 +215,7 @@ def main(locus2info,sample2locus, target_fa, oseq):
          'species(from metadata)']
     locus2info_df = locus2info_df.reindex(columns=list(locus2info_df.columns) + c)
     locus2info_df.loc[:, c] = order_sample2info.loc[:, c].values
-    locus2info_df.to_csv(final_tsv, sep='\t', index=0)
+    locus2info_df.to_csv(final_tsv, sep='\t', index=1)
     ############################################################
 
     kegg = KEGG()
@@ -237,7 +237,12 @@ def main(locus2info,sample2locus, target_fa, oseq):
             result = [[n for n in _.split(' ') if n] for _ in r.split('\n') if 'NAME' in _]
             name = [_[1] for _ in result][0].strip(',')
             koSingle2name[ko] = name
-    order_columns = ['nirK', 'nirS', 'CYP55', 'hcp', 'norB', 'norC', 'nosZ', 'norV', 'norW', 'narB', 'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'nasB', 'nasA', 'nirA','nirB', 'nirD', 'nrfA', 'nrfH', 'napA', 'napB', 'anfG', 'nifD', 'nifH', 'nifK', 'vnfD', 'vnfG', 'vnfH', 'vnfK', 'hzsA', 'hzsB', 'hzsC', 'hdh', 'pmoA-amoA','pmoB-amoB', 'pmoC-amoC', 'hao', 'hmp, YHB1', 'ncd2, npd']
+    order_columns = ['nirK', 'nirS', 'CYP55', 'hcp', 'norB', 'norC', 'nosZ', 'narB',
+       'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'nasB',
+       'nasA', 'nirA', 'nirB', 'nirD', 'nrfA', 'nrfH', 'napA', 'napB',
+       'pmoA-amoA', 'pmoB-amoB', 'pmoC-amoC', 'hao', 'hmp, YHB1', 'anfG',
+       'nifD', 'nifH', 'nifK', 'vnfD', 'vnfG', 'vnfH', 'vnfK', 'hzsA',
+       'hzsB', 'hzsC', 'hdh', 'norV', 'norW', 'ncd2, npd']
     with pd.ExcelWriter(join(odir, 'relative_genes_summary(tax).xlsx')) as writer:
         for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
             sub_df = locus2info_df.copy()
