@@ -9,6 +9,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 from bioservices import KEGG
 
+
 def output_seq_from_df(df, oseq):
     with open(oseq, 'w') as f1:
         for _, row in df.iterrows():
@@ -29,12 +30,27 @@ used_ko += [_.split('\t')[0] for _ in open('./ko_info.csv').read().split('\n')
             if _ and _.split('\t')[0] != 'KO number']
 used_ko = [_ for _ in used_ko if _ not in removed_ko]
 
-locus2info = './locus_info.csv'
-sample2locus = '../concat_all/sample2infos.tsv'
-target_fa = '../concat_all/all_protein.faa'
-oseq = './output/first_extract_seq.faa'
+# relative to /home-user/thliao/data/metagenomes/manually_output
+# input file
+locus2info = './locus_info.csv'  # genes from kegg database
+sample2locus = '../concat_all/sample2infos.tsv'  # collected metadata
+manually_info = '../manually_curated_N_cycle_genes.xlsx'  # manually curated genes with ko info? or not
 
-def main(locus2info,sample2locus, target_fa, oseq):
+ko2info_file = '../KO_info.xlsx'
+target_fa = '../concat_all/all_protein.faa'
+
+# output file
+odir = '.'
+oseq = join(odir, 'first_extract_seq.faa')
+o1_tab = join(odir, 'first_diamond.out')
+intermedia_faa = join(odir, 'first_extract_seq.faa')
+o2_tab = join(odir, 'first_extract_seq_KOfam.out')
+final_faa = join(odir, 'confirmed.faa')
+final_tsv = join(odir, 'confirmed_locus2info.tsv')
+
+
+def main(locus2info, sample2locus, target_fa, oseq):
+    # step1. extract genes info
     df = pd.read_csv(locus2info, sep='\t')
     odir = dirname(oseq)
     if not exists(odir):
@@ -42,16 +58,26 @@ def main(locus2info,sample2locus, target_fa, oseq):
     output_seq_from_df(df, oseq)
     dbname = abspath(oseq).rpartition('.')[0]
 
-    # name
-    o1_tab = join(odir, 'first_diamond.out')
-    intermedia_faa = join(odir, 'first_extract_seq.faa')
-    o2_tab = join(odir, 'first_extract_seq_KOfam.out')
-    # o2_tab = '/home-user/thliao/data/metagenomes/new_grab/output/first_extract_seq_KOfam.out'
-    final_faa = join(odir, 'confirmed.faa')
-    final_tsv = join(odir, 'confirmed_locus2info.tsv')
-
+    # build index with step1 output
     run_cmd(f'diamond makedb --in {oseq} --db {dbname}')
+    # perform first blastp
     run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2")
+
+    # reannotate from gene info file, especially the KO and its name
+    pre_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
+    subject_info_df = pd.read_excel(manually_info)
+    subject_info_df = subject_info_df.set_index('AA accession')
+    order_df = subject_info_df.reindex(pre_df.loc[:, 1])
+    pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / order_df.loc[:, 'AA sequence(seq)'].str.len().values
+    pre_df.loc[:, 'KO'] = order_df.loc[:, 'ko'].values
+    pre_df.loc[:, 'KO name'] = order_df.loc[:, 'gene name'].values
+    # subject_info_df = subject_info_df.set_index('locus name')
+    # query_df = query_df.drop_duplicates('locus_name')
+    # query_df = query_df.set_index('locus_name')
+    # get_df = query_df.reindex(pre_df.loc[:, 1])
+    # pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / get_df.loc[:, 'AA seq'].str.len().values
+    # pre_df.loc[:, 'KO'] = get_df.loc[:, 'Orthology(single)'].values
+    # pre_df.loc[:, 'KO name'] = get_df.loc[:, 'KO name'].values
 
     tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
     records = SeqIO.parse(f'{target_fa}', format='fasta')
@@ -63,64 +89,77 @@ def main(locus2info,sample2locus, target_fa, oseq):
     with open(f'{intermedia_faa}', 'w') as f1:
         SeqIO.write(collcect_records, f1, format='fasta-2line')
 
-    run_cmd(f"/home-user/thliao/software/kofamscan/exec_annotation {intermedia_faa} -o {o2_tab} --cpu 2 -f mapper-one-line --no-report-unannotated")
+    # step2: using more and well-annotated kegg database to annotated, for removing false-positive
+    run_cmd(f"/home-user/thliao/software/kofamscan/exec_annotation {intermedia_faa} -o {o2_tab} --cpu 2 -f mapper-one-line")
+    # extract step2 output info into a dictionary
+    kofamscan_str = open(f'{o2_tab}', 'r').read().split('\n')
+    ko2result = dict([(row.split('\t')[0],
+                       row.split('\t')[1:])
+                      for row in kofamscan_str
+                      ])
 
-    pre_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
-    query_df = df.copy()
-    query_df = query_df.drop_duplicates('locus_name')
-    query_df = query_df.set_index('locus_name')
-    get_df = query_df.reindex(pre_df.loc[:, 1])
-    pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / get_df.loc[:, 'AA seq'].str.len().values
-    pre_df.loc[:, 'KO'] = get_df.loc[:, 'Orthology(single)'].values
-    pre_df.loc[:, 'KO name'] = get_df.loc[:, 'KO name'].values
-    aft_str = open(f'{o2_tab}', 'r').read().split('\n')
-    aft_dict = dict([(row.split('\t')[0],
-                      row.split('\t')[1:]) for row in aft_str])
-    aft_list_ID = list(aft_dict.keys())
+    # step3: init a bucket to collect all required info
+    confirmed_seq = defaultdict(dict)
+    # prepare annotation
+    ko_info = pd.read_excel(ko2info_file)
+    ko2name = dict(zip(ko_info.iloc[:, 0].values, ko_info.iloc[:, 1].values))
 
-    not_in_df = pre_df.loc[~pre_df.loc[:, 0].isin(aft_list_ID), :]
-    in_df = pre_df.loc[pre_df.loc[:, 0].isin(aft_list_ID), :]
-    confirmed_seq = defaultdict(dict)  # confirmed seq
+    # pre_ko2name = dict(zip(subject_info_df.loc[:, 'ko'].values,
+    #                        subject_info_df.loc[:, 'gene name'].values))
+    # pre_ko2name.pop('nan')  # nan maybe multiple, could not overwrite by one
+    # ko2name.update(pre_ko2name)
 
-    # for in_df
-    def select_ko(locus):
+    def annotate_KO(locus):
         collect_seq = defaultdict(dict)
-        sub_df = in_df.loc[in_df.loc[:, 0] == locus, :]
-        ko_names = list(sub_df['KO name'])
-        ko1_list = list(sub_df["KO"])
-        ko1_set = set(ko1_list)
-        ko1_dict = dict(zip(ko1_list, ko_names))
-        ko2_list = aft_dict.get(locus, [])
-        ko2_set = set(ko2_list)
-        # must not empty
-        if not ko2_set.difference(ko1_set):
-            # within paralog
-            if len(ko2_set) == 1:
-                collect_seq[locus]['real KO'] = ko2_list[0]
-                collect_seq[locus]['KO name'] = ko1_dict[ko2_list[0]]
-                collect_seq[locus]['outside paralog'] = 'NO'
-                collect_seq[locus]['within paralog'] = 'NO'
-            else:
-                # len(ko2_set) >1 ; would not ==0
-                collect_seq[locus]['real KO'] = ko2_list[0] if len(ko2_list) != 0 else ko1_list[0]
-                collect_seq[locus]['KO name'] = ko1_dict[collect_seq[locus]['real KO']]
-                collect_seq[locus]['outside paralog'] = 'NO'
+        sub_df = pre_df.loc[pre_df.loc[:, 0] == locus, :]
+        _df = sub_df.loc[(sub_df.loc[:, 'cover ratio'] >= 0.6) & (sub_df.loc[:, 10] <= 1e-10), :]
+        ko1_list = []
+        pre_ko2name = {}
+        if _df.shape[0] !=0:
+            existing_names = list(_df['KO name'].fillna('missing'))
+            ko1_list = list(_df["KO"].fillna('missing'))
+            ko1_set = set(ko1_list)
+            pre_ko2name = dict(zip(ko1_list, existing_names))
+            pre_ko2name.pop('missing')  # nan maybe multiple, could not overwrite by one
+
+        annotated_KOs_list = ko2result.get(locus, [])
+        annotated_KOs_set = set(annotated_KOs_list)
+
+        if not annotated_KOs_list and not ko1_list:
+            return collect_seq
+        elif annotated_KOs_list and ko1_list:
+            top1_annotated = annotated_KOs_list[0]
+            top1_pre = ko1_list[0]
+            if top1_annotated in set(ko1_list):
+                # in preannotated set, maybe totally same
+                collect_seq[locus]['KO'] = top1_annotated
+                collect_seq[locus]['KO name'] = pre_ko2name.get(top1_annotated,'')
+
                 collect_seq[locus]['within paralog'] = 'YES'
-                if len(ko2_list) != 0:
-                    collect_seq[locus]['likely KO'] = ';'.join(ko2_list[1:])
-                    collect_seq[locus]['likely KO name'] = ';'.join([ko1_dict[_]
-                                                                     for _ in ko2_list[1:]])
-        else:
-            # with others KO
-            collect_seq[locus]['real KO'] = ko2_list[0] if len(ko2_list) != 0 else ko1_list[0]
-            collect_seq[locus]['KO name'] = ko1_dict.get(collect_seq[locus]['real KO'], 'unknown')
-            if len(ko2_set) == 1:
                 collect_seq[locus]['outside paralog'] = 'NO'
+                if set(ko1_list).difference(annotated_KOs_set):
+                    collect_seq[locus]['likely KO'] = ';'.join(set(ko1_list).difference(annotated_KOs_set))
+                    collect_seq[locus]['likely KO name'] = ';'.join([pre_ko2name.get(_, '')
+                                                                     for _ in collect_seq[locus].get('likely KO','').split(';')])
+            elif top1_annotated in ko2name:
+                # not in pre-annotated set, but in total set
+                collect_seq[locus]['KO'] = top1_annotated
+                collect_seq[locus]['KO name'] = ko2name[top1_annotated]
+                collect_seq[locus]['within paralog'] = 'YES'
+                collect_seq[locus]['outside paralog'] = 'NO'
+                collect_seq[locus]['likely KO'] = ';'.join(set(ko1_list))
+                collect_seq[locus]['likely KO name'] = ';'.join([pre_ko2name.get(_,'')
+                                                                 for _ in collect_seq[locus].get('likely KO','').split(';')])
             else:
+                # not in .., and not in .., total new or missing ko.
+                collect_seq[locus]['KO'] = top1_annotated
+                collect_seq[locus]['KO name'] = "new one"
+                collect_seq[locus]['within paralog'] = 'NO'
                 collect_seq[locus]['outside paralog'] = 'YES'
-                collect_seq[locus]['likely KO'] = ';'.join(ko2_list[1:])
-                collect_seq[locus]['likely KO name'] = ';'.join([ko1_dict.get(_, 'unknown')
-                                                                 for _ in ko2_list[1:]])
+                collect_seq[locus]['likely KO'] = ';'.join(set(ko1_list))
+                collect_seq[locus]['likely KO name'] = ';'.join([pre_ko2name.get(_,'')
+                                                                 for _ in collect_seq[locus].get('likely KO','').split(';')])
+
         return collect_seq
 
     unique_locus_name_indf = list(set(in_df.loc[:, 0]))
@@ -136,7 +175,7 @@ def main(locus2info,sample2locus, target_fa, oseq):
     def select_ko2(locus):
         collect_seq = defaultdict(dict)
         sub_df = not_in_df.loc[not_in_df.loc[:, 0] == locus, :].sort_values(10)
-        _cache = list(sub_df.loc[:, 'KO'])
+        _cache = ['nan' if pd.isna(_) else _ for _ in list(sub_df.loc[:, 'KO'])]
         _names = list(sub_df.loc[:, 'KO name'])
         _ko2name = dict(zip(_cache, _names))
         if len(set(_cache)) == 1:
@@ -149,7 +188,9 @@ def main(locus2info,sample2locus, target_fa, oseq):
             collect_seq[locus]['KO name'] = _names[0]
             collect_seq[locus]['outside paralog'] = 'NO'
             collect_seq[locus]['within paralog'] = 'YES'
-            new_cache = set([_ for _ in _cache[1:] if _ != _cache[0]])
+            new_cache = set([_
+                             for _ in _cache[1:]
+                             if _ != _cache[0]])
             names = [_ko2name[_] for _ in new_cache]
             collect_seq[locus]['likely KO'] = ';'.join(new_cache)
             collect_seq[locus]['likely KO name'] = ';'.join(names)
@@ -162,10 +203,11 @@ def main(locus2info,sample2locus, target_fa, oseq):
 
     collect_seq = [_
                    for _, v in confirmed_seq.items()
-                   if v.get('KO name') != 'unknown']
+                   if (v.get('KO name') != 'unknown') or
+                   (v.get('within paralog', 'YES') == 'YES' and v.get('likely KO name', 'unknown') != 'unknown')]
 
-    print("contains %s confirmed sequence" % len(collect_seq))
     confirmed_seq_set = set(collect_seq)
+    print("contains %s confirmed sequence" % len(confirmed_seq_set))
     records = SeqIO.parse(f'{intermedia_faa}', format='fasta')
     collect_reads = [_
                      for _ in records
@@ -185,7 +227,7 @@ def main(locus2info,sample2locus, target_fa, oseq):
                                           'within paralog KO name',
                                           ])
     new_dict = defaultdict(dict)
-    for locus in tqdm(confirmed_seq):
+    for locus in tqdm(confirmed_seq_set):
         _dict = confirmed_seq[locus]
         ko = _dict['real KO']
         ko_name = _dict['KO name']
@@ -195,6 +237,12 @@ def main(locus2info,sample2locus, target_fa, oseq):
         for _, v in zip(locus2info_df.columns, [locus_prefix, sname, sproject, ko, ko_name, wp, wpk, wpkn]):
             new_dict[locus][_] = v
     locus2info_df = pd.DataFrame.from_dict(new_dict, orient='index')
+
+    for _, row in locus2info_df.iterrows():
+        ko = row['ko(single)']
+        name = row['Gene name(N metabolism)']
+        if name == 'unknown' and ko in ko2name:
+            locus2info_df.at[_, 'Gene name(N metabolism)'] = ko2name[ko]
 
     order_sample2info = sample2info.copy()
     order_sample2info = order_sample2info.reindex([_
@@ -238,11 +286,11 @@ def main(locus2info,sample2locus, target_fa, oseq):
             name = [_[1] for _ in result][0].strip(',')
             koSingle2name[ko] = name
     order_columns = ['nirK', 'nirS', 'CYP55', 'hcp', 'norB', 'norC', 'nosZ', 'narB',
-       'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'nasB',
-       'nasA', 'nirA', 'nirB', 'nirD', 'nrfA', 'nrfH', 'napA', 'napB',
-       'pmoA-amoA', 'pmoB-amoB', 'pmoC-amoC', 'hao', 'hmp, YHB1', 'anfG',
-       'nifD', 'nifH', 'nifK', 'vnfD', 'vnfG', 'vnfH', 'vnfK', 'hzsA',
-       'hzsB', 'hzsC', 'hdh', 'norV', 'norW', 'ncd2, npd']
+                     'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'nasB',
+                     'nasA', 'nirA', 'nirB', 'nirD', 'nrfA', 'nrfH', 'napA', 'napB',
+                     'pmoA-amoA', 'pmoB-amoB', 'pmoC-amoC', 'hao', 'hmp, YHB1', 'anfG',
+                     'nifD', 'nifH', 'nifK', 'vnfD', 'vnfG', 'vnfH', 'vnfK', 'hzsA',
+                     'hzsB', 'hzsC', 'hdh', 'norV', 'norW', 'ncd2, npd']
     with pd.ExcelWriter(join(odir, 'relative_genes_summary(tax).xlsx')) as writer:
         for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
             sub_df = locus2info_df.copy()
