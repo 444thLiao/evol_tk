@@ -7,12 +7,12 @@ Entrez.email = 'l0404th@gmail.com'
 
 a = pd.read_excel('manually_curated_N_cycle_genes.xlsx')
 for _, row in tqdm(a.iterrows(), total=a.shape[0]):
-    aa_seq = row['AA sequence']
+    aa_seq = row['AA sequence (manual)']
     if not pd.isna(row['AA sequence(seq)']):
         # got before
         continue
     if pd.isna(aa_seq):
-        aa_seq = row['nucl sequence']
+        aa_seq = row['nucl sequence (manual)']
     if len(aa_seq) <= 100:
         pid = aa_seq
         record = Entrez.read(Entrez.esearch(term=pid, db='protein'))
