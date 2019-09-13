@@ -18,6 +18,7 @@ def batch_iter(iter, batch_size):
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
 
+
 def get_module_info(metabolism_id):
     # N_pathway_id = "ko00910"  # id of N-metabolism
 
@@ -139,10 +140,7 @@ def get_locusDetailedInfo(locus2info):
             if locus in genes_df.iloc[:, 0]:
                 continue
             try:
-                (other_paralog_locus,
-                module_name,
-                orthology_total,
-                orthology_single) = locus2info[locus]
+                other_paralog_locus, module_name, orthology_total, orthology_single = locus2info[locus]
             except:
                 continue
             gene_name = ';'.join(info_dict.get('NAME', ['']))
@@ -166,7 +164,7 @@ def get_locusDetailedInfo(locus2info):
     return genes_df
 
 
-def main(metabolism_id, locus_id_list,extra_ko):
+def main(metabolism_id, locus_id_list, extra_ko):
     tqdm.write("getting module information")
     module_dict = get_module_info(metabolism_id)
     if extra_ko is not None:
@@ -190,10 +188,10 @@ def main(metabolism_id, locus_id_list,extra_ko):
 @click.option("-locusDF", "locusDF_out", help="output table of relative locus ID and its sequence")
 @click.option("-drop_ko", "removed_ko", help="file indicated ko doesn't need", default=None)
 @click.option("-extra_ko", "extra_ko", help="file indicated extra ko", default=None)
-def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko,extra_ko):
+def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko, extra_ko):
     if extra_ko is not None:
         extra_ko = set([_ for _ in open(extra_ko).read().split('\n') if _])
-    ko_df, locus2info = main(koID, locusID_out,extra_ko)
+    ko_df, locus2info = main(koID, locusID_out, extra_ko)
     ko_df.to_csv(koDF_out, sep='\t', index=1, index_label="KO number")
 
     if removed_ko is not None:
@@ -202,10 +200,10 @@ def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko,extra_ko):
                       for k, v in locus2info.items()
                       if v[-1][-1] not in removed_ko}
     genes_df = get_locusDetailedInfo(locus2info)
+
     genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
                                   for ko in genes_df.loc[:, 'Orthology(single)']]
     genes_df.to_csv(locusDF_out, sep='\t', index=0)
-
 
 if __name__ == '__main__':
     kegg = KEGG()
