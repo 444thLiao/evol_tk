@@ -139,9 +139,9 @@ def get_locusDetailedInfo(locus2info):
             locus = [_ for _ in bin10 if locus in _][0]
             if locus in genes_df.iloc[:, 0]:
                 continue
-                
+
             for args in locus2info[locus]:
-                other_paralog_locus, module_name, orthology_total, orthology_single = *args
+                other_paralog_locus, module_name, orthology_total, orthology_single = args
                 gene_name = ';'.join(info_dict.get('NAME', ['']))
                 definition = info_dict['DEFINITION']
                 source_organism = info_dict["ORGANISM"]
