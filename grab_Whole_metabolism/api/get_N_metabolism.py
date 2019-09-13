@@ -139,28 +139,27 @@ def get_locusDetailedInfo(locus2info):
             locus = [_ for _ in bin10 if locus in _][0]
             if locus in genes_df.iloc[:, 0]:
                 continue
-            try:
-                other_paralog_locus, module_name, orthology_total, orthology_single = locus2info[locus]
-            except:
-                continue
-            gene_name = ';'.join(info_dict.get('NAME', ['']))
-            definition = info_dict['DEFINITION']
-            source_organism = info_dict["ORGANISM"]
-            NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
-            uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-            AA_seq = info_dict["AASEQ"].replace(' ', '')
-            genes_df.loc[count_, :] = [locus,
-                                       gene_name,
-                                       source_organism,
-                                       definition,
-                                       uniprot_refID,
-                                       NCBI_refID,
-                                       other_paralog_locus,
-                                       module_name,
-                                       orthology_total,
-                                       orthology_single,
-                                       AA_seq]
-            count_ += 1
+                
+            for args in locus2info[locus]:
+                other_paralog_locus, module_name, orthology_total, orthology_single = *args
+                gene_name = ';'.join(info_dict.get('NAME', ['']))
+                definition = info_dict['DEFINITION']
+                source_organism = info_dict["ORGANISM"]
+                NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
+                uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
+                AA_seq = info_dict["AASEQ"].replace(' ', '')
+                genes_df.loc[count_, :] = [locus,
+                                           gene_name,
+                                           source_organism,
+                                           definition,
+                                           uniprot_refID,
+                                           NCBI_refID,
+                                           other_paralog_locus,
+                                           module_name,
+                                           orthology_total,
+                                           orthology_single,
+                                           AA_seq]
+                count_ += 1
     return genes_df
 
 
@@ -200,7 +199,6 @@ def cli(koID, locusID_out, koDF_out, locusDF_out, removed_ko, extra_ko):
                       for k, v in locus2info.items()
                       if v[-1][-1] not in removed_ko}
     genes_df = get_locusDetailedInfo(locus2info)
-
     genes_df.loc[:, 'KO name'] = [ko_df.loc[ko, 'gene name']
                                   for ko in genes_df.loc[:, 'Orthology(single)']]
     genes_df.to_csv(locusDF_out, sep='\t', index=0)
