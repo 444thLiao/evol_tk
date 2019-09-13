@@ -3,30 +3,34 @@ from Bio import SeqIO
 import os
 from os.path import join
 from tqdm import tqdm
+
+locus2info = '../new_grab/locus_info.csv'
+locus2info_df = pd.read_csv(locus2info,sep='\t',index_col=0)
+
 manually_info = '../manually_curated_N_cycle_genes.xlsx'  # manually curated genes with ko info? or not
 subject_info_df = pd.read_excel(manually_info)
 subject_info_df = subject_info_df.set_index('AA accession')
-
-final_df = pd.read_csv('./concated_all.csv', sep='\t', index_col=0)
-target_ = 'nrfA_ONR'
+#final_df = pd.read_csv('./concated_all.csv', sep='\t', index_col=0)
+target_ = 'nxrA_narG'
 genes = target_.split('_')
 os.makedirs(target_, exist_ok=1)
 
-r_id = list(final_df.index[final_df.loc[:, 'Gene name(N metabolism)'].isin(genes)])
-r_id += list(final_df.index[final_df.loc[:, 'paralog KO name'].isin(genes)])
-r_id = set(r_id)
+ids = []
+for _ in genes:
+    ids += list(locus2info_df.index[locus2info_df.loc[:,'KO name'].str.contains(_)])
+ids = set(ids)
 with open(join(target_, 'protein.faa'), 'w') as f1:
-    records = SeqIO.parse('./first_extract_seq.faa', format='fasta')
-    reads = [_ for _ in tqdm(records) if _.id in r_id]
-    remained_seq = r_id.difference(set([_.id for _ in reads]))
-    records = SeqIO.parse('../new_grab/output/first_extract_seq.faa', format='fasta')
-    reads += [_ for _ in tqdm(records) if _.id in remained_seq]
-    SeqIO.write(reads, f1, format='fasta-2line')
+    _sub_df = locus2info_df.loc[ids,:].drop_duplicates('AA seq')
+    for _,row in _sub_df.iterrows():
+        f1.write('>%s\n' % _)
+        f1.write('%s\n' % row['AA seq'])
+
     f1.flush()
-    _subdf = subject_info_df.loc[subject_info_df.loc[:, 'gene name'].isin(genes), :]
-    for _,row in _subdf.iterrows():
+    _sub_df = subject_info_df.loc[subject_info_df.loc[:, 'gene name'].isin(genes), :]
+    for _,row in _sub_df.iterrows():
         f1.write('>%s\n' % _)
         f1.write('%s\n' % row['AA sequence(seq)'])
+
 
 import seaborn as sns
 colors = sns.color_palette('Set1',len(genes)).as_hex()
@@ -46,5 +50,3 @@ for idx,g in enumerate(genes):
         template += '%s\t%s\n' % (_,label)
 with open(join(target_,'curated_genes.txt'),'w') as f1:
     f1.write(template)
-
-#"iqtree -nt 32 -m MFP -bb 1000 -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -pre iqtree -s protein.aln"

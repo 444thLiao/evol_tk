@@ -5,6 +5,19 @@ from tqdm import tqdm
 import click
 import time
 
+
+def batch_iter(iter, batch_size):
+    # generating batch according batch_size
+    iter = list(iter)
+    n_iter = []
+    batch_d = 0
+    for batch_u in range(0, len(iter), batch_size):
+        if batch_u != 0:
+            n_iter.append(iter[batch_d:batch_u])
+        batch_d = batch_u
+    n_iter.append(iter[batch_d: len(iter) + 1])
+    return n_iter
+
 def get_module_info(metabolism_id):
     # N_pathway_id = "ko00910"  # id of N-metabolism
 
@@ -110,36 +123,43 @@ def get_locusDetailedInfo(locus2info):
                                      "Orthology(single)",
                                      "AA seq", ])
     count_ = 0
-    for locus, locus_info_list in tqdm(locus2info.items(),
-                                       total=len(locus2info)):
-        if locus in genes_df.index:
-            continue
-        info_dict = kegg.parse(kegg.get(locus))
-        for (other_paralog_locus,
-             module_name,
-             orthology_total,
-             orthology_single) in locus_info_list:
-
-            if type(info_dict) == dict:
-                gene_name = ';'.join(info_dict.get('NAME', ['']))
-                definition = info_dict['DEFINITION']
-                source_organism = info_dict["ORGANISM"]
-                NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
-                uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-                AA_seq = info_dict["AASEQ"].replace(' ', '')
-                genes_df.loc[count_, :] = [locus,
-                                           gene_name,
-                                           source_organism,
-                                           definition,
-                                           uniprot_refID,
-                                           NCBI_refID,
-                                           other_paralog_locus,
-                                           module_name,
-                                           orthology_total,
-                                           orthology_single,
-                                           AA_seq]
-                count_ += 1
-
+    all_locus = list(locus2info.keys())
+    pack10_up = batch_iter(all_locus, 10)
+    # pack it up, make it 10 times faster
+    for bin10 in tqdm(pack10_up):
+        bin10 = [_ for _ in bin10 if _]
+        info_str = kegg.get('+'.join(bin10))
+        for each_str in info_str.split('\nENTRY '):
+            if each_str.startswith('ENTRY'):
+                info_dict = kegg.parse(each_str)
+            else:
+                info_dict = kegg.parse('ENTRY ' + each_str)
+            locus = info_dict.get('ENTRY', 'unknown').split(' ')[0]
+            try:
+                (other_paralog_locus,
+                module_name,
+                orthology_total,
+                orthology_single) = locus2info[locus]
+            except:
+                continue
+            gene_name = ';'.join(info_dict.get('NAME', ['']))
+            definition = info_dict['DEFINITION']
+            source_organism = info_dict["ORGANISM"]
+            NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
+            uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
+            AA_seq = info_dict["AASEQ"].replace(' ', '')
+            genes_df.loc[count_, :] = [locus,
+                                       gene_name,
+                                       source_organism,
+                                       definition,
+                                       uniprot_refID,
+                                       NCBI_refID,
+                                       other_paralog_locus,
+                                       module_name,
+                                       orthology_total,
+                                       orthology_single,
+                                       AA_seq]
+            count_ += 1
     return genes_df
 
 

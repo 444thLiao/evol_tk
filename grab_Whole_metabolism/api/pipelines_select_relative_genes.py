@@ -259,29 +259,7 @@ def main(locus2info, sample2locus, target_fa, oseq):
         l1, l2 = d_tuple[:2]
         dropped_locus = sorted([l1, l2], key=lambda x: pre_df.loc[pre_df.loc[:, 0] == x, 3].values[0])[0]
         locus2info_df = locus2info_df.drop(dropped_locus)
-    t = ['CIMKLAMG_01008', 'BLHCAHHO_01887', 'KAPHPNMJ_01950',
-         'BLHCAHHO_02203', 'KAPHPNMJ_00555', 'GFGMIJHE_02191',
-         'DDDAEOCG_00928', 'FPKBIPEM_01264', 'OKOMEFJD_00369',
-         'DFJGGOCD_00279', 'FNMJIPCB_00158', 'KKEGIMMP_00878',
-         'GLELHIOC_00437', 'CNAAHEGP_00473', 'ILGCLMOP_00797',
-         'OMKEHILC_01648', 'IEGHJKID_00458', 'GFGMIJHE_01595',
-         'DDDAEOCG_01667', 'KKHHJNPO_01081', 'LAIKLKFG_01802',
-         'KDLDFFLJ_00880', 'AMMCEENH_00385', 'OKOMEFJD_00123',
-         'EHGCCCFP_01499', 'FDGGIJME_00679', 'FPKBIPEM_01592',
-         'KFHEOECM_00769', 'GLELHIOC_01843', 'ILGCLMOP_00106',
-         'OMKEHILC_01002', 'IEGHJKID_01654', 'CNAAHEGP_00879',
-         'KKEGIMMP_00079', 'KFHEOECM_01249', 'BLHCAHHO_00728',
-         'KAPHPNMJ_01068', 'LAIKLKFG_00187', 'FPKBIPEM_01120',
-         'ILGCLMOP_00394', 'OMKEHILC_01706', 'IEGHJKID_01360',
-         'GLELHIOC_00795', 'CNAAHEGP_00245', 'BLHCAHHO_02199',
-         'KAPHPNMJ_00009', 'GFGMIJHE_02168', 'DDDAEOCG_00821',
-         'KFHEOECM_01063', 'ILGCLMOP_00801', 'OMKEHILC_01644',
-         'IEGHJKID_00454', 'GLELHIOC_00441', 'CNAAHEGP_00469',
-         'FPKBIPEM_01268', 'ENIBLNEE_00528', 'FNMJIPCB_01245',
-         'EJGMDGIB_00419', 'DFJGGOCD_00276', 'FDGGIJME_00006',
-         'OKOMEFJD_00372'],
-    locus2info_df.loc[t, 'Gene name(N metabolism)'] = 'hdh'
-    locus2info_df.loc[t, 'ko(single)'] = 'K20935'
+
     #
     # for _, row in locus2info_df.iterrows():
     #     ko = row['ko(single)']
