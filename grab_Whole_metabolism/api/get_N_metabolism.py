@@ -135,7 +135,8 @@ def get_locusDetailedInfo(locus2info):
             else:
                 info_dict = kegg.parse('ENTRY ' + each_str)
             locus = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-            if locus in genes_df.iloc[:,0]:
+            locus = [_ for _ in bin10 if locus in _][0]
+            if locus in genes_df.iloc[:, 0]:
                 continue
             try:
                 (other_paralog_locus,
