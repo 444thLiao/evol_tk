@@ -80,24 +80,24 @@ def main(locus2info, sample2locus, target_fa, oseq):
     # pre_df.loc[:, 'KO name'] = get_df.loc[:, 'KO name'].values
 
     # considerate before and after locus, which being cutted
-    _pre_df = pre_df.drop_duplicates(0)
-    all_locus_ed = set(_pre_df.loc[:, 0].unique())
-    counted_locus = []
-    for _, row in tqdm(_pre_df.iterrows(), total=_pre_df.shape[0]):
-        locus = row[0]
-        n = row['KO name']
-        num = int(locus[-2:])
-        b_locus, after_locus = locus[:-2] + str(int(num - 1)), locus[:-2] + str(int(num + 1))
-        if b_locus in all_locus_ed:
-            _sub_df = _pre_df.loc[_pre_df.loc[:, 0] == b_locus, 'KO name'].values[0]
-            if _sub_df == n:
-                counted_locus.append(tuple(sorted([locus, b_locus]) + [n]))
-                # print(locus,b_locus,n)
-        if after_locus in all_locus_ed:
-            _sub_df = _pre_df.loc[_pre_df.loc[:, 0] == after_locus, 'KO name'].values[0]
-            if _sub_df == n:
-                counted_locus.append(tuple(sorted([locus, after_locus]) + [n]))
-                # print(locus,after_locus,n)
+    # _pre_df = pre_df.drop_duplicates(0)
+    # all_locus_ed = set(_pre_df.loc[:, 0].unique())
+    # counted_locus = []
+    # for _, row in tqdm(_pre_df.iterrows(), total=_pre_df.shape[0]):
+    #     locus = row[0]
+    #     n = row['KO name']
+    #     num = int(locus[-2:])
+    #     b_locus, after_locus = locus[:-2] + str(int(num - 1)), locus[:-2] + str(int(num + 1))
+    #     if b_locus in all_locus_ed:
+    #         _sub_df = _pre_df.loc[_pre_df.loc[:, 0] == b_locus, 'KO name'].values[0]
+    #         if _sub_df == n:
+    #             counted_locus.append(tuple(sorted([locus, b_locus]) + [n]))
+    #             # print(locus,b_locus,n)
+    #     if after_locus in all_locus_ed:
+    #         _sub_df = _pre_df.loc[_pre_df.loc[:, 0] == after_locus, 'KO name'].values[0]
+    #         if _sub_df == n:
+    #             counted_locus.append(tuple(sorted([locus, after_locus]) + [n]))
+    #             # print(locus,after_locus,n)
 
     tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
     records = SeqIO.parse(f'{target_fa}', format='fasta')
@@ -147,7 +147,8 @@ def main(locus2info, sample2locus, target_fa, oseq):
             ko1_list = list(_df["KO"].fillna('missing'))
             ko_output = ['%s:%s' % (k, n)
                          for k, n in zip(ko1_list, existing_names)]
-            pre_ko2name = dict(zip(ko1_list, existing_names))
+            pre_ko2name = dict(zip(ko1_list[::-1],
+                                   existing_names[::-1]))
             if 'missing' in pre_ko2name:
                 pre_ko2name.pop('missing')  # nan maybe multiple, could not overwrite by one
         annotated_KOs_list = ko2result.get(locus, [])
@@ -214,15 +215,15 @@ def main(locus2info, sample2locus, target_fa, oseq):
         SeqIO.write(collect_reads, f1, format='fasta-2line')
 
     sample2info = pd.read_csv(sample2locus, sep='\t', header=0, index_col=1)
-    locus2info_df = pd.DataFrame(columns=["locus_prefix",
-                                          'sample name',
-                                          'source project',
-                                          'ko(single)',
-                                          'Gene name(N metabolism)',
-                                          'within paralog',
-                                          'paralog KO',
-                                          'paralog KO name',
-                                          ])
+    columns = ["locus_prefix",
+               'sample name',
+               'source project',
+               'ko(single)',
+               'Gene name(N metabolism)',
+               'within paralog',
+               'paralog KO',
+               'paralog KO name',
+               ]
     new_dict = defaultdict(dict)
     for locus in tqdm(collect_IDs_set):
         _dict = confirmed_seq[locus]
@@ -231,9 +232,9 @@ def main(locus2info, sample2locus, target_fa, oseq):
         locus_prefix = locus.split('_')[0]
         sname, sproject = sample2info.loc[locus_prefix, ['sample_name', 'source']].values
         wp, wpk = _dict.get('within paralog', 'NO'), _dict.get('likely KO', '')
-        for _, v in zip(locus2info_df.columns, [locus_prefix, sname, sproject, ko, ko_name, wp,
-                                                ';'.join([_.split(':')[0] for _ in wpk]),
-                                                ';'.join([_.split(':')[1] for _ in wpk])]):
+        for _, v in zip(columns, [locus_prefix, sname, sproject, ko, ko_name, wp,
+                                  ';'.join([_.split(':')[0] for _ in wpk]),
+                                  ';'.join([_.split(':')[1] for _ in wpk])]):
             new_dict[locus][_] = v
     locus2info_df = pd.DataFrame.from_dict(new_dict, orient='index')
     _sub_df = locus2info_df.loc[locus2info_df.loc[:, 'Gene name(N metabolism)'] == 'new one', ['paralog KO',
@@ -244,21 +245,41 @@ def main(locus2info, sample2locus, target_fa, oseq):
     locus2info_df = locus2info_df.loc[locus2info_df.loc[:, 'ko(single)'] != 'K00373', :]
     # drop k00373
 
-    locus2info_df.loc[:, 'Gene name(N metabolism)'] = list(map(lambda x: x[1] if x[0] == 'missing' else ko2name[x[0]],
-                                                               locus2info_df.loc[:, ['ko(single)',
-                                                                                     'Gene name(N metabolism)']].values))
+    # manually interferred the result with gene tree result
+    all_ori_ids = set(locus2info_df.index)
+    nxrA = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'] == 'nxrA']
+    all_ori_ids = all_ori_ids.difference(set(nxrA))
+    # locus2info_df.loc[nxrA,'']
+    nxrB = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'] == 'nxrB']
+    all_ori_ids = all_ori_ids.difference(set(nxrB))
+    narH = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'] == 'narH']
+    all_ori_ids = all_ori_ids.difference(set(narH))
+    narG = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'] == 'narG']
+    all_ori_ids = all_ori_ids.difference(set(narG))
+    amo_ids = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'].str.startswith('amo')]
+    all_ori_ids = all_ori_ids.difference(set(amo_ids))
+    pmo_ids = locus2info_df.index[locus2info_df.loc[:, 'Gene name(N metabolism)'].str.startswith('pmo')]
+    all_ori_ids = all_ori_ids.difference(set(pmo_ids))
+
+    remained_id = list(all_ori_ids)
+    locus2info_df.loc[remained_id, 'Gene name(N metabolism)'] = list(map(lambda x: x[1] if x[0] == 'missing' else ko2name[x[0]],
+                                                                         locus2info_df.loc[remained_id, ['ko(single)',
+                                                                                                         'Gene name(N metabolism)']].values))
     locus2info_df.loc[locus2info_df.loc[:, 'paralog KO name'] == 'norZ',
                       'Gene name(N metabolism)'] = 'norZ'
+
     # detect duplicated one, remove smallest one?
-    _count = []
-    for _ in set(counted_locus):
-        if _[0] in locus2info_df.index and _[1] in locus2info_df.index:
-            if _[2] in locus2info_df.loc[_[0], ['Gene name(N metabolism)', 'paralog KO name']].values:
-                _count.append(_)
-    for d_tuple in tqdm(_count):
-        l1, l2 = d_tuple[:2]
-        dropped_locus = sorted([l1, l2], key=lambda x: pre_df.loc[pre_df.loc[:, 0] == x, 3].values[0])[0]
-        locus2info_df = locus2info_df.drop(dropped_locus)
+    # _count = []
+    # for _ in set(counted_locus):
+    #     if _[0] in locus2info_df.index and _[1] in locus2info_df.index:
+    #         if _[2] in locus2info_df.loc[_[0], ['Gene name(N metabolism)', 'paralog KO name']].values:
+    #             if _[2].startswith('pmo') or _[2].startswith('amo') or _[2].startswith('hzs'):
+    #                 continue
+    #             _count.append(_)
+    # for d_tuple in tqdm(_count):
+    #     l1, l2 = d_tuple[:2]
+    #     dropped_locus = sorted([l1, l2], key=lambda x: pre_df.loc[pre_df.loc[:, 0] == x, 3].values[0])[0]
+    #     locus2info_df = locus2info_df.drop(dropped_locus)
 
     #
     # for _, row in locus2info_df.iterrows():
@@ -293,20 +314,31 @@ def main(locus2info, sample2locus, target_fa, oseq):
     previous_result.columns = locus2info_df.columns
     _sub_df = previous_result.loc[previous_result.index.difference(locus2info_df.index), :]
     final_df = pd.concat([locus2info_df, _sub_df], axis=0)
+    # manually revised
+    under_manually_revised_g = ['narG, narZ, nxrA', 'narH, narY, nxrB', 'pmoB-amoB']
+    for g in under_manually_revised_g:
+        _sub_df = final_df.loc[final_df.loc[:, 'Gene name(N metabolism)'] == g, :]
+        for id in tqdm(_sub_df.index):
+            _df = pre_df.loc[pre_df.loc[:, 0] == id, 'KO name']
+            if _df.shape[0] != 0:
+                final_df.loc[id, 'Gene name(N metabolism)'] = _df.values[0]
+
     final_df.to_csv('./concated_all.csv', sep='\t', index=1)
 
     locus2info_df = final_df.copy()
     order_columns = ['anfG', 'nifD', 'nifK', 'nifH', 'vnfG', 'vnfD', 'vnfK', 'vnfH',
-                     'pmoA-amoA', 'pmoB-amoB', 'pmoC-amoC', 'hao', 'nirK',
-                     'narG, narZ, nxrA', 'narH, narY, nxrB', 'pmoA-amoA', 'pmoB-amoB',
-                     'pmoC-amoC', 'hao', 'hmp, YHB1', 'nasA', 'nasB',
-                     'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV', 'napA',
-                     'napB', 'nirK', 'nirS', 'norV', 'norW', 'hcp', 'norB', 'norC', 'norZ',
-                     'nosZ', 'narG, narZ, nxrA', 'narH, narY, nxrB', 'narI, narV',
-                     'napA', 'napB', 'nrfA', 'nrfH', 'εHao (HaoA)', 'haoC', 'ONR', 'OTR', 'nirK', 'nirS',
+                     'pmoA', 'pmoB', 'pmoC', 'amoA', 'amoB', 'amoC', 'hao', 'nirK',
+                     'nxrA', 'nxrB', 'pmoA', 'pmoB', 'pmoC', 'amoA', 'amoB', 'amoC', 'hao',
+                     'hmp, YHB1', 'nasA', 'nasB', 'narG', 'narH', 'narI, narV', 'napA',
+                     'napB', 'nxrA', 'nxrB', 'nirK', 'nirS', 'norV', 'norW', 'hcp', 'norB', 'norC', 'nosZ',
+                     'norZ', 'narG', 'narH', 'narI, narV', 'napA', 'napB', 'nxrA', 'nxrB', 'nrfA', 'nrfH',
+                     'εHao (HaoA)', 'haoC', 'ONR', 'OTR', 'nirK', 'nirS',
                      'hzsA', 'hzsB', 'hzsC', 'hdh', 'hao', 'nasA', 'nasB', 'narB',
-                     'nirA', 'nirB', 'nirD']
+                     'nirA', 'nirB']
     with pd.ExcelWriter(join(odir, 'relative_genes_summary(tax).xlsx')) as writer:
+        workbook = writer.book
+        cell_format = workbook.add_format()
+        cell_format.set_font_name('Times New Roman')
         for level in ['phylum', 'class', 'order', 'family', 'genus', 'species']:
             sub_df = locus2info_df.copy()
             sub_df.loc[:, level] = sub_df.loc[:, level].replace('', 'unclassified').fillna('unclassified')
@@ -365,15 +397,15 @@ def main(locus2info, sample2locus, target_fa, oseq):
             total_count = sample2info.loc[sample2info.source.isin(projects), :].shape[0]
 
             collect_dfs = []
-            for m in ko2name.keys():
-                _df = sub_df.loc[sub_df.loc[:, 'ko(single)'] == m, :]
+            for genename in sub_df.loc[:, 'Gene name(N metabolism)'].unique():
+                _df = sub_df.loc[sub_df.loc[:, 'Gene name(N metabolism)'] == genename, :]
                 _df = _df.drop_duplicates('locus_prefix')
                 count_data = _df.loc[:, level].shape[0]
                 # count_data, level2snames = count_method(_df, level)
                 freq_data = count_data / total_count * 100
                 # freq_data = freq_data[freq_data >= 0.6]
                 collect_dfs.append(pd.DataFrame(freq_data,
-                                                columns=[koSingle2name[m]],
+                                                columns=[genename],
                                                 index=['%s (%s)' % (env, total_count)]))
                 summary_df = pd.concat(collect_dfs, axis=1, sort=True)
             total_collect.append(summary_df)
@@ -381,6 +413,7 @@ def main(locus2info, sample2locus, target_fa, oseq):
         summary_df = summary_df.fillna(0)
         summary_df = summary_df.applymap(lambda x: round(x, 2))
         summary_df = summary_df.reindex(columns=order_columns)
+        summary_df = summary_df.T
         summary_df.to_excel(writer, index_label='ENV (in total)')
 
     ############################################################

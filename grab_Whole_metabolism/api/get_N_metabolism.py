@@ -26,16 +26,28 @@ def get_module_info(metabolism_id):
     dict_data = kegg.parse(data)
 
     # get module
-    list_module = dict_data['MODULE']
+    list_module = dict_data.get('MODULE', {})
     module_dict = defaultdict(dict)
-    for m in list_module:
-        module_data = kegg.parse(kegg.get(m))
-        module_dict[m]['data'] = module_data
-        module_dict[m]['metadata'] = list_module[m]
-    module_dict['others'] = {}
-    module_dict['others']['data'] = {}
-    module_dict['others']['data']['ORTHOLOGY'] = dict_data['ORTHOLOGY']
-    module_dict['others']['data']['NAME'] = ['Others']
+    if not metabolism_id.lower().startswith('ko'):
+        if not list_module:
+            module_ID = 'others'
+            module_name = ''
+        else:
+            module_ID = list(list_module)[0]
+            module_name = list(list_module.values())[0]
+        # pass a orthology ID
+        module_dict[module_ID]['data'] = {}
+        module_dict[module_ID]['data']['ORTHOLOGY'] = {metabolism_id: dict_data.get('DEFINITION','')}
+        module_dict[module_ID]['data']['NAME'] = [module_name]
+    else:
+        for m in list_module:
+            module_data = kegg.parse(kegg.get(m))
+            module_dict[m]['data'] = module_data
+            module_dict[m]['metadata'] = list_module[m]
+        module_dict['others'] = {}
+        module_dict['others']['data'] = {}
+        module_dict['others']['data']['ORTHOLOGY'] = dict_data['ORTHOLOGY']
+        module_dict['others']['data']['NAME'] = ['Others']
     return module_dict
 
 
@@ -140,26 +152,26 @@ def get_locusDetailedInfo(locus2info):
             if locus in genes_df.iloc[:, 0]:
                 continue
 
-            for args in locus2info[locus]:
-                other_paralog_locus, module_name, orthology_total, orthology_single = args
-                gene_name = ';'.join(info_dict.get('NAME', ['']))
-                definition = info_dict['DEFINITION']
-                source_organism = info_dict["ORGANISM"]
-                NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
-                uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
-                AA_seq = info_dict["AASEQ"].replace(' ', '')
-                genes_df.loc[count_, :] = [locus,
-                                           gene_name,
-                                           source_organism,
-                                           definition,
-                                           uniprot_refID,
-                                           NCBI_refID,
-                                           other_paralog_locus,
-                                           module_name,
-                                           orthology_total,
-                                           orthology_single,
-                                           AA_seq]
-                count_ += 1
+            args = locus2info[locus][0]
+            other_paralog_locus, module_name, orthology_total, orthology_single = args
+            gene_name = ';'.join(info_dict.get('NAME', ['']))
+            definition = info_dict['DEFINITION']
+            source_organism = info_dict["ORGANISM"]
+            NCBI_refID = info_dict.get("DBLINKS", {}).get("NCBI-ProteinID", None)
+            uniprot_refID = info_dict.get("DBLINKS", {}).get("UniProt", None)
+            AA_seq = info_dict["AASEQ"].replace(' ', '')
+            genes_df.loc[count_, :] = [locus,
+                                       gene_name,
+                                       source_organism,
+                                       definition,
+                                       uniprot_refID,
+                                       NCBI_refID,
+                                       other_paralog_locus,
+                                       module_name,
+                                       orthology_total,
+                                       orthology_single,
+                                       AA_seq]
+            count_ += 1
     return genes_df
 
 
