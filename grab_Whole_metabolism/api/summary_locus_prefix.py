@@ -74,7 +74,7 @@ def download_summary(indir):
             record.id = random_prefix + '_' + record.id
             new_records.append(record)
         with open(join(each_dir, 'generated_protein.faa'), 'w') as f1:
-            SeqIO.write(new_records, f1, format='fasta-2lines')
+            SeqIO.write(new_records, f1, format='fasta-2line')
         sname2locus[sname] = {}
         sname2locus[sname]['locus_prefix'] = random_prefix
     result_df = pd.DataFrame.from_dict(sname2locus, orient='index')
