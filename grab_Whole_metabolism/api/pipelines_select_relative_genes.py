@@ -9,6 +9,13 @@ from Bio import SeqIO
 from tqdm import tqdm
 from bioservices import KEGG
 
+# prepare the input faa
+# 1. download genome data/ protein faa
+# 2. use prokka to get protein sequences if just download genome data
+# 3. summary a protein2sample csv (called sample2infos.tsv, mean sample2locus)
+# 4. cat all protein seq into one big file for performing diamond search
+# 5. below code.
+
 
 def output_seq_from_df(df, oseq):
     with open(oseq, 'w') as f1:
