@@ -57,10 +57,10 @@ def download_summary(indir):
     for each_dir in tqdm(genome_dirs):
         # iterating all directory
         p_faa = glob(join(each_dir, '*.faa.gz'))
-        sname = basename(dirname(p_faa))
+        sname = basename(each_dir)
         if not p_faa:
             # if not download faa file, pass it and record it.
-            missing_faa_samples.append(basename(each_dir))
+            missing_faa_samples.append(sname)
             sname2locus[sname] = {}
             continue
         p_faa = p_faa[0]
