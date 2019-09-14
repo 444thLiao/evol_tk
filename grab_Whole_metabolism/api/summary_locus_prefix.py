@@ -64,7 +64,7 @@ def download_summary(indir):
             sname2locus[sname] = {}
             continue
         p_faa = p_faa[0]
-        records = SeqIO.parse(gzip.open(p_faa), format='fasta')
+        records = SeqIO.parse(gzip.open(p_faa,'rt'), format='fasta')
         random_prefix = randomString(10)
         if random_prefix in occured_id:
             random_prefix = randomString(10)
