@@ -72,19 +72,20 @@ def main(locus2info, sample2locus, target_fa, oseq):
 
     # reannotate from gene info file, especially the KO and its name
     pre_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
+
     subject_info_df = pd.read_excel(manually_info)
     subject_info_df = subject_info_df.set_index('AA accession')
     order_df = subject_info_df.reindex(pre_df.loc[:, 1])
     pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / order_df.loc[:, 'AA sequence(seq)'].str.len().values
     pre_df.loc[:, 'KO'] = order_df.loc[:, 'ko'].values
     pre_df.loc[:, 'KO name'] = order_df.loc[:, 'gene name'].values
-    # subject_info_df = subject_info_df.set_index('locus name')
+    # subject_info_df = subject_info_df.set_index('locus_name')
     # query_df = query_df.drop_duplicates('locus_name')
     # query_df = query_df.set_index('locus_name')
     # get_df = query_df.reindex(pre_df.loc[:, 1])
-    # pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / get_df.loc[:, 'AA seq'].str.len().values
-    # pre_df.loc[:, 'KO'] = get_df.loc[:, 'Orthology(single)'].values
-    # pre_df.loc[:, 'KO name'] = get_df.loc[:, 'KO name'].values
+    # pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / order_df.loc[:, 'AA seq'].str.len().values
+    # pre_df.loc[:, 'KO'] = order_df.loc[:, 'Orthology(single)'].values
+    # pre_df.loc[:, 'KO name'] = order_df.loc[:, 'KO name'].values
 
     # considerate before and after locus, which being cutted
     # _pre_df = pre_df.drop_duplicates(0)

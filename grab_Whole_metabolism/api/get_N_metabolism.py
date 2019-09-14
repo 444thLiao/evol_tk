@@ -148,7 +148,10 @@ def get_locusDetailedInfo(locus2info):
             else:
                 info_dict = kegg.parse('ENTRY ' + each_str)
             locus = info_dict.get('ENTRY', 'unknown').split(' ')[0]
-            locus = [_ for _ in bin10 if locus in _][0]
+            try:
+                locus = [_ for _ in bin10 if locus.lower() in _.lower()][0]
+            except:
+                import pdb;pdb.set_trace()
             if locus in genes_df.iloc[:, 0]:
                 continue
 
