@@ -54,7 +54,7 @@ def download_summary(indir):
     missing_faa_samples = []
     sname2locus = {}
     occured_id = []
-    for each_dir in genome_dirs:
+    for each_dir in tqdm(genome_dirs):
         # iterating all directory
         p_faa = glob(join(each_dir, '*.faa.gz'))
         sname = basename(dirname(p_faa))
@@ -97,3 +97,6 @@ def main(indir, outfile, typeOfdata):
     else:
         raise Exception('accepted parameters of -t included')
     result_df.to_csv(outfile, index_label='sample_name')
+
+if __name__ == '__main__':
+    main()
