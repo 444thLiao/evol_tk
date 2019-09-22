@@ -151,6 +151,8 @@ def get_locusDetailedInfo(locus2info):
             try:
                 locus = [_ for _ in bin10 if locus.lower() in _.lower()][0]
             except:
+                locus = info_dict.get('NAME', [])[0]
+                locus = [_ for _ in bin10 if locus.lower() in _.lower()][0]
                 import pdb;pdb.set_trace()
             if locus in genes_df.iloc[:, 0]:
                 continue
