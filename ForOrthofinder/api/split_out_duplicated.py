@@ -107,7 +107,7 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
             if (not left_n and not right_n):
                 # None is beacuse it could not find this locus at gff
                 # empty is because no neighbour besides it
-                _df = pd.DataFrame.from_dict({target_locus: Counter([])}, orient='index')
+                _df = pd.DataFrame(index=[target_locus])
                 collect_df.append(_df)
                 continue
             _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
