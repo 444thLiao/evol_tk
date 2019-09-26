@@ -108,9 +108,8 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
                 # None is beacuse it could not find this locus at gff
                 # empty is because no neighbour besides it
                 _df = pd.DataFrame(index=[target_locus])
-                collect_df.append(_df)
-                continue
-            _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
+            else:
+                _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
             collect_df.append(_df)
     # make the concat slower actually. leave it as a failed tried???
     # final_columns = set([c for df in collect_df

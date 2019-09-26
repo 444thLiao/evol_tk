@@ -44,9 +44,13 @@ def main(infile, backbone_column_idx=0):
         used_genome, used_locus = [(genome, locus)
                                    for genome, locus in row.items()
                                    if not pd.isna(locus)][0]
-        genome_ordered_col = list(order_OG_df.reindex(order_OG_without_gap).loc[:, used_genome])
+        # get the first not nan one. 
+        genome_ordered_col = list(OG_df.reindex(order_OG_without_gap).loc[:, used_genome])
+        # order this genome among all order_OG_without_gap OGs. (may nan, but for backbone is all full and order.)
         reorder_col = sorted(genome_ordered_col + [used_locus], key=order_func)
+        # add this locus into these OG, and reorder it.
         next_locus = reorder_col[reorder_col.index(used_locus) + 1]
+        # find the next locus
         if not pd.isna(next_locus):
             insert_idx = genome_ordered_col.index(next_locus)
         else:
