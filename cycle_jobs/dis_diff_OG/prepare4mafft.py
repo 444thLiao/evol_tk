@@ -82,7 +82,7 @@ def to_color_strip(each_og,ofile,info_col='type',ko_name=None):
     id2info = {}
     for id, org in id2org.items():
         if org in g_df.index:
-            name = g_df.loc[org, 'genome name']
+            #name = g_df.loc[org, 'genome name']
             val = g_df.loc[org,info_col]
             id2info[id] = val
         else:
