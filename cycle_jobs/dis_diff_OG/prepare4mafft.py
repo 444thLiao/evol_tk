@@ -14,27 +14,49 @@ with open(join(odir, 'manually_blast_r.json'), 'r') as f1:
 with open(join(odir, 'ko2og2names.json'), 'r') as f1:
     ko2og2names = json.load(f1)
 
-og_tsv = './genome_protein_files/OrthoFinder/Results_Sep25/Orthogroups/Orthogroups.tsv'
+og_tsv = './genome_protein_files/OrthoFinder/Results_Sep27/Orthogroups/Orthogroups.tsv'
 og_df = pd.read_csv(og_tsv, sep='\t', low_memory=False, index_col=0)
+def rename(x):
+    if pd.isna(x):
+        return x
+    if ', ' not in x:
+        return str(x).split(' ')[0]
+    else:
+        return ', '.join([str(_).split(' ')[0] for _ in x.split(', ')])
+og_df = og_df.applymap(rename)
+
 genome_info = './genome_info_full.xlsx'
 g_df = pd.read_excel(genome_info, index_col=0)
+
+# remove removed seq
+
+# add to from manually_blast_r 
+def add_to_more(ofile,manually_blast_r):
+    # fix me
+    
+    pass
+
+# special_annotate_file (out group )
+
+
 # generate annoating file
-
-
-def generate_id2org(og_name, ofile):
+def generate_id2org(og_names, ofile):
     all_seq_ids = [_.id for _ in SeqIO.parse(ofile, format='fasta')]
-    row = og_df.loc[og_name, :]
+    if isinstance(og_names,str):
+        og_names = [og_names]
     id2org = {}
-    for seq_id in all_seq_ids:
-        org_ids = row.index[row.fillna('').str.contains(seq_id)]
-        if not list(org_ids):
-            print('Error', seq_id, og_name)
-            continue
-        org_id = org_ids[0]
-        id2org[seq_id] = org_id
+    for og_name in og_names:
+        row = og_df.loc[og_name, :]
+        for seq_id in all_seq_ids:
+            org_ids = row.index[row.fillna('').str.contains(seq_id)]
+            if not list(org_ids):
+                #print('Error', seq_id, og_name)
+                continue
+            org_id = org_ids[0]
+            id2org[seq_id] = org_id
     return id2org
 # rename
-def to_label(each_og,ofile):
+def to_label(each_og,ofile,ko_name=None):
     template_text = open(
         '/home-user/thliao/template_txt/labels_template.txt').read()
     id2org = generate_id2org(each_og, ofile)
@@ -45,17 +67,19 @@ def to_label(each_og,ofile):
         else:
             name = id
         full_text += '%s,%s\n' % (id, name)
+    if ko_name is not None:
+        each_og = ko_name
     with open(join(odir, f'label_{each_og}.txt'), 'w') as f1:
         f1.write(full_text)
 
-def to_color_strip(each_og,ofile,info_col='type'):
+color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#377eb8', 'AOB': '#4daf4a', 'AOA': '#984ea3'},
+                }
+def to_color_strip(each_og,ofile,info_col='type',ko_name=None):
     template_text = open(
         '/home-user/thliao/template_txt/dataset_color_strip_template.txt').read()
     id2org = generate_id2org(each_og, ofile)
     colors = sns.color_palette('Set1').as_hex()
-    
     id2info = {}
-    full_text = template_text[::]
     for id, org in id2org.items():
         if org in g_df.index:
             name = g_df.loc[org, 'genome name']
@@ -63,11 +87,14 @@ def to_color_strip(each_og,ofile,info_col='type'):
             id2info[id] = val
         else:
             name = id
-    
+
     set_v = set(id2info.values())
     num_v = len(set_v)
     cols = colors[:num_v]
-    info2col = dict(zip(set_v,cols))
+    if info_col in color_scheme:
+        info2col = color_scheme[info_col]
+    else:
+        info2col = dict(zip(set_v,cols))
     id2col = {id:info2col[info] for id,info in id2info.items()}
     annotate_text = '\n'.join(['%s,%s\n' % (id,col) for id,col in id2col.items()])
     
@@ -83,41 +110,67 @@ LEGEND_COLORS,{legend_colors}
 LEGEND_LABELS,{legend_labels}"""
     template_text = template_text.format(legend_text=legend_text,
                      dataset_label=info_col)
+    if ko_name is not None:
+        each_og = ko_name
     with open(join(odir, f'color_{each_og}.txt'), 'w') as f1:
         f1.write(template_text+'\n'+annotate_text)
 
-# separated OG align
-og_list = [og for og_l in ko2og.values() for og in og_l]
+# ref or outgroup seq, additionally add to
+ref_file = 'outgroup_total.xlsx'
+ref_df = pd.read_excel(ref_file,index_col=None)
+ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
+def get_add_text(sub_df):
+    t_text = '' 
+    for _,row in sub_df.iterrows():
+        aa_id = row['AA accession']
+        gene_name = row['gene name']
+        seq = row['seq']
+        t_text+= f'>{aa_id}_{gene_name}\n{seq}\n'
+    return t_text
 
+
+
+# separated OG align
 odir = join('./align', 'single_OG')
 os.makedirs(odir, exist_ok=1)
-for each_og in og_list:
-    fa_file = f'./genome_protein_files/OrthoFinder/Results_Sep25/Orthogroup_Sequences/{each_og}.fa'
-    ofile = join(odir, each_og+'.aln')
-    if not exists(ofile):
-        check_call(
-            f'mafft --anysymbol --thread -1 {fa_file} > {ofile}', shell=1)
-    # if not exists(ofile.replace('.aln','.treefile')):
-    #     check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -pre {odir}/{each_og} -s {ofile}',shell=1)
-    to_label(each_og,ofile)
-    to_color_strip(each_og,ofile,info_col='type')
+for ko, og_list in ko2og.items():
+    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
+    add_text = get_add_text(sub_ref_df)
+    for each_og in og_list:
+        fa_file = f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa'
+        new_fa_file = join(odir, each_og+'.fa')
+        with open(new_fa_file,'w') as f1:
+            f1.write(add_text+open(fa_file,'r').read())
+        ofile = join(odir, each_og+'.aln')
+        if not exists(ofile):
+            check_call(
+                f'mafft --anysymbol --thread -1 {new_fa_file} > {ofile}', shell=1)
+        if not exists(ofile.replace('.aln','.treefile')):
+            check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{each_og} -s {ofile}',shell=1)
+        to_label(each_og,ofile)
+        to_color_strip(each_og,ofile,info_col='type')
     
 
 odir = join('./align', 'complete_ko')
 os.makedirs(odir, exist_ok=1)
 for ko,og_list in ko2og.items():
-    
-    fa_files = [f'./genome_protein_files/OrthoFinder/Results_Sep25/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
+    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
+    add_text = get_add_text(sub_ref_df)
+    fa_files = [f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     new_file = join(odir, ko+'.fa')
     if not exists(new_file):
         fa_file = ' '.join(fa_files)
         check_call(
             f'cat {fa_file} > {new_file}', shell=1)
+    ori_text = open(new_file,'r').read()
+    with open(new_file,'w') as f1:
+        f1.write(add_text+ori_text)
+    
     ofile = join(odir, ko+'.aln')
     if not exists(ofile):
         check_call(
-            f'mafft --anysymbol --thread -1 {fa_file} > {ofile}', shell=1)
+            f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
     if not exists(ofile.replace('.aln','.treefile')):
-        check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -pre {odir}/{ko} -s {ofile}',shell=1)
-    to_label(ko,ofile)
-    to_color_strip(ko,ofile,info_col='type')
+        check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
+    to_label(og_list,ofile,ko_name=ko)
+    to_color_strip(og_list,ofile,info_col='type',ko_name=ko)

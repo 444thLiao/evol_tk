@@ -31,15 +31,15 @@ def run_cmd(cmd):
 
 
 used_ko = []
-removed_ko = [_ for _ in open('./removed_ko.txt').read().split('\n')
+removed_ko = [_ for _ in open('../new_grab2/removed_ko.txt').read().split('\n')
               if _]
-used_ko += [_.split('\t')[0] for _ in open('./ko_info.csv').read().split('\n')
+used_ko += [_.split('\t')[0] for _ in open('../new_grab2/ko_info.csv').read().split('\n')
             if _ and _.split('\t')[0] != 'KO number']
 used_ko = [_ for _ in used_ko if _ not in removed_ko]
 
 # relative to /home-user/thliao/data/metagenomes/manually_output
 # input file
-locus2info = './locus_info.csv'  # genes from kegg database
+locus2info = '../new_grab2/locus_info.csv'  # genes from kegg database
 sample2locus = '../concat_all/sample2infos.tsv'  # collected metadata
 manually_info = '../manually_curated_N_cycle_genes.xlsx'  # manually curated genes with ko info? or not
 
@@ -50,8 +50,8 @@ target_fa = '../concat_all/all_protein.faa'
 odir = '.'
 oseq = join(odir, 'first_extract_seq.faa')
 o1_tab = join(odir, 'first_diamond.out')
-intermedia_faa = join(odir, 'first_extract_seq.faa')
-o2_tab = join(odir, 'first_extract_seq_KOfam.out')
+intermedia_faa = join(odir, 'first_diamond_extract.faa')
+o2_tab = join(odir, 'first_diamond_extract.out')
 final_faa = join(odir, 'confirmed.faa')
 final_tsv = join(odir, 'confirmed_locus2info.tsv')
 
@@ -68,17 +68,35 @@ def main(locus2info, sample2locus, target_fa, oseq):
     # build index with step1 output
     run_cmd(f'diamond makedb --in {oseq} --db {dbname}')
     # perform first blastp
-    run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2")
-
+    outformat = 'qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore'
+    run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2 --outfmt {outformat}")
+    
+    subset_names = {'amoA': 'K10944',
+           'amoB': 'K10945',
+           'amoC': 'K10946',
+           'hao': 'K10535',
+           'nxrA': 'K00370',
+           'nxrB': 'K00371'}
     # reannotate from gene info file, especially the KO and its name
     pre_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
 
     subject_info_df = pd.read_excel(manually_info)
+    subject_info_df = subject_info_df.drop_duplicates('AA accession')
     subject_info_df = subject_info_df.set_index('AA accession')
+    subject_info_df2 = pd.read_csv(locus2info,sep='\t')
+    subject_info_df2 = subject_info_df2.rename(columns={'AA seq':'AA sequence(seq)',
+                                    'Orthology(single)':'ko',
+                                    'KO name':'gene name'})
+    subject_info_df2 = subject_info_df2.drop_duplicates('locus_name')
+    subject_info_df2 = subject_info_df2.set_index('locus_name')
+    subject_info_df = pd.concat([subject_info_df,subject_info_df2],axis=0)
     order_df = subject_info_df.reindex(pre_df.loc[:, 1])
     pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / order_df.loc[:, 'AA sequence(seq)'].str.len().values
     pre_df.loc[:, 'KO'] = order_df.loc[:, 'ko'].values
     pre_df.loc[:, 'KO name'] = order_df.loc[:, 'gene name'].values
+    
+    sub_pre_df = pre_df.loc[pre_df.loc[:,'KO name'].isin(subset_names),:]
+    pre_df = sub_pre_df.copy()
     # subject_info_df = subject_info_df.set_index('locus_name')
     # query_df = query_df.drop_duplicates('locus_name')
     # query_df = query_df.set_index('locus_name')
@@ -107,9 +125,9 @@ def main(locus2info, sample2locus, target_fa, oseq):
     #             counted_locus.append(tuple(sorted([locus, after_locus]) + [n]))
     #             # print(locus,after_locus,n)
 
-    tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
+    #tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
     records = SeqIO.parse(f'{target_fa}', format='fasta')
-    used_gids = set(tmp_df.iloc[:, 0])
+    used_gids = set(sub_pre_df.iloc[:, 0])
     collcect_records = []
     for record in tqdm(records):
         if record.id in used_gids:
@@ -118,7 +136,7 @@ def main(locus2info, sample2locus, target_fa, oseq):
         SeqIO.write(collcect_records, f1, format='fasta-2line')
 
     # step2: using more and well-annotated kegg database to annotated, for removing false-positive
-    run_cmd(f"/home-user/thliao/software/kofamscan/exec_annotation {intermedia_faa} -o {o2_tab} --cpu 2 -f mapper-one-line")
+    run_cmd(f"/home-user/thliao/software/kofamscan/exec_annotation {intermedia_faa} -o {o2_tab} --cpu 40 -f mapper-one-line")
     # extract step2 output info into a dictionary
     kofamscan_str = open(f'{o2_tab}', 'r').read().split('\n')
     ko2result = dict([(row.split('\t')[0],
@@ -145,7 +163,7 @@ def main(locus2info, sample2locus, target_fa, oseq):
     def annotate_KO(locus):
         collect_seq = defaultdict(dict)
         sub_df = pre_df.loc[pre_df.loc[:, 0] == locus, :]
-        _df = sub_df.loc[(sub_df.loc[:, 'cover ratio'] >= 0.6) & (sub_df.loc[:, 10] <= 1e-7), :]
+        _df = sub_df.loc[(sub_df.loc[:, 'cover ratio'] >= 0.4) & (sub_df.loc[:, 10] <= 1e-7), :]
         ko1_list = []
         pre_ko2name = {}
         ko_output = []
