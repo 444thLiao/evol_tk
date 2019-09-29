@@ -93,6 +93,7 @@ def to_color_strip(each_og,ofile,info_col='type',ko_name=None):
     cols = colors[:num_v]
     if info_col in color_scheme:
         info2col = color_scheme[info_col]
+        info2col = {k:v for k,v in info2col.items() if k in set_v}
     else:
         info2col = dict(zip(set_v,cols))
     id2col = {id:info2col[info] for id,info in id2info.items()}
@@ -136,11 +137,13 @@ def annotate_outgroup(sub_df):
                                          filed_label='outgroup/reference')
     annotate_text = ''
     for _,row in sub_df.iterrows():
-        aa_accession = row['AA accession']
+        aa_id = row['AA accession']
+        gene_name = row['gene name']
+        name = f'{aa_id}_{gene_name}'
         if row['type'] == 'outgroup':
-            annotate_text += '\t'.join([aa_accession,'1']) +'\n'
+            annotate_text += '\t'.join([name,'1']) +'\n'
         else:
-            annotate_text += '\t'.join([aa_accession,'0']) +'\n'
+            annotate_text += '\t'.join([name,'0']) +'\n'
     return template_text+annotate_text
 
 # separated OG align
