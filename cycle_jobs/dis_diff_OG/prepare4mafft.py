@@ -33,7 +33,6 @@ g_df = pd.read_excel(genome_info, index_col=0)
 # add to from manually_blast_r 
 def add_to_more(ofile,manually_blast_r):
     # fix me
-    
     pass
 
 # special_annotate_file (out group )
@@ -72,8 +71,19 @@ def to_label(each_og,ofile,ko_name=None):
     with open(join(odir, f'label_{each_og}.txt'), 'w') as f1:
         f1.write(full_text)
 
-color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#377eb8', 'AOB': '#4daf4a', 'AOA': '#984ea3'},
+color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d', 
+                        'AOB': '#bad5b9', 'AOA': '#358f0f'},
+                'phylum/class':{'Thaumarchaeota': '#358f0f',
+                                'Nitrospirae': '#edc31d',
+                                'Gammaproteobacteria': '#78fce0',
+                                'chloroflexi': '#e41a1c',
+                                'Betaproteobacteria': '#956cb4',
+                                'Alphaproteobacteria': '#8c613c'}
+
                 }
+
+
+
 def to_color_strip(each_og,ofile,info_col='type',ko_name=None):
     template_text = open(
         '/home-user/thliao/template_txt/dataset_color_strip_template.txt').read()
@@ -85,8 +95,6 @@ def to_color_strip(each_og,ofile,info_col='type',ko_name=None):
             #name = g_df.loc[org, 'genome name']
             val = g_df.loc[org,info_col]
             id2info[id] = val
-        else:
-            name = id
 
     set_v = set(id2info.values())
     num_v = len(set_v)
@@ -112,7 +120,8 @@ LEGEND_LABELS,{legend_labels}"""
                      dataset_label=info_col)
     if ko_name is not None:
         each_og = ko_name
-    with open(join(odir, f'color_{each_og}.txt'), 'w') as f1:
+    info_col = info_col.replace('/','_')
+    with open(join(odir, f'color_{each_og}_{info_col}.txt'), 'w') as f1:
         f1.write(template_text+'\n'+annotate_text)
 
 # ref or outgroup seq, additionally add to
@@ -128,7 +137,19 @@ def get_add_text(sub_df):
         t_text+= f'>{aa_id}_{gene_name}\n{seq}\n'
     return t_text
 
-
+def annotate_outgroup(sub_df):
+    template_text = open(
+        '/home-user/thliao/template_txt/dataset_binary_template.txt').read()
+    template_text = template_text.format(filed_shape='3',
+                                         filed_label='outgroup/reference')
+    annotate_text = ''
+    for _,row in sub_df.iterrows():
+        aa_accession = row['AA accession']
+        if row['type'] == 'outgroup':
+            annotate_text += '\t'.join([aa_accession,'1']) +'\n'
+        else:
+            annotate_text += '\t'.join([aa_accession,'0']) +'\n'
+    return template_text+annotate_text
 
 # separated OG align
 odir = join('./align', 'single_OG')
@@ -136,6 +157,7 @@ os.makedirs(odir, exist_ok=1)
 for ko, og_list in ko2og.items():
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
     add_text = get_add_text(sub_ref_df)
+    annotate_text = annotate_outgroup(sub_ref_df)
     for each_og in og_list:
         fa_file = f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa'
         new_fa_file = join(odir, each_og+'.fa')
@@ -149,13 +171,14 @@ for ko, og_list in ko2og.items():
             check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{each_og} -s {ofile}',shell=1)
         to_label(each_og,ofile)
         to_color_strip(each_og,ofile,info_col='type')
-    
+        to_color_strip(each_og,ofile,info_col='phylum/class')
 
 odir = join('./align', 'complete_ko')
 os.makedirs(odir, exist_ok=1)
 for ko,og_list in ko2og.items():
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
     add_text = get_add_text(sub_ref_df)
+    annotate_text = annotate_outgroup(sub_ref_df)
     fa_files = [f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     new_file = join(odir, ko+'.fa')
     if not exists(new_file):
@@ -174,3 +197,6 @@ for ko,og_list in ko2og.items():
         check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
     to_label(og_list,ofile,ko_name=ko)
     to_color_strip(og_list,ofile,info_col='type',ko_name=ko)
+    to_color_strip(og_list,ofile,info_col='phylum/class',ko_name=ko)
+    with open(join(odir,f'marker_{ko}_outgroup_ref.txt'),'w') as f1:
+        f1.write(annotate_text)

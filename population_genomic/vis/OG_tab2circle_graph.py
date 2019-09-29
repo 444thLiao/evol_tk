@@ -61,3 +61,15 @@ def draw_barplot(plot_data):
                          x=plot_data['width'],
                          marker=dict(color=plot_data['color'])))
     return fig
+
+
+@click.command()
+@click.option("-i", "input_OG")
+@click.option("-o", "output_file")
+@click.option("-s", "subset_samples")
+def cli(input_OG, output_file, subset_samples):
+    pass
+
+
+if __name__ == '__main__':
+    cli()
