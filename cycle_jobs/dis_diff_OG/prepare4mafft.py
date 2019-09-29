@@ -28,15 +28,7 @@ og_df = og_df.applymap(rename)
 genome_info = './genome_info_full.xlsx'
 g_df = pd.read_excel(genome_info, index_col=0)
 
-# remove removed seq
-
-# add to from manually_blast_r 
-def add_to_more(ofile,manually_blast_r):
-    # fix me
-    pass
-
 # special_annotate_file (out group )
-
 
 # generate annoating file
 def generate_id2org(og_names, ofile):
