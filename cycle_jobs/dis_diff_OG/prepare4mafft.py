@@ -118,7 +118,7 @@ LEGEND_LABELS,{legend_labels}"""
         f1.write(template_text+'\n'+annotate_text)
 
 # ref or outgroup seq, additionally add to
-ref_file = 'outgroup_total.xlsx'
+ref_file = 'outgroup and reference.xlsx'
 ref_df = pd.read_excel(ref_file,index_col=None)
 ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
 def get_add_text(sub_df):
@@ -150,7 +150,7 @@ def annotate_outgroup(sub_df):
 odir = join('./align', 'single_OG')
 os.makedirs(odir, exist_ok=1)
 for ko, og_list in ko2og.items():
-    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
+    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     add_text = get_add_text(sub_ref_df)
     annotate_text = annotate_outgroup(sub_ref_df)
     for each_og in og_list:
@@ -167,11 +167,13 @@ for ko, og_list in ko2og.items():
         to_label(each_og,ofile)
         to_color_strip(each_og,ofile,info_col='type')
         to_color_strip(each_og,ofile,info_col='phylum/class')
-
+        with open(join(odir,f'marker_{each_og}_outgroup_ref.txt'),'w') as f1:
+            f1.write(annotate_text)
+        
 odir = join('./align', 'complete_ko')
 os.makedirs(odir, exist_ok=1)
 for ko,og_list in ko2og.items():
-    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup for which KO']==ko,:]
+    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     add_text = get_add_text(sub_ref_df)
     annotate_text = annotate_outgroup(sub_ref_df)
     fa_files = [f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
