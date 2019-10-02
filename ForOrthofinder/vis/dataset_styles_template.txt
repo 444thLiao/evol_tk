@@ -11,10 +11,10 @@ SEPARATOR TAB
 #SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
-DATASET_LABEL   {dataset_label}
+DATASET_LABEL	{dataset_label}
 
 #dataset color (can be changed later)
-COLOR   #ffff00
+COLOR	#ffff00
 
 #=================================================================#
 #                    OPTIONAL SETTINGS                            #

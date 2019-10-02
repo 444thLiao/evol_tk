@@ -142,18 +142,18 @@ sname2info = {k:v for k,v in sname2info.items() if not pd.isna(v)}
 
 # data dependent transform
 
-def deduced_legend(info2color,info_name='dataset'):
+def deduced_legend(info2color,info_name='dataset',sep=','):
     
     legend_title = info_name
-    legend_shape = ','.join(['1'] * len(info2color))
-    legend_colors = ','.join([_
+    legend_shape = sep.join(['1'] * len(info2color))
+    legend_colors = sep.join([_
                               for _ in info2color.values()])
-    legend_labels = ','.join(list(info2color.keys()))
+    legend_labels = sep.join(list(info2color.keys()))
     legend_text = f"""
-LEGEND_TITLE,{legend_title}
-LEGEND_SHAPES,{legend_shape}
-LEGEND_COLORS,{legend_colors}
-LEGEND_LABELS,{legend_labels}"""
+LEGEND_TITLE{sep}{legend_title}
+LEGEND_SHAPES{sep}{legend_shape}
+LEGEND_COLORS{sep}{legend_colors}
+LEGEND_LABELS{sep}{legend_labels}"""
     return legend_text
 
 def to_color_strip(id2info,info2color,info_name='dataset'):
@@ -168,13 +168,13 @@ def to_color_strip(id2info,info2color,info_name='dataset'):
     info_name = info_name.replace('/','_')
     return template_text+'\n'+annotate_text
     
-def to_color_branch(ID2info,info2color,dataset_name='color range'):
+def to_color_branch(ID2info,info2color,dataset_name='color branch'):
     # clade for 
     template_text = open(
         '/home-user/thliao/template_txt/dataset_styles_template.txt').read()
     id2col = {ID:info2color[info] for ID,info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
-    legend_text = deduced_legend(info2color,dataset_name)
+    legend_text = deduced_legend(info2color,dataset_name,sep='\t')
     
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text=legend_text)
