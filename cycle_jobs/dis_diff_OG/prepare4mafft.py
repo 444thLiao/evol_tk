@@ -1,11 +1,13 @@
 import json
 import os
-from os.path import join, exists
+from os.path import join, exists,basename,dirname
+from glob import glob
 import pandas as pd
 from subprocess import check_call
 from Bio import SeqIO
 import seaborn as sns
 from ete3 import Tree
+import plotly.express as px
 
 # load all necessary data
 odir = 'json_dump'
@@ -16,7 +18,9 @@ with open(join(odir, 'manually_blast_r.json'), 'r') as f1:
 with open(join(odir, 'ko2og2names.json'), 'r') as f1:
     ko2og2names = json.load(f1)
 
-og_tsv = './genome_protein_files/OrthoFinder/Results_Sep27/Orthogroups/Orthogroups.tsv'
+indir = 'genome_protein_files'
+
+og_tsv = join(indir,'OrthoFinder/Results_Sep27/Orthogroups/Orthogroups.tsv')
 og_df = pd.read_csv(og_tsv, sep='\t', low_memory=False, index_col=0)
 def rename(x):
     if pd.isna(x):
@@ -29,6 +33,15 @@ og_df = og_df.applymap(rename)
 
 genome_info = './genome_info_full.xlsx'
 g_df = pd.read_excel(genome_info, index_col=0)
+
+# name2dirname
+name2dirname = {}
+for ofile in glob(join(indir,'*.faa')):
+    real_ofile = os.path.realpath(ofile)
+    name = basename(ofile).replace('.faa','')
+    if '/prokka_o/' in real_ofile:
+        dir_name = basename(dirname(real_ofile)).replace('.faa','')
+        name2dirname[name] = dir_name
 
 # special_annotate_file (out group )
 # generate annoating file
@@ -47,6 +60,31 @@ def generate_id2org(og_names, ofile):
             org_id = org_ids[0]
             id2org[seq_id] = org_id
     return id2org
+
+def get_color_info(each_og, ofile,info_col='type'):
+    id2org = generate_id2org(each_og, ofile)
+    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
+    id2info = {}
+    for id, org in id2org.items():
+        org = name2dirname.get(org,org)
+        if org in g_df.index:
+            #name = g_df.loc[org, 'genome name']
+            id2info[id] = g_df.loc[org,info_col]
+        elif info_col == 'phylum/class' and name2dirname.get(org,org) in sname2info:
+            id2info[id] = sname2info[org]
+            
+    set_v = set(id2info.values())
+    num_v = len(set_v)
+    cols = colors[:num_v]
+    total_info2col = dict(zip(set_v,cols))
+    if info_col in color_scheme:
+        _info2col = color_scheme[info_col]
+        info2col = {k:_info2col[k] for k in set_v if k in _info2col}
+        fix_missed = {k:total_info2col[k] for k in set_v if k not in info2col}
+        info2col.update(fix_missed)
+    else:
+        info2col = total_info2col.copy()
+    return id2info,info2col
 
 # rename
 def to_label(each_og,ofile,ko_name=None):
@@ -81,53 +119,90 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                 'phylum/class':{'Thaumarchaeota': '#358f0f',
                                 'Nitrospirae': '#edc31d',
                                 'Gammaproteobacteria': '#78fce0',
-                                'chloroflexi': '#e41a1c',
+                                'Chloroflexi': '#e41a1c',
                                 'Betaproteobacteria': '#956cb4',
                                 'Alphaproteobacteria': '#8c613c'}
 
                 }
 
-def to_color_strip(each_og, ofile,info_col='type',ko_name=None):
-    template_text = open(
-        '/home-user/thliao/template_txt/dataset_color_strip_template.txt').read()
-    id2org = generate_id2org(each_og, ofile)
-    colors = sns.color_palette('Set1').as_hex()
-    id2info = {}
-    for id, org in id2org.items():
-        if org in g_df.index:
-            #name = g_df.loc[org, 'genome name']
-            val = g_df.loc[org,info_col]
-            id2info[id] = val
+# annotate MAGs lineage
 
-    set_v = set(id2info.values())
-    num_v = len(set_v)
-    cols = colors[:num_v]
-    if info_col in color_scheme:
-        info2col = color_scheme[info_col]
-        info2col = {k:v for k,v in info2col.items() if k in set_v}
-    else:
-        info2col = dict(zip(set_v,cols))
-    id2col = {id:info2col[info] for id,info in id2info.items()}
-    annotate_text = '\n'.join(['%s,%s\n' % (id,col) for id,col in id2col.items()])
+MAG_annotate_file = '/home-user/thliao/data/metagenomes/update_0928_nitrification/confirmed_locus2info.tsv'
+MAG_annotate_df = pd.read_csv(MAG_annotate_file,sep='\t',index_col=0)
+derep_df = MAG_annotate_df.drop_duplicates('sample name')
+filtered_df = derep_df.loc[derep_df.loc[:,'sample name'].isin(remained_ID),:]
+phylum_from_metadata_count = filtered_df.groupby('phylum(from metadata)').count().iloc[:,0]
+sname2phylum_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],MAG_annotate_df.loc[:,'phylum(from metadata)']))
+sname2class_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],MAG_annotate_df.loc[:,'class(from metadata)']))
+
+sname2phylum_metadata = {k:v for k,v in sname2phylum_metadata.items() if not pd.isna(v)}
+sname2info = {k:v if v !='Proteobacteria' else sname2class_metadata[k] for k,v in sname2phylum_metadata.items()}
+sname2info = {k:v for k,v in sname2info.items() if not pd.isna(v)}
+
+
+# data dependent transform
+
+def deduced_legend(info2color,info_name='dataset'):
     
-    legend_title = info_col
-    legend_shape = ','.join(['1'] * len(info2col))
+    legend_title = info_name
+    legend_shape = ','.join(['1'] * len(info2color))
     legend_colors = ','.join([_
-                              for _ in info2col.values()])
-    legend_labels = ','.join(list(info2col.keys()))
+                              for _ in info2color.values()])
+    legend_labels = ','.join(list(info2color.keys()))
     legend_text = f"""
 LEGEND_TITLE,{legend_title}
 LEGEND_SHAPES,{legend_shape}
 LEGEND_COLORS,{legend_colors}
 LEGEND_LABELS,{legend_labels}"""
-    template_text = template_text.format(legend_text=legend_text,
-                     dataset_label=info_col)
-    if ko_name is not None:
-        each_og = ko_name
-    info_col = info_col.replace('/','_')
-    with open(join(odir, f'color_{each_og}_{info_col}.txt'), 'w') as f1:
-        f1.write(template_text+'\n'+annotate_text)
+    return legend_text
 
+def to_color_strip(id2info,info2color,info_name='dataset'):
+    template_text = open(
+        '/home-user/thliao/template_txt/dataset_color_strip_template.txt').read()
+    id2col = {id:info2color[info] for id,info in id2info.items()}
+    annotate_text = '\n'.join(['%s,%s\n' % (id,col) for id,col in id2col.items()])
+    legend_text = deduced_legend(info2color,info_name)
+    
+    template_text = template_text.format(legend_text=legend_text,
+                     dataset_label=info_name)
+    info_name = info_name.replace('/','_')
+    return template_text+'\n'+annotate_text
+    
+def to_color_branch(ID2info,info2color,dataset_name='color range'):
+    # clade for 
+    template_text = open(
+        '/home-user/thliao/template_txt/dataset_styles_template.txt').read()
+    id2col = {ID:info2color[info] for ID,info in ID2info.items()}
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    legend_text = deduced_legend(info2color,dataset_name)
+    
+    template_text = template_text.format(dataset_label=dataset_name,
+                                         legend_text=legend_text)
+    
+    rows = [each_template.format(ID=ID,
+                                 TYPE='branch',
+                                 WHAT='node',
+                                 COLOR=color,
+                                 WIDTH_OR_SIZE_FACTOR=2,
+                                 STYLE='normal',
+                                 BACKGROUND_COLOR='')
+        for ID,color in id2col.items()]
+    return template_text + '\n'.join(rows)
+        
+    
+    
+def write2colorstrip(id2info,info2col, unique_id,info_name='type',):
+    content = to_color_strip(id2info,info2col,info_name=info_name)
+    info_name = info_name.replace('/','_')
+    with open(join(odir, f'color_{unique_id}_{info_name}.txt'), 'w') as f1:
+        f1.write(content)
+
+def write2colorbranch(id2info,info2col, unique_id,info_name='type',):
+    content = to_color_branch(id2info,info2col,dataset_name=info_name)
+    info_name = info_name.replace('/','_')
+    with open(join(odir, f'color_branch_{unique_id}_{info_name}.txt'), 'w') as f1:
+        f1.write(content)
+        
 # ref or outgroup seq, additionally add to
 ref_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/outgroup and reference.xlsx'
 ref_df = pd.read_excel(ref_file,index_col=None)
@@ -163,23 +238,6 @@ def annotate_outgroup(sub_df,ref_others=[]):
         annotate_text += '\t'.join([rid,'1']) +'\n'
     return template_text + annotate_text
 
-# annotate MAGs lineage
-
-MAG_annotate_file = '/home-user/thliao/data/metagenomes/update_0928_nitrification/confirmed_locus2info.tsv'
-MAG_annotate_df = pd.read_csv(MAG_annotate_file,sep='\t',index_col=0)
-derep_df = MAG_annotate_df.drop_duplicates('sample name')
-filtered_df = derep_df.loc[derep_df.loc[:,'sample name'].isin(remained_ID),:]
-phylum_from_metadata_count = filtered_df.groupby('phylum(from metadata)').count().iloc[:,0]
-sname2phylum_metadata = dict(zip(MAG_annotate_df.index,MAG_annotate_df.loc[:,'phylum(from metadata)']))
-sname2phylum_metadata = {k:v for k,v in sname2phylum_metadata.items() if not pd.isna(v)}
-all_phylum_metadata = set(phylum_from_metadata_count)
-
-def annotate_MAGs(used_IDs):
-    # clade for 
-    
-    each_template = 'ID\tTYPE\tWHAT\tCOLOR\tWIDTH_OR_SIZE_FACTOR\tSTYLE\tBACKGROUND_COLOR\n'
-    
-    
 
 odir = join('./align', 'complete_ko')
 os.makedirs(odir, exist_ok=1)
@@ -205,11 +263,19 @@ for ko,og_list in ko2og.items():
             f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
     if not exists(ofile.replace('.aln','.treefile')):
         check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
+    renamed_tree(ofile.replace('.aln','.treefile'),
+                 ofile.replace('.aln','.newick'))
+    
+    
     to_label(og_list,ofile,ko_name=ko)
     # annotate with type
-    to_color_strip(og_list,ofile,info_col='type',ko_name=ko)
-    # annotate with phylum
-    to_color_strip(og_list,ofile,info_col='phylum/class',ko_name=ko)
+    id2info,info2col = get_color_info(og_list,ofile,info_col='type')
+    write2colorstrip(id2info,info2col,unique_id=ko,info_name='type')
+    # annotate with phylum/class as a color strip
+    id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class')
+    write2colorstrip(id2info,info2col,unique_id=ko,info_name='phylum/class')
+    # annotate with tree
+    write2colorbranch(id2info,info2col,unique_id=ko,info_name='phylum/class')
     # annotate the marker and outgroup
     with open(join(odir,f'marker_{ko}_outgroup_ref.txt'),'w') as f1:
         f1.write(annotate_text)
