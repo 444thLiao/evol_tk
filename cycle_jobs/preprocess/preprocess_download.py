@@ -33,7 +33,7 @@ if not exists(odir):
 if not exists(tmp_dir):
     os.makedirs(tmp_dir,exist_ok=True)
 for p_dir in glob(join(indir,'**','GCA*'),recursive=True):
-    if isdir(p_dir):
+    if isdir(p_dir) and basename(p_dir) in all_g_ids:
         p_files = glob(join(p_dir,'*.faa.gz'))
         if not p_files:
             fna_file = glob(join(p_dir,'*.fna.gz'))[0]
@@ -48,4 +48,29 @@ for p_dir in glob(join(indir,'**','GCA*'),recursive=True):
             check_call(f'cat {p_file} >{ofile}',shell=True)
         else:
             #print(p_file,ofile)
+            pass
+
+odir = './genome_protein_files'
+for p_dir in glob(join(indir,'**','GCA*'),recursive=True):
+    if isdir(p_dir) and basename(p_dir) in all_g_ids:
+        p_files = glob(join(p_dir,'*.faa.gz'))
+        if not p_files:
+            fna_file = glob(join(p_dir,'*.fna.gz'))[0]
+            new_fna = fna_file.replace('.gz','')
+            print(new_fna)
+            continue
+            #check_call(f'gunzip -d -c {fna_file} > {new_fna}',shell=True)
+            #p_files = [get_faa_from_prokka_r(new_fna,tmp_dir,basename(dirname(fna_file)))]
+            
+        p_file = p_files[0]
+        p_file = p_file.replace('protein.faa.gz','genomic.gff.gz')
+        
+        ofile = join(odir,'prokka_o',basename(p_dir),basename(p_dir)+ '.gff')
+        os.makedirs(dirname(ofile),exist_ok=1)
+        if (not exists(ofile)) and p_file.endswith('.gz') and exists(p_file):
+            check_call(f'gunzip -d -c {p_file} >{ofile}',shell=True)
+        elif (not exists(ofile)) and exists(p_file):
+            check_call(f'cat {p_file} >{ofile}',shell=True)
+        else:
+            print(p_file,ofile)
             pass

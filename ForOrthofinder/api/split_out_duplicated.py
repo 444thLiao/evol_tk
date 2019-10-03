@@ -17,23 +17,25 @@ def preprocess_locus_name(locus):
     return locus
 
 
-def read_gff(gff_file):
+def read_gff(gff_file,id_spec):
     os.makedirs('./tmp/', exist_ok=True)
     odb_file = join('./tmp/', basename(gff_file) + '.db')
     if not exists(odb_file):
         db = gffutils.create_db(gff_file,
                                 odb_file,
-                                force=True, sort_attribute_values=True)
+                                id_spec=id_spec,
+                                force=True, 
+                                sort_attribute_values=True)
     else:
         db = gffutils.FeatureDB(odb_file, keep_order=True, sort_attribute_values=True)
     return db
 
 
-def get_all_gene_pos(genome_file, CDS_names=None):
+def get_all_gene_pos(genome_file, CDS_names=None,id_spec='ID'):
     if not exists(genome_file):
         tqdm.write('wrong file path[%s]... pass it' % genome_file)
         return None, None
-    db = read_gff(genome_file)
+    db = read_gff(genome_file,id_spec)
     if CDS_names is None:
         all_CDS = [_.id for _ in db.all_features()]
     else:

@@ -93,7 +93,6 @@ def use_og_reannoate_(failed_g, sname2ko2locus):
     
     return failed_g, sname2ko2locus
 
-
 def update_ko2og(sname2ko2locus, failed_g=[]):
     # get ko2og with defined failed_g
     # would not use og info from the ids of failed_g

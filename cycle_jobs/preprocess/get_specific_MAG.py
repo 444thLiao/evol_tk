@@ -26,7 +26,6 @@ for sname in tqdm(sample_names):
     p_dir = join(genome_dir,sname)
     faa = [_ for _ in glob(join(p_dir,'*.fna'))][0]
     if not exists(join(odir,basename(faa))):
-        
         check_call(f"ln -s {faa} {odir}",shell=True)
         
 

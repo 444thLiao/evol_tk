@@ -5,15 +5,6 @@ from sklearn.cluster import AgglomerativeClustering
 tmp_path = '/home-user/thliao/data/metagenomes/update_0928_nitrification/confirmed_locus2info.tsv'
 a = pd.read_csv(tmp_path,sep='\t',index_col=0)
 
-# def filter_genome(gdict):
-#     # can not use gene contain or not to arbitary define use it or not
-#     for g,genes in gdict.items():
-#         if set(genes) == {'nxrA','nxrB'}:
-#             return 'NOB'
-#         elif set(genes) == {}:
-#             return 'AOB'
-#         else:
-#             return 
             
 genome2gene = defaultdict(list)
 for _,row in a.iterrows():
