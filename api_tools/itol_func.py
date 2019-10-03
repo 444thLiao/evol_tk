@@ -6,8 +6,9 @@ indir = '/home-user/thliao/template_txt/'
 color_strip_template = join(indir, 'dataset_color_strip_template.txt')
 dataset_styles_template = join(indir, 'dataset_styles_template.txt')
 dataset_binary_template = join(indir, 'dataset_binary_template.txt')
+label_template = join(indir,'labels_template.txt')
 
-
+        
 def renamed_tree(in_tree_file, outfile):
     count = 0
     t = Tree(open(in_tree_file).read())
@@ -44,9 +45,9 @@ def deduced_field(info2style, infos, sep='\t'):
         shapes.append(info2style[info].get('shape', '2'))
         labels.append(info2style[info].get('info', info))
         colors.append(info2style[info].get('color', colors_theme[idx]))
-    template_text = template_text.format(field_shape=sep.join(shapes),
-                                         field_label=sep.join(labels),
-                                         field_color=sep.join(colors))
+    template_text = template_text.format(field_shapes=sep.join(shapes),
+                                         field_labels=sep.join(labels),
+                                         field_colors=sep.join(colors))
     return template_text
 
 

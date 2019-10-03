@@ -164,9 +164,16 @@ def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_nam
     info_name = info_name.replace('/','_')
     with open(join(odir, f'{unique_id}_{info_name}_colorbranch_clade.txt'), 'w') as f1:
         f1.write(content)
-       
-# ref or outgroup seq, additionally add to
 
+
+def write2binary_dataset(ID2infos, odir,info2style, unique_id):
+    
+    annotate_text = annotate_outgroup(ID2infos,info2style)
+    with open(join(odir,f'{unique_id}_marker_outgroup_ref.txt'),'w') as f1:
+        f1.write(annotate_text)
+        
+        
+# ref or outgroup seq, additionally add to
 ref_df = pd.read_excel(ref_file,index_col=None)
 ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
 def get_add_text(sub_df,used_ids):
@@ -186,23 +193,23 @@ def get_add_text(sub_df,used_ids):
             new_ref.append(aa_id)
     return t_text,new_ref,id2info
 
-def annotate_outgroup(sub_df,ref_others=[]):
-    template_text = open(
-        '/home-user/thliao/template_txt/dataset_binary_template.txt').read()
-    template_text = template_text.format(filed_shape='3',
-                                         filed_label='outgroup/reference')
-    annotate_text = ''
+
+def get_outgroup_info(sub_df,ref_others=[]):
+    ID2infos = {}
     for _,row in sub_df.iterrows():
         aa_id = row['AA accession']
         gene_name = row['gene name']
         name = f'{aa_id}_{gene_name}'
         if row['type'] == 'outgroup':
-            annotate_text += '\t'.join([name,'0']) +'\n'
+            ID2infos[name] = ['outgroup']
         else:
-            annotate_text += '\t'.join([name,'1']) +'\n'
+            ID2infos[name] = ['reference']
     for rid in ref_others:
-        annotate_text += '\t'.join([rid,'1']) +'\n'
-    return template_text + annotate_text
+        ID2infos[rid] = ['reference']
+    info2style = {}
+    info2style['outgroup'] = {'status':'0'}
+    info2style['reference'] = {'status':'1'}
+    return ID2infos,info2style
 
 
 final_odir = join('./align_v2', 'complete_ko')
@@ -214,7 +221,8 @@ for ko,og_list in ko2og.items():
     used_ids = [record.id for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
     
     add_text,used_ref_ids,ref_id2info = get_add_text(sub_ref_df,used_ids)
-    annotate_text = annotate_outgroup(sub_ref_df,ref_others=used_ref_ids)
+    ID2infos,info2style = get_outgroup_info(sub_ref_df,ref_others=used_ref_ids)
+    
     new_file = join(final_odir, ko+'.fa')
     if not exists(new_file):
         fa_file = ' '.join(fa_files)
@@ -244,12 +252,11 @@ for ko,og_list in ko2og.items():
         id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
         write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
         # annotate with tree
-        write2colorbranch_clade(id2info,final_odir,
+        write2colorbranch_clade(id2info,
+                                final_odir,
                                 info2col,
                                 treefile=ofile.replace('.aln','.newick'),
-                                unique_id=ko,info_name='branch_color')
-        # annotate the marker and outgroup
-        with open(join(final_odir,f'{ko}_marker_outgroup_ref.txt'),'w') as f1:
-            f1.write(annotate_text)
-            
+                                unique_id=ko,
+                                info_name='branch_color')
+        write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 

@@ -26,17 +26,17 @@ COLOR	#ff0000
 #4: right pointing triangle
 #5: left pointing triangle
 #6: check mark
-#FIELD_SHAPES	{field_shapes}
+FIELD_SHAPES	{field_shapes}
 
 #field labels
-#FIELD_LABELS	{field_labels}
+FIELD_LABELS	{field_labels}
 
 #=================================================================#
 #                    OPTIONAL SETTINGS                            #
 #=================================================================#
 
 #define colors for each individual field column (if not defined all symbols will use the main dataset color, defined in COLOR above)
-#FIELD_COLORS	{field_colors}
+FIELD_COLORS	{field_colors}
 
 
 #=================================================================#
