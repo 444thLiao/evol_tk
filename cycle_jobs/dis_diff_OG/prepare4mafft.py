@@ -10,7 +10,7 @@ from ete3 import Tree
 import plotly.express as px
 
 # load all necessary data
-odir = 'json_dump'
+odir = 'json_dump_v2'
 with open(join(odir, 'ko2og.json'), 'r') as f1:
     ko2og = json.load(f1)
 with open(join(odir, 'manually_blast_r.json'), 'r') as f1:
@@ -18,9 +18,8 @@ with open(join(odir, 'manually_blast_r.json'), 'r') as f1:
 with open(join(odir, 'ko2og2names.json'), 'r') as f1:
     ko2og2names = json.load(f1)
 
-indir = 'genome_protein_files'
-
-og_tsv = join(indir,'OrthoFinder/Results_Sep27/Orthogroups/Orthogroups.tsv')
+indir = 'genome_protein_files_more'
+og_tsv = f'./{indir}/OrthoFinder/Results_Oct01/Orthogroups/Orthogroups.tsv'
 og_df = pd.read_csv(og_tsv, sep='\t', low_memory=False, index_col=0)
 def rename(x):
     if pd.isna(x):
@@ -61,7 +60,7 @@ def generate_id2org(og_names, ofile):
             id2org[seq_id] = org_id
     return id2org
 
-def get_color_info(each_og, ofile,info_col='type'):
+def get_color_info(each_og, ofile,info_col='type',extra={}):
     id2org = generate_id2org(each_og, ofile)
     colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     id2info = {}
@@ -72,7 +71,8 @@ def get_color_info(each_og, ofile,info_col='type'):
             id2info[id] = g_df.loc[org,info_col]
         elif info_col == 'phylum/class' and name2dirname.get(org,org) in sname2info:
             id2info[id] = sname2info[org]
-            
+    if extra:
+        id2info.update(extra)   
     set_v = set(id2info.values())
     num_v = len(set_v)
     cols = colors[:num_v]
@@ -126,7 +126,7 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                 }
 
 # annotate MAGs lineage
-
+remained_ID = og_df.columns.difference(g_df.index)
 MAG_annotate_file = '/home-user/thliao/data/metagenomes/update_0928_nitrification/confirmed_locus2info.tsv'
 MAG_annotate_df = pd.read_csv(MAG_annotate_file,sep='\t',index_col=0)
 derep_df = MAG_annotate_df.drop_duplicates('sample name')
@@ -178,31 +178,101 @@ def to_color_branch(ID2info,info2color,dataset_name='color branch'):
     
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text=legend_text)
-    
     rows = [each_template.format(ID=ID,
                                  TYPE='branch',
                                  WHAT='node',
                                  COLOR=color,
-                                 WIDTH_OR_SIZE_FACTOR=2,
+                                 WIDTH_OR_SIZE_FACTOR=7,
                                  STYLE='normal',
                                  BACKGROUND_COLOR='')
         for ID,color in id2col.items()]
+    rows += [each_template.format(ID=ID,
+                                 TYPE='label',
+                                 WHAT='node',
+                                 COLOR=color,
+                                 WIDTH_OR_SIZE_FACTOR=1,
+                                 STYLE='bold',
+                                 BACKGROUND_COLOR='')
+        for ID,color in id2col.items()]
     return template_text + '\n'.join(rows)
-        
+
+def to_color_Clade(ID2info,info2color,tree,dataset_name='color branch clade'):
+    # clade for 
+    template_text = open(
+        '/home-user/thliao/template_txt/dataset_styles_template.txt').read()
+    id2col = {ID:info2color[info] for ID,info in ID2info.items()}
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    legend_text = deduced_legend(info2color,dataset_name,sep='\t')
     
+    tree_obj = Tree(tree,format=3)
+    def collapsed_leaf(node):
+        if node.is_leaf():
+            return True
+        else:
+            leafs_all = node.get_leaves()
+            children_names = [ID2info.get(_.name,'') for _ in leafs_all]
+            if '' in children_names:
+                return False
+            if len(set(children_names)) == 1:
+                return True
+            else:
+                return False
+        return False
+    new_tree_obj = Tree(tree_obj.write(is_leaf_fn=collapsed_leaf))
+    new_leaves_names = [_.name for _ in new_tree_obj.get_leaves()]
+    internal_nodes = [tree_obj.search_nodes(name =_)[0] for _ in new_leaves_names]
+    internal_nodes = [_ for _ in internal_nodes if not _.is_leaf()]
+    internal_node2info = {n.name:info2color.get(ID2info.get(n.get_leaves()[0].name,''),'') 
+                          for n in internal_nodes}
+    internal_node2info = {n.name:info2color[ID2info[n.get_leaves()[0].name]] 
+                          for n in internal_nodes}
+
+    template_text = template_text.format(dataset_label=dataset_name,
+                                         legend_text=legend_text)
+    rows = [each_template.format(ID=ID,
+                                 TYPE='branch',
+                                 WHAT='node',
+                                 COLOR=color,
+                                 WIDTH_OR_SIZE_FACTOR=7,
+                                 STYLE='normal',
+                                 BACKGROUND_COLOR='')
+        for ID,color in id2col.items()]
+    rows += [each_template.format(ID=ID,
+                                 TYPE='label',
+                                 WHAT='node',
+                                 COLOR=color,
+                                 WIDTH_OR_SIZE_FACTOR=1,
+                                 STYLE='bold',
+                                 BACKGROUND_COLOR='')
+        for ID,color in id2col.items()]
+    rows += [each_template.format(ID=ID,
+                                 TYPE='branch',
+                                 WHAT='clade',
+                                 COLOR=color,
+                                 WIDTH_OR_SIZE_FACTOR=7,
+                                 STYLE='normal',
+                                 BACKGROUND_COLOR='')
+        for ID,color in internal_node2info.items()]
+    return template_text + '\n'.join(rows)        
     
-def write2colorstrip(id2info,info2col, unique_id,info_name='type',):
-    content = to_color_strip(id2info,info2col,info_name=info_name)
+def write2colorstrip(id2info,info2color, unique_id,info_name='type',):
+    content = to_color_strip(id2info,info2color,info_name=info_name)
     info_name = info_name.replace('/','_')
-    with open(join(odir, f'color_{unique_id}_{info_name}.txt'), 'w') as f1:
+    with open(join(odir, f'{unique_id}_{info_name}_colorstrip.txt'), 'w') as f1:
         f1.write(content)
 
-def write2colorbranch(id2info,info2col, unique_id,info_name='type',):
-    content = to_color_branch(id2info,info2col,dataset_name=info_name)
+def write2colorbranch(id2info,info2color, unique_id,info_name='type',):
+    content = to_color_branch(id2info,info2color,dataset_name=info_name)
     info_name = info_name.replace('/','_')
-    with open(join(odir, f'color_branch_{unique_id}_{info_name}.txt'), 'w') as f1:
+    with open(join(odir, f'{unique_id}_{info_name}_colorbranch.txt'), 'w') as f1:
         f1.write(content)
-        
+
+def write2colorbranch_clade(id2info,info2color,treefile, unique_id,info_name='type',):
+    content = to_color_Clade(id2info,info2color,treefile,info_name)
+    info_name = info_name.replace('/','_')
+    with open(join(odir, f'{unique_id}_{info_name}_colorbranch_clade.txt'), 'w') as f1:
+        f1.write(content)
+       
 # ref or outgroup seq, additionally add to
 ref_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/outgroup and reference.xlsx'
 ref_df = pd.read_excel(ref_file,index_col=None)
@@ -210,15 +280,19 @@ ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:]
 def get_add_text(sub_df,used_ids):
     new_ref = []
     t_text = '' 
+    id2info = {}
     for _,row in sub_df.iterrows():
         aa_id = row['AA accession']
         gene_name = row['gene name']
         seq = row['seq']
+        info = row['phylum/class']
         if aa_id not in used_ids:
             t_text+= f'>{aa_id}_{gene_name}\n{seq}\n'
+            
+            id2info[f'{aa_id}_{gene_name}'] = info
         else:
             new_ref.append(aa_id)
-    return t_text,new_ref
+    return t_text,new_ref,id2info
 
 def annotate_outgroup(sub_df,ref_others=[]):
     template_text = open(
@@ -239,14 +313,15 @@ def annotate_outgroup(sub_df,ref_others=[]):
     return template_text + annotate_text
 
 
-odir = join('./align', 'complete_ko')
+odir = join('./align_v2', 'complete_ko')
 os.makedirs(odir, exist_ok=1)
 for ko,og_list in ko2og.items():
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
-    fa_files = [f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
+    predir = dirname(dirname(og_tsv))
+    fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     used_ids = [record.id for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
     
-    add_text,used_ref_ids = get_add_text(sub_ref_df,used_ids)
+    add_text,used_ref_ids,ref_id2info = get_add_text(sub_ref_df,used_ids)
     annotate_text = annotate_outgroup(sub_ref_df,ref_others=used_ref_ids)
     new_file = join(odir, ko+'.fa')
     if not exists(new_file):
@@ -262,49 +337,52 @@ for ko,og_list in ko2og.items():
         check_call(
             f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
     if not exists(ofile.replace('.aln','.treefile')):
-        check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
-    renamed_tree(ofile.replace('.aln','.treefile'),
-                 ofile.replace('.aln','.newick'))
-    
+       check_call(f'iqtree -nt 64 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
+    #renamed_tree(ofile.replace('.aln','.treefile'),
+    #             ofile.replace('.aln','.newick'))
     
     to_label(og_list,ofile,ko_name=ko)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
     write2colorstrip(id2info,info2col,unique_id=ko,info_name='type')
     # annotate with phylum/class as a color strip
-    id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class')
+    id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
     write2colorstrip(id2info,info2col,unique_id=ko,info_name='phylum/class')
     # annotate with tree
-    write2colorbranch(id2info,info2col,unique_id=ko,info_name='phylum/class')
+    #write2colorbranch(id2info,info2col,unique_id=ko,info_name='branch_color')
+    write2colorbranch_clade(id2info,
+                            info2col,
+                            treefile=ofile.replace('.aln','.newick'),
+                            unique_id=ko,info_name='branch_color')
     # annotate the marker and outgroup
-    with open(join(odir,f'marker_{ko}_outgroup_ref.txt'),'w') as f1:
+    with open(join(odir,f'{ko}_marker_outgroup_ref.txt'),'w') as f1:
         f1.write(annotate_text)
         
 
-# separated OG align
-odir = join('./align', 'single_OG')
-os.makedirs(odir, exist_ok=1)
-for ko, og_list in ko2og.items():
-    sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
-    for each_og in og_list:
-        fa_file = f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa'
-        used_ids = [record.id for record in SeqIO.parse(fa_file,format='fasta')]
-        add_text,used_ref_ids = get_add_text(sub_ref_df,used_ids)
-        annotate_text = annotate_outgroup(sub_ref_df,ref_others=used_ref_ids)
-        new_fa_file = join(odir, each_og+'.fa')
-        with open(new_fa_file,'w') as f1:
-            f1.write(add_text+open(fa_file,'r').read())
-        ofile = join(odir, each_og+'.aln')
-        if not exists(ofile):
-            check_call(
-                f'mafft --anysymbol --thread -1 {new_fa_file} > {ofile}', shell=1)
-        if not exists(ofile.replace('.aln','.treefile')):
-            check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{each_og} -s {ofile}',shell=1)
-        to_label(each_og,ofile)
-        to_color_strip(each_og,ofile,info_col='type')
-        to_color_strip(each_og,ofile,info_col='phylum/class')
-        with open(join(odir,f'marker_{each_og}_outgroup_ref.txt'),'w') as f1:
-            f1.write(annotate_text)
+# # separated OG align
+# odir = join('./align', 'single_OG')
+# os.makedirs(odir, exist_ok=1)
+# for ko, og_list in ko2og.items():
+#     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
+#     for each_og in og_list:
+#         fa_file = f'./genome_protein_files/OrthoFinder/Results_Sep27/Orthogroup_Sequences/{each_og}.fa'
+#         used_ids = [record.id for record in SeqIO.parse(fa_file,format='fasta')]
+#         add_text,used_ref_ids = get_add_text(sub_ref_df,used_ids)
+#         annotate_text = annotate_outgroup(sub_ref_df,ref_others=used_ref_ids)
+#         new_fa_file = join(odir, each_og+'.fa')
+#         with open(new_fa_file,'w') as f1:
+#             f1.write(add_text+open(fa_file,'r').read())
+#         ofile = join(odir, each_og+'.aln')
+#         if not exists(ofile):
+#             check_call(
+#                 f'mafft --anysymbol --thread -1 {new_fa_file} > {ofile}', shell=1)
+#         if not exists(ofile.replace('.aln','.treefile')):
+#             check_call(f'iqtree -nt 32 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{each_og} -s {ofile}',shell=1)
+#         to_label(each_og,ofile)
+#         to_color_strip(each_og,ofile,info_col='type')
+#         to_color_strip(each_og,ofile,info_col='phylum/class')
+#         with open(join(odir,f'marker_{each_og}_outgroup_ref.txt'),'w') as f1:
+#             f1.write(annotate_text)
 
 
 # special process for differential AOA and AOB

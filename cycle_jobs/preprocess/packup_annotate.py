@@ -1,4 +1,3 @@
-
 import json
 from subprocess import check_call
 from glob import glob
@@ -23,6 +22,7 @@ ko2name = dict([(v, k) for k, v in name2ko.items()])
 
 # validatation
 g_df = pd.read_excel(genome_info, index_col=0)
+g_df = g_df.loc[g_df.loc[:,'used']!='no',:]
 all_g_ids = list(g_df.index)
 # assert not set(all_g_ids).difference(g_df.index)
 
@@ -32,6 +32,7 @@ kid_list = [_ for _ in open(target_file, 'r').read().split('\n') if _]
 for ofile in tqdm(glob(join(odir, '*.out'))):
     sname = basename(ofile).replace('.out', '')
     if sname in all_g_ids:
+        # only capture the reference genome annotation
         locus2ko = dict([(_.split('\t')[0], _.split('\t')[1])
                          for _ in open(ofile).read().split('\n')
                          if _])
@@ -101,6 +102,7 @@ def update_ko2og(sname2ko2locus, failed_g=[]):
     else:
         id_list = []
     sub_df = og_df.reindex(columns=all_g_ids)
+    # only consider these reference genomes
     ko2og = defaultdict(list)
     ko2og2names = defaultdict(lambda: defaultdict(list))
     for g_id in sub_df.columns:
@@ -123,6 +125,7 @@ def update_ko2og(sname2ko2locus, failed_g=[]):
     return ko2og, ko2og2names
 
 og_tsv = './genome_protein_files/OrthoFinder/Results_Sep27/Orthogroups/Orthogroups.tsv'
+og_tsv = './genome_protein_files_more/OrthoFinder/Results_Oct01/Orthogroups/Orthogroups.tsv'
 og_df = pd.read_csv(og_tsv, sep='\t', low_memory=False, index_col=0)
 
 def rename(x):
@@ -133,8 +136,6 @@ def rename(x):
     else:
         return ', '.join([str(_).split(' ')[0] for _ in x.split(', ')])
 og_df = og_df.applymap(rename)
-
-
 
 # first time to get ko2og, no failed_g, all info are comed from kofamscan
 ko2og, ko2og2names = update_ko2og(sname2ko2locus)
@@ -228,7 +229,7 @@ failed_g = reupdate_dict(failed_g, sname2ko2locus)
 failed_g, sname2ko2locus = use_og_reannoate_(failed_g, sname2ko2locus)
 ko2og, ko2og2names = update_ko2og(sname2ko2locus, failed_g)
 
-odir = 'json_dump'
+odir = 'json_dump_v2'
 os.makedirs(odir, exist_ok=True)
 with open(join(odir, 'ko2og.json'), 'w') as f1:
     json.dump(ko2og, f1)

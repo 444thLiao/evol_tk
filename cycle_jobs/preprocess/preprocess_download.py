@@ -4,6 +4,11 @@ from glob import glob
 import os
 from subprocess import check_call
 
+genome_info = './genome_info_full.xlsx'
+g_df = pd.read_excel(genome_info, index_col=0)
+g_df = g_df.loc[g_df.loc[:,'used']!='no',:]
+all_g_ids = list(g_df.index)
+
 indir = './genbank'
 odir = './genome_protein_files'
 
@@ -27,7 +32,7 @@ if not exists(odir):
     os.makedirs(odir,exist_ok=True)
 if not exists(tmp_dir):
     os.makedirs(tmp_dir,exist_ok=True)
-for p_dir in glob(join(indir,'**','GC*'),recursive=True):
+for p_dir in glob(join(indir,'**','GCA*'),recursive=True):
     if isdir(p_dir):
         p_files = glob(join(p_dir,'*.faa.gz'))
         if not p_files:
