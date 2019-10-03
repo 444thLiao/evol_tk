@@ -35,8 +35,6 @@ def rename(x):
     else:
         return ', '.join([str(_).split(' ')[0] for _ in x.split(', ')])
 og_df = og_df.applymap(rename)
-
-
 g_df = pd.read_excel(genome_info, index_col=0)
 
 # name2dirname
@@ -93,7 +91,7 @@ def get_color_info(each_og, ofile,info_col='type',extra={}):
     return id2info,info2col
 
 # rename
-def to_label(each_og,ofile,ko_name=None):
+def to_label(each_og,ofile,odir,ko_name=None):
     template_text = open(
         '/home-user/thliao/template_txt/labels_template.txt').read()
     id2org = generate_id2org(each_og, ofile)
@@ -211,12 +209,21 @@ def get_outgroup_info(sub_df,ref_others=[]):
     info2style['reference'] = {'status':'1'}
     return ID2infos,info2style
 
+# necessary for nxr and nar relative
+# necessary for hao and hzo 
+
+def refine_some_genes():
+    pass
 
 final_odir = join('./align_v2', 'complete_ko')
 os.makedirs(final_odir, exist_ok=1)
 for ko,og_list in ko2og.items():
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
+    og_list = og_list[::]
+    if ko == 'K10944':
+        og_list.remove('OG0006386')
+        og_list.append('OG0001887')
     fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     used_ids = [record.id for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
     
@@ -224,10 +231,9 @@ for ko,og_list in ko2og.items():
     ID2infos,info2style = get_outgroup_info(sub_ref_df,ref_others=used_ref_ids)
     
     new_file = join(final_odir, ko+'.fa')
-    if not exists(new_file):
-        fa_file = ' '.join(fa_files)
-        check_call(
-            f'cat {fa_file} > {new_file}', shell=1)
+    fa_file = ' '.join(fa_files)
+    check_call(
+        f'cat {fa_file} > {new_file}', shell=1)
     ori_text = open(new_file,'r').read()
     with open(new_file,'w') as f1:
         f1.write(add_text+ori_text)
@@ -237,26 +243,26 @@ for ko,og_list in ko2og.items():
         check_call(
             f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
     if not exists(ofile.replace('.aln','.treefile')):
-        pass
-    #    check_call(f'iqtree -nt 64 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -bb 1000 -pre {final_odir}/{ko} -s {ofile}',
-    #               shell=1)
-    else:
-        renamed_tree(ofile.replace('.aln','.treefile'),
-                 ofile.replace('.aln','.newick'))
-    
-        to_label(og_list,ofile,ko_name=ko)
-        # annotate with type
-        id2info,info2col = get_color_info(og_list,ofile,info_col='type')
-        write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
-        # annotate with phylum/class as a color strip
-        id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
-        write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
-        # annotate with tree
-        write2colorbranch_clade(id2info,
-                                final_odir,
-                                info2col,
-                                treefile=ofile.replace('.aln','.newick'),
-                                unique_id=ko,
-                                info_name='branch_color')
-        write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
+        #pass
+        check_call(f'iqtree -nt 64 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -bb 1000 -pre {final_odir}/{ko} -s {ofile}',
+                  shell=1)
+    #else:
+    renamed_tree(ofile.replace('.aln','.treefile'),
+                ofile.replace('.aln','.newick'))
+
+    to_label(og_list,ofile,final_odir,ko_name=ko)
+    # annotate with type
+    id2info,info2col = get_color_info(og_list,ofile,info_col='type')
+    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
+    # annotate with phylum/class as a color strip
+    id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
+    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
+    # annotate with tree
+    write2colorbranch_clade(id2info,
+                            final_odir,
+                            info2col,
+                            treefile=ofile.replace('.aln','.newick'),
+                            unique_id=ko,
+                            info_name='branch_color')
+    write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 
