@@ -141,8 +141,8 @@ def to_color_Clade(ID2info, info2color, tree, dataset_name='color branch clade')
     internal_node2info = {n.name: info2color[ID2info[n.get_leaves()[0].name]]
                           for n in internal_nodes}
     #dropped_IDs = [_.name for node in internal_nodes for _ in node.get_leaves()]
-    for ID in list(id2col.keys()):
-        id2col.pop(ID)
+    # for ID in list(id2col.keys()):
+    #     id2col.pop(ID)
 
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text=legend_text)
