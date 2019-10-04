@@ -212,18 +212,24 @@ def get_outgroup_info(sub_df,ref_others=[]):
 # necessary for nxr and nar relative
 # necessary for hao and hzo 
 
-def refine_some_genes():
-    pass
-
-final_odir = join('./align_v2', 'complete_ko')
-os.makedirs(final_odir, exist_ok=1)
-for ko,og_list in ko2og.items():
+def refine_some_genes(fa_file,ko_name):
+    removed_ids = glob(join('./manual_remove',ko_name+'*'))
+    
+    if removed_ids:
+        removed_ids = open(removed_ids[0]).read().split('\n')
+        records = [_ for _ in SeqIO.parse(fa_file,format='fasta')
+                   if _.id not in removed_ids]
+        with open(fa_file,'w') as f1:
+            SeqIO.write(records,f1,format='fasta-2line')
+        print('refined ',fa_file)
+    else:
+        pass
+    
+import multiprocessing as mp
+def process_ko(ko,og_list):
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
-    og_list = og_list[::]
-    if ko == 'K10944':
-        og_list.remove('OG0006386')
-        og_list.append('OG0001887')
+
     fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     used_ids = [record.id for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
     
@@ -237,6 +243,7 @@ for ko,og_list in ko2og.items():
     ori_text = open(new_file,'r').read()
     with open(new_file,'w') as f1:
         f1.write(add_text+ori_text)
+    refine_some_genes(new_file,ko)
     
     ofile = join(final_odir, ko+'.aln')
     if not exists(ofile):
@@ -266,3 +273,18 @@ for ko,og_list in ko2og.items():
                             info_name='branch_color')
     write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 
+final_odir = join('./align_v2', 'complete_ko')
+os.makedirs(final_odir, exist_ok=1)
+params_list = []
+for ko,og_list in ko2og.items():
+    og_list = og_list[::]
+    if ko == 'K10944':
+        og_list.remove('OG0006386')  # arachaea amoA
+        #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
+    #process_ko(ko,og_list)
+    params_list.append((ko,og_list))
+def run_c(x):
+    process_ko(*x)
+
+with mp.Pool(processes=10) as mp:
+    mp.map(run_c,params_list)
