@@ -189,6 +189,7 @@ def get_add_text(sub_df,used_ids):
             id2info[f'{aa_id}_{gene_name}'] = info
         else:
             new_ref.append(aa_id)
+            id2info[f'{aa_id}'] = info
     return t_text,new_ref,id2info
 
 
@@ -212,14 +213,15 @@ def get_outgroup_info(sub_df,ref_others=[]):
 # necessary for nxr and nar relative
 # necessary for hao and hzo 
 
-def refine_some_genes(fa_file,ko_name):
+def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
     removed_ids = glob(join('./manual_remove',ko_name+'*'))
     
     if removed_ids:
         removed_ids = open(removed_ids[0]).read().split('\n')
-        records = [_ for _ in SeqIO.parse(fa_file,format='fasta')
-                   if _.id not in removed_ids]
-        with open(fa_file,'w') as f1:
+        records = [_ 
+                   for _ in SeqIO.parse(fa_file,format='fasta')
+                   if _.id not in removed_ids or _.id in no_dropped_ids]
+        with open(fa_file.replace('.fa','.filterd.fa'),'w') as f1:
             SeqIO.write(records,f1,format='fasta-2line')
         print('refined ',fa_file)
     else:
@@ -243,8 +245,8 @@ def process_ko(ko,og_list):
     ori_text = open(new_file,'r').read()
     with open(new_file,'w') as f1:
         f1.write(add_text+ori_text)
-    refine_some_genes(new_file,ko)
-    
+    refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
+    new_file = new_file.replace('.fa','.filterd.fa')
     ofile = join(final_odir, ko+'.aln')
     if not exists(ofile):
         check_call(
