@@ -67,7 +67,6 @@ def annotate_outgroup(ID2infos, info2style,):
         annotate_text += '\t'.join(row) + '\n'
     return template_text + annotate_text
 
-
 def to_color_strip(ID2info, info2color, info_name='dataset'):
     template_text = open(color_strip_template).read()
     id2col = {id: info2color[info] for id, info in ID2info.items()}
@@ -80,6 +79,26 @@ def to_color_strip(ID2info, info2color, info_name='dataset'):
     info_name = info_name.replace('/', '_')
     return template_text+'\n'+annotate_text
 
+
+def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
+    # clade for
+    template_text = open(dataset_styles_template).read()
+    id2col = {ID: info2color[info] for ID, info in ID2info.items()}
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    legend_text = deduced_legend(info2color, info_name, sep='\t')
+
+    template_text = template_text.format(dataset_label=info_name,
+                                         legend_text=legend_text)
+    
+    rows = [each_template.format(ID=ID,
+                                  TYPE='label',
+                                  WHAT='node',
+                                  COLOR='',
+                                  WIDTH_OR_SIZE_FACTOR=1,
+                                  STYLE='bold',
+                                  BACKGROUND_COLOR=color)
+             for ID, color in id2col.items()]
+    return template_text + '\n'.join(rows)
 
 def to_color_branch(ID2info, info2color, dataset_name='color branch'):
     # clade for

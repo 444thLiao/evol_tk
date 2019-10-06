@@ -64,6 +64,16 @@ def generate_id2org(og_names, ofile):
             id2org[seq_id] = org_id
     return id2org
 
+color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d', 
+                        'AOB': '#bad5b9', 'AOA': '#358f0f'},
+                'phylum/class':{'Thaumarchaeota': '#358f0f',
+                                'Nitrospirae': '#edc31d',
+                                'Gammaproteobacteria': '#78fce0',
+                                'Chloroflexi': '#e41a1c',
+                                'Betaproteobacteria': '#956cb4',
+                                'Alphaproteobacteria': '#8c613c'}
+
+                }
 def get_color_info(each_og, ofile,info_col='type',extra={}):
     id2org = generate_id2org(each_og, ofile)
     colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
@@ -118,16 +128,6 @@ def renamed_tree(in_tree_file,outfile):
     t.write(outfile=outfile,format=3)
     return t
 
-color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d', 
-                        'AOB': '#bad5b9', 'AOA': '#358f0f'},
-                'phylum/class':{'Thaumarchaeota': '#358f0f',
-                                'Nitrospirae': '#edc31d',
-                                'Gammaproteobacteria': '#78fce0',
-                                'Chloroflexi': '#e41a1c',
-                                'Betaproteobacteria': '#956cb4',
-                                'Alphaproteobacteria': '#8c613c'}
-
-                }
 
 # annotate MAGs lineage
 remained_ID = og_df.columns.difference(g_df.index)
@@ -151,6 +151,12 @@ def write2colorstrip(id2info,odir,info2color, unique_id,info_name='type',):
     with open(join(odir, f'{unique_id}_{info_name}_colorstrip.txt'), 'w') as f1:
         f1.write(content)
 
+def write2color_label_bg(id2info,odir,info2color, unique_id,info_name='type',):
+    content = to_color_labels_bg(id2info,info2color,info_name=info_name)
+    info_name = info_name.replace('/','_')
+    with open(join(odir, f'{unique_id}_{info_name}_color_label_bg.txt'), 'w') as f1:
+        f1.write(content)
+        
 def write2colorbranch(id2info,odir,info2color, unique_id,info_name='type',):
     content = to_color_branch(id2info,info2color,dataset_name=info_name)
     info_name = info_name.replace('/','_')
@@ -165,7 +171,6 @@ def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_nam
 
 
 def write2binary_dataset(ID2infos, odir,info2style, unique_id):
-    
     annotate_text = annotate_outgroup(ID2infos,info2style)
     with open(join(odir,f'{unique_id}_marker_outgroup_ref.txt'),'w') as f1:
         f1.write(annotate_text)
@@ -262,7 +267,8 @@ def process_ko(ko,og_list):
     to_label(og_list,ofile,final_odir,ko_name=ko)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
-    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
+    #write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
+    write2color_label_bg(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     # annotate with phylum/class as a color strip
     id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
