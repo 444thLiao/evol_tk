@@ -35,6 +35,7 @@ def split_out(in_fa,db_files,remained_db):
     for pid in tqdm(all_ids):
         cloest_db = ''
         cloest_db_v = 100
+        not_in_REMAINED_DB = []
         for db_name,identity in collect_diff_db_identity.items():
             this_db_identity = identity.get(pid,100)
             if this_db_identity<=cloest_db_v:
@@ -42,6 +43,8 @@ def split_out(in_fa,db_files,remained_db):
                 cloest_db_v = this_db_identity
         if cloest_db_v !=  100:
             pid2cloest_db[pid] = (cloest_db,cloest_db_v)
+        else:
+            pid2cloest_db[pid] = ('',100)
     dropped_ids = [pid for pid,v in pid2cloest_db.items() if v[0] != remained_db]
     return dropped_ids
 

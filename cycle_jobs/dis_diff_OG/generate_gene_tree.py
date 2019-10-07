@@ -71,12 +71,14 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 'Gammaproteobacteria': '#78fce0',
                                 'Chloroflexi': '#e41a1c',
                                 'Betaproteobacteria': '#956cb4',
-                                'Alphaproteobacteria': '#8c613c'}
+                                'Alphaproteobacteria': '#8c613c',
+                                'Actinobacteria':'#eb663b',
+                                }
 
                 }
 def get_color_info(each_og, ofile,info_col='type',extra={}):
     id2org = generate_id2org(each_og, ofile)
-    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
+    
     id2info = {}
     for id, org in id2org.items():
         org = name2dirname.get(org,org)
@@ -84,11 +86,14 @@ def get_color_info(each_og, ofile,info_col='type',extra={}):
             #name = g_df.loc[org, 'genome name']
             id2info[id] = g_df.loc[org,info_col]
         elif info_col == 'phylum/class' and name2dirname.get(org,org) in sname2info:
-            id2info[id] = sname2info[org]
+            tax_name = sname2info[org]
+            id2info[id] = tax_name if 'Candidatus' not in tax_name else 'CPR'
+            
     if extra:
         id2info.update(extra)   
     set_v = set(id2info.values())
     num_v = len(set_v)
+    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     cols = colors[:num_v]
     total_info2col = dict(zip(set_v,cols))
     if info_col in color_scheme:
@@ -157,14 +162,14 @@ def write2color_label_bg(id2info,odir,info2color, unique_id,info_name='type',):
     with open(join(odir, f'{unique_id}_{info_name}_color_label_bg.txt'), 'w') as f1:
         f1.write(content)
         
-def write2colorbranch(id2info,odir,info2color, unique_id,info_name='type',):
-    content = to_color_branch(id2info,info2color,dataset_name=info_name)
+def write2colorbranch(id2info,odir,info2color, unique_id,info_name='type',no_legend=False):
+    content = to_color_branch(id2info,info2color,dataset_name=info_name,no_legend=no_legend)
     info_name = info_name.replace('/','_')
     with open(join(odir, f'{unique_id}_{info_name}_colorbranch.txt'), 'w') as f1:
         f1.write(content)
 
-def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_name='type',):
-    content = to_color_Clade(id2info,info2color,treefile,info_name)
+def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_name='type',**kwargs):
+    content = to_color_Clade(id2info,info2color,treefile,info_name,**kwargs)
     info_name = info_name.replace('/','_')
     with open(join(odir, f'{unique_id}_{info_name}_colorbranch_clade.txt'), 'w') as f1:
         f1.write(content)
@@ -213,6 +218,28 @@ def get_outgroup_info(sub_df,ref_others=[]):
     info2style = {}
     info2style['outgroup'] = {'status':'0'}
     info2style['reference'] = {'status':'1'}
+    return ID2infos,info2style
+
+def get_outgroup_info_phylum(sub_df,now_info2style):
+    ID2infos = {}
+    for _,row in sub_df.iterrows():
+        aa_id = row['AA accession']
+        gene_name = row['gene name']
+        tax = str(row['phylum/class']).strip()
+        name = f'{aa_id}_{gene_name}'
+        ID2infos[name] = tax
+    
+    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
+    remained_colors = [c for c in colors if c not in now_info2style.values()]
+    info2style = {}
+    for v in set(ID2infos.values()):
+        if v in now_info2style:
+            pass
+        elif v not in now_info2style and v in color_scheme:
+            info2style.update({v:color_scheme[v]})
+        elif v not in now_info2style and v not in color_scheme:
+            one_color = remained_colors.pop(0)
+            info2style.update({v:one_color})
     return ID2infos,info2style
 
 # necessary for nxr and nar relative
@@ -267,10 +294,14 @@ def process_ko(ko,og_list):
     to_label(og_list,ofile,final_odir,ko_name=ko)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
-    #write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
-    write2color_label_bg(id2info,final_odir,info2col,unique_id=ko,info_name='type')
+    type_id2color = {id:info2col[info] for id,info in id2info.items()}
+    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
+    #write2color_label_bg(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     # annotate with phylum/class as a color strip
     id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
+    _id2info,_info2col = get_outgroup_info_phylum(sub_ref_df,info2col)
+    id2info.update(_id2info)
+    info2col.update(_info2col)
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
     # annotate with tree
     write2colorbranch_clade(id2info,
@@ -278,7 +309,8 @@ def process_ko(ko,og_list):
                             info2col,
                             treefile=ofile.replace('.aln','.newick'),
                             unique_id=ko,
-                            info_name='branch_color')
+                            info_name='branch_color',
+                            no_legend=True)
     write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 
 final_odir = join('./align_v2', 'complete_ko')

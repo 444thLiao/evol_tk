@@ -37,12 +37,12 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 def deduced_field(info2style, infos, sep='\t'):
     template_text = open(dataset_binary_template).read()
-    colors_theme = px.colors.qualitative.Dark24
+    colors_theme = px.colors.qualitative.Light24
     shapes = []
     labels = []
     colors = []
     for idx, info in enumerate(infos):
-        shapes.append(info2style[info].get('shape', '2'))
+        shapes.append(info2style[info].get('shape', '3'))
         labels.append(info2style[info].get('info', info))
         colors.append(info2style[info].get('color', colors_theme[idx]))
     template_text = template_text.format(field_shapes=sep.join(shapes),
@@ -85,27 +85,30 @@ def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
-    legend_text = deduced_legend(info2color, info_name, sep='\t')
+    #legend_text = deduced_legend(info2color, info_name, sep='\t')
 
     template_text = template_text.format(dataset_label=info_name,
-                                         legend_text=legend_text)
+                                         legend_text='')
     
     rows = [each_template.format(ID=ID,
                                   TYPE='label',
                                   WHAT='node',
-                                  COLOR='',
+                                  COLOR='#000000',
                                   WIDTH_OR_SIZE_FACTOR=1,
                                   STYLE='bold',
                                   BACKGROUND_COLOR=color)
              for ID, color in id2col.items()]
     return template_text + '\n'.join(rows)
 
-def to_color_branch(ID2info, info2color, dataset_name='color branch'):
+def to_color_branch(ID2info, info2color, dataset_name='color branch',no_legend=False):
     # clade for
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
-    legend_text = deduced_legend(info2color, dataset_name, sep='\t')
+    if no_legend:
+        legend_text = ''
+    else:
+        legend_text = deduced_legend(info2color, dataset_name, sep='\t')
 
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text=legend_text)
@@ -128,12 +131,17 @@ def to_color_branch(ID2info, info2color, dataset_name='color branch'):
     return template_text + '\n'.join(rows)
 
 
-def to_color_Clade(ID2info, info2color, tree, dataset_name='color branch clade'):
+def to_color_Clade(ID2info, info2color, tree, 
+                   dataset_name='color branch clade',
+                   no_legend=False,bgcolor={}):
     # colorize branch within whole clade when all children under this clade share same info.
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
-    legend_text = deduced_legend(info2color, dataset_name, sep='\t')
+    if no_legend:
+        legend_text = ''
+    else:
+        legend_text = deduced_legend(info2color, dataset_name, sep='\t')
 
     tree_obj = Tree(tree, format=3)
 
@@ -173,13 +181,14 @@ def to_color_Clade(ID2info, info2color, tree, dataset_name='color branch clade')
                                  STYLE='normal',
                                  BACKGROUND_COLOR='')
             for ID, color in id2col.items()]
+    
     rows += [each_template.format(ID=ID,
                                   TYPE='label',
                                   WHAT='node',
                                   COLOR=color,
                                   WIDTH_OR_SIZE_FACTOR=1,
                                   STYLE='bold',
-                                  BACKGROUND_COLOR='')
+                                  BACKGROUND_COLOR=bgcolor.get(ID,''))
              for ID, color in id2col.items()]
     rows += [each_template.format(ID=ID,
                                   TYPE='branch',
