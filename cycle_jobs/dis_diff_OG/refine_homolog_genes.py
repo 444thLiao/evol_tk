@@ -22,7 +22,7 @@ def split_out(in_fa,db_files,remained_db):
         if not exists(ofile):
             run_blast(in_fa,db_file,ofile)
         result_df = pd.read_csv(ofile,sep='\t',header=None)
-        result_df = result_df.sort_values([10,3])
+        result_df = result_df.sort_values([10,3],ascending=[True,False])
         # SPECIAL FOR narG
         result_df = result_df.loc[result_df.iloc[:,1]!= 'CAJ72445',:]
         pid2db_identity = {}
