@@ -14,7 +14,7 @@ def renamed_tree(in_tree_file, outfile):
     t = Tree(open(in_tree_file).read())
     for n in t.traverse():
         if not n.name:
-            n.name = 'Internal_%s' % count
+            n.name = 'I%s_S%s' % (count,str(int(n.support)))
             count += 1
     t.write(outfile=outfile, format=3)
     return t

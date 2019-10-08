@@ -8,8 +8,8 @@ from Bio import SeqIO
 import seaborn as sns
 from ete3 import Tree
 import plotly.express as px
-
-
+import io
+import multiprocessing as mp
 
 odir = 'json_dump_v2'
 indir = 'genome_protein_files_more'
@@ -184,26 +184,25 @@ def write2binary_dataset(ID2infos, odir,info2style, unique_id):
 # ref or outgroup seq, additionally add to
 ref_df = pd.read_excel(ref_file,index_col=None)
 ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
-def get_add_text(sub_df,used_ids):
-    new_ref = []
-    t_text = '' 
+def get_add_text(sub_df,used_records):
+    used_ids = [str(_.id) for _ in used_records]
     id2info = {}
+    record_need_dropped_ids = []
     for _,row in sub_df.iterrows():
         aa_id = row['AA accession']
         gene_name = row['gene name']
         seq = row['seq']
         info = row['phylum/class']
-        if aa_id not in used_ids:
-            t_text+= f'>{aa_id}_{gene_name}\n{seq}\n'
+        if aa_id in used_ids:
+            record_need_dropped_ids.append(aa_id)
             
-            id2info[f'{aa_id}_{gene_name}'] = info
-        else:
-            new_ref.append(aa_id)
-            id2info[f'{aa_id}'] = info
-    return t_text,new_ref,id2info
+        used_records.append(SeqIO.read(io.StringIO(f'>{aa_id}_{gene_name}\n{seq}'),format='fasta'))
+        id2info[f'{aa_id}_{gene_name}'] = info
+    final_records = [_ for _ in used_records if str(_.id) not in record_need_dropped_ids]    
+    return final_records,id2info
 
 
-def get_outgroup_info(sub_df,ref_others=[]):
+def get_outgroup_info(sub_df):
     ID2infos = {}
     for _,row in sub_df.iterrows():
         aa_id = row['AA accession']
@@ -213,8 +212,6 @@ def get_outgroup_info(sub_df,ref_others=[]):
             ID2infos[name] = ['outgroup']
         else:
             ID2infos[name] = ['reference']
-    for rid in ref_others:
-        ID2infos[rid] = ['reference']
     info2style = {}
     info2style['outgroup'] = {'status':'0'}
     info2style['reference'] = {'status':'1'}
@@ -259,42 +256,39 @@ def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
     else:
         pass
     
-import multiprocessing as mp
 def process_ko(ko,og_list):
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
 
+    # collect seq from Orthofinder and add outgroup sequence
     fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
-    used_ids = [record.id for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
-    
-    add_text,used_ref_ids,ref_id2info = get_add_text(sub_ref_df,used_ids)
-    ID2infos,info2style = get_outgroup_info(sub_ref_df,ref_others=used_ref_ids)
-    
+    used_records = [record for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
+    final_records,ref_id2info = get_add_text(sub_ref_df,used_records)
+    ID2infos,info2style = get_outgroup_info(sub_ref_df)
     new_file = join(final_odir, ko+'.fa')
-    fa_file = ' '.join(fa_files)
-    check_call(
-        f'cat {fa_file} > {new_file}', shell=1)
-    ori_text = open(new_file,'r').read()
     with open(new_file,'w') as f1:
-        f1.write(add_text+ori_text)
+        SeqIO.write(final_records,f1,format='fasta-2line')
+        
+    # read manual remove directory, and remove the seqs want to remove        
     refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
     new_file = new_file.replace('.fa','.filterd.fa')
     ofile = join(final_odir, ko+'.aln')
-    if not exists(ofile):
-        check_call(
-            f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
+    
+    check_call(f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
+    
     if not exists(ofile.replace('.aln','.treefile')):
         #pass
-        check_call(f'iqtree -nt 64 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -bb 1000 -pre {final_odir}/{ko} -s {ofile}',
+        check_call(f'iqtree -nt 10 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',
                   shell=1)
     #else:
+    # convert tree file output by iqtree and add internal node name
     renamed_tree(ofile.replace('.aln','.treefile'),
                 ofile.replace('.aln','.newick'))
 
     to_label(og_list,ofile,final_odir,ko_name=ko)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
-    type_id2color = {id:info2col[info] for id,info in id2info.items()}
+    #type_id2color = {id:info2col[info] for id,info in id2info.items()}
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     #write2color_label_bg(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     # annotate with phylum/class as a color strip
@@ -313,7 +307,7 @@ def process_ko(ko,og_list):
                             no_legend=True)
     write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 
-final_odir = join('./align_v2', 'complete_ko')
+final_odir = join('./align_v3', 'complete_ko')
 os.makedirs(final_odir, exist_ok=1)
 params_list = []
 for ko,og_list in ko2og.items():
@@ -321,10 +315,10 @@ for ko,og_list in ko2og.items():
     if ko == 'K10944':
         og_list.remove('OG0006386')  # arachaea amoA
         #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
-    #process_ko(ko,og_list)
+    
     params_list.append((ko,og_list))
 def run_c(x):
     process_ko(*x)
 
-with mp.Pool(processes=10) as mp:
-    mp.map(run_c,params_list)
+with mp.Pool(processes=10) as tp:
+    tp.map(run_c,params_list)
