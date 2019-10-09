@@ -1,13 +1,16 @@
 from ete3 import Tree
-from os.path import join
+from os.path import join,exists,dirname
 import plotly.express as px
 
 indir = '/home-user/thliao/template_txt/'
+if not exists(indir):
+    indir = join(dirname(__file__),'itol_template')
+
 color_strip_template = join(indir, 'dataset_color_strip_template.txt')
 dataset_styles_template = join(indir, 'dataset_styles_template.txt')
 dataset_binary_template = join(indir, 'dataset_binary_template.txt')
 label_template = join(indir,'labels_template.txt')
-
+dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
         
 def renamed_tree(in_tree_file, outfile):
     count = 0
@@ -199,3 +202,34 @@ def to_color_Clade(ID2info, info2color, tree,
                                   BACKGROUND_COLOR='')
              for ID, color in internal_node2info.items()]
     return template_text + '\n'.join(rows)
+
+
+def to_node_symbol(in_tree,dataset_name='bootstrap'):
+    #normally for bootstrap
+    # give it a tree is enough, must have internal node name.
+    template_text = open(dataset_symbol_template).read()
+    tree = Tree(in_tree,format=1)
+    id2support = {}
+    for n in tree.traverse():
+        if (not n.is_leaf()) and n.name:
+            support_v = int(n.name.split('_S')[-1])
+            id2support[n.name] = support_v
+    
+    # ID,symbol,size,color,fill,position,label
+    rows = []
+    for id,s_v in id2support.items():
+        size = '5'
+        shape = '2'
+        filled = '1'
+        if int(s_v) >= 95:
+            color = '#000000'
+        else:
+            color = '#999999'
+        row = '\t'.join([id,shape,size,color,filled,'0',''])
+        rows.append(row)
+        
+    annotate_text = '\n'.join(rows)
+    template_text = template_text.format(dataset_label=dataset_name,
+                                         legend_text='',
+                                         maximum_size=size)
+    return template_text + annotate_text
