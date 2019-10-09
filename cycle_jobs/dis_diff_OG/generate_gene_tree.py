@@ -34,9 +34,14 @@ def rename(x):
         return str(x).split(' ')[0]
     else:
         return ', '.join([str(_).split(' ')[0] for _ in x.split(', ')])
+    
 og_df = og_df.applymap(rename)
 g_df = pd.read_excel(genome_info, index_col=0)
-
+dropped_g_df = g_df.loc[g_df.loc[:,'used']=='no',:]
+for gid in dropped_g_df.index:
+    if gid in og_df.columns:
+        og_df.drop(gid,axis=1,inplace=True)
+        
 # name2dirname
 name2dirname = {}
 for ofile in glob(join(indir,'*.faa')):
@@ -189,7 +194,7 @@ def get_add_text(sub_df,used_records):
     id2info = {}
     record_need_dropped_ids = []
     for _,row in sub_df.iterrows():
-        aa_id = row['AA accession']
+        aa_id = row['AA accession'].strip()
         gene_name = row['gene name']
         seq = row['seq']
         info = row['phylum/class']
@@ -273,8 +278,8 @@ def process_ko(ko,og_list):
     refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
     new_file = new_file.replace('.fa','.filterd.fa')
     ofile = join(final_odir, ko+'.aln')
-    
-    check_call(f'mafft --anysymbol --thread -1 {new_file} > {ofile}', shell=1)
+    if not exists(ofile):
+        check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {new_file} > {ofile}', shell=1)
     
     if not exists(ofile.replace('.aln','.treefile')):
         #pass
@@ -284,7 +289,11 @@ def process_ko(ko,og_list):
     # convert tree file output by iqtree and add internal node name
     renamed_tree(ofile.replace('.aln','.treefile'),
                 ofile.replace('.aln','.newick'))
-
+    
+    new_text = to_node_symbol(ofile.replace('.aln','.newick'))
+    with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
+        f1.write(new_text)
+        
     to_label(og_list,ofile,final_odir,ko_name=ko)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')

@@ -140,7 +140,7 @@ def to_color_Clade(ID2info, info2color, tree,
     # colorize branch within whole clade when all children under this clade share same info.
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
-    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}'
     if no_legend:
         legend_text = ''
     else:

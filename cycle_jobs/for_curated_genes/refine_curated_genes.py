@@ -23,7 +23,7 @@ def modify_record(args):
     record.name = record.description = ''
     return record
 
-from api_tools.itol_func import to_color_Clade,renamed_tree
+from api_tools.itol_func import to_color_Clade,renamed_tree,to_node_symbol
 def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_name='type',**kwargs):
     content = to_color_Clade(id2info,info2color,treefile,info_name,**kwargs)
     info_name = info_name.replace('/','_')
@@ -39,7 +39,7 @@ def get_id2tax(id,df):
     return tax
     
 
-redo = False
+redo = True
     
 if not exists(odir):
     os.makedirs(odir)
@@ -64,12 +64,12 @@ for homolog_name,gene_list in homolog_dict.items():
     with open(join(odir,f'{homolog_name}.faa'),'w') as f1:
         SeqIO.write(total_fa,f1,format='fasta-2line')
     if not exists(f'{odir}/{homolog_name}.aln') or redo:
-        check_call(f'mafft --anysymbol --thread -1 {odir}/{homolog_name}.faa > {odir}/{homolog_name}.aln', shell=1)
+        check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {odir}/{homolog_name}.faa > {odir}/{homolog_name}.aln', shell=1)
         
-    tree_suffix = 'newick'
+    tree_suffix = 'treefile'
     if not exists(f'{odir}/{homolog_name}.{tree_suffix}') or redo:     
-        check_call(f'FastTree {odir}/{homolog_name}.aln > {odir}/{homolog_name}.{tree_suffix}', shell=1)
-        #check_call(f'iqtree -nt 20 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{homolog_name} -s {odir}/{homolog_name}.aln', shell=1)
+        #check_call(f'FastTree {odir}/{homolog_name}.aln > {odir}/{homolog_name}.{tree_suffix}', shell=1)
+        check_call(f'iqtree -nt 20 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{homolog_name} -s {odir}/{homolog_name}.aln', shell=1)
         
     id2info = {id:id.rpartition('_')[-1] for id in now_ids}
     colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
@@ -77,6 +77,9 @@ for homolog_name,gene_list in homolog_dict.items():
                           colors))
     renamed_tree(f'{odir}/{homolog_name}.{tree_suffix}',
                  f'{odir}/{homolog_name}_new.{tree_suffix}')
+    new_text = to_node_symbol( f'{odir}/{homolog_name}_new.{tree_suffix}')
+    with open(join(odir, f'{homolog_name}_node_bootstrap.txt'), 'w') as f1:
+        f1.write(new_text)
     write2colorbranch_clade(id2info,odir,info2color,f'{odir}/{homolog_name}_new.{tree_suffix}',homolog_name,info_name='gene cluster')
     id2info = {id:get_id2tax(id.rpartition('_')[0],in_df) for id in now_ids}
     colors = list(px.colors.qualitative.Dark24) + list(px.colors.qualitative.Light24)

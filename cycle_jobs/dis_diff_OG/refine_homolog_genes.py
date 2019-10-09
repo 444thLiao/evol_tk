@@ -22,13 +22,12 @@ def split_out(in_fa,db_files,remained_db):
         if not exists(ofile):
             run_blast(in_fa,db_file,ofile)
         result_df = pd.read_csv(ofile,sep='\t',header=None)
-        result_df = result_df.sort_values([10,3],ascending=[True,False])
+        result_df = result_df.sort_values([10,2],ascending=[True,False])
         # SPECIAL FOR narG
-        result_df = result_df.loc[result_df.iloc[:,1]!= 'CAJ72445',:]
-        pid2db_identity = {}
-        for pid in result_df.iloc[:,0].unique():
-            sub_df = result_df.loc[result_df.iloc[:,0]==pid,3]
-            pid2db_identity[pid] = (sub_df[:5]).mean()
+        #result_df = result_df.loc[result_df.iloc[:,1]!= 'CAJ72445',:]
+        
+        r = result_df.groupby(0).head().groupby(0).mean()
+        pid2db_identity = dict(zip(r.index,r.loc[:,3]))
         collect_diff_db_identity[db_name] = pid2db_identity
     
     pid2cloest_db = {}
@@ -48,14 +47,22 @@ def split_out(in_fa,db_files,remained_db):
     dropped_ids = [pid for pid,v in pid2cloest_db.items() if v[0] != remained_db]
     return dropped_ids
 
+odir = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/manual_remove/'
 
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00371.fa'
 db_files = ['curated_genes/narH.faa',
             'curated_genes/nxrB.faa']
 remained_db = 'nxrB'
+others_db = [basename(_).replace('.faa','')
+             for _ in db_files
+             if basename(_).replace('.faa','') != remained_db]
+other_db_names = '_'.join(others_db)
+ko_str = basename(in_fa).replace('.fa','')
 dropped_ids = split_out(in_fa,db_files,remained_db)
 print('need to drop %s sequences' % len(dropped_ids))
-output_file = './nitrification/reference_genomes/manual_remove/K00371_narH_in_nxrB.txt'
+
+output_file = join(odir,
+                   f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
 with open(output_file,'w') as f1:
     f1.write('\n'.join(dropped_ids))
 
@@ -63,9 +70,13 @@ in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00370.fa'
 db_files = ['curated_genes/narG.faa',
             'curated_genes/nxrA.faa']
 remained_db = 'nxrA'
+others_db = [basename(_).replace('.faa','')
+             for _ in db_files
+             if basename(_).replace('.faa','') != remained_db]
 dropped_ids = split_out(in_fa,db_files,remained_db)
 print('need to drop %s sequences' % len(dropped_ids))
-output_file = './nitrification/reference_genomes/manual_remove/K00370_narG_in_nxrA.txt'
+output_file = join(odir,
+                   f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
 with open(output_file,'w') as f1:
     f1.write('\n'.join(dropped_ids))
 
