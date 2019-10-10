@@ -23,14 +23,16 @@ def split_out(in_fa,db_files,remained_db):
             run_blast(in_fa,db_file,ofile)
         result_df = pd.read_csv(ofile,sep='\t',header=None)
         result_df = result_df.sort_values([10,2],ascending=[True,False])
-        # SPECIAL FOR narG
-        #result_df = result_df.loc[result_df.iloc[:,1]!= 'CAJ72445',:]
+        
         
         r = result_df.groupby(0).head().groupby(0).mean()
-        pid2db_identity = dict(zip(r.index,r.loc[:,3]))
+        pid2db_identity = dict(zip(r.index,
+                                   r.loc[:,2]/100 * r.loc[:,3] ))
+        # convert a identity into a dictinoary (from pid to identity * length)
         collect_diff_db_identity[db_name] = pid2db_identity
     
     pid2cloest_db = {}
+    #pid2cover_ratio = {}
     for pid in tqdm(all_ids):
         cloest_db = ''
         cloest_db_v = 0
@@ -40,6 +42,7 @@ def split_out(in_fa,db_files,remained_db):
             if this_db_identity>=cloest_db_v:
                 cloest_db = db_name
                 cloest_db_v = this_db_identity
+                
         if cloest_db_v !=  0:
             pid2cloest_db[pid] = (cloest_db,cloest_db_v)
         else:
@@ -60,11 +63,11 @@ other_db_names = '_'.join(others_db)
 ko_str = basename(in_fa).replace('.fa','')
 dropped_ids = split_out(in_fa,db_files,remained_db)
 print('need to drop %s sequences' % len(dropped_ids))
-
 output_file = join(odir,
                    f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
 with open(output_file,'w') as f1:
     f1.write('\n'.join(dropped_ids))
+
 
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00370.fa'
 db_files = ['curated_genes/narG.faa',

@@ -111,7 +111,7 @@ def get_color_info(each_og, ofile,info_col='type',extra={}):
     return id2info,info2col
 
 # rename
-def to_label(each_og,ofile,odir,ko_name=None):
+def to_label(each_og,ofile,odir,ko_name=None,extra={}):
     template_text = open(
         '/home-user/thliao/template_txt/labels_template.txt').read()
     id2org = generate_id2org(each_og, ofile)
@@ -121,6 +121,8 @@ def to_label(each_og,ofile,odir,ko_name=None):
             name = g_df.loc[org, 'genome name']
         else:
             name = id
+        full_text += '%s,%s\n' % (id, name)
+    for id,name in extra.items():
         full_text += '%s,%s\n' % (id, name)
     if ko_name is not None:
         each_og = ko_name
@@ -208,11 +210,14 @@ def get_add_text(sub_df,used_records):
 
 
 def get_outgroup_info(sub_df):
+    ID2name = {}
     ID2infos = {}
     for _,row in sub_df.iterrows():
         aa_id = row['AA accession']
         gene_name = row['gene name']
+        org = row['org name']
         name = f'{aa_id}_{gene_name}'
+        ID2name[name] = f'{org} ({gene_name})'
         if row['type'] == 'outgroup':
             ID2infos[name] = ['outgroup']
         else:
@@ -220,7 +225,7 @@ def get_outgroup_info(sub_df):
     info2style = {}
     info2style['outgroup'] = {'status':'0'}
     info2style['reference'] = {'status':'1'}
-    return ID2infos,info2style
+    return ID2infos,info2style,ID2name
 
 def get_outgroup_info_phylum(sub_df,now_info2style):
     ID2infos = {}
@@ -252,14 +257,15 @@ def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
     
     if removed_ids:
         removed_ids = open(removed_ids[0]).read().split('\n')
-        records = [_ 
-                   for _ in SeqIO.parse(fa_file,format='fasta')
-                   if _.id not in removed_ids or _.id in no_dropped_ids]
-        with open(fa_file.replace('.fa','.filterd.fa'),'w') as f1:
-            SeqIO.write(records,f1,format='fasta-2line')
-        print('refined ',fa_file)
     else:
-        pass
+        removed_ids = []
+    
+    records = [_ 
+                for _ in SeqIO.parse(fa_file,format='fasta')
+                if _.id not in removed_ids or _.id in no_dropped_ids]
+    with open(fa_file.replace('.fa','.filterd.fa'),'w') as f1:
+        SeqIO.write(records,f1,format='fasta-2line')
+    print('refined ',fa_file)
     
 def process_ko(ko,og_list):
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
@@ -269,7 +275,7 @@ def process_ko(ko,og_list):
     fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     used_records = [record for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
     final_records,ref_id2info = get_add_text(sub_ref_df,used_records)
-    ID2infos,info2style = get_outgroup_info(sub_ref_df)
+    ID2infos,info2style,extra_id2name = get_outgroup_info(sub_ref_df)
     new_file = join(final_odir, ko+'.fa')
     with open(new_file,'w') as f1:
         SeqIO.write(final_records,f1,format='fasta-2line')
@@ -294,7 +300,7 @@ def process_ko(ko,og_list):
     with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
         f1.write(new_text)
         
-    to_label(og_list,ofile,final_odir,ko_name=ko)
+    to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
     # annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
     #type_id2color = {id:info2col[info] for id,info in id2info.items()}
@@ -320,6 +326,9 @@ final_odir = join('./align_v3', 'complete_ko')
 os.makedirs(final_odir, exist_ok=1)
 params_list = []
 for ko,og_list in ko2og.items():
+    if not ko.startswith('K1094'):
+        continue
+    og_list = ko2og[ko]
     og_list = og_list[::]
     if ko == 'K10944':
         og_list.remove('OG0006386')  # arachaea amoA
