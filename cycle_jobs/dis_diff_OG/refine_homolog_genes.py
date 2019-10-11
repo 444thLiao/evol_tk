@@ -18,14 +18,19 @@ def split_out(in_fa,db_files,remained_db):
     for db_file in db_files:
         db_name = basename(db_file).split('.')[0]
         in_name = basename(in_fa).split('.')[0]
+        
+        ori_len_dict = {_.id:len(_) for _ in SeqIO.parse(db_file,format='fasta')}
+        
         ofile = join(tmp_dir,f'{in_name}_{db_name}_blast.out')
         if not exists(ofile):
             run_blast(in_fa,db_file,ofile)
         result_df = pd.read_csv(ofile,sep='\t',header=None)
+        result_df.loc[:,'coverage ratio'] = result_df.loc[:,3] / pd.np.array([ori_len_dict[_]
+                                                                           for _ in result_df.loc[:,1]])
+        result_df = result_df.loc[result_df.loc[:,'coverage ratio']>=0.4,:]
         result_df = result_df.sort_values([10,2],ascending=[True,False])
         
-        
-        r = result_df.groupby(0).head().groupby(0).mean()
+        r = result_df.groupby(0).head(3).groupby(0).mean()
         pid2db_identity = dict(zip(r.index,
                                    r.loc[:,2]/100 * r.loc[:,3] ))
         # convert a identity into a dictinoary (from pid to identity * length)
@@ -39,7 +44,7 @@ def split_out(in_fa,db_files,remained_db):
         #not_in_REMAINED_DB = []
         for db_name,identity in collect_diff_db_identity.items():
             this_db_identity = identity.get(pid,0)
-            if this_db_identity>=cloest_db_v:
+            if this_db_identity>=cloest_db_v+10:
                 cloest_db = db_name
                 cloest_db_v = this_db_identity
                 
@@ -76,6 +81,8 @@ remained_db = 'nxrA'
 others_db = [basename(_).replace('.faa','')
              for _ in db_files
              if basename(_).replace('.faa','') != remained_db]
+other_db_names = '_'.join(others_db)
+ko_str = basename(in_fa).replace('.fa','')
 dropped_ids = split_out(in_fa,db_files,remained_db)
 print('need to drop %s sequences' % len(dropped_ids))
 output_file = join(odir,

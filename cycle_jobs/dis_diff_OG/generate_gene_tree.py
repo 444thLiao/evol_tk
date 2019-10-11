@@ -147,13 +147,24 @@ MAG_annotate_df = pd.read_csv(MAG_annotate_file,sep='\t',index_col=0)
 derep_df = MAG_annotate_df.drop_duplicates('sample name')
 filtered_df = derep_df.loc[derep_df.loc[:,'sample name'].isin(remained_ID),:]
 phylum_from_metadata_count = filtered_df.groupby('phylum(from metadata)').count().iloc[:,0]
-sname2phylum_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],MAG_annotate_df.loc[:,'phylum(from metadata)']))
-sname2class_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],MAG_annotate_df.loc[:,'class(from metadata)']))
+sname2phylum_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],
+                                 MAG_annotate_df.loc[:,'phylum(from metadata)']))
+sname2class_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name']
+                                ,MAG_annotate_df.loc[:,'class(from metadata)']))
 
+# MAG to phylum info
 sname2phylum_metadata = {k:v for k,v in sname2phylum_metadata.items() if not pd.isna(v)}
 sname2info = {k:v if v !='Proteobacteria' else sname2class_metadata[k] for k,v in sname2phylum_metadata.items()}
 sname2info = {k:v for k,v in sname2info.items() if not pd.isna(v)}
 
+# MAG to habitat
+mag2habitat_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/MAG2habitat.xlsx'
+mag2habitat_df = pd.read_excel(mag2habitat_file,index_col=0,)
+mag2habitat = dict(zip(mag2habitat_df.index,mag2habitat_df.loc[:,'habitat raw']))
+filtered_df.loc[:,'habitat raw'] = [mag2habitat[_] for _ in  list(filtered_df.loc[:,'source project'])]
+habitat_from_metadata_count = filtered_df.groupby('habitat raw').count().iloc[:,0]
+locus2habitat = dict(zip([_.split('_')[0] for _ in filtered_df.index],
+                         list(filtered_df.loc[:,'habitat raw'])))
 
 # data dependent transform
 from api_tools.itol_func import *   
@@ -213,7 +224,7 @@ def get_outgroup_info(sub_df):
     ID2name = {}
     ID2infos = {}
     for _,row in sub_df.iterrows():
-        aa_id = row['AA accession']
+        aa_id = row['AA accession'].strip()
         gene_name = row['gene name']
         org = row['org name']
         name = f'{aa_id}_{gene_name}'
@@ -230,7 +241,7 @@ def get_outgroup_info(sub_df):
 def get_outgroup_info_phylum(sub_df,now_info2style):
     ID2infos = {}
     for _,row in sub_df.iterrows():
-        aa_id = row['AA accession']
+        aa_id = str(row['AA accession']).strip()
         gene_name = row['gene name']
         tax = str(row['phylum/class']).strip()
         name = f'{aa_id}_{gene_name}'
@@ -249,20 +260,35 @@ def get_outgroup_info_phylum(sub_df,now_info2style):
             info2style.update({v:one_color})
     return ID2infos,info2style
 
+def get_colors_general(ID2infos,now_info2style={}):
+    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
+    remained_colors = [c for c in colors if c not in now_info2style.values()]
+    info2style = {}
+    for v in set(ID2infos.values()):
+        if v in now_info2style:
+            pass
+        elif v not in now_info2style and v in color_scheme:
+            info2style.update({v:color_scheme[v]})
+        elif v not in now_info2style and v not in color_scheme:
+            one_color = remained_colors.pop(0)
+            info2style.update({v:one_color})
+    return ID2infos,info2style
+
 # necessary for nxr and nar relative
 # necessary for hao and hzo 
-
 def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
-    removed_ids = glob(join('./manual_remove',ko_name+'*'))
+    removed_ids_files = glob(join('./manual_remove',ko_name+'*'))
     
-    if removed_ids:
-        removed_ids = open(removed_ids[0]).read().split('\n')
+    if removed_ids_files:
+        removed_ids = [id
+                       for f in removed_ids_files
+                       for id in open(f).read().split('\n')]
     else:
         removed_ids = []
     
     records = [_ 
                 for _ in SeqIO.parse(fa_file,format='fasta')
-                if _.id not in removed_ids or _.id in no_dropped_ids]
+                if (_.id not in removed_ids) or (_.id in no_dropped_ids)]
     with open(fa_file.replace('.fa','.filterd.fa'),'w') as f1:
         SeqIO.write(records,f1,format='fasta-2line')
     print('refined ',fa_file)
@@ -289,9 +315,12 @@ def process_ko(ko,og_list):
     
     if not exists(ofile.replace('.aln','.treefile')):
         #pass
-        check_call(f'iqtree -nt 10 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',
-                  shell=1)
-    #else:
+        check_call(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',shell=1)
+        # n_file = ofile.replace('.aln','.treefile')
+        # check_call(f'FastTree {ofile} > {n_file}',
+        #           shell=1)
+    
+    
     # convert tree file output by iqtree and add internal node name
     renamed_tree(ofile.replace('.aln','.treefile'),
                 ofile.replace('.aln','.newick'))
@@ -301,18 +330,18 @@ def process_ko(ko,og_list):
         f1.write(new_text)
         
     to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
-    # annotate with type
+    ## annotate with type
     id2info,info2col = get_color_info(og_list,ofile,info_col='type')
-    #type_id2color = {id:info2col[info] for id,info in id2info.items()}
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
-    #write2color_label_bg(id2info,final_odir,info2col,unique_id=ko,info_name='type')
-    # annotate with phylum/class as a color strip
+    
+    ## annotate with phylum/class as a color strip
     id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
     _id2info,_info2col = get_outgroup_info_phylum(sub_ref_df,info2col)
     id2info.update(_id2info)
     info2col.update(_info2col)
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
-    # annotate with tree
+    
+    # annotate branch color as the same as phylum/class with tree
     write2colorbranch_clade(id2info,
                             final_odir,
                             info2col,
@@ -322,12 +351,19 @@ def process_ko(ko,og_list):
                             no_legend=True)
     write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
 
+        
+    ## annotate with habitat
+    new_locus2habit = {id:locus2habitat[id.split('_')[0]] 
+                       for id in id2info.keys() 
+                       if id.split('_')[0] in locus2habitat}
+    id2info,info2col = get_colors_general(new_locus2habit)
+    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
+    
+    
 final_odir = join('./align_v3', 'complete_ko')
 os.makedirs(final_odir, exist_ok=1)
 params_list = []
 for ko,og_list in ko2og.items():
-    if not ko.startswith('K1094'):
-        continue
     og_list = ko2og[ko]
     og_list = og_list[::]
     if ko == 'K10944':

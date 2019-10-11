@@ -46,6 +46,8 @@ if not exists(odir):
 in_df = pd.read_excel(in_file)
 in_df = in_df.loc[in_df.loc[:,'note']!='removed',:]
 in_df.loc[:,'phylum/class'] = in_df.loc[:,'phylum/class'].fillna('failed')
+new_in_df = in_df.loc[in_df.loc[:,'phylum/class'].isin(['failed','ENV']),:]
+dropped_ids = [_.strip() for _ in new_in_df.loc[:,'AA accession']]
 for homolog_name,gene_list in homolog_dict.items():
     if not homolog_name.startswith('NXR_NAR'):
         continue
@@ -56,7 +58,9 @@ for homolog_name,gene_list in homolog_dict.items():
         fa_file = f'./{gn}.faa' 
         if exists(fa_file):
             records = SeqIO.parse(fa_file,format='fasta')
-            records = list(map(modify_record,[(record,gn) for record in records]))
+            records = [_ for _ in records if _.id not in dropped_ids]
+            records = list(map(modify_record,
+                               [(record,gn) for record in records]))
             now_ids = [_.id for _ in total_fa]
             for record in records:
                 if record.id not in now_ids:
