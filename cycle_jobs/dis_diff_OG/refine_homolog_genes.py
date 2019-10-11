@@ -55,6 +55,16 @@ def split_out(in_fa,db_files,remained_db):
     dropped_ids = [pid for pid,v in pid2cloest_db.items() if v[0] != remained_db]
     return dropped_ids
 
+
+
+
+def remove_by_tigafam(fa_file):
+    ko_str = basename(in_fa).replace('.fa','')
+    odir = './tmp'
+    ofile = join(odir,f'{ko_str}2TIGFAM.tab')
+    check_call("python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/annotate_faa.py -i {fa_file} -o {ofile} -n 50 -p 10")
+    
+
 odir = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/manual_remove/'
 
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00371.fa'
