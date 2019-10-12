@@ -91,6 +91,9 @@ def cli(inpath, suffix, output, cpu, db, evalue, parallel):
         seqs = get_seqs(inpath, suffix)
     else:
         seqs = [inpath]
+    if len(seqs) >1 and not os.path.isdir(output):
+        print("output should be a directory. Now let we create it.")
+        os.makedirs(output)
     args = []
     for seq in seqs:
         if output is None:

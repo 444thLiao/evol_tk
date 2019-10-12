@@ -160,11 +160,22 @@ sname2info = {k:v for k,v in sname2info.items() if not pd.isna(v)}
 # MAG to habitat
 mag2habitat_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/MAG2habitat.xlsx'
 mag2habitat_df = pd.read_excel(mag2habitat_file,index_col=0,)
-mag2habitat = dict(zip(mag2habitat_df.index,mag2habitat_df.loc[:,'habitat raw']))
-filtered_df.loc[:,'habitat raw'] = [mag2habitat[_] for _ in  list(filtered_df.loc[:,'source project'])]
-habitat_from_metadata_count = filtered_df.groupby('habitat raw').count().iloc[:,0]
+mag2habitat = dict(zip(mag2habitat_df.index,
+                       mag2habitat_df.loc[:,'classify as ']))
+filtered_df.loc[:,'habitat (manual)'] = [mag2habitat[_] 
+                                    for _ in  list(filtered_df.loc[:,'source project'])]
+metadata_for_17_parks = '/mnt/home-backup/thliao/metagenomes/17_parks/pack_up_metadata.tsv'
+metadata_for_17_parks_df = pd.read_csv(metadata_for_17_parks,sep='\t',index_col=0)
+sub_df = filtered_df.loc[filtered_df.loc[:,'source project']=='17_parks',:]
+collect_list = []
+for _,row in sub_df.iterrows():
+    gnome_id = '_'.join(row['sample name'].split('_')[:2])
+    habitat = metadata_for_17_parks_df.loc[gnome_id,'habitat (manual)']
+    collect_list.append(habitat)
+filtered_df.loc[sub_df.index,'habitat (manual)'] = collect_list
+habitat_from_metadata_count = filtered_df.groupby('habitat (manual)').count().iloc[:,0]
 locus2habitat = dict(zip([_.split('_')[0] for _ in filtered_df.index],
-                         list(filtered_df.loc[:,'habitat raw'])))
+                         list(filtered_df.loc[:,'habitat (manual)'])))
 
 # data dependent transform
 from api_tools.itol_func import *   
@@ -292,8 +303,10 @@ def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
     with open(fa_file.replace('.fa','.filterd.fa'),'w') as f1:
         SeqIO.write(records,f1,format='fasta-2line')
     print('refined ',fa_file)
-    
-def process_ko(ko,og_list):
+
+outgroup_gene_names = {'K00370':['dms','tor']}
+
+def process_ko(ko,og_list,tree_exe='iqtree'):
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
 
@@ -315,15 +328,21 @@ def process_ko(ko,og_list):
     
     if not exists(ofile.replace('.aln','.treefile')):
         #pass
-        check_call(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',shell=1)
-        # n_file = ofile.replace('.aln','.treefile')
-        # check_call(f'FastTree {ofile} > {n_file}',
-        #           shell=1)
+        if tree_exe == 'iqtree':
+            check_call(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',shell=1)
+        else:
+            n_file = ofile.replace('.aln','.treefile')
+            check_call(f'FastTree {ofile} > {n_file}',shell=1)
     
-    
+    t = root_tree_with(ofile.replace('.aln','.treefile'),
+                       gene_names=outgroup_gene_names.get(ko,[]),
+                       format=0)
+    renamed_tree(t,
+                 outfile=ofile.replace('.aln','.newick'),
+                 ascending=True)
     # convert tree file output by iqtree and add internal node name
-    renamed_tree(ofile.replace('.aln','.treefile'),
-                ofile.replace('.aln','.newick'))
+    # renamed_tree(ofile.replace('.aln','.treefile'),
+    #             ofile.replace('.aln','.newick'))
     
     new_text = to_node_symbol(ofile.replace('.aln','.newick'))
     with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:

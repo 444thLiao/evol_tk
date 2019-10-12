@@ -58,11 +58,23 @@ def split_out(in_fa,db_files,remained_db):
 
 
 
-def remove_by_tigafam(fa_file):
+def remove_by_tigafam(fa_file,odir,filter_tigar_famid):
+    # filter_tigar_famid: TIGR03479 for DMSO reductase II
     ko_str = basename(in_fa).replace('.fa','')
-    odir = './tmp'
-    ofile = join(odir,f'{ko_str}2TIGFAM.tab')
-    check_call("python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/annotate_faa.py -i {fa_file} -o {ofile} -n 50 -p 10")
+    tmp_dir = './tmp'
+    ofile = join(tmp_dir,f'{ko_str}_TIGFAM.tab')
+    if not exists(ofile):
+        check_call(f"python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/annotate_faa.py -i {fa_file} -o {ofile} -n 50 -p 10",shell=1)
+    all_ids = [_.id for _ in SeqIO.parse(fa_file,format='fasta')]
+    tigfam_annotated = pd.read_csv(ofile,sep='\t',index_col=None,header=None)
+    id_like_dmso = [_ for _ in list(tigfam_annotated.loc[tigfam_annotated.loc[:,1]==filter_tigar_famid,2])]
+    # follow reference `Genomic profiling of four cultivated Candidatus Nitrotoga spp. predicts broad metabolic potential and environmental distribution`
+    dropped_ids = [_ for _ in all_ids if _ not in id_like_dmso]
+    output_file = join(odir,
+                   f'{ko_str}_not_like_{filter_tigar_famid}.txt')
+    print('need to drop %s sequences by tigfam filter' % len(dropped_ids))
+    with open(output_file,'w') as f1:
+        f1.write('\n'.join(dropped_ids))
     
 
 odir = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/manual_remove/'
@@ -82,7 +94,8 @@ output_file = join(odir,
                    f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
 with open(output_file,'w') as f1:
     f1.write('\n'.join(dropped_ids))
-
+    
+remove_by_tigafam(in_fa,odir,'TIGR03478')	
 
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00370.fa'
 db_files = ['curated_genes/narG.faa',
@@ -100,3 +113,4 @@ output_file = join(odir,
 with open(output_file,'w') as f1:
     f1.write('\n'.join(dropped_ids))
 
+remove_by_tigafam(in_fa,odir,'TIGR03479')
