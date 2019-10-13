@@ -26,6 +26,7 @@ with open(join(odir, 'manually_blast_r.json'), 'r') as f1:
 with open(join(odir, 'ko2og2names.json'), 'r') as f1:
     ko2og2names = json.load(f1)
 
+# load orthofinder csv, and rename it
 og_df = pd.read_csv(og_tsv, sep='\t', low_memory=False, index_col=0)
 def rename(x):
     if pd.isna(x):
@@ -43,6 +44,7 @@ for gid in dropped_g_df.index:
         og_df.drop(gid,axis=1,inplace=True)
         
 # name2dirname
+# for mag 
 name2dirname = {}
 for ofile in glob(join(indir,'*.faa')):
     real_ofile = os.path.realpath(ofile)
@@ -343,6 +345,7 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     # read manual remove directory, and remove the seqs want to remove        
     refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
     new_file = new_file.replace('.fa','.filterd.fa')
+    final_ID_list = [_.id for _ in SeqIO.parse(new_file,format='fasta')]
     if not exists(ofile):
         check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {new_file} > {ofile}', shell=1)
     
@@ -390,16 +393,26 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
                             unique_id=ko,
                             info_name='branch_color',
                             no_legend=True)
-    write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
-
+    #write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
+    ID2add_type = {ID:ID2infos[ID][0] if ID2infos.get(ID,[]) else 'MAGs' for ID in final_ID_list}
+    matrix_text = to_matrix_shape(ID2add_type,'From',color={"reference":'#FF0000',
+                                                            "outgroup":'#00FF00',
+                                                            "MAGs":'#0000FF'})
+    with open(join(final_odir,f'{ko}_from.txt'),'w') as f1:
+        f1.write(matrix_text)
         
     ## annotate with habitat
     new_locus2habit = {id:locus2habitat[id.split('_')[0]] 
                        for id in id2info.keys() 
                        if id.split('_')[0] in locus2habitat}
-    
     id2info,info2col = get_colors_general(new_locus2habit)
-    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
+    all_id2habitat.update(id2info)
+    all_id2habitat = {k:v for k,v in all_id2habitat.items()
+                      if k in final_ID_list}
+    matrix_text = to_matrix_shape(all_id2habitat,'habitat')
+    with open(join(final_odir,f'{ko}_habitat.txt'),'w') as f1:
+        f1.write(matrix_text)
+    #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
     
     
 final_odir = join('./align_v3', 'complete_ko')

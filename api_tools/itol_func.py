@@ -285,14 +285,20 @@ def to_matrix_shape(ID2categorical_v,dataset_label,color='#000000'):
     template_text = open(matrix_like_template).read()
     all_v = set(map(str,ID2categorical_v.values()))
     all_v = list(sorted(all_v))
+    if type(color) == str:
+        color_str = '\t'.join([color]*len(all_v))
+    elif type(color) == dict:
+        color_str = '\t'.join([color[_] for _ in all_v])
+    else:
+        raise IOError
     template_text = template_text.format(dataset_label=dataset_label,
-                                         field_color=color,
+                                         field_color=color_str,
                                          field_labels='\t'.join(all_v))
     annotate_text = ''
     for ID,v in ID2categorical_v.items():
         vals = [ID]
         for _ in range(len(all_v)):
-            if v == all_v[_]:
+            if v == str(all_v[_]):
                 vals.append('10')
             else:
                 vals.append('0')
