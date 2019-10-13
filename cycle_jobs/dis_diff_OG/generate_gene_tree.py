@@ -79,7 +79,7 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 'Chloroflexi': '#e41a1c',
                                 'Betaproteobacteria': '#956cb4',
                                 'Alphaproteobacteria': '#8c613c',
-                                'Actinobacteria':'#eb663b',
+                                'Actinobacteria':'#ebFF3b',
                                 }
 
                 }
@@ -316,19 +316,7 @@ outgroup_gene_names = {'K00370':['dms','tor'],
 def process_ko(ko,og_list,tree_exe='iqtree'):
     ref_df = pd.read_excel(ref_file,index_col=None)
     ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
-    # outgroup and genome to habitat
-    aa_ID2habitat = dict(zip( ['_'.join(map(lambda x:str(x).strip(),_)) 
-                               for _ in ref_df.loc[:,['AA accession','gene name']].values],
-                      ref_df.loc[:,'habitat (manual)'].str.strip()))
-    org2habitat = dict(zip(g_df.index,
-                           g_df.loc[:,'habitat (manual classify)']))
     ofile = join(final_odir, ko+'.aln')
-    id2org = generate_id2org(og_list, ofile)
-    id2habitat = {id:org2habitat[org] 
-                  for id,org in id2org.items()
-                  if org in org2habitat}
-    all_id2habitat = aa_ID2habitat.copy()
-    all_id2habitat.update(id2habitat)
     ######
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
@@ -363,6 +351,19 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     renamed_tree(t,
                  outfile=ofile.replace('.aln','.newick'),
                  ascending=True)
+    # outgroup and genome to habitat
+    aa_ID2habitat = dict(zip( ['_'.join(map(lambda x:str(x).strip(),_)) 
+                               for _ in ref_df.loc[:,['AA accession','gene name']].values],
+                      ref_df.loc[:,'habitat (manual)'].str.strip()))
+    org2habitat = dict(zip(g_df.index,
+                           g_df.loc[:,'habitat (manual classify)']))
+    
+    id2org = generate_id2org(og_list, ofile)
+    id2habitat = {id:org2habitat[org] 
+                  for id,org in id2org.items()
+                  if org in org2habitat}
+    all_id2habitat = aa_ID2habitat.copy()
+    all_id2habitat.update(id2habitat)
     # convert tree file output by iqtree and add internal node name
     # renamed_tree(ofile.replace('.aln','.treefile'),
     #             ofile.replace('.aln','.newick'))
@@ -394,8 +395,13 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
                             info_name='branch_color',
                             no_legend=True)
     #write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
-    ID2add_type = {ID:ID2infos[ID][0] if ID2infos.get(ID,[]) else 'MAGs' for ID in final_ID_list}
+    ID2add_type = {ID:ID2infos[ID][0] if ID2infos.get(ID,[]) else 'MAGs' 
+                   for ID in final_ID_list}
+    ID2add_type.update({ID:'reference genome' 
+                   for ID in final_ID_list
+                   if id2org.get(ID,'nan') in g_df.index})
     matrix_text = to_matrix_shape(ID2add_type,'From',color={"reference":'#FF0000',
+                                                            "reference genome":'#FF0000',
                                                             "outgroup":'#00FF00',
                                                             "MAGs":'#0000FF'})
     with open(join(final_odir,f'{ko}_from.txt'),'w') as f1:
@@ -403,13 +409,27 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
         
     ## annotate with habitat
     new_locus2habit = {id:locus2habitat[id.split('_')[0]] 
-                       for id in id2info.keys() 
+                       for id in [_ for _,v in ID2add_type.items() if v=='MAGs']
                        if id.split('_')[0] in locus2habitat}
     id2info,info2col = get_colors_general(new_locus2habit)
     all_id2habitat.update(id2info)
-    all_id2habitat = {k:v for k,v in all_id2habitat.items()
+    all_id2habitat = {k:str(v).strip() for k,v in all_id2habitat.items()
                       if k in final_ID_list}
-    matrix_text = to_matrix_shape(all_id2habitat,'habitat')
+    all_id2habitat = {k:'terrestrial' if v =='soil' else v
+                      for k,v in all_id2habitat.items()}
+    all_id2habitat = {k:'freshwater' if v =='fresh water' else v
+                      for k,v in all_id2habitat.items()}
+    
+    habitats = list(set(all_id2habitat.values()))
+    habitat_colros = {}
+    for h in habitats:
+        if 'water' in h or h == 'marine':
+            habitat_colros[h] = '#0099FF'
+        elif h == 'terrestrial':
+            habitat_colros[h] = '#f99806'
+        else:
+            habitat_colros[h] = '#000000'
+    matrix_text = to_matrix_shape(all_id2habitat,'habitat',color=habitat_colros)
     with open(join(final_odir,f'{ko}_habitat.txt'),'w') as f1:
         f1.write(matrix_text)
     #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')

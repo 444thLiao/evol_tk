@@ -266,7 +266,7 @@ def to_node_symbol(in_tree,dataset_name='bootstrap'):
         size = '5'
         shape = '2'
         filled = '1'
-        if int(s_v) >= 95:
+        if int(s_v) >= 85:
             color = '#000000'
         else:
             color = '#999999'
