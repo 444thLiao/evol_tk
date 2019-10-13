@@ -12,16 +12,16 @@ SEPARATOR TAB
 #SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
-DATASET_LABEL,example shapes dataset
+DATASET_LABEL	{dataset_label}
 
 #dataset color (can be changed later)
-COLOR,#ff0000
+COLOR	#ff0000
 
 #define colors for each individual field column (use hexadecimal, RGB or RGBA notation; if using RGB/RGBA, COMMA cannot be used as SEPARATOR)
-FIELD_COLORS,#ff0000,#00ff00,#0000ff
+FIELD_COLORS	{field_color}
 
 #field labels
-FIELD_LABELS,f1,f2,f3
+FIELD_LABELS	{field_labels}
 
 #=================================================================#
 #                    OPTIONAL SETTINGS                            #

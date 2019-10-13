@@ -81,9 +81,8 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 }
 
                 }
-def get_color_info(each_og, ofile,info_col='type',extra={}):
-    id2org = generate_id2org(each_og, ofile)
-    
+
+def get_color_info(id2org,info_col='type',extra={}):
     id2info = {}
     for id, org in id2org.items():
         org = name2dirname.get(org,org)
@@ -177,6 +176,8 @@ habitat_from_metadata_count = filtered_df.groupby('habitat (manual)').count().il
 locus2habitat = dict(zip([_.split('_')[0] for _ in filtered_df.index],
                          list(filtered_df.loc[:,'habitat (manual)'])))
 
+
+
 # data dependent transform
 from api_tools.itol_func import *   
 def write2colorstrip(id2info,odir,info2color, unique_id,info_name='type',):
@@ -211,8 +212,7 @@ def write2binary_dataset(ID2infos, odir,info2style, unique_id):
         
         
 # ref or outgroup seq, additionally add to
-ref_df = pd.read_excel(ref_file,index_col=None)
-ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
+
 def get_add_text(sub_df,used_records):
     used_ids = [str(_.id) for _ in used_records]
     id2info = {}
@@ -312,6 +312,22 @@ outgroup_gene_names = {'K00370':['dms','tor'],
                        'K10946':['bmo']}
 
 def process_ko(ko,og_list,tree_exe='iqtree'):
+    ref_df = pd.read_excel(ref_file,index_col=None)
+    ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
+    # outgroup and genome to habitat
+    aa_ID2habitat = dict(zip( ['_'.join(map(lambda x:str(x).strip(),_)) 
+                               for _ in ref_df.loc[:,['AA accession','gene name']].values],
+                      ref_df.loc[:,'habitat (manual)'].str.strip()))
+    org2habitat = dict(zip(g_df.index,
+                           g_df.loc[:,'habitat (manual classify)']))
+    ofile = join(final_odir, ko+'.aln')
+    id2org = generate_id2org(og_list, ofile)
+    id2habitat = {id:org2habitat[org] 
+                  for id,org in id2org.items()
+                  if org in org2habitat}
+    all_id2habitat = aa_ID2habitat.copy()
+    all_id2habitat.update(id2habitat)
+    ######
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
     predir = dirname(dirname(og_tsv))
 
@@ -327,7 +343,6 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     # read manual remove directory, and remove the seqs want to remove        
     refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
     new_file = new_file.replace('.fa','.filterd.fa')
-    ofile = join(final_odir, ko+'.aln')
     if not exists(ofile):
         check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {new_file} > {ofile}', shell=1)
     
@@ -353,13 +368,15 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
         f1.write(new_text)
         
+    
     to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
     ## annotate with type
-    id2info,info2col = get_color_info(og_list,ofile,info_col='type')
+    id2info,info2col = get_color_info(id2org,info_col='type')
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     
     ## annotate with phylum/class as a color strip
-    id2info,info2col = get_color_info(og_list,ofile,info_col='phylum/class',extra=ref_id2info)
+    
+    id2info,info2col = get_color_info(id2org,info_col='phylum/class',extra=ref_id2info)
     _id2info,_info2col = get_outgroup_info_phylum(sub_ref_df,info2col)
     id2info.update(_id2info)
     info2col.update(_info2col)
@@ -380,6 +397,7 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     new_locus2habit = {id:locus2habitat[id.split('_')[0]] 
                        for id in id2info.keys() 
                        if id.split('_')[0] in locus2habitat}
+    
     id2info,info2col = get_colors_general(new_locus2habit)
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
     

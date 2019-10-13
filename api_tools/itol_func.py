@@ -11,6 +11,8 @@ dataset_styles_template = join(indir, 'dataset_styles_template.txt')
 dataset_binary_template = join(indir, 'dataset_binary_template.txt')
 label_template = join(indir,'labels_template.txt')
 dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
+matrix_like_template = join(indir,"dataset_external_shapes_template.txt")
+
 
 def root_tree_with(in_tree_file,gene_names=[],format=0):
     leaf_list = []
@@ -26,23 +28,32 @@ def root_tree_with(in_tree_file,gene_names=[],format=0):
     return t
 
 def sort_tree(in_tree_file,ascending=True,format=0):
-    # from down to top. 
-    # ascending is True, mean longer branch place top.
+    # from top to bottom
+    # ascending is True, mean longer branch place bottom.
     if isinstance(in_tree_file,Tree):
         t = in_tree_file
     else:
         t = Tree(open(in_tree_file).read(),format=format)
     for n in t.traverse():
-        if len(n.children)==2:
+        childrens = n.children
+        if len(childrens)==2:
             d1,d2 = [_.dist for _ in n.children]
-            if ascending and (d1<d2):
-                n.children = n.children[::-1]
-            elif (not ascending) and (d1>d2):
-                n.children = n.children[::-1]
-            if d1 == d2:
-                n.children = list(sorted(n.children,
+            if ascending:
+                if d1>d2:
+                    n.children = n.children[::-1]
+                elif d1==d2:
+                    # place outgroup at the bottom
+                    n.children = list(sorted(n.children,
                                          key=lambda x:len(x.get_leaves()),
-                                         reverse=True))
+                                         ))[::-1]
+            else:
+                if d1<d2:
+                    n.children = n.children[::-1]
+                elif d1==d2:
+                    # place outgroup at the top
+                    n.children = list(sorted(n.children,
+                                         key=lambda x:len(x.get_leaves()),
+                                         ))
     return t
 
 def renamed_tree(in_tree_file, outfile,ascending=True,format=0):
@@ -266,4 +277,24 @@ def to_node_symbol(in_tree,dataset_name='bootstrap'):
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text='',
                                          maximum_size=size)
+    return template_text + annotate_text
+
+
+
+def to_matrix_shape(ID2categorical_v,dataset_label,color='#000000'):
+    template_text = open(matrix_like_template).read()
+    all_v = set(map(str,ID2categorical_v.values()))
+    all_v = list(sorted(all_v))
+    template_text = template_text.format(dataset_label=dataset_label,
+                                         field_color=color,
+                                         field_labels='\t'.join(all_v))
+    annotate_text = ''
+    for ID,v in ID2categorical_v.items():
+        vals = [ID]
+        for _ in range(len(all_v)):
+            if v == all_v[_]:
+                vals.append('10')
+            else:
+                vals.append('0')
+        annotate_text += '\t'.join(vals) + '\n'
     return template_text + annotate_text
