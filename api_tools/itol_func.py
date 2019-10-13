@@ -35,10 +35,14 @@ def sort_tree(in_tree_file,ascending=True,format=0):
     for n in t.traverse():
         if len(n.children)==2:
             d1,d2 = [_.dist for _ in n.children]
-            if ascending and (d1<=d2):
+            if ascending and (d1<d2):
                 n.children = n.children[::-1]
-            elif (not ascending) and (d1>=d2):
+            elif (not ascending) and (d1>d2):
                 n.children = n.children[::-1]
+            if d1 == d2:
+                n.children = list(sorted(n.children,
+                                         key=lambda x:len(x.get_leaves()),
+                                         reverse=True))
     return t
 
 def renamed_tree(in_tree_file, outfile,ascending=True,format=0):

@@ -304,7 +304,12 @@ def refine_some_genes(fa_file,ko_name,no_dropped_ids=[]):
         SeqIO.write(records,f1,format='fasta-2line')
     print('refined ',fa_file)
 
-outgroup_gene_names = {'K00370':['dms','tor']}
+outgroup_gene_names = {'K00370':['dms','tor'],
+                       'K00371':['dms','tor'],
+                       'K10535':['nrfA','_ONR'],
+                       'K10944':['bmo'],
+                       'K10945':['bmo'],
+                       'K10946':['bmo']}
 
 def process_ko(ko,og_list,tree_exe='iqtree'):
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]

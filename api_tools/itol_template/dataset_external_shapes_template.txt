@@ -7,9 +7,9 @@ DATASET_EXTERNALSHAPE
 #                    MANDATORY SETTINGS                           #
 #=================================================================#
 #select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file (except in the SEPARATOR line, which uses space).
-#SEPARATOR TAB
+SEPARATOR TAB
 #SEPARATOR SPACE
-SEPARATOR COMMA
+#SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
 DATASET_LABEL,example shapes dataset
