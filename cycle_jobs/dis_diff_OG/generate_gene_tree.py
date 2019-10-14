@@ -79,7 +79,8 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 'Chloroflexi': '#e41a1c',
                                 'Betaproteobacteria': '#956cb4',
                                 'Alphaproteobacteria': '#8c613c',
-                                'Actinobacteria':'#ebFF3b',
+                                'Actinobacteria':'#11FF11',
+                                'Planctomycetes':'#FF66bb',
                                 }
 
                 }
@@ -129,17 +130,6 @@ def to_label(each_og,ofile,odir,ko_name=None,extra={}):
         each_og = ko_name
     with open(join(odir, f'{each_og}_label.txt'), 'w') as f1:
         f1.write(full_text)
-
-# rename the internal node
-def renamed_tree(in_tree_file,outfile):
-    count = 0
-    t = Tree(open(in_tree_file).read())
-    for n in t.traverse():
-        if not n.name:
-            n.name = 'Internal_%s' % count
-            count += 1
-    t.write(outfile=outfile,format=3)
-    return t
 
 
 # annotate MAGs lineage
@@ -215,7 +205,7 @@ def write2binary_dataset(ID2infos, odir,info2style, unique_id):
         
 # ref or outgroup seq, additionally add to
 
-def get_add_text(sub_df,used_records):
+def add_ref_seq(sub_df,used_records):
     used_ids = [str(_.id) for _ in used_records]
     id2info = {}
     record_need_dropped_ids = []
@@ -319,16 +309,20 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     ofile = join(final_odir, ko+'.aln')
     ######
     sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
+    # for extra removed AOA
+    sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,'phylum/class']!='Thaumarchaeota',:]
+    
     predir = dirname(dirname(og_tsv))
 
     # collect seq from Orthofinder and add outgroup sequence
     fa_files = [f'{predir}/Orthogroup_Sequences/{each_og}.fa' for each_og in og_list]
     used_records = [record for fa_file in fa_files for record in SeqIO.parse(fa_file,format='fasta')]
-    final_records,ref_id2info = get_add_text(sub_ref_df,used_records)
-    ID2infos,info2style,extra_id2name = get_outgroup_info(sub_ref_df)
+    final_records,ref_id2info = add_ref_seq(sub_ref_df,used_records)
     new_file = join(final_odir, ko+'.fa')
     with open(new_file,'w') as f1:
         SeqIO.write(final_records,f1,format='fasta-2line')
+    
+
         
     # read manual remove directory, and remove the seqs want to remove        
     refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
@@ -371,9 +365,7 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     new_text = to_node_symbol(ofile.replace('.aln','.newick'))
     with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
         f1.write(new_text)
-        
     
-    to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
     ## annotate with type
     id2info,info2col = get_color_info(id2org,info_col='type')
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
@@ -387,6 +379,7 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
     
     # annotate branch color as the same as phylum/class with tree
+    
     write2colorbranch_clade(id2info,
                             final_odir,
                             info2col,
@@ -394,8 +387,11 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
                             unique_id=ko,
                             info_name='branch_color',
                             no_legend=True)
-    #write2binary_dataset(ID2infos,final_odir,info2style,unique_id=ko)
-    ID2add_type = {ID:ID2infos[ID][0] if ID2infos.get(ID,[]) else 'MAGs' 
+    # get new add sequence infomation and annotate it
+    ID2infos,_,extra_id2name = get_outgroup_info(sub_ref_df)
+    to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
+    ID2add_type = {ID:ID2infos[ID][0] 
+                   if ID2infos.get(ID,[]) else 'MAGs' 
                    for ID in final_ID_list}
     ID2add_type.update({ID:'reference genome' 
                    for ID in final_ID_list
@@ -430,6 +426,7 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
         else:
             habitat_colros[h] = '#000000'
     matrix_text = to_matrix_shape(all_id2habitat,'habitat',color=habitat_colros)
+    
     with open(join(final_odir,f'{ko}_habitat.txt'),'w') as f1:
         f1.write(matrix_text)
     #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
@@ -444,8 +441,9 @@ for ko,og_list in ko2og.items():
     if ko == 'K10944':
         og_list.remove('OG0006386')  # arachaea amoA
         #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
-    
+        
     params_list.append((ko,og_list))
+    
 def run_c(x):
     process_ko(*x)
 
