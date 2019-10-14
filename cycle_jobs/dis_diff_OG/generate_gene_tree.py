@@ -303,7 +303,7 @@ outgroup_gene_names = {'K00370':['dms','tor'],
                        'K10945':['bmo'],
                        'K10946':['bmo']}
 
-def process_ko(ko,og_list,tree_exe='iqtree'):
+def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     ref_df = pd.read_excel(ref_file,index_col=None)
     ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
     ofile = join(final_odir, ko+'.aln')
@@ -322,10 +322,9 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     with open(new_file,'w') as f1:
         SeqIO.write(final_records,f1,format='fasta-2line')
     
-
-        
     # read manual remove directory, and remove the seqs want to remove        
-    refine_some_genes(new_file,ko,no_dropped_ids=list(ref_id2info.keys()))
+    refine_some_genes(new_file,ko,
+                      no_dropped_ids=list(ref_id2info.keys()))
     new_file = new_file.replace('.fa','.filterd.fa')
     final_ID_list = [_.id for _ in SeqIO.parse(new_file,format='fasta')]
     if not exists(ofile):
@@ -432,17 +431,19 @@ def process_ko(ko,og_list,tree_exe='iqtree'):
     #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
     
     
-final_odir = join('./align_v3', 'complete_ko')
+final_odir = join('./align_v3', 'complete_ko_removed_AOA')
 os.makedirs(final_odir, exist_ok=1)
 params_list = []
 for ko,og_list in ko2og.items():
+    if not ko.startswith('K1094'):
+        continue
     og_list = ko2og[ko]
     og_list = og_list[::]
     if ko == 'K10944':
         og_list.remove('OG0006386')  # arachaea amoA
         #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
         
-    params_list.append((ko,og_list))
+    params_list.append((ko,og_list,final_odir))
     
 def run_c(x):
     process_ko(*x)
