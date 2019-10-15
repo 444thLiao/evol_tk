@@ -6,7 +6,8 @@ from subprocess import check_call
 import plotly.express as px
 homolog_dict = {'mmoA':['amoA',
                         'bmoA',
-                        'pmoA','pxmA'],
+                        'pmoA',
+                        'pxmA'],
                 'mmoB':['amoB','bmoB','pmoB','pxmB'],
                 'mmoC':['amoC','bmoC','pmoC','pxmC'],
                 'OCC':['hao','haoA','nrfA','hdh','hzo','ONR','OTR'],
@@ -75,7 +76,7 @@ for homolog_name,gene_list in homolog_dict.items():
     tree_suffix = 'treefile'
     if not exists(f'{odir}/{homolog_name}.{tree_suffix}') or redo:     
         #check_call(f'FastTree {odir}/{homolog_name}.aln > {odir}/{homolog_name}.{tree_suffix}', shell=1)
-        check_call(f'iqtree -nt 60 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{homolog_name} -s {odir}/{homolog_name}.aln', shell=1)
+        check_call(f'iqtree -nt 30 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{homolog_name} -s {odir}/{homolog_name}.aln', shell=1)
         
     id2info = {id:id.rpartition('_')[-1] for id in now_ids}
     colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24

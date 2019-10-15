@@ -431,12 +431,10 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
     
     
-final_odir = join('./align_v3', 'complete_ko_removed_AOA')
+final_odir = join('./align_v3', 'complete_ko')
 os.makedirs(final_odir, exist_ok=1)
 params_list = []
 for ko,og_list in ko2og.items():
-    if not ko.startswith('K1094'):
-        continue
     og_list = ko2og[ko]
     og_list = og_list[::]
     if ko == 'K10944':
@@ -450,3 +448,35 @@ def run_c(x):
 
 with mp.Pool(processes=10) as tp:
     tp.map(run_c,params_list)
+
+
+
+# get_all_genome_name
+org_names = []
+final_odir = join('./align_v3', 'complete_ko')
+os.makedirs(final_odir, exist_ok=1)
+params_list = []
+for ko,og_list in ko2og.items():
+    og_list = ko2og[ko]
+    og_list = og_list[::]
+    if ko == 'K10944':
+        og_list.remove('OG0006386')  # arachaea amoA
+        #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
+        
+    ofile = join(final_odir, ko+'.aln')
+    id2org = generate_id2org(og_list, ofile)
+    org_names += list(set(id2org.values()))
+fa_files = []
+for _ in set(org_names):
+    flist = glob('./genome_protein_files_more/'+_+'*')
+    if not flist:
+        print(_)
+    else:
+        fa_files.append(flist[0])
+from tqdm import tqdm
+cdd_odir = join('./genome_protein_files_more','cogRbp_anno')
+os.makedirs(cdd_odir,exist_ok=1)
+for fa in tqdm(fa_files):
+    anno = join(cdd_odir,basename(fa).replace('.faa','.cogrbp'))
+    cmd_template = f"blastp -query {fa} -db /home-user/sswang/resource/db/CogRbp/CogRbp -outfmt 6 -num_threads 50 -evalue 1e-10 -max_hsps 1 -max_target_seqs 1 > {anno}" 
+    check_call(cmd_template,shell=1)
