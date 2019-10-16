@@ -25,7 +25,7 @@ def main(in_tree,o_file,outgroup_names):
 @click.option('-i','in_newick')
 @click.option('-o','o_newick')
 @click.option('-r','root_name',help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
-@click.option('-f','force',help='overwrite?',default=False,required=False)
+@click.option('-f','force',help='overwrite?',default=False,required=False,is_falg=True)
 def cli(in_newick,o_newick,root_name,force):
     if ',' in root_name:
         root_names = [_.strip() for _ in root_name.split(',')]
