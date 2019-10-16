@@ -32,7 +32,7 @@ def main(infile, odir, name,redo):
         odir = f'./{basename}'
     odir = abspath(odir)
     os.makedirs(odir, exist_ok=True)
-    cmd = f"{mafft_p} --thread -1 {infile} > {odir}/{basename}.aln"
+    cmd = f"{mafft_p} --maxiterate 1000 --genafpair --thread -1 {infile} > {odir}/{basename}.aln"
     if (not os.path.exists(f"{odir}/{basename}.aln")) or redo:
         run_cmd(cmd)
     # test fasttree (for quick view)

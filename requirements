@@ -8,3 +8,4 @@ click
 scikit-learn
 scipy
 git+git://github.com/daler/gffutils.git
+ete3

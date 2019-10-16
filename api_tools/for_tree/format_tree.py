@@ -8,8 +8,14 @@ def root_tree_with(in_tree_file,gene_names=[],format=0):
     for gname in gene_names:
         leafs = [_ for _ in all_leafs if gname in _.name]
         leaf_list+= leafs
-    LCA = t.get_common_ancestor(leaf_list)
-    t.set_outgroup(LCA)
+    if len(leaf_list) !=1:
+        LCA = t.get_common_ancestor(leaf_list)
+        t.set_outgroup(LCA)
+    elif len(leaf_list) ==1:
+        t.set_outgroup(leaf_list[0])
+    else:
+        print("No leaf could found with input '%s'" % str(gene_names))
+        return t
     return t
 
 def sort_tree(in_tree_file,ascending=True,format=0):

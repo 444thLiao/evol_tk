@@ -206,7 +206,7 @@ def get_colors_general(ID2infos,now_info2style={}):
     info2style = {}
     for v in set(ID2infos.values()):
         if v in now_info2style:
-            pass
+            info2style[v] = now_info2style[v]
         elif v not in now_info2style and v in color_scheme:
             info2style.update({v:color_scheme[v]})
         elif v not in now_info2style and v not in color_scheme:
@@ -424,6 +424,7 @@ for _ in set(org_names):
         print(_)
     else:
         fa_files.append(flist[0])
+        
 from tqdm import tqdm
 cdd_odir = join('./genome_protein_files_more','cogRbp_anno')
 os.makedirs(cdd_odir,exist_ok=1)
@@ -431,3 +432,28 @@ for fa in tqdm(fa_files):
     anno = join(cdd_odir,basename(fa).replace('.faa','.cogrbp'))
     cmd_template = f"blastp -query {fa} -db /home-user/sswang/resource/db/CogRbp/CogRbp -outfmt 6 -num_threads 50 -evalue 1e-10 -max_hsps 1 -max_target_seqs 1 > {anno}" 
     check_call(cmd_template,shell=1)
+_sub_df =g_df.loc[:,['phylum/class','habitat (manual classify)']]
+_sub_df.columns = ['phylum/class', 'habitat (manual)']
+new_df = pd.concat([mag2info_df,_sub_df])
+new_df.loc[:,'habitat (manual)'] = [_.strip() for _ in new_df.loc[:,'habitat (manual)']]
+new_df.index = [_.split('.')[0] for _ in new_df.index]
+new_df.to_csv('./genome_protein_files_more/extract_cog_aln/info.csv',sep='\t',index=1)
+
+
+odir = './genome_protein_files_more/extract_cog_aln/'
+all_ids = [_.id for _ in SeqIO.parse(join(odir,'concat_aln.aln'),format='fasta')]
+
+id2tax = {id:new_df.loc[id,'phylum/class'] if id in new_df.index else new_df.loc[name2dirname[id].split('.')[0],'phylum/class'] for id in all_ids}
+id2tax = {k:v 
+            for k,v in id2tax.items()
+            if not pd.isna(v)}
+id2tax = {k:'CPR' if 'candidatus' in str(v).lower() or 'candidate' in str(v) else v
+            for k,v in id2tax.items()}
+id2info,info2col = get_colors_general(id2tax,now_info2style= color_scheme['phylum/class'])
+write2colorstrip(id2info,odir,info2col,unique_id='concat_no_par',info_name='phylum/class')
+root_with ='GCA_002345125'
+
+
+new_text = to_node_symbol(join(odir,'concat_aln.newick'))
+with open(join(final_odir,'concat_no_par_node_bootstrap.txt'),'w') as f1:
+    f1.write(new_text)
