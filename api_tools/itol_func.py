@@ -12,7 +12,7 @@ dataset_binary_template = join(indir, 'dataset_binary_template.txt')
 label_template = join(indir,'labels_template.txt')
 dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
 matrix_like_template = join(indir,"dataset_external_shapes_template.txt")
-
+labels_template = join(indir,"labels_template.txt")
 
 def root_tree_with(in_tree_file,gene_names=[],format=0):
     leaf_list = []
@@ -304,3 +304,12 @@ def to_matrix_shape(ID2categorical_v,dataset_label,color='#000000'):
                 vals.append('0')
         annotate_text += '\t'.join(vals) + '\n'
     return template_text + annotate_text
+
+def to_label(id2new_id):
+    template_text = open(labels_template).read()
+    full_text = template_text[::]
+    for id,new_id in id2new_id.items():
+        id = str(id)
+        new_id = str(new_id)
+        full_text += '%s,%s\n' % (id, new_id)
+    return full_text

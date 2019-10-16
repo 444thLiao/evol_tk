@@ -76,41 +76,33 @@ def remove_by_tigafam(fa_file,odir,filter_tigar_famid):
     with open(output_file,'w') as f1:
         f1.write('\n'.join(dropped_ids))
     
-
+def main(in_fa,odir,db_files,target_gene,tigafam_id):
+    others_db = [basename(_).replace('.faa','')
+                for _ in db_files
+                if basename(_).replace('.faa','') != remained_db]
+    other_db_names = '_'.join(others_db)
+    ko_str = basename(in_fa).replace('.fa','')
+    dropped_ids = split_out(in_fa,db_files,remained_db)
+    print('need to drop %s sequences' % len(dropped_ids))
+    output_file = join(odir,
+                    f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
+    with open(output_file,'w') as f1:
+        f1.write('\n'.join(dropped_ids))
+        
+    remove_by_tigafam(in_fa,odir,tigafam_id)	
+    
 odir = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/manual_remove/'
-
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00371.fa'
 db_files = ['curated_genes/narH.faa',
             'curated_genes/nxrB.faa']
-remained_db = 'nxrB'
-others_db = [basename(_).replace('.faa','')
-             for _ in db_files
-             if basename(_).replace('.faa','') != remained_db]
-other_db_names = '_'.join(others_db)
-ko_str = basename(in_fa).replace('.fa','')
-dropped_ids = split_out(in_fa,db_files,remained_db)
-print('need to drop %s sequences' % len(dropped_ids))
-output_file = join(odir,
-                   f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
-with open(output_file,'w') as f1:
-    f1.write('\n'.join(dropped_ids))
-    
-remove_by_tigafam(in_fa,odir,'TIGR03478')	
+target_gene = 'nxrB'
+corresponding_tigafam = 'TIGR03478'
 
+main(in_fa,odir,db_files,target_gene,corresponding_tigafam)
+####
 in_fa = 'nitrification/reference_genomes/align_v3/complete_ko/K00370.fa'
 db_files = ['curated_genes/narG.faa',
             'curated_genes/nxrA.faa']
 remained_db = 'nxrA'
-others_db = [basename(_).replace('.faa','')
-             for _ in db_files
-             if basename(_).replace('.faa','') != remained_db]
-other_db_names = '_'.join(others_db)
-ko_str = basename(in_fa).replace('.fa','')
-dropped_ids = split_out(in_fa,db_files,remained_db)
-print('need to drop %s sequences' % len(dropped_ids))
-output_file = join(odir,
-                   f'{ko_str}_{other_db_names}_in_{remained_db}.txt')
-with open(output_file,'w') as f1:
-    f1.write('\n'.join(dropped_ids))
-
-remove_by_tigafam(in_fa,odir,'TIGR03479')
+corresponding_tigafam = 'TIGR03479'
+main(in_fa,odir,db_files,target_gene,corresponding_tigafam)

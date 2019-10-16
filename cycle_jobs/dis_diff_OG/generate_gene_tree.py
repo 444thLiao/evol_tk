@@ -85,89 +85,26 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
 
                 }
 
-def get_color_info(id2org,info_col='type',extra={}):
-    id2info = {}
-    for id, org in id2org.items():
-        org = name2dirname.get(org,org)
-        if org in g_df.index:
-            #name = g_df.loc[org, 'genome name']
-            id2info[id] = g_df.loc[org,info_col]
-        elif info_col == 'phylum/class' and name2dirname.get(org,org) in sname2info:
-            tax_name = sname2info[org]
-            id2info[id] = tax_name if 'Candidatus' not in tax_name else 'CPR'
-            
-    if extra:
-        id2info.update(extra)   
-    set_v = set(id2info.values())
-    num_v = len(set_v)
-    colors = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
-    cols = colors[:num_v]
-    total_info2col = dict(zip(set_v,cols))
-    if info_col in color_scheme:
-        _info2col = color_scheme[info_col]
-        info2col = {k:_info2col[k] for k in set_v if k in _info2col}
-        fix_missed = {k:total_info2col[k] for k in set_v if k not in info2col}
-        info2col.update(fix_missed)
-    else:
-        info2col = total_info2col.copy()
-    return id2info,info2col
-
 # rename
-def to_label(each_og,ofile,odir,ko_name=None,extra={}):
+def rename_gene(each_og,ofile,extra={}):
     template_text = open(
         '/home-user/thliao/template_txt/labels_template.txt').read()
     id2org = generate_id2org(each_og, ofile)
     full_text = template_text[::]
+    id2new_name = {}
     for id, org in id2org.items():
         if org in g_df.index:
             name = g_df.loc[org, 'genome name']
         else:
             name = id
-        full_text += '%s,%s\n' % (id, name)
-    for id,name in extra.items():
-        full_text += '%s,%s\n' % (id, name)
-    if ko_name is not None:
-        each_og = ko_name
-    with open(join(odir, f'{each_og}_label.txt'), 'w') as f1:
-        f1.write(full_text)
+        id2new_name[id] = name
+    id2new_name.update(extra)
+    return id2new_name
 
 
-# annotate MAGs lineage
-remained_ID = og_df.columns.difference(g_df.index)
-MAG_annotate_df = pd.read_csv(MAG_annotate_file,sep='\t',index_col=0)
-derep_df = MAG_annotate_df.drop_duplicates('sample name')
-filtered_df = derep_df.loc[derep_df.loc[:,'sample name'].isin(remained_ID),:]
-phylum_from_metadata_count = filtered_df.groupby('phylum(from metadata)').count().iloc[:,0]
-sname2phylum_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name'],
-                                 MAG_annotate_df.loc[:,'phylum(from metadata)']))
-sname2class_metadata = dict(zip(MAG_annotate_df.loc[:,'sample name']
-                                ,MAG_annotate_df.loc[:,'class(from metadata)']))
-
-# MAG to phylum info
-sname2phylum_metadata = {k:v for k,v in sname2phylum_metadata.items() if not pd.isna(v)}
-sname2info = {k:v if v !='Proteobacteria' else sname2class_metadata[k] for k,v in sname2phylum_metadata.items()}
-sname2info = {k:v for k,v in sname2info.items() if not pd.isna(v)}
-
-# MAG to habitat
-mag2habitat_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/MAG2habitat.xlsx'
-mag2habitat_df = pd.read_excel(mag2habitat_file,index_col=0,)
-mag2habitat = dict(zip(mag2habitat_df.index,
-                       mag2habitat_df.loc[:,'classify as ']))
-filtered_df.loc[:,'habitat (manual)'] = [mag2habitat[_] 
-                                    for _ in  list(filtered_df.loc[:,'source project'])]
-metadata_for_17_parks = '/mnt/home-backup/thliao/metagenomes/17_parks/pack_up_metadata.tsv'
-metadata_for_17_parks_df = pd.read_csv(metadata_for_17_parks,sep='\t',index_col=0)
-sub_df = filtered_df.loc[filtered_df.loc[:,'source project']=='17_parks',:]
-collect_list = []
-for _,row in sub_df.iterrows():
-    gnome_id = '_'.join(row['sample name'].split('_')[:2])
-    habitat = metadata_for_17_parks_df.loc[gnome_id,'habitat (manual)']
-    collect_list.append(habitat)
-filtered_df.loc[sub_df.index,'habitat (manual)'] = collect_list
-habitat_from_metadata_count = filtered_df.groupby('habitat (manual)').count().iloc[:,0]
-locus2habitat = dict(zip([_.split('_')[0] for _ in filtered_df.index],
-                         list(filtered_df.loc[:,'habitat (manual)'])))
-
+mag2info_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/mag2info.csv'
+mag2info_df = pd.read_csv(mag2info_file,sep='\t',index_col=0)
+mag2info_dict = mag2info_df.to_dict()
 
 
 # data dependent transform
@@ -337,13 +274,14 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
         else:
             n_file = ofile.replace('.aln','.treefile')
             check_call(f'FastTree {ofile} > {n_file}',shell=1)
-    
+
     t = root_tree_with(ofile.replace('.aln','.treefile'),
                        gene_names=outgroup_gene_names.get(ko,[]),
                        format=0)
     renamed_tree(t,
                  outfile=ofile.replace('.aln','.newick'),
                  ascending=True)
+    ## annotation part
     # outgroup and genome to habitat
     aa_ID2habitat = dict(zip( ['_'.join(map(lambda x:str(x).strip(),_)) 
                                for _ in ref_df.loc[:,['AA accession','gene name']].values],
@@ -358,20 +296,29 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     all_id2habitat = aa_ID2habitat.copy()
     all_id2habitat.update(id2habitat)
     # convert tree file output by iqtree and add internal node name
-    # renamed_tree(ofile.replace('.aln','.treefile'),
-    #             ofile.replace('.aln','.newick'))
     
+    # annotate the tree with bootstrap values as filled or unfilled dot.
     new_text = to_node_symbol(ofile.replace('.aln','.newick'))
     with open(join(final_odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
         f1.write(new_text)
     
     ## annotate with type
-    id2info,info2col = get_color_info(id2org,info_col='type')
+    id2type = {k:g_df.loc[v,'type']
+               for k,v in id2org.items()
+               if v in g_df.index}
+    id2info,info2col = get_colors_general(id2type,now_info2style= ref_id2info)
     write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='type')
     
     ## annotate with phylum/class as a color strip
-    
-    id2info,info2col = get_color_info(id2org,info_col='phylum/class',extra=ref_id2info)
+    id2tax = {id: mag2info_dict['phylum/class'][gid]
+                       for id,gid in id2org.items()
+                       if gid in mag2info_dict['phylum/class']}
+    id2tax = {k:v 
+              for k,v in id2tax.items()
+              if not pd.isna(v)}
+    id2tax = {k:'CPR' if 'candidatus' in str(v).lower() or 'candidate' in str(v) else v
+              for k,v in id2tax.items()}
+    id2info,info2col = get_colors_general(id2tax,now_info2style= ref_id2info)
     _id2info,_info2col = get_outgroup_info_phylum(sub_ref_df,info2col)
     id2info.update(_id2info)
     info2col.update(_info2col)
@@ -388,7 +335,11 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
                             no_legend=True)
     # get new add sequence infomation and annotate it
     ID2infos,_,extra_id2name = get_outgroup_info(sub_ref_df)
-    to_label(og_list,ofile,final_odir,ko_name=ko,extra=extra_id2name)
+    locus2new_name = rename_gene(og_list,ofile,extra=extra_id2name)
+    full_text = to_label(locus2new_name)
+    with open(join(final_odir, f'{ko}_label.txt'), 'w') as f1:
+        f1.write(full_text)
+        
     ID2add_type = {ID:ID2infos[ID][0] 
                    if ID2infos.get(ID,[]) else 'MAGs' 
                    for ID in final_ID_list}
@@ -403,9 +354,9 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
         f1.write(matrix_text)
         
     ## annotate with habitat
-    new_locus2habit = {id:locus2habitat[id.split('_')[0]] 
-                       for id in [_ for _,v in ID2add_type.items() if v=='MAGs']
-                       if id.split('_')[0] in locus2habitat}
+    new_locus2habit = {id: mag2info_dict['habitat (manual)'][gid]
+                       for id,gid in id2org.items()
+                       if gid in mag2info_dict['habitat (manual)']}
     id2info,info2col = get_colors_general(new_locus2habit)
     all_id2habitat.update(id2info)
     all_id2habitat = {k:str(v).strip() for k,v in all_id2habitat.items()
