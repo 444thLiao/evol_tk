@@ -452,8 +452,17 @@ id2tax = {k:'CPR' if 'candidatus' in str(v).lower() or 'candidate' in str(v) els
 id2info,info2col = get_colors_general(id2tax,now_info2style= color_scheme['phylum/class'])
 write2colorstrip(id2info,odir,info2col,unique_id='concat_no_par',info_name='phylum/class')
 root_with ='GCA_002345125'
+    
+write2colorbranch_clade(id2info,
+                            odir,
+                            info2col,
+                            treefile=join(odir,'concat_no_par.newick'),
+                            unique_id='concat_no_par',
+                            info_name='branch_color',
+                            no_legend=True)    
 
-
-new_text = to_node_symbol(join(odir,'concat_aln.newick'))
-with open(join(final_odir,'concat_no_par_node_bootstrap.txt'),'w') as f1:
+new_text = to_node_symbol(join(odir,'concat_no_par.newick'))
+with open(join(odir,'concat_no_par_node_bootstrap.txt'),'w') as f1:
     f1.write(new_text)
+
+    
