@@ -258,7 +258,8 @@ def main(infile, odir, batch_size, test=False):
 @click.option('-bs', 'batch_size', help='number of sample fetch at each query', default=500, required=False)
 @click.option('-debug', 'test', help='test?', default=False, required=False, is_flag=True)
 def cli(infile, odir, test, batch_size):
-    main(infile, odir, test)
+    batch_size = int(batch_size)
+    main(infile, odir, batch_size,test)
 
 
 if __name__ == "__main__":
