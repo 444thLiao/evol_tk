@@ -2,6 +2,7 @@
 This script is mainly for retrieve infomation enough for following analysis
 
 """
+from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 import random
 from Bio import Entrez
 from tqdm import tqdm
@@ -14,7 +15,6 @@ import pandas as pd
 from os.path import exists, dirname, join
 import os
 import click
-from thirty_party.EntrezDownloader import EntrezDownloader
 
 edl = EntrezDownloader(
     # An email address. You might get blocked by the NCBI without specifying one.
@@ -32,8 +32,9 @@ def parse_id(infile, columns=1):
     id2info = {}
     for row in tqdm(open(infile, 'r')):
         if row:
-            id_list.append(row.split('\t')[columns])
-            id2info[row.split('\t')[columns]] = ';'.join(
+            id = row.split('\t')[columns].strip().strip('\n')
+            id_list.append(id)
+            id2info[id] = ';'.join(
                 row.split('\t')[columns+1:]).strip('\n')
     return id_list, id2info
 
@@ -119,18 +120,14 @@ def parse_biosample_xml(xml_text):
     return result_bucket
 
 
-infile = './nr_parse_ids.output'
-odir = './nr_retrieve_info'
-
 
 def main(infile, odir):
     if not exists(odir):
         os.makedirs(odir)
-    #order_id_list = [_ for _ in open(infile).read().split('\n') if _]
     order_id_list, id2annotate = parse_id(infile, 0)
 
     id_list = list(set(order_id_list))
-    #id_list = random.sample(id_list,10000)
+    id_list = random.sample(id_list,1000)
 
     pid2info_dict = defaultdict(dict)
     tqdm.write('get pid summary from each one')
@@ -162,11 +159,13 @@ def main(infile, odir):
             print('error ', aid)
         annotations = prot_t.annotations
 
-        ref_texts = [_.title
+        ref_texts = [_
                      for _ in annotations.get('references', [])
                      if 'Direct' not in _.title]
         for idx, ref_t in enumerate(ref_texts):
-            pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t
+            pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
+            pid2info_dict[aid]['reference_'+str(int(idx)+1) + ' journal'] = ref_t.journal
+            pid2info_dict[aid]['reference_'+str(int(idx)+1) + ' author'] = ref_t.authors
         pid2info_dict[aid]['nuccore id'] = annotations.get(
             'db_source', '').split(' ')[-1]
         pid2info_dict[aid]['source'] = annotations['source']
@@ -197,7 +196,7 @@ def main(infile, odir):
     pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'), 
                        index=1, index_label='protein accession')
 
-    tqdm.write('processing pid to bioproject id and biosample')
+    tqdm.write('processing pid to bioproject and retrieving the info of bioproject')
     set_bioprojects = list(set([d.get('BioProject', '')
                                 for d in pid2info_dict.values() if 'BioProject' in d]))
 
@@ -223,6 +222,7 @@ def main(infile, odir):
     bioproject_df.to_excel(join(odir, 'bioproject2info.xlsx'),
                          index=1, index_label='bioproject ID')
 
+    tqdm.write('processing pid to biosample and retrieving the info of biosample')
     set_biosamples = [_ for _ in list(
         pid2info_df.loc[:, 'BioSample'].unique()) if isinstance(_, str)]
 
@@ -234,7 +234,7 @@ def main(infile, odir):
                                  ids=all_GI,
                                  retmode='xml',
                                  retype='xml',
-                                 batch_size=1,
+                                 #batch_size=1,
                                  result_func=lambda x: parse_biosample_xml(x))
     _t = {}
     for r in results:
@@ -247,9 +247,10 @@ def main(infile, odir):
 
 
 @click.command()
-@click.option()
-def cli():
-    pass
+@click.option('-i','infile',help='input file which contains protein accession id and its annotation.')
+@click.option('-o','odir',help='output directory')
+def cli(infile,odir):
+    main(infile,odir)
 
 
 if __name__ == "__main__":
