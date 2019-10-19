@@ -16,16 +16,6 @@ from os.path import exists, dirname, join
 import os
 import click
 
-edl = EntrezDownloader(
-    # An email address. You might get blocked by the NCBI without specifying one.
-    email='l0404th@gmail.com',
-    # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-    api_key='ccf9847611deebe1446b9814a356f14cde08',
-    num_threads=30,                       # The number of parallel requests to make
-    batch_size=500,                        # The number of IDs to fetch per request
-    pbar=True                             # Enables a progress bar, requires tqdm package
-)
-
 
 def parse_id(infile, columns=1):
     id_list = []
@@ -121,7 +111,18 @@ def parse_biosample_xml(xml_text):
     return result_bucket
 
 
-def main(infile, odir,test=False):
+def main(infile, odir, batch_size, test=False):
+
+    edl = EntrezDownloader(
+        # An email address. You might get blocked by the NCBI without specifying one.
+        email='l0404th@gmail.com',
+        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+        api_key='ccf9847611deebe1446b9814a356f14cde08',
+        num_threads=30,                       # The number of parallel requests to make
+        # The number of IDs to fetch per request
+        batch_size=batch_size,
+        pbar=True                             # Enables a progress bar, requires tqdm package
+    )
     if not exists(odir):
         os.makedirs(odir)
     order_id_list, id2annotate = parse_id(infile, 0)
@@ -149,7 +150,7 @@ def main(infile, odir,test=False):
                                            ids=list(map(str, id_list)),
                                            retmode='text',
                                            retype='gb',
-                                           batch_size=50,
+                                           #batch_size=50,
                                            result_func=lambda x: list(SeqIO.parse(
                                                io.StringIO(x), format='genbank'))
                                            )
@@ -254,9 +255,10 @@ def main(infile, odir,test=False):
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')
 @click.option('-o', 'odir', help='output directory')
-@click.option('-debug','test',help='test?',default=False,required=False,is_flag=True)
-def cli(infile, odir,test):
-    main(infile, odir,test)
+@click.option('-bs', 'batch_size', help='number of sample fetch at each query', default=500, required=False)
+@click.option('-debug', 'test', help='test?', default=False, required=False, is_flag=True)
+def cli(infile, odir, test, batch_size):
+    main(infile, odir, test)
 
 
 if __name__ == "__main__":
