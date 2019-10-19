@@ -38,6 +38,7 @@ def parse_id(infile, columns=1):
                 row.split('\t')[columns+1:]).strip('\n')
     return id_list, id2info
 
+
 def parse_bioproject_xml(xml_text):
     result_bucket = []
     soup = BeautifulSoup(xml_text, 'xml')
@@ -120,14 +121,14 @@ def parse_biosample_xml(xml_text):
     return result_bucket
 
 
-
-def main(infile, odir):
+def main(infile, odir,test=False):
     if not exists(odir):
         os.makedirs(odir)
     order_id_list, id2annotate = parse_id(infile, 0)
 
     id_list = list(set(order_id_list))
-    id_list = random.sample(id_list,1000)
+    if test:
+        id_list = random.sample(id_list, 1000)
 
     pid2info_dict = defaultdict(dict)
     tqdm.write('get pid summary from each one')
@@ -164,8 +165,10 @@ def main(infile, odir):
                      if 'Direct' not in _.title]
         for idx, ref_t in enumerate(ref_texts):
             pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
-            pid2info_dict[aid]['reference_'+str(int(idx)+1) + ' journal'] = ref_t.journal
-            pid2info_dict[aid]['reference_'+str(int(idx)+1) + ' author'] = ref_t.authors
+            pid2info_dict[aid]['reference_' +
+                               str(int(idx)+1) + ' journal'] = ref_t.journal
+            pid2info_dict[aid]['reference_' +
+                               str(int(idx)+1) + ' author'] = ref_t.authors
         pid2info_dict[aid]['nuccore id'] = annotations.get(
             'db_source', '').split(' ')[-1]
         pid2info_dict[aid]['source'] = annotations['source']
@@ -193,10 +196,11 @@ def main(infile, odir):
                    'keywords',
                    'comments'] + [_ for _ in pid2info_df.columns if 'reference' in _]
     pid2info_df = pid2info_df.reindex(columns=new_columns)
-    pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'), 
-                       index=1, index_label='protein accession')
+    pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
+                         index=1, index_label='protein accession')
 
-    tqdm.write('processing pid to bioproject and retrieving the info of bioproject')
+    tqdm.write(
+        'processing pid to bioproject and retrieving the info of bioproject')
     set_bioprojects = list(set([d.get('BioProject', '')
                                 for d in pid2info_dict.values() if 'BioProject' in d]))
 
@@ -220,7 +224,7 @@ def main(infile, odir):
     bioproject_df = bioproject_df.applymap(
         lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
     bioproject_df.to_excel(join(odir, 'bioproject2info.xlsx'),
-                         index=1, index_label='bioproject ID')
+                           index=1, index_label='bioproject ID')
 
     tqdm.write('processing pid to biosample and retrieving the info of biosample')
     set_biosamples = [_ for _ in list(
@@ -234,7 +238,7 @@ def main(infile, odir):
                                  ids=all_GI,
                                  retmode='xml',
                                  retype='xml',
-                                 #batch_size=1,
+                                 # batch_size=1,
                                  result_func=lambda x: parse_biosample_xml(x))
     _t = {}
     for r in results:
@@ -243,14 +247,16 @@ def main(infile, odir):
     biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
     biosample_df = biosample_df.applymap(
         lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    biosample_df.to_excel(join(odir, 'biosample2info.xlsx'), index=1, index_label='biosample ID')
+    biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
+                          index=1, index_label='biosample ID')
 
 
 @click.command()
-@click.option('-i','infile',help='input file which contains protein accession id and its annotation.')
-@click.option('-o','odir',help='output directory')
-def cli(infile,odir):
-    main(infile,odir)
+@click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')
+@click.option('-o', 'odir', help='output directory')
+@click.option('-debug','test',help='test?',default=False,required=False,is_flag=True)
+def cli(infile, odir,test):
+    main(infile, odir,test)
 
 
 if __name__ == "__main__":
