@@ -19,6 +19,7 @@ from ete3 import NCBITaxa
 
 ncbi = NCBITaxa()
 
+
 def parse_id(infile, columns=1):
     id_list = []
     id2info = {}
@@ -115,7 +116,7 @@ def parse_biosample_xml(xml_text):
     return result_bucket
 
 
-def main(infile, odir, batch_size, test=False):
+def main(infile, odir, batch_size, test=False,just_seq=False):
 
     edl = EntrezDownloader(
         # An email address. You might get blocked by the NCBI without specifying one.
@@ -147,7 +148,8 @@ def main(infile, odir, batch_size, test=False):
                                        io.StringIO(x)))
     if failed:
         tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
-    taxons = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']    
+    taxons = ['superkingdom', 'phylum', 'class',
+              'order', 'family', 'genus', 'species']
     gi2pid = {}
     tqdm.write('from summary to GI and taxonomy')
     for result in tqdm(results):
@@ -163,7 +165,7 @@ def main(infile, odir, batch_size, test=False):
                 if c in rank:
                     pid2info_dict[aid][c] = names[rank[c]]
         except:
-            tqdm.write("failed to parse taxonomy info for ",aid)
+            tqdm.write("failed to parse taxonomy info for ", aid)
         gi2pid[gi] = aid
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
@@ -177,7 +179,7 @@ def main(infile, odir, batch_size, test=False):
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
 
-    with open(join(odir, 'protein2INFO.tab'),'w') as f1:
+    with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
         for prot_t in prot_results:
             aid = prot_t.id
             if aid not in id_list:
@@ -185,14 +187,14 @@ def main(infile, odir, batch_size, test=False):
                 continue
             annotations = prot_t.annotations
             ref_texts = [_
-                        for _ in annotations.get('references', [])
-                        if 'Direct' not in _.title and _.title]
+                         for _ in annotations.get('references', [])
+                         if 'Direct' not in _.title and _.title]
             for idx, ref_t in enumerate(ref_texts):
                 pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
                 pid2info_dict[aid]['reference_' +
-                                str(int(idx)+1) + ' journal'] = ref_t.journal
+                                   str(int(idx)+1) + ' journal'] = ref_t.journal
                 pid2info_dict[aid]['reference_' +
-                                str(int(idx)+1) + ' author'] = ref_t.authors
+                                   str(int(idx)+1) + ' author'] = ref_t.authors
             pid2info_dict[aid]['nuccore id'] = annotations.get(
                 'db_source', '').split(' ')[-1]
             pid2info_dict[aid]['source'] = annotations['source']
@@ -203,87 +205,96 @@ def main(infile, odir, batch_size, test=False):
             pid2info_dict[aid]['seq'] = str(prot_t.seq)
             pid2info_dict[aid].update(dict([_.split(':')
                                             for _ in prot_t.dbxrefs if ':' in _]))
-            pid2info_dict[aid]['annotated as'] = [id2annotate.get(_,'')
-                                        for _ in pid2info_dict.keys()]
+            pid2info_dict[aid]['annotated as'] = [id2annotate.get(_, '')
+                                                  for _ in pid2info_dict.keys()]
 
-        refs = list(sorted(list(set([_ for v in pid2info_dict.values() for _ in v.keys() if _.startswith('reference')]))))
+        refs = list(sorted(list(set([_ for v in pid2info_dict.values(
+        ) for _ in v.keys() if _.startswith('reference')]))))
         new_columns = ['protein accession',
                        'annotated as',
-                    'seq',
-                    'org',
-                    'source',
-                    'BioProject',
-                    'BioSample',
-                    'GI',
-                    'taxid',
-                    'nuccore id',
-                    'keywords',
-                    'comments'] +taxons+ refs
+                       'seq',
+                       'org',
+                       'source',
+                       'BioProject',
+                       'BioSample',
+                       'GI',
+                       'taxid',
+                       'nuccore id',
+                       'keywords',
+                       'comments'] + taxons + refs
         f1.write('\t'.join(new_columns)+'\n')
-        for aid,info_dict in pid2info_dict.items():
-            print(f'{aid}\t' + '\t'.join([str(info_dict.get(_,'')).replace('\n', ' ') for _ in new_columns]),file=f1)
-        
+        for aid, info_dict in pid2info_dict.items():
+            print(f'{aid}\t' + '\t'.join([str(info_dict.get(_, '')
+                                              ).replace('\n', ' ') for _ in new_columns]), file=f1)
         tqdm.write('transforming dictionary into a DataFrame. ')
-    pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
-    pid2info_df = pid2info_df.applymap(
-        lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    pid2info_df.loc[:, 'annotated as'] = [id2annotate.get(_,'')
-                                        for _ in pid2info_df.index]
-    
-    pid2info_df = pid2info_df.reindex(columns=new_columns)
-    pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
-                        index=1, index_label='protein accession')
 
-    tqdm.write(
-        'processing pid to bioproject and retrieving the info of bioproject')
-    set_bioprojects = list(pid2info_df.loc[:,'BioProject'].unique())
-    set_bioprojects = [_ for _ in set_bioprojects if str(_)!='nan']
-    results, failed = edl.esearch(db='bioproject',
-                                  ids=set_bioprojects,
-                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    
-    all_GI = results[::]
-    results, failed = edl.efetch(db='bioproject',
-                                 ids=all_GI,
-                                 retmode='xml',
-                                 retype='xml',
-                                 # batch_size=1,
-                                 result_func=lambda x: parse_bioproject_xml(x))
-    _t = {}
-    for _ in results:
-        if isinstance(_, dict):
-            _t.update(_)
-    bioproject_df = pd.DataFrame.from_dict(_t, orient='index')
-    bioproject_df.loc[:, 'GI'] = bioproject_df.loc[:, 'GI'].astype(int)
-    bioproject_df = bioproject_df.reindex(pid2info_df.loc[:, 'BioProject'])
-    bioproject_df = bioproject_df.applymap(
-        lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    bioproject_df.to_excel(join(odir, 'bioproject2info.xlsx'),
-                           index=1, index_label='bioproject ID')
+    # pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
+    # pid2info_df = pid2info_df.applymap(
+    #     lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+    # pid2info_df.loc[:, 'annotated as'] = [id2annotate.get(_,'')
+    #                                     for _ in pid2info_df.index]
 
-    tqdm.write('processing pid to biosample and retrieving the info of biosample')
-    set_biosamples = [_ for _ in list(
-        pid2info_df.loc[:, 'BioSample'].unique()) if isinstance(_, str)]
+    # pid2info_df = pid2info_df.reindex(columns=new_columns)
+    # pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
+    #                     index=1, index_label='protein accession')
+    if just_seq:
+        tqdm.write('only perform sequence searching... completed')
+    else:
+        tqdm.write(
+            'processing pid to bioproject and retrieving the info of bioproject')
+        set_bioprojects = list(set([_.get('BioProject', '')
+                                    for _ in pid2info_dict.values()]))
+        set_bioprojects = [_
+                        for _ in set_bioprojects
+                        if str(_) != 'nan' and _]
+        results, failed = edl.esearch(db='bioproject',
+                                    ids=set_bioprojects,
+                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+        all_GI = results[::]
+        results, failed = edl.efetch(db='bioproject',
+                                    ids=all_GI,
+                                    retmode='xml',
+                                    retype='xml',
+                                    # batch_size=1,
+                                    result_func=lambda x: parse_bioproject_xml(x))
+        _t = {}
+        for _ in results:
+            if isinstance(_, dict):
+                _t.update(_)
+        bioproject_df = pd.DataFrame.from_dict(_t, orient='index')
+        bioproject_df.loc[:, 'GI'] = bioproject_df.loc[:, 'GI'].astype(int)
+        #bioproject_df = bioproject_df.reindex(pid2info_df.loc[:, 'BioProject'])
+        bioproject_df = bioproject_df.applymap(
+            lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+        bioproject_df.to_excel(join(odir, 'bioproject2info.xlsx'),
+                            index=1, index_label='bioproject ID')
 
-    results, failed = edl.esearch(db='biosample',
-                                  ids=set_biosamples,
-                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    all_GI = results[::]
-    results, failed = edl.efetch(db='biosample',
-                                 ids=all_GI,
-                                 retmode='xml',
-                                 retype='xml',
-                                 # batch_size=1,
-                                 result_func=lambda x: parse_biosample_xml(x))
-    _t = {}
-    for r in results:
-        _t.update(r)
-    biosample_df = pd.DataFrame.from_dict(_t, orient='index')
-    biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
-    biosample_df = biosample_df.applymap(
-        lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
-                          index=1, index_label='biosample ID')
+        tqdm.write('processing pid to biosample and retrieving the info of biosample')
+        set_biosamples = list(set([_.get('BioSample', '')
+                                for _ in pid2info_dict.values()]))
+        set_biosamples = [_
+                        for _ in set_biosamples
+                        if str(_) != 'nan' and _]
+
+        results, failed = edl.esearch(db='biosample',
+                                    ids=set_biosamples,
+                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+        all_GI = results[::]
+        results, failed = edl.efetch(db='biosample',
+                                    ids=all_GI,
+                                    retmode='xml',
+                                    retype='xml',
+                                    # batch_size=1,
+                                    result_func=lambda x: parse_biosample_xml(x))
+        _t = {}
+        for r in results:
+            _t.update(r)
+        biosample_df = pd.DataFrame.from_dict(_t, orient='index')
+        #biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
+        biosample_df = biosample_df.applymap(
+            lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+        biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
+                            index=1, index_label='biosample ID')
 
 
 @click.command()
@@ -291,9 +302,10 @@ def main(infile, odir, batch_size, test=False):
 @click.option('-o', 'odir', help='output directory')
 @click.option('-bs', 'batch_size', help='number of sample fetch at each query', default=500, required=False)
 @click.option('-debug', 'test', help='test?', default=False, required=False, is_flag=True)
-def cli(infile, odir, test, batch_size):
+@click.option('-only_seq', 'just_seq', help='only retrieve seq?', default=False, required=False, is_flag=True)
+def cli(infile, odir, test, batch_size,just_seq):
     batch_size = int(batch_size)
-    main(infile, odir, batch_size,test)
+    main(infile, odir, batch_size, test,just_seq)
 
 
 if __name__ == "__main__":
