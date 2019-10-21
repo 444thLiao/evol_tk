@@ -179,8 +179,10 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
 
+    #all_cols = list(list(pid2info_dict.values())[0].keys())
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
-        for prot_t in prot_results:
+        tqdm.write('write into a dictinoary')
+        for prot_t in tqdm(prot_results):
             aid = prot_t.id
             if aid not in id_list:
                 print('error ', aid)
@@ -189,7 +191,7 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
             ref_texts = [_
                          for _ in annotations.get('references', [])
                          if 'Direct' not in _.title and _.title]
-            for idx, ref_t in enumerate(ref_texts):
+            for idx, ref_t in list(enumerate(ref_texts))[:10]:
                 pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
                 pid2info_dict[aid]['reference_' +
                                    str(int(idx)+1) + ' journal'] = ref_t.journal
@@ -223,10 +225,13 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                        'keywords',
                        'comments'] + taxons + refs
         f1.write('\t'.join(new_columns)+'\n')
-        for aid, info_dict in pid2info_dict.items():
+        tqdm.write('write out into a file')
+        for aid, info_dict in tqdm(pid2info_dict.items()):
             print(f'{aid}\t' + '\t'.join([str(info_dict.get(_, '')
-                                              ).replace('\n', ' ') for _ in new_columns]), file=f1)
-        tqdm.write('transforming dictionary into a DataFrame. ')
+                                              ).replace('\n', ' ') for _ in new_columns]),
+                   file=f1)
+            f1.flush()
+        #tqdm.write('transforming dictionary into a DataFrame. ')
 
     # pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
     # pid2info_df = pid2info_df.applymap(
