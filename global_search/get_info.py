@@ -15,7 +15,9 @@ import pandas as pd
 from os.path import exists, dirname, join
 import os
 import click
+from ete3 import NCBITaxa
 
+ncbi = NCBITaxa()
 
 def parse_id(infile, columns=1):
     id_list = []
@@ -126,7 +128,6 @@ def main(infile, odir, batch_size, test=False):
     if not exists(odir):
         os.makedirs(odir)
     order_id_list, id2annotate = parse_id(infile, 0)
-
     id_list = list(set(order_id_list))
     if test:
         id_list = random.sample(id_list, 1000)
@@ -139,14 +140,24 @@ def main(infile, odir, batch_size, test=False):
                                        io.StringIO(x)))
     if failed:
         tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
-        
+    taxons = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']    
     gi2pid = {}
     for result in results:
         aid = result['AccessionVersion']
         pid2info_dict[aid]['GI'] = gi = result['Gi'].real
         pid2info_dict[aid]['taxid'] = result['TaxId'].real
+        try:
+            lineage = ncbi.get_lineage(result['TaxId'].real)
+            rank = ncbi.get_rank(lineage)
+            rank = {v: k for k, v in rank.items()}
+            names = ncbi.get_taxid_translator(lineage)
+            for c in taxons:
+                if c in rank:
+                    pid2info_dict[aid][c] = names[rank[c]]
+        except:
+            tqdm.write("failed to parse taxonomy info for ",aid)
         gi2pid[gi] = aid
-    tqdm.write("successfully retrieve %s summary of protein ID" % len(failed))
+    tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
                                            ids=list(map(str, id_list)),
@@ -157,12 +168,13 @@ def main(infile, odir, batch_size, test=False):
                                                io.StringIO(x), format='genbank')))
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
-        
+
     with open(join(odir, 'protein2INFO.tab'),'w') as f1:
         for prot_t in prot_results:
             aid = prot_t.id
             if aid not in id_list:
                 print('error ', aid)
+                continue
             annotations = prot_t.annotations
 
             ref_texts = [_
@@ -186,6 +198,7 @@ def main(infile, odir, batch_size, test=False):
                                             for _ in prot_t.dbxrefs if ':' in _]))
             pid2info_dict[aid]['annotated as'] = [id2annotate.get(_,'')
                                         for _ in pid2info_dict.keys()]
+
         refs = list(sorted(list(set([_ for v in pid2info_dict.values() for _ in v.keys() if _.startswith('reference')]))))
         new_columns = ['protein accession',
                        'annotated as',
@@ -198,7 +211,7 @@ def main(infile, odir, batch_size, test=False):
                     'taxid',
                     'nuccore id',
                     'keywords',
-                    'comments'] + refs
+                    'comments'] +taxons+ refs
         f1.write('\t'.join(new_columns)+'\n')
         for aid,info_dict in pid2info_dict.items():
             print(f'{aid}\t' + '\t'.join([str(info_dict.get(_,'')).replace('\n', ' ') for _ in new_columns]),file=f1)
