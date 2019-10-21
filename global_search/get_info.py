@@ -25,6 +25,8 @@ def parse_id(infile, columns=1):
     for row in tqdm(open(infile, 'r')):
         if row:
             id = row.split('\t')[columns].strip().strip('\n')
+            if '||' in id:
+                id = id.split('||')[-1]
             id_list.append(id)
             id2info[id] = ';'.join(
                 row.split('\t')[columns+1:]).strip('\n')
