@@ -224,7 +224,6 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                     f1.write('\t'.join([ref_t.title,ref_t.journal,ref_t.authors])+'\t')
                 else:
                     f1.write('\t'.join(['','',''])+'\n')
-                    
             f1.flush()
             if just_seq:
                 continue
@@ -248,17 +247,19 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                                             for _ in prot_t.dbxrefs if ':' in _]))
             pid2info_dict[aid]['annotated as'] = [id2annotate.get(_, '')
                                                   for _ in pid2info_dict.keys()]
-
-        refs = list(sorted(list(set([_ for v in pid2info_dict.values(
-        ) for _ in v.keys() if _.startswith('reference')]))))
-        
-        f1.write('\t'.join(new_columns)+'\n')
-        tqdm.write('write out into a file')
-        for aid, info_dict in tqdm(pid2info_dict.items()):
-            print(f'{aid}\t' + '\t'.join([str(info_dict.get(_, '')
-                                              ).replace('\n', ' ') for _ in new_columns]),
-                   file=f1)
-            f1.flush()
+        if just_seq:
+            tqdm.write('only perform sequence searching... completed')
+        else:
+            refs = list(sorted(list(set([_ for v in pid2info_dict.values(
+            ) for _ in v.keys() if _.startswith('reference')]))))
+            
+            f1.write('\t'.join(new_columns)+'\n')
+            tqdm.write('write out into a file')
+            for aid, info_dict in tqdm(pid2info_dict.items()):
+                print(f'{aid}\t' + '\t'.join([str(info_dict.get(_, '')
+                                                ).replace('\n', ' ') for _ in new_columns]),
+                    file=f1)
+                f1.flush()
         #tqdm.write('transforming dictionary into a DataFrame. ')
 
     # pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
@@ -271,7 +272,7 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
     # pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
     #                     index=1, index_label='protein accession')
     if just_seq:
-        tqdm.write('only perform sequence searching... completed')
+        tqdm.write('')
     else:
         tqdm.write(
             'processing pid to bioproject and retrieving the info of bioproject')
