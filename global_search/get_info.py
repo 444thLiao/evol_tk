@@ -136,8 +136,12 @@ def main(infile, odir, batch_size, test=False):
 
     pid2info_dict = defaultdict(dict)
     tqdm.write('get pid summary from each one')
+    results, failed = edl.esearch(db='protein',
+                                  ids=id_list,
+                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+    all_GI = results[::]
     results, failed = edl.esummary(db='protein',
-                                   ids=id_list,
+                                   ids=all_GI,
                                    result_func=lambda x: Entrez.read(
                                        io.StringIO(x)))
     if failed:
