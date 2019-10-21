@@ -135,11 +135,12 @@ def main(infile, odir, batch_size, test=False):
         id_list = random.sample(id_list, 1000)
 
     pid2info_dict = defaultdict(dict)
-    tqdm.write('get pid summary from each one')
+    tqdm.write('from protein Accession ID to GI')
     results, failed = edl.esearch(db='protein',
                                   ids=id_list,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
     all_GI = results[::]
+    tqdm.write('get pid summary from each one')
     results, failed = edl.esummary(db='protein',
                                    ids=all_GI,
                                    result_func=lambda x: Entrez.read(
@@ -148,7 +149,8 @@ def main(infile, odir, batch_size, test=False):
         tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
     taxons = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']    
     gi2pid = {}
-    for result in results:
+    tqdm.write('from summary to GI and taxonomy')
+    for result in tqdm(results):
         aid = result['AccessionVersion']
         pid2info_dict[aid]['GI'] = gi = result['Gi'].real
         pid2info_dict[aid]['taxid'] = result['TaxId'].real
@@ -166,7 +168,7 @@ def main(infile, odir, batch_size, test=False):
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
-                                           ids=list(map(str, id_list)),
+                                           ids=all_GI,
                                            retmode='text',
                                            retype='gb',
                                            batch_size=50,
@@ -182,7 +184,6 @@ def main(infile, odir, batch_size, test=False):
                 print('error ', aid)
                 continue
             annotations = prot_t.annotations
-
             ref_texts = [_
                         for _ in annotations.get('references', [])
                         if 'Direct' not in _.title and _.title]

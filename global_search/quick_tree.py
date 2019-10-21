@@ -5,6 +5,10 @@ from Bio import SeqIO
 import io
 from subprocess import check_call
 from ete3 import NCBITaxa
+import plotly.express as px
+from Bio import Entrez
+from api_tools.itol_func import * 
+from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 
 ncbi = NCBITaxa()
 
@@ -14,28 +18,6 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10535'
 protein_df = pd.read_excel(infile,index_col=0)
 tree_exe = 'iqtree'
-
-
-with open(join(odir,'all_seqs.faa'),'w') as f1:
-    for aid,row in protein_df.iterrows():
-        seq = row['seq']
-        print(f'>{aid}\n{seq}',file=f1)
-fa_file = join(odir,'unique_seqs.faa')
-num_unique_seq = len(protein_df.loc[:,'seq'].unique())
-sub_protein_df = protein_df.drop_duplicates('seq')
-with open(fa_file,'w') as f1:
-    for aid,row in sub_protein_df.iterrows():
-        seq = row['seq']
-        print(f'>{aid}\n{seq}',file=f1)
-# filter/ 
-ofile = join(odir,f'{ko}.kofam.out')
-infa = fa_file[::]
-run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
-confirmed_id = [_.strip().split('\t')[0] for _ in open(ofile,'r').read().split('\n') if _]
-remained_records = [_ for _ in SeqIO.parse(infa,format='fasta') if _.id in confirmed_id]
-new_fa_file = join(odir,'unique_seqs_filtered.faa')
-with open(new_fa_file,'w') as f1:
-    SeqIO.write(remained_records,f1,format='fasta-2line')
 
 def run(cmd):
     check_call(cmd,shell=True)
@@ -56,7 +38,6 @@ def add_ref_seq(sub_df,used_records):
         id2info[f'{aa_id}_{gene_name}'] = info
     final_records = [_ for _ in used_records if str(_.id) not in record_need_dropped_ids]    
     return final_records,id2info
-## 
 
 color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d', 
                         'AOB': '#bad5b9', 'AOA': '#358f0f'},
@@ -69,8 +50,7 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 'Actinobacteria':'#11FF11',
                                 'Planctomycetes':'#FF66bb',
                                 }}
-import plotly.express as px
-from Bio import Entrez
+
 def get_colors_general(ID2infos,now_info2style={}):
     _c = color_scheme.copy()
     _c = _c['phylum/class']
@@ -85,14 +65,14 @@ def get_colors_general(ID2infos,now_info2style={}):
             info2style.update({v:one_color})
     return ID2infos,info2style
 
-# lengths distribution
-len_seqs = [len(_.seq) for _ in remained_records]
-print('25 percentile has %s AA' % pd.np.percentile(len_seqs,25))
-print('75 percentile has %s AA' % pd.np.percentile(len_seqs,75))
-_s = sorted(remained_records,key=lambda x:len(x.seq))
-print('longest seq is %s, has %s AA' % (_s[-1].id,len(_s[-1].seq)))
-print('shortest seq is %s, has %s AA' % (_s[0].id,len(_s[0].seq)) )
-##
+def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_name='type',
+                            **kwargs):
+    content = to_color_Clade(id2info,info2color,treefile,info_name,**kwargs)
+    info_name = info_name.replace('/','_')
+    with open(join(odir, f'{unique_id}_{info_name}_colorbranch_clade.txt'), 'w') as f1:
+        f1.write(content)
+        
+
 outgroup_gene_names = {'K00370':['dms','tor'],
                        'K00371':['dms','tor'],
                        'K10535':['nrfA','_ONR'],
@@ -104,20 +84,49 @@ ref_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_gen
 ref_df = pd.read_excel(ref_file,index_col=None)
 ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:] 
 sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
-# for extra removed AOA
 sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,'phylum/class']!='Thaumarchaeota',:]
+
+# step1 write unqiue seqs
+fa_file = join(odir,'unique_seqs.faa')
+num_unique_seq = len(protein_df.loc[:,'seq'].unique())
+sub_protein_df = protein_df.drop_duplicates('seq')
+with open(fa_file,'w') as f1:
+    for aid,row in sub_protein_df.iterrows():
+        seq = row['seq']
+        print(f'>{aid}\n{seq}',file=f1)
+# filter/ 
+# step2 filter false postitive 
+ofile = join(odir,f'{ko}.kofam.out')
+infa = fa_file[::]
+run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
+confirmed_id = [_.strip().split('\t')[0] for _ in open(ofile,'r').read().split('\n') if _]
+remained_records = [_ for _ in SeqIO.parse(infa,format='fasta') if _.id in confirmed_id]
+new_fa_file = join(odir,'unique_seqs_filtered.faa')
+with open(new_fa_file,'w') as f1:
+    SeqIO.write(remained_records,f1,format='fasta-2line')
+
+# step3 summarize the distribution of sequences
+# lengths distribution
+len_seqs = [len(_.seq) for _ in remained_records]
+print('25 percentile has %s AA' % pd.np.percentile(len_seqs,25))
+print('75 percentile has %s AA' % pd.np.percentile(len_seqs,75))
+_s = sorted(remained_records,key=lambda x:len(x.seq))
+print('longest seq is %s, has %s AA' % (_s[-1].id,len(_s[-1].seq)))
+print('shortest seq is %s, has %s AA' % (_s[0].id,len(_s[0].seq)))
+##
+
+# step4 annotate added reference and output and add reference and outgroup into seq
 used_records = list(SeqIO.parse(new_fa_file,format='fasta'))
 final_records,ref_id2info = add_ref_seq(sub_ref_df,used_records)
 ref_id2info,ref_info2style = get_colors_general(ref_id2info)
-new_file = join(odir, ko+'.fa')
-with open(new_file,'w') as f1:
+infa = join(odir, ko+'.fa')
+with open(infa,'w') as f1:
     SeqIO.write(final_records,f1,format='fasta-2line')
-
+    
+# step5 alignment and build tree
 ofile = join(odir, ko+'.aln')
 if not exists(ofile):
-    check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {new_file} > {ofile}', shell=1)
-    
-from api_tools.itol_func import * 
+    check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}', shell=1)
 
 if not exists( ofile.replace('.aln','.treefile')):
     #pass
@@ -134,7 +143,7 @@ renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
                 ascending=True)
 
 # generateing annotation files
-from global_search.thirty_party.EntrezDownloader import EntrezDownloader
+
 edl = EntrezDownloader(
     # An email address. You might get blocked by the NCBI without specifying one.
     email='l0404th@gmail.com',
@@ -147,12 +156,20 @@ edl = EntrezDownloader(
 )
     
 remained_records_ids = [_.id for _ in remained_records]
+general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
+sub_df = general_df.reindex(remained_records_ids)
+biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
+bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
+biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
+bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
+
 
 results, failed = edl.esummary(db='protein',
                                 ids=remained_records_ids,
                                 result_func=lambda x: Entrez.read(
                                     io.StringIO(x)))
 id2tax = {}
+id2org = {}
 for r in results:
     aid = r['AccessionVersion']
     tid = r['TaxId'].real
@@ -164,7 +181,10 @@ for r in results:
         id2tax[aid] = names.get(rank.get('class',''),'ENV')
     else:
         id2tax[aid] = names.get(rank.get('phylum',''),'ENV')
-
+    id2org[aid] = names[tid]
+        
+        
+        
 id2info,info2col = get_colors_general(id2tax,now_info2style= ref_info2style)
 id2info.update(ref_id2info)
 info2col.update(ref_info2style)
@@ -172,11 +192,7 @@ new_text = to_node_symbol(ofile.replace('.aln','.sorted.newick'))
 with open(join(odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
     f1.write(new_text)
     
-def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_name='type',**kwargs):
-    content = to_color_Clade(id2info,info2color,treefile,info_name,**kwargs)
-    info_name = info_name.replace('/','_')
-    with open(join(odir, f'{unique_id}_{info_name}_colorbranch_clade.txt'), 'w') as f1:
-        f1.write(content)
+
 write2colorbranch_clade(id2info,
                         odir,
                         info2col,
@@ -184,4 +200,8 @@ write2colorbranch_clade(id2info,
                         unique_id=ko,
                         info_name='branch_color',
                         no_legend=False)
+        
+full_text = to_label(id2org)
+with open(join(odir, f'{ko}_label.txt'), 'w') as f1:
+    f1.write(full_text)
         
