@@ -150,55 +150,63 @@ def main(infile, odir, batch_size, test=False):
                                            ids=list(map(str, id_list)),
                                            retmode='text',
                                            retype='gb',
-                                           #batch_size=50,
+                                           batch_size=50,
                                            result_func=lambda x: list(SeqIO.parse(
                                                io.StringIO(x), format='genbank'))
                                            )
+    with open(join(odir, 'protein2INFO.tab'),'w') as f1:
+        for prot_t in prot_results:
+            aid = prot_t.id
+            if aid not in id_list:
+                print('error ', aid)
+            annotations = prot_t.annotations
 
-    for prot_t in prot_results:
-        aid = prot_t.id
-        if aid not in id_list:
-            print('error ', aid)
-        annotations = prot_t.annotations
-
-        ref_texts = [_
-                     for _ in annotations.get('references', [])
-                     if 'Direct' not in _.title]
-        for idx, ref_t in enumerate(ref_texts):
-            pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
-            pid2info_dict[aid]['reference_' +
-                               str(int(idx)+1) + ' journal'] = ref_t.journal
-            pid2info_dict[aid]['reference_' +
-                               str(int(idx)+1) + ' author'] = ref_t.authors
-        pid2info_dict[aid]['nuccore id'] = annotations.get(
-            'db_source', '').split(' ')[-1]
-        pid2info_dict[aid]['source'] = annotations['source']
-        pid2info_dict[aid]['org'] = annotations['organism']
-        pid2info_dict[aid]['keywords'] = ';'.join(
-            annotations.get('keywords', []))
-        pid2info_dict[aid]['comments'] = annotations.get('comment', '')
-        pid2info_dict[aid]['seq'] = str(prot_t.seq)
-        pid2info_dict[aid].update(dict([_.split(':')
-                                        for _ in prot_t.dbxrefs if ':' in _]))
-    pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
-    pid2info_df = pid2info_df.applymap(
-        lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    pid2info_df.loc[:, 'annotated as'] = [id2annotate[_]
-                                          for _ in pid2info_df.index]
-    new_columns = ['annotated as',
-                   'seq',
-                   'org',
-                   'source',
-                   'BioProject',
-                   'BioSample',
-                   'GI',
-                   'taxid',
-                   'nuccore id',
-                   'keywords',
-                   'comments'] + [_ for _ in pid2info_df.columns if 'reference' in _]
-    pid2info_df = pid2info_df.reindex(columns=new_columns)
-    pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
-                         index=1, index_label='protein accession')
+            ref_texts = [_
+                        for _ in annotations.get('references', [])
+                        if 'Direct' not in _.title]
+            for idx, ref_t in enumerate(ref_texts):
+                pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
+                pid2info_dict[aid]['reference_' +
+                                str(int(idx)+1) + ' journal'] = ref_t.journal
+                pid2info_dict[aid]['reference_' +
+                                str(int(idx)+1) + ' author'] = ref_t.authors
+            pid2info_dict[aid]['nuccore id'] = annotations.get(
+                'db_source', '').split(' ')[-1]
+            pid2info_dict[aid]['source'] = annotations['source']
+            pid2info_dict[aid]['org'] = annotations['organism']
+            pid2info_dict[aid]['keywords'] = ';'.join(
+                annotations.get('keywords', []))
+            pid2info_dict[aid]['comments'] = annotations.get('comment', '')
+            pid2info_dict[aid]['seq'] = str(prot_t.seq)
+            pid2info_dict[aid].update(dict([_.split(':')
+                                            for _ in prot_t.dbxrefs if ':' in _]))
+        refs = list(sorted(list(set([_ for v in pid2info_dict.values() for _ in v.keys() if _.startswith('reference')]))))
+        new_columns = ['protein accession',
+                       'annotated as',
+                    'seq',
+                    'org',
+                    'source',
+                    'BioProject',
+                    'BioSample',
+                    'GI',
+                    'taxid',
+                    'nuccore id',
+                    'keywords',
+                    'comments'] + refs
+        f1.write('\t'.join(new_columns)+'\n')
+        for aid,info_dict in pid2info_dict.items():
+            print(f'{aid}\t' + '\t'.join([str(info_dict.get(_,'')).replace('\n', ' ') for _ in new_columns]),file=f1)
+        
+        tqdm.write('transforming dictionary into a DataFrame. ')
+        pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
+        pid2info_df = pid2info_df.applymap(
+            lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+        pid2info_df.loc[:, 'annotated as'] = [id2annotate[_]
+                                            for _ in pid2info_df.index]
+        
+        pid2info_df = pid2info_df.reindex(columns=new_columns)
+        pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
+                            index=1, index_label='protein accession')
 
     tqdm.write(
         'processing pid to bioproject and retrieving the info of bioproject')
