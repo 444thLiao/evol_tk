@@ -137,14 +137,16 @@ def main(infile, odir, batch_size, test=False):
                                    ids=id_list,
                                    result_func=lambda x: Entrez.read(
                                        io.StringIO(x)))
-
+    if failed:
+        tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
+        
     gi2pid = {}
     for result in results:
         aid = result['AccessionVersion']
         pid2info_dict[aid]['GI'] = gi = result['Gi'].real
         pid2info_dict[aid]['taxid'] = result['TaxId'].real
         gi2pid[gi] = aid
-
+    tqdm.write("successfully retrieve %s summary of protein ID" % len(failed))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
                                            ids=list(map(str, id_list)),
@@ -152,8 +154,10 @@ def main(infile, odir, batch_size, test=False):
                                            retype='gb',
                                            batch_size=50,
                                            result_func=lambda x: list(SeqIO.parse(
-                                               io.StringIO(x), format='genbank'))
-                                           )
+                                               io.StringIO(x), format='genbank')))
+    if prot_failed:
+        tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
+        
     with open(join(odir, 'protein2INFO.tab'),'w') as f1:
         for prot_t in prot_results:
             aid = prot_t.id
@@ -163,7 +167,7 @@ def main(infile, odir, batch_size, test=False):
 
             ref_texts = [_
                         for _ in annotations.get('references', [])
-                        if 'Direct' not in _.title]
+                        if 'Direct' not in _.title and _.title]
             for idx, ref_t in enumerate(ref_texts):
                 pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
                 pid2info_dict[aid]['reference_' +
@@ -180,6 +184,8 @@ def main(infile, odir, batch_size, test=False):
             pid2info_dict[aid]['seq'] = str(prot_t.seq)
             pid2info_dict[aid].update(dict([_.split(':')
                                             for _ in prot_t.dbxrefs if ':' in _]))
+            pid2info_dict[aid]['annotated as'] = [id2annotate.get(_,'')
+                                        for _ in pid2info_dict.keys()]
         refs = list(sorted(list(set([_ for v in pid2info_dict.values() for _ in v.keys() if _.startswith('reference')]))))
         new_columns = ['protein accession',
                        'annotated as',
@@ -198,24 +204,24 @@ def main(infile, odir, batch_size, test=False):
             print(f'{aid}\t' + '\t'.join([str(info_dict.get(_,'')).replace('\n', ' ') for _ in new_columns]),file=f1)
         
         tqdm.write('transforming dictionary into a DataFrame. ')
-        pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
-        pid2info_df = pid2info_df.applymap(
-            lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-        pid2info_df.loc[:, 'annotated as'] = [id2annotate[_]
-                                            for _ in pid2info_df.index]
-        
-        pid2info_df = pid2info_df.reindex(columns=new_columns)
-        pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
-                            index=1, index_label='protein accession')
+    pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
+    pid2info_df = pid2info_df.applymap(
+        lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+    pid2info_df.loc[:, 'annotated as'] = [id2annotate.get(_,'')
+                                        for _ in pid2info_df.index]
+    
+    pid2info_df = pid2info_df.reindex(columns=new_columns)
+    pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
+                        index=1, index_label='protein accession')
 
     tqdm.write(
         'processing pid to bioproject and retrieving the info of bioproject')
-    set_bioprojects = list(set([d.get('BioProject', '')
-                                for d in pid2info_dict.values() if 'BioProject' in d]))
-
+    set_bioprojects = list(pid2info_df.loc[:,'BioProject'].unique())
+    set_bioprojects = [_ for _ in set_bioprojects if str(_)!='nan']
     results, failed = edl.esearch(db='bioproject',
                                   ids=set_bioprojects,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+    
     all_GI = results[::]
     results, failed = edl.efetch(db='bioproject',
                                  ids=all_GI,
