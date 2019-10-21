@@ -178,19 +178,58 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                                                io.StringIO(x), format='genbank')))
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
-
+    refs = ['reference_' + str(_+1) + _suffix for _ in range(10)
+            for _suffix in ['',' journal',' author']]
+    new_columns = ['protein accession',
+                       'annotated as',
+                       'seq',
+                       'org',
+                       'source',
+                       'BioProject',
+                       'BioSample',
+                       'GI',
+                       'taxid',
+                       'nuccore id',
+                       'keywords',
+                       'comments'] + taxons + refs
     #all_cols = list(list(pid2info_dict.values())[0].keys())
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
         tqdm.write('write into a dictinoary')
         for prot_t in tqdm(prot_results):
-            aid = prot_t.id
             if aid not in id_list:
                 print('error ', aid)
                 continue
-            annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])
-                         if 'Direct' not in _.title and _.title]
+                        if 'Direct' not in _.title and _.title]
+            aid = prot_t.id
+            annotations = prot_t.annotations
+            f1.write(f'{aid}\t')
+            f1.write(id2annotate.get(aid, '')+'\t')
+            f1.write(str(prot_t.seq)+'\t')
+            f1.write(annotations.get('organism','')+'\t')
+            f1.write(annotations.get('source','')+'\t')
+            f1.write(annotations.get('BioProject','')+'\t')
+            f1.write(annotations.get('BioSample','')+'\t')
+            f1.write(annotations.get('GI','')+'\t')
+            f1.write(annotations.get('taxid','')+'\t')
+            f1.write(annotations.get('db_source', '').split(' ')[-1]+'\t')
+            f1.write(';'.join(annotations.get('keywords', []))+'\t')
+            f1.write(annotations.get('comment', '')+'\t')
+            for t in taxons:
+                f1.write(pid2info_dict.get(aid,{}).get(t,'')+'\t')
+            for idx in range(10):
+                if idx < len(ref_texts):
+                    ref_t = ref_texts[idx]
+                    f1.write('\t'.join([ref_t.title,ref_t.journal,ref_t.authors])+'\t')
+                else:
+                    f1.write('\t'.join(['','',''])+'\n')
+                    
+            f1.flush()
+            if just_seq:
+                continue
+
+
             for idx, ref_t in list(enumerate(ref_texts))[:10]:
                 pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
                 pid2info_dict[aid]['reference_' +
@@ -212,18 +251,7 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
 
         refs = list(sorted(list(set([_ for v in pid2info_dict.values(
         ) for _ in v.keys() if _.startswith('reference')]))))
-        new_columns = ['protein accession',
-                       'annotated as',
-                       'seq',
-                       'org',
-                       'source',
-                       'BioProject',
-                       'BioSample',
-                       'GI',
-                       'taxid',
-                       'nuccore id',
-                       'keywords',
-                       'comments'] + taxons + refs
+        
         f1.write('\t'.join(new_columns)+'\n')
         tqdm.write('write out into a file')
         for aid, info_dict in tqdm(pid2info_dict.items()):
