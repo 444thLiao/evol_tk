@@ -140,7 +140,7 @@ with open(infa,'w') as f1:
 # step5 alignment and build tree
 ofile = join(odir, ko+'.aln')
 if not exists(ofile):
-    print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}', shell=1)
+    print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}')#, shell=1)
 
 if not exists( ofile.replace('.aln','.treefile')):
     #pass

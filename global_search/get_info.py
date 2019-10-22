@@ -176,25 +176,25 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         f1.write('\n'.join(map(str,all_GI)))
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
-    if just_seq:
-        prot_results, prot_failed = edl.efetch(db='protein',
-                                           ids=all_GI,
-                                           retmode='text',
-                                           retype='fasta',
-                                           batch_size=fectch_size,
-                                           result_func=lambda x: list(SeqIO.parse(
-                                               io.StringIO(x), format='fasta')))
-        with open(join(odir, 'all_seqs.faa'),'w') as f1:
-            SeqIO.write(f1,prot_results,format='fasta-2line')
-        return 
-    else:
-        prot_results, prot_failed = edl.efetch(db='protein',
-                                           ids=all_GI,
-                                           retmode='text',
-                                           retype='gb',
-                                           batch_size=fectch_size,
-                                           result_func=lambda x: list(SeqIO.parse(
-                                               io.StringIO(x), format='genbank')))
+    # if just_seq:
+    #     prot_results, prot_failed = edl.efetch(db='protein',
+    #                                        ids=all_GI,
+    #                                        retmode='text',
+    #                                        retype='fasta',
+    #                                        batch_size=fectch_size,
+    #                                        result_func=lambda x: list(SeqIO.parse(
+    #                                            io.StringIO(x), format='fasta')))
+        # with open(join(odir, 'all_seqs.faa'),'w') as f1:
+        #     SeqIO.write(f1,prot_results,format='fasta-2line')
+        # return 
+    # else:
+    prot_results, prot_failed = edl.efetch(db='protein',
+                                        ids=all_GI,
+                                        retmode='text',
+                                        retype='gb',
+                                        batch_size=fectch_size,
+                                        result_func=lambda x: list(SeqIO.parse(
+                                            io.StringIO(x), format='genbank')))
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
     refs = ['reference_' + str(_+1) + _suffix for _ in range(10)
