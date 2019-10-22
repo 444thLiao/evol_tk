@@ -12,48 +12,40 @@ from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from tqdm import tqdm
 
 ncbi = NCBITaxa()
+kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
+tree_exe = 'iqtree'
+
 
 odir = './nr_retrieve_hao'
 infile = './nr_retrieve_hao/protein2INFO.xlsx'
-kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10535'
 protein_df = pd.read_excel(infile,index_col=0)
-tree_exe = 'iqtree'
 
 
 odir = './nr_retrieve_amoC'
 infile = './nr_retrieve_amoC/protein2INFO.tab'
-kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10946'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-tree_exe = 'iqtree'
-filter_id_txt = join(odir,'removed_ids.txt')
 
 odir = './nr_retrieve_amoA'
-kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10944'
 infile = './nr_retrieve_amoA/protein2INFO.tab'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-tree_exe = 'iqtree'
-filter_id_txt = join(odir,'removed_ids.txt')
 
 odir = './nr_retrieve_amoB'
-kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10945'
 infile = './nr_retrieve_amoA/protein2INFO.tab'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-tree_exe = 'iqtree'
-filter_id_txt = join(odir,'removed_ids.txt')
+
 
 odir = './nr_retrieve_nxrA'
-kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K00370'
 infile = './nr_retrieve_amoA/protein2INFO.tab'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-tree_exe = 'iqtree'
+
+
+####
 filter_id_txt = join(odir,'removed_ids.txt')
-
-
 def run(cmd):
     check_call(cmd,shell=True)
     
