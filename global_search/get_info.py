@@ -121,7 +121,8 @@ def parse_biosample_xml(xml_text):
 
 
 def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
-
+    fectch_size = int(fectch_size)
+    
     edl = EntrezDownloader(
         # An email address. You might get blocked by the NCBI without specifying one.
         email='l0404th@gmail.com',
@@ -144,7 +145,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
     results, failed = edl.esearch(db='protein',
                                   ids=id_list,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    all_GI = results[::]
+    all_GI = list(set(results[::]))
     tqdm.write('get pid summary from each one')
     results, failed = edl.esummary(db='protein',
                                    ids=all_GI,
@@ -181,7 +182,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                                            retmode='text',
                                            retype='fasta',
                                            batch_size=fectch_size,
-                                           result_func=lambda x: list(SeqIO.parse(
+                                           result_func=lambda x: list(SeqIO.read(
                                                io.StringIO(x), format='fasta')))
         with open(join(odir, 'all_seqs.faa'),'w') as f1:
             SeqIO.write(f1,prot_results,format='fasta-2line')
