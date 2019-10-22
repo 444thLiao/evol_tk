@@ -12,11 +12,13 @@ from os.path import *
 from Bio import SeqIO
 def main(infa,ofile):
     records = SeqIO.parse(infa,format='fasta')
+    if '/' not in ofile:
+        ofile = './' + ofile
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
     with open(ofile,'w') as f1:
-        for record in records:
-            f1.write('\t'.join([record.id,record.name,record.description])+'\t')
+        for record in tqdm(records):
+            f1.write('\t'.join([record.id,record.name,record.description])+'\n')
 
 
 
