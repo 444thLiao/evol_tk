@@ -199,11 +199,12 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
             if aid not in id_list:
                 print('error ', aid)
                 continue
+
+            aid = prot_t.id
+            annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])
                         if 'Direct' not in _.title and _.title]
-            aid = prot_t.id
-            annotations = prot_t.annotations
             f1.write(f'{aid}\t')
             f1.write(id2annotate.get(aid, '')+'\t')
             f1.write(str(prot_t.seq)+'\t')
