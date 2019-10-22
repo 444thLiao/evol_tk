@@ -9,6 +9,7 @@ import plotly.express as px
 from Bio import Entrez
 from api_tools.itol_func import * 
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
+from tqdm import tqdm
 
 ncbi = NCBITaxa()
 
@@ -24,6 +25,30 @@ odir = './nr_retrieve_amoC'
 infile = './nr_retrieve_amoC/protein2INFO.tab'
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10946'
+protein_df = pd.read_csv(infile,sep='\t',index_col=0)
+tree_exe = 'iqtree'
+filter_id_txt = join(odir,'removed_ids.txt')
+
+odir = './nr_retrieve_amoA'
+kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
+ko = 'K10944'
+infile = './nr_retrieve_amoA/protein2INFO.tab'
+protein_df = pd.read_csv(infile,sep='\t',index_col=0)
+tree_exe = 'iqtree'
+filter_id_txt = join(odir,'removed_ids.txt')
+
+odir = './nr_retrieve_amoB'
+kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
+ko = 'K10945'
+infile = './nr_retrieve_amoA/protein2INFO.tab'
+protein_df = pd.read_csv(infile,sep='\t',index_col=0)
+tree_exe = 'iqtree'
+filter_id_txt = join(odir,'removed_ids.txt')
+
+odir = './nr_retrieve_nxrA'
+kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
+ko = 'K00370'
+infile = './nr_retrieve_amoA/protein2INFO.tab'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
 tree_exe = 'iqtree'
 filter_id_txt = join(odir,'removed_ids.txt')
@@ -96,8 +121,10 @@ ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:]
 sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
 sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,'phylum/class']!='Thaumarchaeota',:]
 
-# step1 write unqiue seqs
+# step1 write into unqiue seqs
+
 fa_file = join(odir,'unique_seqs.faa')
+fa_file = join(odir,'matched_seq.faa')
 num_unique_seq = len(protein_df.loc[:,'seq'].unique())
 sub_protein_df = protein_df.drop_duplicates('seq')
 with open(fa_file,'w') as f1:
@@ -110,7 +137,8 @@ ofile = join(odir,f'{ko}.kofam.out')
 infa = fa_file[::]
 run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
 confirmed_id = [_.strip().split('\t')[0] for _ in open(ofile,'r').read().split('\n') if _]
-remained_records = [_ for _ in SeqIO.parse(infa,format='fasta') if _.id in confirmed_id]
+confirmed_id = set(confirmed_id)
+remained_records = [_ for _ in tqdm(SeqIO.parse(infa,format='fasta')) if _.id in confirmed_id]
 new_fa_file = join(odir,'unique_seqs_filtered.faa')
 if exists(filter_id_txt):
     ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
