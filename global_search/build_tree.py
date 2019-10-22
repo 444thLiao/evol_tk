@@ -16,9 +16,11 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
 
+
 infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
-
-
+infa = './nr_retrieve_amoA/cluster_95'
+infa = './nr_retrieve_nxrB/cluster_95'
+infa = './nr_retrieve_nxrA/cluster_95_filtered_lengths.fa'
 
 gene_info = {'kegg': {'nxrA': 'K00370',
                       'nxrB': 'K00371',
@@ -32,7 +34,8 @@ gene_info = {'kegg': {'nxrA': 'K00370',
                         'amoA': 'TIGR03080',
                         'amoB': 'TIGR03079',
                         'amoC': 'TIGR03078'}}
-
+# narG: TIGR01580
+# narH: TIGR01660
 ####
 odir = dirname(infa)
 ko = gene_info['kegg'].get(basename(odir).split('_')[-1],'')

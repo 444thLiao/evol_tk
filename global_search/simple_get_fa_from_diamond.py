@@ -5,16 +5,17 @@ import os
 
 all_seq = './all_seqs.faa'
 # get unique faa from original nr sequence file.
-a = open('nr_parse.output').read()
-all_ids = [_.split('\t')[0] for _ in a.split('\n') if _]
-all_ids = set(all_ids)
+if not exists(all_seq):
+    a = open('nr_parse.output').read()
+    all_ids = [_.split('\t')[0] for _ in a.split('\n') if _]
+    all_ids = set(all_ids)
 
-with open(all_seq,'w') as f1:
-    nr = SeqIO.parse('/home-user/thliao/data/protein_db/NCBI/nr',format='fasta')
-    for record in tqdm(nr):
-        if record.id in all_ids:
-            SeqIO.write(record,f1,format='fasta-2line')
-            f1.flush()
+    with open(all_seq,'w') as f1:
+        nr = SeqIO.parse('/home-user/thliao/data/protein_db/NCBI/nr',format='fasta')
+        for record in tqdm(nr):
+            if record.id in all_ids:
+                SeqIO.write(record,f1,format='fasta-2line')
+                f1.flush()
             
 # 
 def get_seq_by_annotation(in_file,ofile,keyword):
@@ -41,3 +42,5 @@ get_seq_by_annotation('nr_parse.output','./nr_retrieve_nxrA/matched_seq.faa','nx
 get_seq_by_annotation('nr_parse.output','./nr_retrieve_amoA/matched_seq.faa',['amoA','pmoA','pxmA'])  
 get_seq_by_annotation('nr_parse.output','./nr_retrieve_amoB/matched_seq.faa',['amoB','pmoB','pxmB']) 
 
+get_seq_by_annotation('nr_parse.output','./nr_retrieve_hao/matched_seq.faa','hao')
+get_seq_by_annotation('nr_parse.output','./nr_retrieve_amoC/matched_seq.faa',['amoC','pmoC','pxmC']) 

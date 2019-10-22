@@ -14,7 +14,7 @@ from toolkit.hmmparser import HMMparser
 from collections import Counter
 from pandas.errors import EmptyDataError
 
-default_db = "/home-db/pub/protein_db/TIGRFAM/14.0_release/TIGRFAM.HMM"
+default_db = "qTIGRFAM.HMM"
 
 
 def run_cmd(seqfile, db, tbloutput, evalue, cpu):

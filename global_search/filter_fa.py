@@ -39,6 +39,16 @@ def filter_fa_by_db(infa, ofile, gene_name):
     remained_records = [_ 
                         for _ in tqdm(SeqIO.parse(infa, format='fasta')) 
                         if _.id in confirmed_id]
+    if gene_name.startswith('nxr'):
+        paralog_ = join(dirname(infa),'paralog_TIGFAM.hmmscan')
+        if gene_name == 'nxrA':
+            cmd = "hmmscan --tblout paralog_TIGFAM.hmmscan --acc --noali --notextw -T 1084.15 --cpu 40  /home-user/thliao/data/protein_db/TIGFAM/TIGR01580.HMM matched_seq.faa > /dev/null"
+        elif gene_name == 'nxrB':
+            cmd = "hmmscan --tblout paralog_TIGFAM.hmmscan --acc --noali --notextw -T 524 --cpu 40  /home-user/thliao/data/protein_db/TIGFAM/TIGR01660.HMM matched_seq.faa > /dev/null"
+        if exists(paralog_):
+            matched_ids = [[_ for _ in row.split(' ') if _][2] for row in open(paralog_,'r').read().split('\n') 
+                           if not row.startswith('#') and row]
+        remained_records = [_ for _ in remained_records if _.id not in matched_ids]
     with open(ofile, 'w') as f1:
         SeqIO.write(remained_records, f1, format='fasta-2line')
     return ofile
@@ -93,21 +103,26 @@ if __name__ == "__main__":
                                          gene)
         records = [_ for _ in SeqIO.parse(new_fa,format='fasta')]
         if len(records) > 1500:
-            cluster_fa(infa)
+            cluster_fa(new_fa)
             final_clustered_fa = join(odir,'cluster_98')
             final_fa = final_clustered_fa +'_filtered_lengths.fa'
             # final_fa = join(odir,'filtered_by_length.faa')
             
-            if gene='amoB':
+            if gene=='amoB':
                 hard_f_value = 240
-            elif gene = 'amoA':
+            elif gene == 'amoA':
+                down_threshold = 50
                 final_clustered_fa = join(odir,'cluster_95')
                 final_fa = final_clustered_fa +'_filtered_lengths.fa'
-                hard_f_value = 200
-            filter_fa_by_length_dis(final_clustered_fa,
+
+            elif gene == 'nxrA':
+                final_clustered_fa = join(odir,'cluster_95')
+                final_fa = final_clustered_fa +'_filtered_lengths.fa'
+                hard_f_value = 600
+                filter_fa_by_length_dis(final_clustered_fa,
                                     final_fa,
                                     output_records=False,
-                                    hard_filter=hard_f_value,)
+                                    hard_filter=hard_f_value)
                                     #down_threshold=down_threshold)
             # records = [_ for _ in SeqIO.parse(final_fa,format='fasta')]
             # if len(records) >= 1000:
