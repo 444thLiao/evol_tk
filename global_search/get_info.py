@@ -185,6 +185,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                                                io.StringIO(x), format='fasta')))
         with open(join(odir, 'all_seqs.faa'),'w') as f1:
             SeqIO.write(f1,prot_results,format='fasta-2line')
+        return 
     else:
         prot_results, prot_failed = edl.efetch(db='protein',
                                            ids=all_GI,
