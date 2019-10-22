@@ -16,7 +16,7 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
 
-infa = './nr_retrieve_amoB/cluster_90'
+infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
 
 
 
@@ -140,18 +140,18 @@ with open(infa,'w') as f1:
     
 # step5 alignment and build tree
 ofile = join(odir, ko+'.aln')
-if not exists(ofile):
-    print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}')#, shell=1)
+#if not exists(ofile):
+print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}')#, shell=1)
 
-if not exists( ofile.replace('.aln','.treefile')):
+#if not exists( ofile.replace('.aln','.treefile')):
     #pass
-    if tree_exe == 'iqtree':
-        print(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}')#,shell=1)
-    else:
-        n_file = ofile.replace('.aln','.treefile')
-        print(f'FastTree {ofile} > {n_file}')#,shell=1)
+if tree_exe == 'iqtree':
+    print(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}')#,shell=1)
+else:
+    n_file = ofile.replace('.aln','.treefile')
+    print(f'FastTree {ofile} > {n_file}')#,shell=1)
 
-t = root_tree_with(ofile.replace('.aln','.treefile'),
+t = root_tree_with(ofile.replace('.aln','.newick'),
                     gene_names=outgroup_gene_names.get(ko,[]),
                     format=0)
 renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
@@ -171,8 +171,8 @@ edl = EntrezDownloader(
 )
     
 remained_records_ids = [_.id for _ in remained_records]
-general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
-sub_df = general_df.reindex(remained_records_ids)
+# general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
+# sub_df = general_df.reindex(remained_records_ids)
 # biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
 # bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
 # biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
