@@ -24,6 +24,7 @@ def main(infa,ofile,from_nr):
             if from_nr:
                 ids = record.description.split('\x01')
                 for id in ids:
+                    id = id.split(' ')[0]
                     f1.write('\t'.join([id,record.name])+'\n')
             else:
                 f1.write('\t'.join([record.id,record.name])+'\n')

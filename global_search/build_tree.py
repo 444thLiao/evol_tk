@@ -16,7 +16,7 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
 
-infa = './nr_retrieve_amoB/cluster_95'
+infa = './nr_retrieve_amoB/cluster_90'
 
 
 
