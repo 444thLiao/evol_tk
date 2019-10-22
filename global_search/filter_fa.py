@@ -2,9 +2,13 @@ from Bio import SeqIO
 from os.path import *
 from tqdm import tqdm
 import os
+import numpy as np
+from subprocess import check_call
 
-
+def run(cmd):
+    check_call(cmd,shell=True)
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
+
 
 gene_info = {'kegg': {'nxrA': 'K00370',
                       'nxrB': 'K00371',
@@ -20,18 +24,74 @@ gene_info = {'kegg': {'nxrA': 'K00370',
                         'amoC': 'TIGR03078'}}
 
 
-def filter_fa(in_fa, ofile, gene_name):
-    
-    run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
+def filter_fa_by_db(infa, ofile, gene_name):
+    _ginfo = gene_info['kegg']
+    ko = _ginfo.get(gene_name,'')
+    if not ko:
+        return
+    otab=join(dirname(infa),f'{ko}.kofam.out')
+    if not exists(otab):
+        run(f"{kofam_scan} -o {otab} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
     confirmed_id = [_.strip().split('\t')[0]
-                    for _ in open(ofile, 'r').read().split('\n') if _]
+                    for _ in open(otab, 'r').read().split('\n') 
+                    if _]
     confirmed_id = set(confirmed_id)
-    remained_records = [_ for _ in tqdm(SeqIO.parse(
-        infa, format='fasta')) if _.id in confirmed_id]
-    new_fa_file = join(odir, 'unique_seqs_filtered.faa')
-    if exists(filter_id_txt):
-        ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
-        remained_records = [_ for _ in remained_records if (
-            _.id not in ids) and (_.id.replace('_', ' ') not in ids)]
-    with open(new_fa_file, 'w') as f1:
+    remained_records = [_ 
+                        for _ in tqdm(SeqIO.parse(infa, format='fasta')) 
+                        if _.id in confirmed_id]
+    with open(ofile, 'w') as f1:
         SeqIO.write(remained_records, f1, format='fasta-2line')
+    return ofile
+
+def filter_fa_by_length_dis(in_fa, ofile=None,output_records=True,down_threshold=25,upper_threshold=100,hard_filter=None):
+    records = [_ for _ in SeqIO.parse(in_fa,format='fasta')]
+    length_dis = [len(_.seq) for _ in records]
+    down_len = np.percentile(length_dis,down_threshold)
+    upper_len = np.percentile(length_dis,upper_threshold)
+    print('down len: ',down_len)
+    print('upper len: ',upper_len)
+    _s = sorted(records,key=lambda x:len(x.seq))
+    print('longest seq is %s, has %s AA' % (_s[-1].id,len(_s[-1].seq)))
+    print('shortest seq is %s, has %s AA' % (_s[0].id,len(_s[0].seq)))
+    if hard_filter is None:
+        remained_records = [_
+                        for _ in records
+                        if len(_.seq)>down_len and len(_.seq)<upper_len]
+    else:
+        remained_records = [_
+                        for _ in records
+                        if len(_.seq)>hard_filter]
+    print('ori number of sequences: ',len(records))
+    print('remained number of sequences: ',len(remained_records))
+    if (ofile is not None) and (not output_records):
+        if not exists(dirname(ofile)):
+            os.makedirs(dirname(ofile))
+        with open(ofile,'w') as f1:
+            
+            SeqIO.write(remained_records,f1,format='fasta-2line')
+    elif output_records:
+        return remained_records
+    return 
+
+def cluster_fa(infa):
+    if not '/' in infa:
+        infa = './' + infa
+    odir = dirname(infa)
+    for threshold in [90,95,98]:
+        run(f"cd-hit -i {infa} -o {odir}/cluster_{threshold} -c 0.{threshold} -n 5  -T 20 -d 0")
+        
+if __name__ == "__main__":
+    for gene in ['nxrA', 'nxrB', 'amoA', 'amoB']:
+        odir = f'./nr_retrieve_{gene}'
+        infa = join(odir,'matched_seq.faa')
+        new_fa = filter_fa_by_db(infa,
+                                         join(odir,'filtered_by_kegg.faa'),
+                                         gene)
+        final_fa = join(odir,'filtered_by_length.faa')
+        filter_fa_by_length_dis(new_fa,
+                                final_fa,
+                                output_records=False,)
+        records = [_ for _ in SeqIO.parse(final_fa,format='fasta')]
+        if len(records) >= 1000:
+            cluster_fa(final_fa)
+        

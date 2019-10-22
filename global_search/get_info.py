@@ -214,7 +214,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
     #all_cols = list(list(pid2info_dict.values())[0].keys())
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
         print('\t'.join(new_columns),file=f1)
-        tqdm.write('write into a dictinoary')
+        tqdm.write('write into a dictinoary and also write into a file')
         def write_in(t):
             f1.write(t.replace('\n',' ')+'\t')
         for prot_t in tqdm(prot_results):
@@ -272,28 +272,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                                                   for _ in pid2info_dict.keys()]
         if just_seq:
             tqdm.write('only perform sequence searching... completed')
-        # else:
-        #     refs = list(sorted(list(set([_ for v in pid2info_dict.values(
-        #     ) for _ in v.keys() if _.startswith('reference')]))))
-            
-        #     f1.write('\t'.join(new_columns)+'\n')
-        #     tqdm.write('write out into a file')
-        #     for aid, info_dict in tqdm(pid2info_dict.items()):
-        #         print(f'{aid}\t' + '\t'.join([str(info_dict.get(_, '')
-        #                                         ).replace('\n', ' ') for _ in new_columns]),
-        #             file=f1)
-        #         f1.flush()
-        #tqdm.write('transforming dictionary into a DataFrame. ')
-
-    # pid2info_df = pd.DataFrame.from_dict(pid2info_dict, orient='index')
-    # pid2info_df = pid2info_df.applymap(
-    #     lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-    # pid2info_df.loc[:, 'annotated as'] = [id2annotate.get(_,'')
-    #                                     for _ in pid2info_df.index]
-
-    # pid2info_df = pid2info_df.reindex(columns=new_columns)
-    # pid2info_df.to_excel(join(odir, 'protein2INFO.xlsx'),
-    #                     index=1, index_label='protein accession')
+            return
     if just_seq:
         tqdm.write('')
     else:

@@ -16,35 +16,29 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
 
-odir = './nr_retrieve_hao'
-infile = './nr_retrieve_hao/protein2INFO.xlsx'
-ko = 'K10535'
-protein_df = pd.read_excel(infile,index_col=0)
+infa = './nr_retrieve_amoB/cluster_95'
 
 
-odir = './nr_retrieve_amoC'
-infile = './nr_retrieve_amoC/protein2INFO.tab'
-ko = 'K10946'
-protein_df = pd.read_csv(infile,sep='\t',index_col=0)
 
-odir = './nr_retrieve_amoA'
-ko = 'K10944'
-infile = './nr_retrieve_amoA/protein2INFO.tab'
-protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-
-odir = './nr_retrieve_amoB'
-ko = 'K10945'
-infile = './nr_retrieve_amoA/protein2INFO.tab'
-protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-
-
-odir = './nr_retrieve_nxrA'
-ko = 'K00370'
-infile = './nr_retrieve_amoA/protein2INFO.tab'
-protein_df = pd.read_csv(infile,sep='\t',index_col=0)
-
+gene_info = {'kegg': {'nxrA': 'K00370',
+                      'nxrB': 'K00371',
+                      'hao': 'K10535',
+                      'amoA': 'K10944',
+                      'amoB': 'K10945',
+                      'amoC': 'K10946'},
+             'TIGFAM': {'nxrA': '',
+                        'nxrB': '',
+                        'hao': 'TIGR01703',
+                        'amoA': 'TIGR03080',
+                        'amoB': 'TIGR03079',
+                        'amoC': 'TIGR03078'}}
 
 ####
+odir = dirname(infa)
+ko = gene_info['kegg'].get(basename(odir).split('_')[-1],'')
+if not ko:
+    raise IOError
+
 filter_id_txt = join(odir,'removed_ids.txt')
 def run(cmd):
     check_call(cmd,shell=True)
@@ -113,28 +107,15 @@ ref_df = ref_df.loc[ref_df.loc[:,'note']!='removed',:]
 sub_ref_df = ref_df.loc[ref_df.loc[:,'outgroup/ref for which KO']==ko,:]
 sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,'phylum/class']!='Thaumarchaeota',:]
 
-# step1 write into unqiue seqs
 
-fa_file = join(odir,'unique_seqs.faa')
-fa_file = join(odir,'matched_seq.faa')
-num_unique_seq = len(protein_df.loc[:,'seq'].unique())
-sub_protein_df = protein_df.drop_duplicates('seq')
-with open(fa_file,'w') as f1:
-    for aid,row in sub_protein_df.iterrows():
-        seq = row['seq']
-        print(f'>{aid}\n{seq}',file=f1)
-# filter/ 
-# step2 filter false postitive 
-ofile = join(odir,f'{ko}.kofam.out')
-infa = fa_file[::]
-run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotated {infa} -p /home-user/thliao/data/kofam/profiles/{ko}.hmm")
-confirmed_id = [_.strip().split('\t')[0] for _ in open(ofile,'r').read().split('\n') if _]
-confirmed_id = set(confirmed_id)
-remained_records = [_ for _ in tqdm(SeqIO.parse(infa,format='fasta')) if _.id in confirmed_id]
-new_fa_file = join(odir,'unique_seqs_filtered.faa')
+# filter
+remained_records = [_ for _ in tqdm(SeqIO.parse(infa,format='fasta'))]
+new_fa_file = join(odir,'prepared.faa')
 if exists(filter_id_txt):
     ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
-    remained_records = [_ for _ in remained_records if (_.id not in ids) and (_.id.replace('_',' ') not in ids)]
+    remained_records = [_ 
+                        for _ in remained_records 
+                        if (_.id not in ids) and (_.id.replace('_',' ') not in ids)]
 with open(new_fa_file,'w') as f1:
     SeqIO.write(remained_records,f1,format='fasta-2line')
 
