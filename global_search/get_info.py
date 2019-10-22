@@ -167,6 +167,8 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
         except:
             tqdm.write("failed to parse taxonomy info for ", aid)
         gi2pid[gi] = aid
+    with open(join(odir,'all_gi.txt'),'w') as f1:
+        f1.write('\n'.join(map(str,all_GI)))
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
