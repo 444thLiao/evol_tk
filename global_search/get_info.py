@@ -71,6 +71,10 @@ def parse_bioproject_xml(xml_text):
                 for _data in Morphology_data:
                     if _data != '\n':
                         bioproject2info[bioproject_id][_data.name] = _data.text
+        target_pro = PID_type.find('target')
+        if target_pro:
+            for _data,v in target_pro.attrs.items():
+                bioproject2info[bioproject_id][_data] = v
         bioproject2info[bioproject_id]['GI'] = bioproject_gid
         bioproject2info[bioproject_id]['description'] = des_text
         bioproject2info[bioproject_id]['title'] = des_title
@@ -116,7 +120,7 @@ def parse_biosample_xml(xml_text):
     return result_bucket
 
 
-def main(infile, odir, batch_size, test=False,just_seq=False):
+def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
 
     edl = EntrezDownloader(
         # An email address. You might get blocked by the NCBI without specifying one.
@@ -175,7 +179,7 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                                            ids=all_GI,
                                            retmode='text',
                                            retype='gb',
-                                           batch_size=50,
+                                           batch_size=fectch_size,
                                            result_func=lambda x: list(SeqIO.parse(
                                                io.StringIO(x), format='genbank')))
     if prot_failed:
@@ -196,6 +200,7 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
                        'comments'] + taxons + refs
     #all_cols = list(list(pid2info_dict.values())[0].keys())
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
+        print('\t'.join(new_columns),file=f1)
         tqdm.write('write into a dictinoary')
         for prot_t in tqdm(prot_results):
             if aid not in id_list:
@@ -338,11 +343,12 @@ def main(infile, odir, batch_size, test=False,just_seq=False):
 @click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')
 @click.option('-o', 'odir', help='output directory')
 @click.option('-bs', 'batch_size', help='number of sample fetch at each query', default=500, required=False)
+@click.option('-fs', 'fectch_size', help='number of sample fetch at each query', default=50, required=False)
 @click.option('-debug', 'test', help='test?', default=False, required=False, is_flag=True)
 @click.option('-only_seq', 'just_seq', help='only retrieve seq?', default=False, required=False, is_flag=True)
-def cli(infile, odir, test, batch_size,just_seq):
+def cli(infile, odir, test, batch_size,just_seq,fectch_size):
     batch_size = int(batch_size)
-    main(infile, odir, batch_size, test,just_seq)
+    main(infile, odir, batch_size, fectch_size,test,just_seq)
 
 
 if __name__ == "__main__":
