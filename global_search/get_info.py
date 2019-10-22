@@ -202,6 +202,8 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
         print('\t'.join(new_columns),file=f1)
         tqdm.write('write into a dictinoary')
+        def write_in(t):
+            f1.write(t.replace('\n',' ')+'\t')
         for prot_t in tqdm(prot_results):
             if aid not in id_list:
                 print('error ', aid)
@@ -215,23 +217,24 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
             f1.write(f'{aid}\t')
             f1.write(id2annotate.get(aid, '')+'\t')
             f1.write(str(prot_t.seq)+'\t')
-            f1.write(annotations.get('organism','')+'\t')
-            f1.write(annotations.get('source','')+'\t')
-            f1.write(annotations.get('BioProject','')+'\t')
-            f1.write(annotations.get('BioSample','')+'\t')
-            f1.write(annotations.get('GI','')+'\t')
-            f1.write(annotations.get('taxid','')+'\t')
-            f1.write(annotations.get('db_source', '').split(' ')[-1]+'\t')
-            f1.write(';'.join(annotations.get('keywords', []))+'\t')
-            f1.write(annotations.get('comment', '')+'\t')
+            write_in(annotations.get('organism',''))
+            write_in(annotations.get('source',''))
+            write_in(annotations.get('BioProject',''))
+            write_in(annotations.get('BioSample',''))
+            write_in(annotations.get('GI',''))
+            write_in(annotations.get('taxid',''))
+            write_in(annotations.get('db_source', '').split(' ')[-1])
+            write_in(';'.join(annotations.get('keywords', [])))
+            write_in(annotations.get('comment', ''))
             for t in taxons:
                 f1.write(pid2info_dict.get(aid,{}).get(t,'')+'\t')
             for idx in range(10):
                 if idx < len(ref_texts):
                     ref_t = ref_texts[idx]
-                    f1.write('\t'.join([ref_t.title,ref_t.journal,ref_t.authors])+'\t')
+                    write_in('\t'.join([ref_t.title,ref_t.journal,ref_t.authors]))
                 else:
-                    f1.write('\t'.join(['','',''])+'\n')
+                    f1.write('\t'.join(['','','']))
+            f1.write('\n')
             f1.flush()
             if just_seq:
                 continue

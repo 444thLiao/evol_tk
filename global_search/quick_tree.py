@@ -21,10 +21,10 @@ tree_exe = 'iqtree'
 
 
 odir = './nr_retrieve_amoC'
-infile = './nr_retrieve_amoC/protein2INFO.xlsx'
+infile = './nr_retrieve_amoC/protein2INFO.tab'
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10946'
-protein_df = pd.read_excel(infile,index_col=0)
+protein_df = pd.read_csv(infile,sep='\t',index_col=0)
 tree_exe = 'iqtree'
 
 def run(cmd):
