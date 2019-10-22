@@ -10,6 +10,8 @@ import click
 import os
 from os.path import *
 from Bio import SeqIO
+from tqdm import tqdm
+
 def main(infa,ofile):
     records = SeqIO.parse(infa,format='fasta')
     if '/' not in ofile:
