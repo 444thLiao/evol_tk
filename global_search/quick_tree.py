@@ -26,6 +26,8 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko = 'K10946'
 protein_df = pd.read_csv(infile,sep='\t',index_col=0)
 tree_exe = 'iqtree'
+filter_id_txt = join(odir,'removed_ids.txt')
+
 
 def run(cmd):
     check_call(cmd,shell=True)
@@ -110,9 +112,13 @@ run(f"{kofam_scan} -o {ofile} --cpu 64 -f mapper-one-line --no-report-unannotate
 confirmed_id = [_.strip().split('\t')[0] for _ in open(ofile,'r').read().split('\n') if _]
 remained_records = [_ for _ in SeqIO.parse(infa,format='fasta') if _.id in confirmed_id]
 new_fa_file = join(odir,'unique_seqs_filtered.faa')
+if exists(filter_id_txt):
+    ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
+    remained_records = [_ for _ in remained_records if (_.id not in ids) and (_.id.replace('_',' ') not in ids)]
 with open(new_fa_file,'w') as f1:
     SeqIO.write(remained_records,f1,format='fasta-2line')
 
+    
 # step3 summarize the distribution of sequences
 # lengths distribution
 len_seqs = [len(_.seq) for _ in remained_records]
@@ -134,15 +140,15 @@ with open(infa,'w') as f1:
 # step5 alignment and build tree
 ofile = join(odir, ko+'.aln')
 if not exists(ofile):
-    check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}', shell=1)
+    print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}', shell=1)
 
 if not exists( ofile.replace('.aln','.treefile')):
     #pass
     if tree_exe == 'iqtree':
-        check_call(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}',shell=1)
+        print(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}')#,shell=1)
     else:
         n_file = ofile.replace('.aln','.treefile')
-        check_call(f'FastTree {ofile} > {n_file}',shell=1)
+        print(f'FastTree {ofile} > {n_file}')#,shell=1)
 
 t = root_tree_with(ofile.replace('.aln','.treefile'),
                     gene_names=outgroup_gene_names.get(ko,[]),
@@ -166,10 +172,10 @@ edl = EntrezDownloader(
 remained_records_ids = [_.id for _ in remained_records]
 general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
 sub_df = general_df.reindex(remained_records_ids)
-biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
-bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
-biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
-bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
+# biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
+# bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
+# biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
+# bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
 
 
 results, failed = edl.esummary(db='protein',

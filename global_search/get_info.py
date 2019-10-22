@@ -175,7 +175,18 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         f1.write('\n'.join(map(str,all_GI)))
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
-    prot_results, prot_failed = edl.efetch(db='protein',
+    if just_seq:
+        prot_results, prot_failed = edl.efetch(db='protein',
+                                           ids=all_GI,
+                                           retmode='text',
+                                           retype='fasta',
+                                           batch_size=fectch_size,
+                                           result_func=lambda x: list(SeqIO.parse(
+                                               io.StringIO(x), format='fasta')))
+        with open(join(odir, 'all_seqs.faa'),'w') as f1:
+            SeqIO.write(f1,prot_results,format='fasta-2line')
+    else:
+        prot_results, prot_failed = edl.efetch(db='protein',
                                            ids=all_GI,
                                            retmode='text',
                                            retype='gb',
