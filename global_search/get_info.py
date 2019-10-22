@@ -182,7 +182,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                                            retmode='text',
                                            retype='fasta',
                                            batch_size=fectch_size,
-                                           result_func=lambda x: list(SeqIO.read(
+                                           result_func=lambda x: list(SeqIO.parse(
                                                io.StringIO(x), format='fasta')))
         with open(join(odir, 'all_seqs.faa'),'w') as f1:
             SeqIO.write(f1,prot_results,format='fasta-2line')
