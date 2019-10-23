@@ -10,16 +10,21 @@ from Bio import Entrez
 from api_tools.itol_func import * 
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from tqdm import tqdm
+import sys
 ncbi = NCBITaxa()
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
+args = sys.argv
 
-infa = './nr_retrieve_amoC/filtered_by_kegg.faa'
-infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
-infa = './nr_retrieve_amoA/cluster_95'
-infa = './nr_retrieve_nxrB/cluster_95'
-infa = './nr_retrieve_nxrA/cluster_95_filtered_lengths.fa'
+infa = args[1]
+build_tree_alread = (len(args) >= 3)
+
+# infa = './nr_retrieve_amoC/filtered_by_kegg.faa'
+# infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
+# infa = './nr_retrieve_amoA/cluster_95'
+# infa = './nr_retrieve_nxrB/cluster_95'
+# infa = './nr_retrieve_nxrA/cluster_95_filtered_lengths.fa'
 
 gene_info = {'kegg': {'nxrA': 'K00370',
                       'nxrB': 'K00371',
@@ -157,73 +162,74 @@ else:
 
 
 
+if build_tree_alread:
+    suffix = args[2]
+    t = root_tree_with(ofile.replace('.aln',suffix),
+                        gene_names=outgroup_gene_names.get(ko,[]),
+                        format=0)
+    renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
+                    ascending=True)
 
-t = root_tree_with(ofile.replace('.aln','.trimal.newick'),
-                    gene_names=outgroup_gene_names.get(ko,[]),
-                    format=0)
-renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
-                ascending=True)
+    # generateing annotation files
 
-# generateing annotation files
-
-edl = EntrezDownloader(
-    # An email address. You might get blocked by the NCBI without specifying one.
-    email='l0404th@gmail.com',
-    # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-    api_key='ccf9847611deebe1446b9814a356f14cde08',
-    num_threads=30,                       # The number of parallel requests to make
-    # The number of IDs to fetch per request
-    batch_size=500,
-    pbar=True                             # Enables a progress bar, requires tqdm package
-)
-    
-remained_records_ids = [_.id for _ in remained_records]
-# general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
-# sub_df = general_df.reindex(remained_records_ids)
-# biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
-# bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
-# biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
-# bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
-
-
-results, failed = edl.esummary(db='protein',
-                                ids=remained_records_ids,
-                                result_func=lambda x: Entrez.read(
-                                    io.StringIO(x)))
-id2tax = {}
-id2org = {}
-for r in results:
-    aid = r['AccessionVersion']
-    tid = r['TaxId'].real
-    lineage = ncbi.get_lineage(tid)
-    rank = ncbi.get_rank(lineage)
-    rank = {v: k for k, v in rank.items()}
-    names = ncbi.get_taxid_translator(lineage)
-    if names.get(rank.get('phylum',''),'ENV') == 'Proteobacteria':
-        id2tax[aid] = names.get(rank.get('class',''),'ENV')
-    else:
-        id2tax[aid] = names.get(rank.get('phylum',''),'ENV')
-    id2org[aid] = names[tid]
+    edl = EntrezDownloader(
+        # An email address. You might get blocked by the NCBI without specifying one.
+        email='l0404th@gmail.com',
+        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+        api_key='ccf9847611deebe1446b9814a356f14cde08',
+        num_threads=30,                       # The number of parallel requests to make
+        # The number of IDs to fetch per request
+        batch_size=500,
+        pbar=True                             # Enables a progress bar, requires tqdm package
+    )
         
-        
-        
-id2info,info2col = get_colors_general(id2tax,now_info2style= ref_info2style)
-id2info.update(ref_id2info)
-info2col.update(ref_info2style)
-new_text = to_node_symbol(ofile.replace('.aln','.sorted.newick'))
-with open(join(odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
-    f1.write(new_text)
-    
+    remained_records_ids = [_.id for _ in remained_records]
+    # general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
+    # sub_df = general_df.reindex(remained_records_ids)
+    # biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
+    # bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
+    # biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
+    # bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
 
-write2colorbranch_clade(id2info,
-                        odir,
-                        info2col,
-                        treefile=ofile.replace('.aln','.sorted.newick'),
-                        unique_id=ko,
-                        info_name='branch_color',
-                        no_legend=False)
+
+    results, failed = edl.esummary(db='protein',
+                                    ids=remained_records_ids,
+                                    result_func=lambda x: Entrez.read(
+                                        io.StringIO(x)))
+    id2tax = {}
+    id2org = {}
+    for r in results:
+        aid = r['AccessionVersion']
+        tid = r['TaxId'].real
+        lineage = ncbi.get_lineage(tid)
+        rank = ncbi.get_rank(lineage)
+        rank = {v: k for k, v in rank.items()}
+        names = ncbi.get_taxid_translator(lineage)
+        if names.get(rank.get('phylum',''),'ENV') == 'Proteobacteria':
+            id2tax[aid] = names.get(rank.get('class',''),'ENV')
+        else:
+            id2tax[aid] = names.get(rank.get('phylum',''),'ENV')
+        id2org[aid] = names[tid]
+            
+            
+            
+    id2info,info2col = get_colors_general(id2tax,now_info2style= ref_info2style)
+    id2info.update(ref_id2info)
+    info2col.update(ref_info2style)
+    new_text = to_node_symbol(ofile.replace('.aln','.sorted.newick'))
+    with open(join(odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
+        f1.write(new_text)
         
-full_text = to_label(id2org)
-with open(join(odir, f'{ko}_label.txt'), 'w') as f1:
-    f1.write(full_text)
+
+    write2colorbranch_clade(id2info,
+                            odir,
+                            info2col,
+                            treefile=ofile.replace('.aln','.sorted.newick'),
+                            unique_id=ko,
+                            info_name='branch_color',
+                            no_legend=False)
+            
+    full_text = to_label(id2org)
+    with open(join(odir, f'{ko}_label.txt'), 'w') as f1:
+        f1.write(full_text)
         
