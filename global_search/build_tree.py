@@ -16,7 +16,7 @@ kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
 
 
-
+infa = './nr_retrieve_amoC/filtered_by_kegg.faa'
 infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
 infa = './nr_retrieve_amoA/cluster_95'
 infa = './nr_retrieve_nxrB/cluster_95'
@@ -98,7 +98,7 @@ def write2colorbranch_clade(id2info,odir,info2color,treefile, unique_id,info_nam
         
 
 outgroup_gene_names = {'K00370':['dms','tor'],
-                       'K00371':['dms','tor'],
+                       'K00371':['dms',],
                        'K10535':['nrfA','_ONR'],
                        'K10944':['bmo'],
                        'K10945':['bmo'],
@@ -137,24 +137,29 @@ print('shortest seq is %s, has %s AA' % (_s[0].id,len(_s[0].seq)))
 used_records = list(SeqIO.parse(new_fa_file,format='fasta'))
 final_records,ref_id2info = add_ref_seq(sub_ref_df,used_records)
 ref_id2info,ref_info2style = get_colors_general(ref_id2info)
-infa = join(odir, ko+'.fa')
-with open(infa,'w') as f1:
+prepared_infa = join(odir, ko+'.fa')
+with open(prepared_infa,'w') as f1:
     SeqIO.write(final_records,f1,format='fasta-2line')
-    
+print('final prepared fa contains ',len(final_records), ' seqs')
 # step5 alignment and build tree
 ofile = join(odir, ko+'.aln')
 #if not exists(ofile):
-print(f'mafft --maxiterate 1000 --genafpair --thread -1 {infa} > {ofile}')#, shell=1)
-
+print(f'mafft --maxiterate 1000 --genafpair --thread -1 {prepared_infa} > {ofile}')#, shell=1)
+print(f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60")#, shell=1)
 #if not exists( ofile.replace('.aln','.treefile')):
     #pass
 if tree_exe == 'iqtree':
-    print(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile}')#,shell=1)
+    print(f"iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile.replace('.aln','.trimal')}")#,shell=1)
 else:
     n_file = ofile.replace('.aln','.treefile')
-    print(f'FastTree {ofile} > {n_file}')#,shell=1)
+    print(f"FastTree {ofile.replace('.aln','.trimal')} > {n_file}")#,shell=1)
 
-t = root_tree_with(ofile.replace('.aln','.newick'),
+
+
+
+
+
+t = root_tree_with(ofile.replace('.aln','.trimal.newick'),
                     gene_names=outgroup_gene_names.get(ko,[]),
                     format=0)
 renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
