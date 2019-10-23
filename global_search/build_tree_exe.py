@@ -168,6 +168,7 @@ if build_tree_alread:
     t = root_tree_with(ofile.replace('.aln',suffix),
                         gene_names=outgroup_gene_names.get(ko,[]),
                         format=0)
+    final_ids = list(t.get_leaf_names())
     renamed_tree(t,outfile=ofile.replace('.aln','.sorted.newick'),
                     ascending=True)
 
@@ -211,10 +212,12 @@ if build_tree_alread:
         else:
             id2tax[aid] = names.get(rank.get('phylum',''),'ENV')
         id2org[aid] = names[tid]
-            
+    id2tax = {k:v for k,v in id2tax.items() if k in final_ids}
+    id2org = {k:v for k,v in id2org.items() if k in final_ids}  
             
             
     id2info,info2col = get_colors_general(id2tax,now_info2style= ref_info2style)
+    ref_id2info = {k:v for k,v in ref_id2info.items() if k in final_ids}
     id2info.update(ref_id2info)
     info2col.update(ref_info2style)
     new_text = to_node_symbol(ofile.replace('.aln','.sorted.newick'))
