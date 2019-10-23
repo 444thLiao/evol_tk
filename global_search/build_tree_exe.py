@@ -148,7 +148,7 @@ with open(prepared_infa,'w') as f1:
 print('final prepared fa contains ',len(final_records), ' seqs')
 
 #if not exists(ofile):
-used_fa_basename = basename(infa).strip('.')
+used_fa_basename = basename(infa).strip('.') + '_aln.dir'
 os.makedirs(join(odir,used_fa_basename),exist_ok=True)
 # step5 alignment and build tree
 ofile = join(odir,used_fa_basename, ko+'.aln')
