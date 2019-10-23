@@ -165,15 +165,19 @@ else:
 
 if build_tree_alread:
     suffix = args[2]
-    if len(args) == 4:
-        final_suffix = args[3]
-    else:
-        final_suffix = '.sorted.newick'
+    os.makedirs(join(odir,suffix.strip('.')),exist_ok=True)
+    
+    
+    final_suffix = '.sorted.newick'
     t = root_tree_with(ofile.replace('.aln',suffix),
                         gene_names=outgroup_gene_names.get(ko,[]),
                         format=0)
     final_ids = list(t.get_leaf_names())
-    renamed_tree(t,outfile=ofile.replace('.aln',final_suffix),
+    final_tree = join(odir,
+                              suffix.strip('.'), 
+                              basename(ofile).replace('.aln',final_suffix))
+    renamed_tree(t,
+                 outfile=final_tree,
                     ascending=True)
 
     # generateing annotation files
@@ -224,15 +228,17 @@ if build_tree_alread:
     ref_id2info = {k:v for k,v in ref_id2info.items() if k in final_ids}
     id2info.update(ref_id2info)
     info2col.update(ref_info2style)
-    new_text = to_node_symbol(ofile.replace('.aln',final_suffix))
-    with open(join(odir,f'{ko}_node_bootstrap.txt'),'w') as f1:
+    new_text = to_node_symbol(final_tree)
+    with open(join(odir,
+                   suffix.strip('.'),
+                   f'{ko}_node_bootstrap.txt'),'w') as f1:
         f1.write(new_text)
         
 
     write2colorbranch_clade(id2info,
                             odir,
                             info2col,
-                            treefile=ofile.replace('.aln',final_suffix),
+                            treefile=final_tree,
                             unique_id=ko,
                             info_name='branch_color',
                             no_legend=False)
