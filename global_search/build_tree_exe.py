@@ -22,7 +22,7 @@ build_tree_alread = (len(args) >= 3)
 
 # infa = './nr_retrieve_amoC/filtered_by_kegg.faa'
 # infa = './nr_retrieve_amoB/filtered_by_kegg.faa'
-# infa = './nr_retrieve_amoA/cluster_95'
+# infa = './nr_retrieve_amoA/cluster_90'
 # infa = './nr_retrieve_nxrB/cluster_95'
 # infa = './nr_retrieve_nxrA/cluster_95_filtered_lengths.fa'
 
@@ -146,9 +146,12 @@ if exists(filter_id_txt):
 with open(prepared_infa,'w') as f1:
     SeqIO.write(final_records,f1,format='fasta-2line')
 print('final prepared fa contains ',len(final_records), ' seqs')
-# step5 alignment and build tree
-ofile = join(odir, ko+'.aln')
+
 #if not exists(ofile):
+used_fa_basename = basename(infa).strip('.')
+os.makedirs(join(odir,used_fa_basename),exist_ok=True)
+# step5 alignment and build tree
+ofile = join(odir,used_fa_basename, ko+'.aln')
 print(f'mafft --maxiterate 1000 --genafpair --thread -1 {prepared_infa} > {ofile}')#, shell=1)
 print(f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60")#, shell=1)
 #if not exists( ofile.replace('.aln','.treefile')):
