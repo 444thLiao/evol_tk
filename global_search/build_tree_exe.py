@@ -236,7 +236,8 @@ if build_tree_alread:
         
 
     write2colorbranch_clade(id2info,
-                            odir,
+                            join(odir,
+                   suffix.strip('.')),
                             info2col,
                             treefile=final_tree,
                             unique_id=ko,
@@ -244,6 +245,8 @@ if build_tree_alread:
                             no_legend=False)
             
     full_text = to_label(id2org)
-    with open(join(odir, f'{ko}_label.txt'), 'w') as f1:
+    with open(join(odir,
+                   suffix.strip('.'),
+                    f'{ko}_label.txt'), 'w') as f1:
         f1.write(full_text)
         
