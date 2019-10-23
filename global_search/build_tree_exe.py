@@ -118,11 +118,7 @@ sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,'phylum/class']!='Thaumarchaeota',:
 # filter
 remained_records = [_ for _ in tqdm(SeqIO.parse(infa,format='fasta'))]
 new_fa_file = join(odir,'prepared.faa')
-if exists(filter_id_txt):
-    ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
-    remained_records = [_ 
-                        for _ in remained_records 
-                        if (_.id not in ids) and (_.id.replace('_',' ') not in ids)]
+
 with open(new_fa_file,'w') as f1:
     SeqIO.write(remained_records,f1,format='fasta-2line')
 
@@ -142,6 +138,11 @@ used_records = list(SeqIO.parse(new_fa_file,format='fasta'))
 final_records,ref_id2info = add_ref_seq(sub_ref_df,used_records)
 ref_id2info,ref_info2style = get_colors_general(ref_id2info)
 prepared_infa = join(odir, ko+'.fa')
+if exists(filter_id_txt):
+    ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
+    final_records = [_ 
+                        for _ in final_records 
+                        if (_.id not in ids) and (_.id.replace('_',' ') not in ids)]
 with open(prepared_infa,'w') as f1:
     SeqIO.write(final_records,f1,format='fasta-2line')
 print('final prepared fa contains ',len(final_records), ' seqs')
