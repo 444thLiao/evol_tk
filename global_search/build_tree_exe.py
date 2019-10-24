@@ -157,7 +157,7 @@ print(f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -r
 #if not exists( ofile.replace('.aln','.treefile')):
     #pass
 if tree_exe == 'iqtree':
-    print(f"iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {odir}/{ko} -s {ofile.replace('.aln','.trimal')}")#,shell=1)
+    print(f"iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {ofile.replace('.aln','.iqtree')} -s {ofile.replace('.aln','.trimal')}")#,shell=1)
 else:
     n_file = ofile.replace('.aln','.treefile')
     print(f"FastTree {ofile.replace('.aln','.trimal')} > {n_file}")#,shell=1)
@@ -172,7 +172,7 @@ if build_tree_alread:
     
     
     final_suffix = '.sorted.newick'
-    t = root_tree_with(ofile.replace('.aln',suffix),
+    t = root_tree_with(ofile.replace('.aln','.iqtree'),
                         gene_names=outgroup_gene_names.get(ko,[]),
                         format=0)
     final_ids = list(t.get_leaf_names())
