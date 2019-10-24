@@ -247,14 +247,12 @@ if build_tree_alread:
     id2info.update(ref_id2info)
     info2col.update(ref_info2style)
     new_text = to_node_symbol(final_tree)
-    with open(join(odir,
-                   suffix.strip('.'),
+    with open(join(dirname(final_tree),
                    f'{ko}_node_bootstrap.txt'), 'w') as f1:
         f1.write(new_text)
 
     write2colorbranch_clade(id2info,
-                            join(odir,
-                                 suffix.strip('.')),
+                            dirname(final_tree),,
                             info2col,
                             treefile=final_tree,
                             unique_id=ko,
@@ -262,7 +260,6 @@ if build_tree_alread:
                             no_legend=False)
 
     full_text = to_label(id2org)
-    with open(join(odir,
-                   suffix.strip('.'),
+    with open(join(dirname(final_tree),
                    f'{ko}_label.txt'), 'w') as f1:
         f1.write(full_text)
