@@ -168,7 +168,9 @@ else:
 
 if build_tree_alread:
     suffix = args[2]
-    os.makedirs(join(odir,suffix.strip('.')),exist_ok=True)
+    os.makedirs(join(odir,
+                      used_fa_basename,
+                              suffix.strip('.')),exist_ok=True)
     
     
     final_suffix = '.sorted.newick'
@@ -177,6 +179,7 @@ if build_tree_alread:
                         format=0)
     final_ids = list(t.get_leaf_names())
     final_tree = join(odir,
+                      used_fa_basename,
                               suffix.strip('.'), 
                               basename(ofile).replace('.aln',final_suffix))
     renamed_tree(t,
