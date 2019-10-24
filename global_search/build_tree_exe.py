@@ -252,7 +252,7 @@ if build_tree_alread:
         f1.write(new_text)
 
     write2colorbranch_clade(id2info,
-                            dirname(final_tree),,
+                            dirname(final_tree),
                             info2col,
                             treefile=final_tree,
                             unique_id=ko,
