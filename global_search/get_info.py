@@ -68,8 +68,8 @@ def get_Normal_ID(id_list,fectch_size=30,edl=None):
         except:
             tqdm.write("failed to parse taxonomy info for ", aid)
         gi2pid[gi] = aid
-    with open(join(odir,'all_gi.txt'),'w') as f1:
-        f1.write('\n'.join(map(str,all_GI)))
+    # with open(join(odir,'all_gi.txt'),'w') as f1:
+    #     f1.write('\n'.join(map(str,all_GI)))
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     
@@ -83,7 +83,7 @@ def get_Normal_ID(id_list,fectch_size=30,edl=None):
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
         
-    return prot_results
+    return prot_results,pid2info_dict
 
 def get_WP_info(id_list,edl):
     def _parse_wp(t):
@@ -157,7 +157,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False,edl=Non
     # for others
     id_list = [_ for _ in id_list if not _.startswith('WP_')]
 
-    prot_results = get_Normal_ID(id_list,fectch_size=fectch_size,edl=edl)
+    prot_results,pid2info_dict = get_Normal_ID(id_list,fectch_size=fectch_size,edl=edl)
     
     # init header
     refs = ['reference_' + str(_+1) + _suffix 
