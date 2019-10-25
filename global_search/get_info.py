@@ -218,11 +218,10 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         def write_in(t):
             f1.write(t.replace('\n',' ')+'\t')
         for prot_t in tqdm(prot_results):
+            aid = prot_t.id
             if aid not in id_list:
                 print('error ', aid)
                 continue
-
-            aid = prot_t.id
             annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])
@@ -331,7 +330,16 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
             lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
         biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
                             index=1, index_label='biosample ID')
-
+        # merged thems
+        protein2info_df = pd.read_csv(join(odir, 'protein2INFO.tab'),sep='\t',index_col=0)
+        _bioproject_df = bioproject_df.reindex(protein2info_df.loc[:,'BioProject'])
+        _biosample_df = biosample_df.reindex(protein2info_df.loc[:,'BioSample'])
+        _bioproject_df.index = protein2info_df.index
+        _biosample_df.index = protein2info_df.index
+        full_df = pd.concat([protein2info_df,_bioproject_df,_biosample_df],axis=1)
+        full_df.to_csv(join(odir, 'full_info.csv'),sep='\t',
+                            index=1, index_label='protein accession')
+        
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')

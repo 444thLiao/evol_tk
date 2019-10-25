@@ -17,3 +17,4 @@ For retrieving protein sequence relative to interested genes.
 7. use `get_info.py` to retrieve relative information from NCBI by **Entrez**.
 
 8. `mafft` and **build** tree
+9. annotate tree result with `depostied` and `intermediated` dumpped file.
