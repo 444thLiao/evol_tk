@@ -128,7 +128,7 @@ def get_WP_info(id_list,edl):
     _t = {}
     for _ in results:
         aid = list(_.keys())[0]
-        v = list(_.values())
+        v = list(_.values())[0]
         if aid not in aid2info:
             aid_s = set([_ 
                    for _ in aid2info.values() 
@@ -136,7 +136,7 @@ def get_WP_info(id_list,edl):
             for aid in aid_s:
                 _t.update({aid:v})
         else:
-            _t.update(_)
+            _t.update({aid:v})
     pid2info = {pid:_t[assid]
                 for pid,assid in aid2info.items()}
     return pid2info
@@ -151,10 +151,12 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False,edl=Non
     if test:
         id_list = random.sample(id_list, 1000)
     # for WP (refseq)
+    tqdm.write('first retrieve WP/refsep protein accession. ')
     WPid_list = [_ for _ in id_list if _.startswith('WP_')]
     WPid2info = get_WP_info(WPid_list,edl=edl)
     
     # for others
+    tqdm.write('then retrieve other protein accession. ')
     id_list = [_ for _ in id_list if not _.startswith('WP_')]
 
     prot_results,pid2info_dict = get_Normal_ID(id_list,fectch_size=fectch_size,edl=edl)
