@@ -237,6 +237,8 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False,edl=Non
                                 '',
                                 ''
                                 ] + [''] * 30) )
+            pid2bioproject[pid] = info_dict['BioprojectAccn']
+            pid2biosample[pid] = info_dict['BioSampleAccn']
             f1.write('\n')
             f1.flush()
     if just_seq:
