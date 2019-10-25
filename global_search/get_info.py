@@ -221,7 +221,11 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
             aid = prot_t.id
             if aid not in id_list:
                 print('error ', aid)
-                continue
+                if aid.split('.')[0] in id_list:
+                    aid = [_ for _ in id_list if _ in aid][0]
+                    pass
+                else:
+                    continue
             annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])
@@ -231,8 +235,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
             f1.write(str(prot_t.seq)+'\t')
             write_in(annotations.get('organism',''))
             write_in(annotations.get('source',''))
-            db_ = dict([_.split(':')
-                                            for _ in prot_t.dbxrefs if ':' in _])
+            db_ = dict([_.split(':') for _ in prot_t.dbxrefs if ':' in _])
             write_in(db_.get('BioProject',''))
             write_in(db_.get('BioSample',''))
             write_in(annotations.get('GI',''))
@@ -330,6 +333,8 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         #biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
         biosample_df = biosample_df.applymap(
             lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
+        from global_search.classification_script import _classificated
+        biosample_df = _classificated(biosample_df)
         biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
                             index=1, index_label='biosample ID')
         # merged thems
@@ -339,8 +344,10 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         _bioproject_df.index = protein2info_df.index
         _biosample_df.index = protein2info_df.index
         full_df = pd.concat([protein2info_df,_bioproject_df,_biosample_df],axis=1)
-        full_df.to_csv(join(odir, 'full_info.csv'),sep='\t',
+        
+        full_df.to_excel(join(odir, 'full_info.xlsx'),
                             index=1, index_label='protein accession')
+        
         
 
 @click.command()

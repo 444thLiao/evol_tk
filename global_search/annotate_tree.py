@@ -30,7 +30,10 @@ def reformat(s):
         float(a)
         return s
     except:
-        return s.rpartition('_')[0]
+        if len(s.rpartition('_')[-1]) == 1:
+            return s
+        else:
+            return s.rpartition('_')[0]
 t = Tree(tree_file,format=1)
 all_ids = t.get_leaf_names()
 all_ids = [reformat(_) for _ in all_ids]
