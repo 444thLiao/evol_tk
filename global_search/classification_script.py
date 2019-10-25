@@ -21,7 +21,6 @@ def _classificated(ori_df):
             ori_df.loc[_,'habitat'] = 'marine'
         if 'wastewater' in row_text or 'activated sludge' in row_text:
             ori_df.loc[_,'habitat'] = 'waste water'
-        if 'spring'
         if 'groundwater' in row_text:
             ori_df.loc[_,'habitat'] = 'ground water'
         if 'bioreactor' in row_text:
