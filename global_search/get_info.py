@@ -4,6 +4,7 @@ This script is mainly for retrieve infomation enough for following analysis
 """
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from global_search.classification_script import _classificated
+from global_search.thirty_party.metadata_parser import *
 import random
 from Bio import Entrez
 from tqdm import tqdm
@@ -20,7 +21,9 @@ from ete3 import NCBITaxa
 
 ncbi = NCBITaxa()
 
-
+taxons = ['superkingdom', 'phylum', 'class',
+            'order', 'family', 'genus', 'species']
+    
 def parse_id(infile, columns=1):
     id_list = []
     id2info = {}
@@ -34,113 +37,7 @@ def parse_id(infile, columns=1):
                 row.split('\t')[columns+1:]).strip('\n')
     return id_list, id2info
 
-
-def parse_bioproject_xml(xml_text):
-    result_bucket = []
-    soup = BeautifulSoup(xml_text, 'xml')
-    split_out = soup.find_all("DocumentSummary")
-    for each_record in split_out:
-        bioproject2info = defaultdict(dict)
-        body = each_record.Project
-        uid = each_record['uid']
-        if body is None:
-            result_bucket.append(uid)
-            continue
-        major_parts = {_.name: _ for _ in body.children if _.name}
-        PID_part = major_parts['ProjectID']
-        bioproject_id = PID_part.ArchiveID['accession']
-        bioproject_gid = int(PID_part.ArchiveID['id'])
-        PID_des = major_parts['ProjectDescr']
-        des_text = PID_des.Description.text if PID_des.Description is not None else ''
-        des_title = PID_des.Title.text if PID_des.Title is not None else ''
-        PID_pubmed_id = ';'.join([_['id']
-                                  for _ in PID_des.find_all('Publication')])
-        list_biosample = PID_des.find_all('LocusTagPrefix')
-        biosample_text = ';'.join([_.get('biosample_id', 'no biosample ID')
-                                   for _ in list_biosample])
-
-        PID_type = major_parts['ProjectType']
-        biological_properties = PID_type.find('BiologicalProperties')
-        if biological_properties is not None:
-            env_data = biological_properties.find('Environment')
-            if env_data:
-                for _data in env_data:
-                    if _data != '\n':
-                        bioproject2info[bioproject_id][_data.name] = _data.text
-            Morphology_data = biological_properties.find('Morphology')
-            if Morphology_data:
-                for _data in Morphology_data:
-                    if _data != '\n':
-                        bioproject2info[bioproject_id][_data.name] = _data.text
-        target_pro = PID_type.find('target')
-        if target_pro:
-            for _data,v in target_pro.attrs.items():
-                bioproject2info[bioproject_id][_data] = v
-        bioproject2info[bioproject_id]['GI'] = bioproject_gid
-        bioproject2info[bioproject_id]['description'] = des_text
-        bioproject2info[bioproject_id]['title'] = des_title
-        bioproject2info[bioproject_id]['pubmed GI'] = PID_pubmed_id
-        bioproject2info[bioproject_id]['relative biosample'] = biosample_text
-        bioproject2info[bioproject_id]['number of biosamples'] = len(
-            list_biosample)
-        pl = each_record.ProjectLinks
-        if pl is not None:
-            memids_DOM = [_ for _ in pl.find_all("MemberID")]
-            memberids = ';'.join([_['id'] for _ in memids_DOM])
-            member_accessions = ';'.join([_['accession'] for _ in memids_DOM])
-            bioproject2info[bioproject_id]['member bioproject GI'] = memberids
-            bioproject2info[bioproject_id]['member bioproject accession'] = member_accessions
-        result_bucket.append(bioproject2info)
-    return result_bucket
-
-
-def parse_biosample_xml(xml_text):
-    result_bucket = []
-    soup = BeautifulSoup(xml_text, 'xml')
-    split_out = soup.find_all("BioSample")
-    for each_record in split_out:
-        biosample2info = defaultdict(dict)
-        uid = each_record['id']
-        accession = each_record['accession']
-        biosample2info[accession]['access status'] = each_record['access']
-        biosample2info[accession]['last_update'] = each_record['last_update']
-        biosample2info[accession]['publication_date'] = each_record['publication_date']
-        biosample2info[accession]['submission_date'] = each_record['submission_date']
-
-        for dom in each_record.find_all('Id'):
-            for attr in dom.attrs:
-                if attr.startswith('db'):
-                    biosample2info[accession][dom[attr]] = dom.text
-        for dom in each_record.find('Description').children:
-            if dom.name is not None:
-                biosample2info[accession][dom.name] = dom.text
-        for dom in each_record.find_all('Attribute'):
-            biosample2info[accession]['attribute:' +
-                                      dom['attribute_name']] = dom.text
-        result_bucket.append(biosample2info)
-    return result_bucket
-
-
-def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
-    fectch_size = int(fectch_size)
-    
-    edl = EntrezDownloader(
-        # An email address. You might get blocked by the NCBI without specifying one.
-        email='l0404th@gmail.com',
-        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-        api_key='ccf9847611deebe1446b9814a356f14cde08',
-        num_threads=30,                       # The number of parallel requests to make
-        # The number of IDs to fetch per request
-        batch_size=batch_size,
-        pbar=True                             # Enables a progress bar, requires tqdm package
-    )
-    if not exists(odir):
-        os.makedirs(odir)
-    order_id_list, id2annotate = parse_id(infile, 0)
-    id_list = list(set(order_id_list))
-    if test:
-        id_list = random.sample(id_list, 1000)
-
+def get_Normal_ID(id_list,fectch_size=30,edl=None):
     pid2info_dict = defaultdict(dict)
     tqdm.write('from protein Accession ID to GI')
     results, failed = edl.esearch(db='protein',
@@ -154,8 +51,6 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                                        io.StringIO(x)))
     if failed:
         tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
-    taxons = ['superkingdom', 'phylum', 'class',
-              'order', 'family', 'genus', 'species']
     gi2pid = {}
     tqdm.write('from summary to GI and taxonomy')
     for result in tqdm(results):
@@ -177,28 +72,96 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         f1.write('\n'.join(map(str,all_GI)))
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
-    # if just_seq:
-    #     prot_results, prot_failed = edl.efetch(db='protein',
-    #                                        ids=all_GI,
-    #                                        retmode='text',
-    #                                        retype='fasta',
-    #                                        batch_size=fectch_size,
-    #                                        result_func=lambda x: list(SeqIO.parse(
-    #                                            io.StringIO(x), format='fasta')))
-        # with open(join(odir, 'all_seqs.faa'),'w') as f1:
-        #     SeqIO.write(f1,prot_results,format='fasta-2line')
-        # return 
-    # else:
+    
     prot_results, prot_failed = edl.efetch(db='protein',
                                         ids=all_GI,
                                         retmode='text',
                                         retype='gb',
                                         batch_size=fectch_size,
                                         result_func=lambda x: list(SeqIO.parse(
-                                            io.StringIO(x), format='genbank')))
+                                            io.StringIO(x), format='genbank')))    
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
-    refs = ['reference_' + str(_+1) + _suffix for _ in range(10)
+        
+    return prot_results
+
+def get_WP_info(id_list,edl):
+    def _parse_wp(t):
+        whole_df = pd.read_csv(io.StringIO(t),sep='\t',header=None)
+        aid = whole_df.iloc[0,6]
+        return [(aid,whole_df)]
+    
+    results, failed = edl.esearch(db='protein',
+                                  ids=id_list,
+                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+    all_GI = list(set(results[::]))
+    tqdm.write('get pid summary from each one')
+    results, failed = edl.efetch(db='protein',
+                                    ids=all_GI,
+                                    retmode='ipg',
+                                    retype='xml',
+                                    batch_size=1,
+                                    result_func=lambda x: _parse_wp(x))
+    aid2info = {}
+    for (aid,aid_df) in results:
+        if aid not in id_list:
+            if aid.split('.')[0] in id_list:
+                aid = [_ for _ in id_list if _ in aid][0]
+                pass
+            else:
+                print('error ', aid)
+                continue
+        assembly_id = [_ for _ in aid_df.iloc[:,-1] if not pd.isna(_)]
+        if assembly_id:
+            aid2info[aid] = assembly_id[-1]
+        else:
+            aid2info[aid] = ''
+    assembly_id_list = list([_ for _ in aid2info.values() if _])
+    results, failed = edl.esearch(db='assembly',
+                                ids=assembly_id_list,
+                                result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+    all_GI = results[::]
+    results, failed = edl.esummary(db='assembly',
+                                    ids=all_GI,
+                                    #batch_size=1,
+                                    result_func=lambda x: parse_assembly_xml(x))
+    _t = {}
+    for _ in results:
+        aid = list(_.keys())[0]
+        v = list(_.values())
+        if aid not in aid2info:
+            aid_s = set([_ 
+                   for _ in aid2info.values() 
+                   if aid.split('_')[1].split('.')[0] in _])
+            for aid in aid_s:
+                _t.update({aid:v})
+        else:
+            _t.update(_)
+    pid2info = {pid:_t[assid]
+                for pid,assid in aid2info.items()}
+    return pid2info
+
+def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False,edl=None):
+    fectch_size = int(fectch_size)
+
+    if not exists(odir):
+        os.makedirs(odir)
+    order_id_list, id2annotate = parse_id(infile, 0)
+    id_list = list(set(order_id_list))
+    if test:
+        id_list = random.sample(id_list, 1000)
+    # for WP (refseq)
+    WPid_list = [_ for _ in id_list if _.startswith('WP_')]
+    WPid2info = get_WP_info(WPid_list,edl=edl)
+    
+    # for others
+    id_list = [_ for _ in id_list if not _.startswith('WP_')]
+
+    prot_results = get_Normal_ID(id_list,fectch_size=fectch_size,edl=edl)
+    
+    # init header
+    refs = ['reference_' + str(_+1) + _suffix 
+            for _ in range(10)
             for _suffix in ['',' journal',' author']]
     new_columns = ['protein accession',
                        'annotated as',
@@ -212,7 +175,8 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                        'nuccore id',
                        'keywords',
                        'comments'] + taxons + refs
-    #all_cols = list(list(pid2info_dict.values())[0].keys())
+    pid2bioproject = {}
+    pid2biosample = {}
     with open(join(odir, 'protein2INFO.tab'), 'w') as f1:
         print('\t'.join(new_columns),file=f1)
         tqdm.write('write into a dictinoary and also write into a file')
@@ -221,11 +185,11 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         for prot_t in tqdm(prot_results):
             aid = prot_t.id
             if aid not in id_list:
-                print('error ', aid)
                 if aid.split('.')[0] in id_list:
                     aid = [_ for _ in id_list if _ in aid][0]
                     pass
                 else:
+                    print('error ', aid)
                     continue
             annotations = prot_t.annotations
             ref_texts = [_
@@ -254,40 +218,35 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                     f1.write('\t'.join(['','','']))
             f1.write('\n')
             f1.flush()
-            if just_seq:
-                continue
-            
-            for idx, ref_t in list(enumerate(ref_texts))[:10]:
-                pid2info_dict[aid]['reference_'+str(int(idx)+1)] = ref_t.title
-                pid2info_dict[aid]['reference_' +
-                                   str(int(idx)+1) + ' journal'] = ref_t.journal
-                pid2info_dict[aid]['reference_' +
-                                   str(int(idx)+1) + ' author'] = ref_t.authors
-            pid2info_dict[aid]['nuccore id'] = annotations.get(
-                'db_source', '').split(' ')[-1]
-            pid2info_dict[aid]['source'] = annotations['source']
-            pid2info_dict[aid]['org'] = annotations['organism']
-            pid2info_dict[aid]['keywords'] = ';'.join(
-                annotations.get('keywords', []))
-            pid2info_dict[aid]['comments'] = annotations.get('comment', '')
-            pid2info_dict[aid]['seq'] = str(prot_t.seq)
-            pid2info_dict[aid].update(dict([_.split(':')
-                                            for _ in prot_t.dbxrefs if ':' in _]))
-            pid2info_dict[aid]['annotated as'] = [id2annotate.get(_, '')
-                                                  for _ in pid2info_dict.keys()]
-        if just_seq:
-            tqdm.write('only perform sequence searching... completed')
-            return
+            pid2bioproject[aid] = db_.get('BioProject','')
+            pid2biosample[aid] = db_.get('BioSample','')
+
+        for pid,info_dict in WPid2info.items():
+            f1.write('\t'.join([pid,
+                                '',
+                                '',
+                                info_dict['SpeciesName'],
+                                '',
+                                info_dict['BioprojectAccn'],
+                                info_dict['BioSampleAccn'],
+                                '',
+                                info_dict['SpeciesTaxid'],
+                                '',
+                                '',
+                                ''
+                                ] + [''] * 30) )
+            f1.write('\n')
+            f1.flush()
     if just_seq:
-        tqdm.write('')
+        tqdm.write('only perform sequence searching... completed')
+        return
     else:
         tqdm.write(
             'processing pid to bioproject and retrieving the info of bioproject')
-        set_bioprojects = list(set([_.get('BioProject', '')
-                                    for _ in pid2info_dict.values()]))
+        set_bioprojects = list(set(pid2bioproject.values()))
         set_bioprojects = [_
                         for _ in set_bioprojects
-                        if str(_) != 'nan' and _]
+                        if _]
         results, failed = edl.esearch(db='bioproject',
                                     ids=set_bioprojects,
                                     result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
@@ -304,18 +263,17 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
                 _t.update(_)
         bioproject_df = pd.DataFrame.from_dict(_t, orient='index')
         bioproject_df.loc[:, 'GI'] = bioproject_df.loc[:, 'GI'].astype(int)
-        #bioproject_df = bioproject_df.reindex(pid2info_df.loc[:, 'BioProject'])
         bioproject_df = bioproject_df.applymap(
             lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
         bioproject_df.to_excel(join(odir, 'bioproject2info.xlsx'),
                             index=1, index_label='bioproject ID')
 
         tqdm.write('processing pid to biosample and retrieving the info of biosample')
-        set_biosamples = list(set([_.get('BioSample', '')
-                                for _ in pid2info_dict.values()]))
+        ###
+        set_biosamples = list(set(pid2biosample.values()))
         set_biosamples = [_
                         for _ in set_biosamples
-                        if str(_) != 'nan' and _]
+                        if _]
 
         results, failed = edl.esearch(db='biosample',
                                     ids=set_biosamples,
@@ -331,7 +289,6 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         for r in results:
             _t.update(r)
         biosample_df = pd.DataFrame.from_dict(_t, orient='index')
-        #biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
         biosample_df = biosample_df.applymap(
             lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
 
@@ -360,7 +317,18 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
 @click.option('-only_seq', 'just_seq', help='only retrieve seq?', default=False, required=False, is_flag=True)
 def cli(infile, odir, test, batch_size,just_seq,fectch_size):
     batch_size = int(batch_size)
-    main(infile, odir, batch_size, fectch_size,test,just_seq)
+      
+    edl = EntrezDownloader(
+    # An email address. You might get blocked by the NCBI without specifying one.
+    email='l0404th@gmail.com',
+    # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+    api_key='ccf9847611deebe1446b9814a356f14cde08',
+    num_threads=30,   # The number of parallel requests to make
+    # The number of IDs to fetch per request
+    batch_size=batch_size,
+    pbar=True  # Enables a progress bar, requires tqdm package
+)
+    main(infile, odir, batch_size, fectch_size,test,just_seq,edl=edl)
 
 
 if __name__ == "__main__":
