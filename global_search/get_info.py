@@ -3,6 +3,7 @@ This script is mainly for retrieve infomation enough for following analysis
 
 """
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
+from global_search.classification_script import _classificated
 import random
 from Bio import Entrez
 from tqdm import tqdm
@@ -333,7 +334,7 @@ def main(infile, odir, batch_size, fectch_size,test=False,just_seq=False):
         #biosample_df = biosample_df.reindex(pid2info_df.loc[:, 'BioSample'])
         biosample_df = biosample_df.applymap(
             lambda x: x.replace('\n', ' ') if isinstance(x, str) else x)
-        from global_search.classification_script import _classificated
+
         biosample_df = _classificated(biosample_df)
         biosample_df.to_excel(join(odir, 'biosample2info.xlsx'),
                             index=1, index_label='biosample ID')
