@@ -103,7 +103,11 @@ class EntrezDownloader:
                     f'{self.baseurl}/{emode}.cgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
-                    result_collector.add_results(results)
+                    if emode=='esearch':
+                        result_collector.add_results(list(zip([_.strip() for _ in ids.split(' OR ')], 
+                                                               results)))
+                    else:
+                        result_collector.add_results(results)
                     error = None
                     break
                 else:
@@ -329,7 +333,7 @@ class EntrezDownloader:
             results.pbar.close()
         return results.results, results.failed
 
-    def esearch(self, db, ids, result_func=lambda x: [x], **kwargs):
+    def esearch(self, db, ids, batch_size=20,result_func=lambda x: [x], **kwargs):
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
@@ -343,11 +347,12 @@ class EntrezDownloader:
             results = ResultCollector()
 
         executor = ThreadPoolExecutor(max_workers=self.num_threads)
-
+        if not batch_size:
+            batch_size = self.batch_size
         fs = []
-        for start in range(0, len(ids), self.batch_size):
+        for start in range(0, len(ids), batch_size):
             num = len(ids)-start
-            num = self.batch_size if num > self.batch_size else num
+            num = batch_size if num > batch_size else num
             f = executor.submit(self._general_batch,
                                 db=db,
                                 ids=' OR '.join(ids[start:start+num]),

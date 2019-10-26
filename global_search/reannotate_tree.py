@@ -79,8 +79,14 @@ if len(sys.argv) >= 2:
             else:
                 new_id2habitat[id]= id2habitat[id]
         to_habitat_matrix(new_id2habitat,fdir)
-        # except:
-        #     failed_f.append(fdir)
+        ####
+        
+        id2seq_type = {}
+        for _,row in  full_df.iterrows():
+            if row['BioSample'] == 'unknown':
+                id2seq_type[_] = 'amplicons'
+            
+        
         if failed_id:
             print(fdir,failed_id)
     if failed_f:

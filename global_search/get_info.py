@@ -18,14 +18,22 @@ from os.path import exists, dirname, join
 import os
 import click
 from ete3 import NCBITaxa
+import pickle
 
 ncbi = NCBITaxa()
 
 taxons = ['superkingdom', 'phylum', 'class',
           'order', 'family', 'genus', 'species']
 source_file = '/home-user/thliao/resource/NCBI2habitat.csv'
-
-
+tmp_dir = './.tmp_getINFO'
+def access_intermedia(obj=None,ofile=None):
+    if (ofile is not None) and (obj is not None):
+        if not exists(dirname(ofile)):
+            os.makedirs(dirname(ofile))
+        pickle.dump(obj,open(ofile,'wb'))
+    elif (not obj) and ofile:
+        return pickle.load(open(ofile,'rb'))
+    
 def parse_id(infile, columns=1):
     id_list = []
     id2info = {}
@@ -41,12 +49,21 @@ def parse_id(infile, columns=1):
 
 
 def get_Normal_ID(id_list, fetch_size=30, edl=None):
-    pid2info_dict = defaultdict(dict)
-    tqdm.write('from protein Accession ID to GI')
-    results, failed = edl.esearch(db='protein',
-                                  ids=id_list,
-                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    all_GI = list(set(results[::]))
+    _md5 = str(hash(';'.join(id_list)))
+    if exists(join(tmp_dir,_md5)):
+        id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
+    else:
+        
+        tqdm.write('from protein Accession ID to GI')
+        results, failed = edl.esearch(db='protein',
+                                    ids=id_list,
+                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'],
+                                    batch_size=1
+                                    )
+        id2gi = dict(results)
+        access_intermedia(id2gi,ofile=join(tmp_dir,_md5))
+    gi2id = {v:k for k,v in id2gi.items()}
+    all_GI = list(set(id2gi.values()))
     tqdm.write('get pid summary from each one')
     results, failed = edl.esummary(db='protein',
                                    ids=all_GI,
@@ -54,12 +71,22 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
                                        io.StringIO(x)))
     if failed:
         tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
-    gi2pid = {}
     tqdm.write('from summary to GI and taxonomy')
+    pid2info_dict = defaultdict(dict)
     for result in tqdm(results):
         aid = result['AccessionVersion']
-        pid2info_dict[aid]['GI'] = gi = result['Gi'].real
-        pid2info_dict[aid]['taxid'] = result['TaxId'].real
+        if aid not in gi2id:
+            _aid = [_ for _ in id2gi if _ in aid]
+            if not _aid:
+                continue
+                #print('error from esummary with gi', aid)
+            else:
+                right_aid = _aid[0]
+        else:
+            right_aid = aid
+        pid2info_dict[right_aid]['GI'] = result['Gi'].real
+        pid2info_dict[right_aid]['taxid'] = result['TaxId'].real
+        pid2info_dict[right_aid]['accession'] = aid
         try:
             lineage = ncbi.get_lineage(result['TaxId'].real)
             rank = ncbi.get_rank(lineage)
@@ -67,28 +94,33 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
             names = ncbi.get_taxid_translator(lineage)
             for c in taxons:
                 if c in rank:
-                    pid2info_dict[aid][c] = names[rank[c]]
+                    pid2info_dict[right_aid][c] = names[rank[c]]
         except:
             tqdm.write("failed to parse taxonomy info for ", aid)
-        gi2pid[gi] = aid
-    # with open(join(odir,'all_gi.txt'),'w') as f1:
-    #     f1.write('\n'.join(map(str,all_GI)))
+            
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
-
-    prot_results, prot_failed = edl.efetch(db='protein',
-                                           ids=all_GI,
-                                           retmode='text',
-                                           retype='gb',
-                                           batch_size=fetch_size,
-                                           result_func=lambda x: list(SeqIO.parse(
-                                               io.StringIO(x), format='genbank')))
-    pid2gb = {record.id:record for record in prot_results}
-    if prot_failed:
-        tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
-
+    if exists(join(tmp_dir,_md5+'_efetch')):
+        pid2gb = access_intermedia(ofile=join(tmp_dir,_md5+'_efetch'))
+    else:
+        prot_results, prot_failed = edl.efetch(db='protein',
+                                            ids=all_GI,
+                                            retmode='text',
+                                            retype='gb',
+                                            batch_size=fetch_size,
+                                            result_func=lambda x: list(SeqIO.parse(
+                                                io.StringIO(x), format='genbank')))
+        if prot_failed:
+            tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
+        pid2gb = {}
+        for record in prot_results:
+            right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+            if not right_aid:
+                print('Wrong ????',record.id)
+            else:
+                pid2gb[right_aid[0]] = record
+        access_intermedia(pid2gb,ofile=join(tmp_dir,_md5+'_efetch'))
     return pid2gb, pid2info_dict
-
 
 def get_WP_info(id_list, edl):
     def _parse_wp(t):
