@@ -58,23 +58,14 @@ def sort_tree(in_tree_file,ascending=True,format=0):
     for n in t.traverse():
         childrens = n.children
         if len(childrens)==2:
-            d1,d2 = [len(_.get_leaves()) for _ in n.children]
-            if ascending:
-                if d1<d2:
-                    n.children = n.children[::-1]
-                elif d1==d2:
-                    # place outgroup at the bottom
-                    n.children = list(sorted(n.children,
-                                         key=lambda x:len(x.get_leaves()),
-                                         ))[::-1]
-            else:
-                if d1>d2:
-                    n.children = n.children[::-1]
-                elif d1==d2:
-                    # place outgroup at the top
-                    n.children = list(sorted(n.children,
+            #d1,d2 = [len(_.get_leaves()) for _ in n.children]
+            sort_by_ascending = list(sorted(n.children,
                                          key=lambda x:len(x.get_leaves()),
                                          ))
+            if ascending:
+                n.children = sort_by_ascending[::-1]
+            else:
+                n.children = sort_by_ascending
     return t
 
 def renamed_tree(in_tree_file, outfile,ascending=True,format=0):
