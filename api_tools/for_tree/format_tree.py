@@ -58,7 +58,7 @@ def sort_tree(in_tree_file,ascending=True,format=0):
     for n in t.traverse():
         childrens = n.children
         if len(childrens)==2:
-            d1,d2 = [len(_.get_leaves) for _ in n.children]
+            d1,d2 = [len(_.get_leaves()) for _ in n.children]
             if ascending:
                 if d1<d2:
                     n.children = n.children[::-1]
