@@ -195,52 +195,54 @@ if build_tree_alread:
                       used_fa_basename,
                       suffix.strip('.'),
                       basename(ofile).replace('.aln', final_suffix))
-    tqdm.write('write into new tree ',final_tree)
+    tqdm.write('write into new tree ' + final_tree)
     renamed_tree(t,
                  outfile=final_tree,
                  ascending=True)
 
     # generateing annotation files
+    if exists('./blabla'):
+        pass
+    else:
+        edl = EntrezDownloader(
+            # An email address. You might get blocked by the NCBI without specifying one.
+            email='l0404th@gmail.com',
+            # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+            api_key='ccf9847611deebe1446b9814a356f14cde08',
+            num_threads=30,                       # The number of parallel requests to make
+            # The number of IDs to fetch per request
+            batch_size=500,
+            pbar=True                             # Enables a progress bar, requires tqdm package
+        )
 
-    edl = EntrezDownloader(
-        # An email address. You might get blocked by the NCBI without specifying one.
-        email='l0404th@gmail.com',
-        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-        api_key='ccf9847611deebe1446b9814a356f14cde08',
-        num_threads=30,                       # The number of parallel requests to make
-        # The number of IDs to fetch per request
-        batch_size=500,
-        pbar=True                             # Enables a progress bar, requires tqdm package
-    )
+        remained_records_ids = [_.id for _ in remained_records]
+        # general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
+        # sub_df = general_df.reindex(remained_records_ids)
+        # biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
+        # bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
+        # biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
+        # bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
 
-    remained_records_ids = [_.id for _ in remained_records]
-    # general_df = pd.read_csv(join(odir,'protein2INFO.tab'),sep='\t',index_col=0,low_memory=False)
-    # sub_df = general_df.reindex(remained_records_ids)
-    # biosample_df = pd.read_excel(join(odir,'biosample2info.xlsx'),index_col=0)
-    # bioproject_df = pd.read_excel(join(odir,'bioproject2info.xlsx'),index_col=0)
-    # biosample_df = biosample_df.drop_duplicates().reindex(sub_df.loc[:,'BioSample'])
-    # bioproject_df = bioproject_df.drop_duplicates().reindex(sub_df.loc[:,'BioProject'])
-
-    results, failed = edl.esummary(db='protein',
-                                   ids=remained_records_ids,
-                                   result_func=lambda x: Entrez.read(
-                                       io.StringIO(x)))
-    id2tax = {}
-    id2org = {}
-    for r in results:
-        aid = r['AccessionVersion']
-        tid = r['TaxId'].real
-        lineage = ncbi.get_lineage(tid)
-        rank = ncbi.get_rank(lineage)
-        rank = {v: k for k, v in rank.items()}
-        names = ncbi.get_taxid_translator(lineage)
-        if names.get(rank.get('phylum', ''), 'ENV') == 'Proteobacteria':
-            id2tax[aid] = names.get(rank.get('class', ''), 'ENV')
-        else:
-            id2tax[aid] = names.get(rank.get('phylum', ''), 'ENV')
-        id2org[aid] = names[tid]
-    id2tax = {k: v for k, v in id2tax.items() if k in final_ids}
-    id2org = {k: v for k, v in id2org.items() if k in final_ids}
+        results, failed = edl.esummary(db='protein',
+                                    ids=remained_records_ids,
+                                    result_func=lambda x: Entrez.read(
+                                        io.StringIO(x)))
+        id2tax = {}
+        id2org = {}
+        for r in results:
+            aid = r['AccessionVersion']
+            tid = r['TaxId'].real
+            lineage = ncbi.get_lineage(tid)
+            rank = ncbi.get_rank(lineage)
+            rank = {v: k for k, v in rank.items()}
+            names = ncbi.get_taxid_translator(lineage)
+            if names.get(rank.get('phylum', ''), 'ENV') == 'Proteobacteria':
+                id2tax[aid] = names.get(rank.get('class', ''), 'ENV')
+            else:
+                id2tax[aid] = names.get(rank.get('phylum', ''), 'ENV')
+            id2org[aid] = names[tid]
+        id2tax = {k: v for k, v in id2tax.items() if k in final_ids}
+        id2org = {k: v for k, v in id2org.items() if k in final_ids}
 
     id2info, info2col = get_colors_general(
         id2tax, now_info2style=ref_info2style)
