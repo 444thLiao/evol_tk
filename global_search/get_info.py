@@ -32,6 +32,7 @@ def access_intermedia(obj=None,ofile=None):
             os.makedirs(dirname(ofile))
         pickle.dump(obj,open(ofile,'wb'))
     elif (not obj) and ofile:
+        tqdm.write("Detecting cache file. read it")
         return pickle.load(open(ofile,'rb'))
     
 def parse_id(infile, columns=1):
@@ -53,7 +54,6 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
     if exists(join(tmp_dir,_md5)):
         id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
     else:
-        
         tqdm.write('from protein Accession ID to GI')
         results, failed = edl.esearch(db='protein',
                                     ids=id_list,
@@ -127,11 +127,20 @@ def get_WP_info(id_list, edl):
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
+    _md5 = str(hash(';'.join(id_list)))
+    if exists(join(tmp_dir,_md5)):
+        id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
+    else:
+        tqdm.write('from protein Accession ID to GI')
+        results, failed = edl.esearch(db='protein',
+                                    ids=id_list,
+                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'],
+                                    batch_size=1)
+        id2gi = dict(results)
+        access_intermedia(id2gi,ofile=join(tmp_dir,_md5))
+    gi2id = {v:k for k,v in id2gi.items()}
+    all_GI = list(set(id2gi.values()))
 
-    results, failed = edl.esearch(db='protein',
-                                  ids=id_list,
-                                  result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    all_GI = list(set(results[::]))
     tqdm.write('get pid summary from each one')
     results, failed = edl.efetch(db='protein',
                                     ids=all_GI,
@@ -142,13 +151,13 @@ def get_WP_info(id_list, edl):
     failed_id = []
     aid2info = {}
     for (aid, aid_df) in results:
-        if aid not in id_list:
-            if aid.split('.')[0] in id_list:
-                aid = [_ for _ in id_list if _ in aid][0]
-                pass
-            else:
-                print('error ', aid)
+        if aid not in id2gi:
+            _c = [_ for _ in id2gi if aid.split('.')[0] in _]
+            if not _c:
+                print('unexpected ',aid)
                 continue
+            else:
+                aid = _c[0]
         assembly_id = [_ for _ in aid_df.iloc[:, -1] if not pd.isna(_)]
         if assembly_id:
             aid2info[aid] = assembly_id[-1]
@@ -202,8 +211,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
     tqdm.write('then retrieve other protein accession. ')
     id_list = [_ for _ in id_list if not _.startswith('WP_')]
 
-    pid2gb, pid2info_dict = get_Normal_ID(
-        id_list, fetch_size=fetch_size, edl=edl)
+    pid2gb, pid2info_dict = get_Normal_ID(id_list, fetch_size=fetch_size, edl=edl)
 
     # init header
     refs = ['reference_' + str(_+1) + _suffix
