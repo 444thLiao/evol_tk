@@ -18,7 +18,7 @@ from os.path import exists, dirname, join
 import os
 import click
 from ete3 import NCBITaxa
-import pickle
+import json
 import hashlib
 
 def hash(astr):
@@ -34,10 +34,10 @@ def access_intermedia(obj=None,ofile=None):
     if (ofile is not None) and (obj is not None):
         if not exists(dirname(ofile)):
             os.makedirs(dirname(ofile))
-        pickle.dump(obj,open(ofile,'wb'))
+        json.dump(obj,open(ofile,'w'))
     elif (not obj) and ofile:
         tqdm.write("Detecting cache file. read it")
-        return pickle.load(open(ofile,'rb'))
+        return json.load(open(ofile,'r'))
     
 def parse_id(infile, columns=1):
     id_list = []
@@ -104,42 +104,38 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
             
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
-    if exists(join(tmp_dir,_md5+'_efetch')):
-        pid2gb = access_intermedia(ofile=join(tmp_dir,_md5+'_efetch'))
-    else:
+    prot_results, prot_failed = edl.efetch(db='protein',
+                                        ids=all_GI,
+                                        retmode='text',
+                                        retype='gb',
+                                        batch_size=fetch_size,
+                                        result_func=lambda x: list(SeqIO.parse(
+                                            io.StringIO(x), format='genbank')))
+    if prot_failed:
+        tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
+    pid2gb = {}
+    for record in prot_results:
+        right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+        if not right_aid:
+            print('Wrong ????',record.id)
+        else:
+            pid2gb[right_aid[0]] = record
+    if set(pid2info_dict).difference(pid2gb):
+        remained_id = list(set(pid2info_dict).difference(pid2gb))
+        remained_id_gis = [id2gi[_] for _ in remained_id]
         prot_results, prot_failed = edl.efetch(db='protein',
-                                            ids=all_GI,
-                                            retmode='text',
-                                            retype='gb',
-                                            batch_size=fetch_size,
-                                            result_func=lambda x: list(SeqIO.parse(
-                                                io.StringIO(x), format='genbank')))
-        if prot_failed:
-            tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
-        pid2gb = {}
+                                        ids=remained_id_gis,
+                                        retmode='text',
+                                        retype='gb',
+                                        batch_size=1,
+                                        result_func=lambda x: list(SeqIO.read(
+                                            io.StringIO(x), format='genbank')))
         for record in prot_results:
             right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
             if not right_aid:
                 print('Wrong ????',record.id)
             else:
                 pid2gb[right_aid[0]] = record
-        if set(pid2info_dict).difference(pid2gb):
-            remained_id = list(set(pid2info_dict).difference(pid2gb))
-            remained_id_gis = [id2gi[_] for _ in remained_id]
-            prot_results, prot_failed = edl.efetch(db='protein',
-                                            ids=remained_id_gis,
-                                            retmode='text',
-                                            retype='gb',
-                                            batch_size=1,
-                                            result_func=lambda x: list(SeqIO.read(
-                                                io.StringIO(x), format='genbank')))
-            for record in prot_results:
-                right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
-                if not right_aid:
-                    print('Wrong ????',record.id)
-                else:
-                    pid2gb[right_aid[0]] = record
-        access_intermedia(pid2gb,ofile=join(tmp_dir,_md5+'_efetch'))
     return pid2gb, pid2info_dict
 
 def get_WP_info(id_list, edl):
@@ -190,7 +186,8 @@ def get_WP_info(id_list, edl):
     results, failed = edl.esearch(db='assembly',
                                   ids=assembly_id_list,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    all_GI = results[::]
+    aid2gi = dict(results)
+    all_GI = list(set(aid2gi.values()))
     results, failed = edl.esummary(db='assembly',
                                    ids=all_GI,
                                    # batch_size=1,
@@ -270,16 +267,6 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
                 else:
                     aid = _c[0]
                     prot_t = pid2gb[aid]
-        # for prot_t in tqdm(prot_results):
-            # aid = prot_t.id
-            # if aid not in id_list:
-            #     if aid.split('.')[0] in id_list:
-            #         aid = [_ for _ in id_list if _ in aid][0]
-            #         pass
-            #     else:
-            #         print('error ', aid)
-            #         f1.write('\t'.join([aid]+['']*len(new_columns)))
-            #         continue
             annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])
