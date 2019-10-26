@@ -56,16 +56,16 @@ def sort_tree(in_tree_file,ascending=True,format=0):
     else:
         t = Tree(open(in_tree_file).read(),format=format)
     for n in t.traverse():
-        childrens = n.children
-        if len(childrens)==2:
+        #childrens = n.children
+        #if len(childrens)==2:
             #d1,d2 = [len(_.get_leaves()) for _ in n.children]
-            sort_by_ascending = list(sorted(n.children,
-                                         key=lambda x:len(x.get_leaves()),
-                                         ))
-            if ascending:
-                n.children = sort_by_ascending[::-1]
-            else:
-                n.children = sort_by_ascending
+        sort_by_ascending = list(sorted(n.children,
+                                        key=lambda x:len(x.get_leaves()),
+                                        ))
+        if ascending:
+            n.children = sort_by_ascending[::-1]
+        else:
+            n.children = sort_by_ascending
     return t
 
 def renamed_tree(in_tree_file, outfile,ascending=True,format=0):
