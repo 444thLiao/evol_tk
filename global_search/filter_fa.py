@@ -123,8 +123,4 @@ if __name__ == "__main__":
                                     final_fa,
                                     output_records=False,
                                     hard_filter=hard_f_value)
-                                    #down_threshold=down_threshold)
-            # records = [_ for _ in SeqIO.parse(final_fa,format='fasta')]
-            # if len(records) >= 1000:
-            #     cluster_fa(final_fa)
         
