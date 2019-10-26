@@ -83,10 +83,11 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
                                            batch_size=fetch_size,
                                            result_func=lambda x: list(SeqIO.parse(
                                                io.StringIO(x), format='genbank')))
+    pid2gb = {record.id:record for record in prot_results}
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(failed))
 
-    return prot_results, pid2info_dict
+    return pid2gb, pid2info_dict
 
 
 def get_WP_info(id_list, edl):
@@ -169,7 +170,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
     tqdm.write('then retrieve other protein accession. ')
     id_list = [_ for _ in id_list if not _.startswith('WP_')]
 
-    prot_results, pid2info_dict = get_Normal_ID(
+    pid2gb, pid2info_dict = get_Normal_ID(
         id_list, fetch_size=fetch_size, edl=edl)
 
     # init header
@@ -196,15 +197,27 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
 
         def write_in(t):
             f1.write(t.replace('\n', ' ').replace('\t', ' ')+'\t')
-        for prot_t in tqdm(prot_results):
-            aid = prot_t.id
-            if aid not in id_list:
-                if aid.split('.')[0] in id_list:
-                    aid = [_ for _ in id_list if _ in aid][0]
-                    pass
-                else:
-                    print('error ', aid)
+        for aid in tqdm(id_list):
+            if aid in pid2gb:
+                prot_t = pid2gb[aid]
+            else:
+                _c = [_ for _ in pid2gb if _.split('.')[0] in aid]
+                if not _c:
+                    print('not found',aid)
                     continue
+                else:
+                    aid = _c[0]
+                    prot_t = pid2gb[aid]
+        # for prot_t in tqdm(prot_results):
+            # aid = prot_t.id
+            # if aid not in id_list:
+            #     if aid.split('.')[0] in id_list:
+            #         aid = [_ for _ in id_list if _ in aid][0]
+            #         pass
+            #     else:
+            #         print('error ', aid)
+            #         f1.write('\t'.join([aid]+['']*len(new_columns)))
+            #         continue
             annotations = prot_t.annotations
             ref_texts = [_
                          for _ in annotations.get('references', [])

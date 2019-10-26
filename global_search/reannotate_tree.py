@@ -2,7 +2,9 @@ import pandas as pd
 import sys
 from os.path import exists,join
 from tqdm import tqdm
-from api_tools.itol_func import *   
+from api_tools.itol_func import *  
+from glob import glob 
+from ete3 import Tree
 def write2colorstrip(id2info,odir,info2color, unique_id,info_name='type',):
     content = to_color_strip(id2info,info2color,info_name=info_name)
     info_name = info_name.replace('/','_')
@@ -35,11 +37,12 @@ def write2binary_dataset(ID2infos, odir,info2style, unique_id):
 
 
 habitat_colros = {'marine':'#0099FF',
+                  'marine(symbiont)':'#0099FF',
                   'terrestrial':'#f99806',
+                  'terrestrial(symbiont)':'#f99806',
                   'waste water':'#aaffaa',
                   }   
 def to_habitat_matrix(id2habitat,fdir):
-    all_habitat = id2habitat
     matrix_text = to_matrix_shape(id2habitat,'habitat',habitat_colros)
     with open(join(fdir,'habitat_matrix.txt'),'w') as f1:
         f1.write(matrix_text)
@@ -49,14 +52,37 @@ if len(sys.argv) >= 2:
     file_list = sys.argv[1:]
     failed_f = []
     for fdir in tqdm(file_list):
-        try:
-            f = join(fdir,'full_info_new.xlsx')
-            full_df = pd.read_excel(f,index_col=0)
-            full_df = full_df.fillna('Unknown')
-            id2habitat = dict(zip(full_df.index,full_df.loc[:,'habitat']))
-            to_habitat_matrix(id2habitat,fdir)
-        except:
-            failed_f.append(fdir)
+        #try:
+        f = join(fdir,'full_info_new.xlsx')
+        t = glob(join(fdir,'*.sorted.newick'))[0]
+        tree = Tree(t,format=3)
+        all_ids = list(tree.get_leaf_names())
+        full_df = pd.read_excel(f,index_col=0)
+        full_df = full_df.fillna('unknown')
+        id2habitat = dict(zip(full_df.index,
+                              full_df.loc[:,'habitat']))
+        new_id2habitat = {}
+        failed_id = []
+        for id in all_ids:
+            if id not in id2habitat:
+                if 'KU509367.1' in id:
+                    # manual mistake, it should be a nuc id
+                    _id = 'ANC58166.1'
+                else:
+                    _id = [k for k in id2habitat if k.split('.')[0] in id]
+                    if not _id:
+                        failed_id.append(id)
+                        continue
+                    else:
+                        _id = _id[0]
+                new_id2habitat[id] = id2habitat[_id]
+            else:
+                new_id2habitat[id]= id2habitat[id]
+        to_habitat_matrix(new_id2habitat,fdir)
+        # except:
+        #     failed_f.append(fdir)
+        if failed_id:
+            print(fdir,failed_id)
     if failed_f:
         print(len(failed_f),' failed')
     else:
