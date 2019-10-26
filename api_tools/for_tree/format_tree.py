@@ -18,35 +18,6 @@ def root_tree_with(in_tree_file,gene_names=[],format=0):
         return t
     return t
 
-# def sort_tree(in_tree_file,ascending=True,format=0):
-#     # from top to bottom
-#     # ascending is True, mean longer branch place bottom.
-#     if isinstance(in_tree_file,Tree):
-#         t = in_tree_file
-#     else:
-#         t = Tree(open(in_tree_file).read(),format=format)
-#     for n in t.traverse():
-#         childrens = n.children
-#         if len(childrens)==2:
-#             d1,d2 = [_.dist for _ in n.children]
-#             if ascending:
-#                 if d1>d2:
-#                     n.children = n.children[::-1]
-#                 elif d1==d2:
-#                     # place outgroup at the bottom
-#                     n.children = list(sorted(n.children,
-#                                          key=lambda x:len(x.get_leaves()),
-#                                          ))[::-1]
-#             else:
-#                 if d1<d2:
-#                     n.children = n.children[::-1]
-#                 elif d1==d2:
-#                     # place outgroup at the top
-#                     n.children = list(sorted(n.children,
-#                                          key=lambda x:len(x.get_leaves()),
-#                                          ))
-#     return t
-
 def sort_tree(in_tree_file,ascending=True,format=0):
     # from bottom to top
     # sort_by_num of nodes

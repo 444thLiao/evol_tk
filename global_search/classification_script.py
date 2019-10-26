@@ -41,7 +41,8 @@ def _classificated(ori_df):
             ori_df.loc[_,'classification'] = 'SAGs'
         # if not pd.isna(row['attribute:host']) and str(row['attribute:host']) != 'not applicable':
         #     ori_df.loc[_,'habitat'] = 'host associated'
-        if 'uncultured' in row['source'] or 'unidentified' in row['source']:
-            ori_df.loc[_,'habitat'] = 'amplicons'
+        if 'source' in row.index:
+            if 'uncultured' in row['source'] or 'unidentified' in row['source']:
+                ori_df.loc[_,'habitat'] = 'amplicons'
     return ori_df
     # ori_df.to_csv('./nr_retrieve_hao/test.csv',index=1)

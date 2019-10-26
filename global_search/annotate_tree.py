@@ -22,7 +22,7 @@ def reformat(s):
 
 
 
-for tree_file in [#'nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/K10535.sorted.newick',
+for tree_file in ['nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/K10535.sorted.newick',
                   'nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.treefile/K00370.sorted.newick',
                   'nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile/K10945.sorted.newick',
                   'nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile/K10946.sorted.newick']:
