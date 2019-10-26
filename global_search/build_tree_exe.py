@@ -100,6 +100,18 @@ def get_colors_general(ID2infos, now_info2style={}):
             info2style.update({v: one_color})
     return ID2infos, info2style
 
+def reformat(s):
+    a = s.split('_')[-1]
+    if not '_' in s:
+        return s
+    try:
+        float(a)
+        return s
+    except:
+        if len(s.rpartition('_')[-1]) == 1:
+            return s
+        else:
+            return s.rpartition('_')[0]
 
 def write2colorbranch_clade(id2info, odir, info2color, treefile, unique_id, info_name='type',
                             **kwargs):
@@ -199,7 +211,12 @@ if build_tree_alread:
     renamed_tree(t,
                  outfile=final_tree,
                  ascending=True)
-
+    all_ids = t.get_leaf_names()
+    all_ids = [reformat(_) for _ in all_ids]
+    basedir = dirname(final_tree)
+    with open(join(basedir,'used_ids.list'),'w') as f1:
+        f1.write('\n'.join(all_ids))
+    
     # generateing annotation files
     if exists('./blabla'):
         pass
