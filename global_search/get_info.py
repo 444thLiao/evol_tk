@@ -205,8 +205,7 @@ def get_WP_info(id_list, edl):
         else:
             _t.update({aid: v})
     pid2info = {pid: _t.get(assid, {})
-                for pid, assid in aid2info.items()
-                }
+                for pid, assid in aid2info.items()}
     return pid2info
 
 

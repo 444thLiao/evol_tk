@@ -82,7 +82,7 @@ def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
-    #legend_text = deduced_legend(info2color, info_name, sep='\t')
+    legend_text = deduced_legend(info2color, info_name, sep='\t')
 
     template_text = template_text.format(dataset_label=info_name,
                                          legend_text='')
@@ -199,7 +199,7 @@ def to_color_Clade(ID2info, info2color, tree,
 
 
 def to_node_symbol(in_tree,dataset_name='bootstrap'):
-    #normally for bootstrap
+    # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
     tree = Tree(in_tree,format=3)
