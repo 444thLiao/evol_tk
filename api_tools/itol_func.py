@@ -237,7 +237,7 @@ def to_matrix_shape(ID2categorical_v,dataset_label,color='#000000'):
     if type(color) == str:
         color_str = '\t'.join([color]*len(all_v))
     elif type(color) == dict:
-        color_str = '\t'.join([color[_] for _ in all_v])
+        color_str = '\t'.join([color.get(_,'#000000') for _ in all_v])
     else:
         raise IOError
     template_text = template_text.format(dataset_label=dataset_label,
