@@ -19,6 +19,10 @@ import os
 import click
 from ete3 import NCBITaxa
 import pickle
+import hashlib
+
+def hash(astr):
+    return hashlib.md5(astr.encode()).hexdigest()
 
 ncbi = NCBITaxa()
 
@@ -229,7 +233,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
 
     pid2gb, pid2info_dict = get_Normal_ID(id_list, fetch_size=fetch_size, edl=edl)
     not_get_id = set(id_list).difference(set(pid2gb))
-    tqdm.write(len(not_get_id)+' failed retrieving...')
+    tqdm.write(str(len(not_get_id))+' failed retrieving...')
     tqdm.write('including '+';'.join(not_get_id))
     # init header
     refs = ['reference_' + str(_+1) + _suffix
