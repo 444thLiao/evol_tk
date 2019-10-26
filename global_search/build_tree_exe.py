@@ -195,6 +195,7 @@ if build_tree_alread:
                       used_fa_basename,
                       suffix.strip('.'),
                       basename(ofile).replace('.aln', final_suffix))
+    tqdm.write('write into new tree ',final_tree)
     renamed_tree(t,
                  outfile=final_tree,
                  ascending=True)
