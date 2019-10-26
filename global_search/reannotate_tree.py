@@ -47,7 +47,26 @@ def to_habitat_matrix(id2habitat,fdir):
     with open(join(fdir,'habitat_matrix.txt'),'w') as f1:
         f1.write(matrix_text)
         
-        
+
+def modify_ID(now_dict,treeIDs):
+    new_dict = {}
+    failed_id = []
+    for id in treeIDs:
+        if id not in now_dict:
+            if 'KU509367.1' in id:
+                # manual mistake, it should be a nuc id
+                _id = 'ANC58166.1'
+            else:
+                _id = [k for k in now_dict if k.split('.')[0] in id]
+                if not _id:
+                    failed_id.append(id)
+                    continue
+                else:
+                    _id = _id[0]
+            new_dict[id] = now_dict[_id]
+        else:
+            new_dict[id]= now_dict[id]
+    return new_dict
 if len(sys.argv) >= 2:
     file_list = sys.argv[1:]
     failed_f = []
@@ -61,23 +80,7 @@ if len(sys.argv) >= 2:
         full_df = full_df.fillna('unknown')
         id2habitat = dict(zip(full_df.index,
                               full_df.loc[:,'habitat']))
-        new_id2habitat = {}
-        failed_id = []
-        for id in all_ids:
-            if id not in id2habitat:
-                if 'KU509367.1' in id:
-                    # manual mistake, it should be a nuc id
-                    _id = 'ANC58166.1'
-                else:
-                    _id = [k for k in id2habitat if k.split('.')[0] in id]
-                    if not _id:
-                        failed_id.append(id)
-                        continue
-                    else:
-                        _id = _id[0]
-                new_id2habitat[id] = id2habitat[_id]
-            else:
-                new_id2habitat[id]= id2habitat[id]
+        new_id2habitat = modify_ID(id2habitat,all_ids)
         to_habitat_matrix(new_id2habitat,fdir)
         ####
         
@@ -85,10 +88,17 @@ if len(sys.argv) >= 2:
         for _,row in  full_df.iterrows():
             if row['BioSample'] == 'unknown':
                 id2seq_type[_] = 'amplicons'
-            
+            else:
+                id2seq_type[_] = 'with Genomes'
+        seq_type_style = {'amplicons':'#0000ff',
+                          'with Genomes':'#ff0000',}
+        id2seq_type = modify_ID(id2seq_type,all_ids)
+        matrix_text = to_matrix_shape(id2seq_type,'seq type',seq_type_style)
+        with open(join(fdir,'seqtype_matrix.txt'),'w') as f1:
+            f1.write(matrix_text)
         
-        if failed_id:
-            print(fdir,failed_id)
+        # if failed_id:
+        #     print(fdir,failed_id)
     if failed_f:
         print(len(failed_f),' failed')
     else:

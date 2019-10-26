@@ -69,10 +69,10 @@ def parse_biosample_xml(xml_text):
         biosample2info = defaultdict(dict)
         uid = each_record['id']
         accession = each_record['accession']
-        biosample2info[accession]['access status'] = each_record['access']
-        biosample2info[accession]['last_update'] = each_record['last_update']
-        biosample2info[accession]['publication_date'] = each_record['publication_date']
-        biosample2info[accession]['submission_date'] = each_record['submission_date']
+        biosample2info[accession]['access status'] = each_record.get('access','')
+        biosample2info[accession]['last_update'] = each_record.get('last_update','')
+        biosample2info[accession]['publication_date'] = each_record.get('publication_date','')
+        biosample2info[accession]['submission_date'] = each_record.get('submission_date','')
 
         for dom in each_record.find_all('Id'):
             for attr in dom.attrs:

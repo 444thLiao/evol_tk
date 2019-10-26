@@ -50,7 +50,7 @@ def parse_id(infile, columns=1):
 
 
 def get_Normal_ID(id_list, fetch_size=30, edl=None):
-    _md5 = str(hash(';'.join(id_list)))
+    _md5 = str(hash(';'.join(sorted(id_list))))
     if exists(join(tmp_dir,_md5)):
         id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
     else:
@@ -119,6 +119,22 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
                 print('Wrong ????',record.id)
             else:
                 pid2gb[right_aid[0]] = record
+        if set(pid2info_dict).difference(pid2gb):
+            remained_id = list(set(pid2info_dict).difference(pid2gb))
+            remained_id_gis = [id2gi[_] for _ in remained_id]
+            prot_results, prot_failed = edl.efetch(db='protein',
+                                            ids=remained_id_gis,
+                                            retmode='text',
+                                            retype='gb',
+                                            batch_size=1,
+                                            result_func=lambda x: list(SeqIO.read(
+                                                io.StringIO(x), format='genbank')))
+            for record in prot_results:
+                right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+                if not right_aid:
+                    print('Wrong ????',record.id)
+                else:
+                    pid2gb[right_aid[0]] = record
         access_intermedia(pid2gb,ofile=join(tmp_dir,_md5+'_efetch'))
     return pid2gb, pid2info_dict
 
@@ -127,7 +143,7 @@ def get_WP_info(id_list, edl):
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
-    _md5 = str(hash(';'.join(id_list)))
+    _md5 = str(hash(';'.join(sorted(id_list))))
     if exists(join(tmp_dir,_md5)):
         id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
     else:
@@ -212,7 +228,9 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
     id_list = [_ for _ in id_list if not _.startswith('WP_')]
 
     pid2gb, pid2info_dict = get_Normal_ID(id_list, fetch_size=fetch_size, edl=edl)
-
+    not_get_id = set(id_list).difference(set(pid2gb))
+    tqdm.write(len(not_get_id),' failed retrieving...')
+    tqdm.write('including ',';'.join(not_get_id))
     # init header
     refs = ['reference_' + str(_+1) + _suffix
             for _ in range(10)
