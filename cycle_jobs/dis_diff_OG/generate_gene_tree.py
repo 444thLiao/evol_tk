@@ -266,11 +266,11 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     final_ID_list = [_.id for _ in SeqIO.parse(new_file,format='fasta')]
     if not exists(ofile):
         check_call(f'mafft --maxiterate 1000 --genafpair --thread -1 {new_file} > {ofile}', shell=1)
-    
+        check_call(f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60", shell=1)
     if not exists(ofile.replace('.aln','.treefile')):
         #pass
         if tree_exe == 'iqtree':
-            check_call(f'iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile}',shell=1)
+            check_call(f"iqtree -nt AUTO -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {final_odir}/{ko} -s {ofile.replace('.aln','.trimal')}",shell=1)
         else:
             n_file = ofile.replace('.aln','.treefile')
             check_call(f'FastTree {ofile} > {n_file}',shell=1)
@@ -281,6 +281,7 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     renamed_tree(t,
                  outfile=ofile.replace('.aln','.newick'),
                  ascending=True)
+    
     ## annotation part
     # outgroup and genome to habitat
     aa_ID2habitat = dict(zip( ['_'.join(map(lambda x:str(x).strip(),_)) 
@@ -313,26 +314,43 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     id2tax = {id: mag2info_dict['phylum/class'][gid]
                        for id,gid in id2org.items()
                        if gid in mag2info_dict['phylum/class']}
+    _id2tax = {k:g_df.loc[v,'phylum/class']
+               for k,v in id2org.items()
+               if v in g_df.index}
+    id2tax.update(_id2tax)
     id2tax = {k:v 
               for k,v in id2tax.items()
               if not pd.isna(v)}
-    id2tax = {k:'CPR' if 'candidatus' in str(v).lower() or 'candidate' in str(v) else v
-              for k,v in id2tax.items()}
-    id2info,info2col = get_colors_general(id2tax,now_info2style= ref_id2info)
+    id2tax = {k: 'CPR' if 'candidat' in v.lower() else v
+                  for k, v in id2tax.items()}
+    Interested_tax = {'Thaumarchaeota': '#358f0f',
+                          'Nitrospirae': '#edc31d',
+                          'Chloroflexi': '#e41a1c',
+                          'Gammaproteobacteria': '#7ffcfa',
+                          'Betaproteobacteria': '#956cb4',
+                          'Alphaproteobacteria': '#8c613c',
+                          'Actinobacteria': '#11FF11',
+                          'Planctomycetes': '#ff44bb',
+                          'ENV': '#B54B4A',
+                          'CPR': '#74A45B'
+                          }
+    #id2tax = {k: v for k, v in id2tax.items() if v in Interested_tax}
+    id2info,info2col = get_colors_general(id2tax,now_info2style= Interested_tax)
     _id2info,_info2col = get_outgroup_info_phylum(sub_ref_df,info2col)
     id2info.update(_id2info)
     info2col.update(_info2col)
-    write2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='phylum/class')
+    id2info = {k: v for k, v in id2info.items() if v in Interested_tax}
+    write2colorstrip(id2info,final_odir,Interested_tax,unique_id=ko,info_name='phylum/class')
     
     # annotate branch color as the same as phylum/class with tree
     
     write2colorbranch_clade(id2info,
                             final_odir,
-                            info2col,
+                            Interested_tax,
                             treefile=ofile.replace('.aln','.newick'),
                             unique_id=ko,
                             info_name='branch_color',
-                            no_legend=True)
+                            no_legend=False)
     # get new add sequence infomation and annotate it
     ID2infos,_,extra_id2name = get_outgroup_info(sub_ref_df)
     locus2new_name = rename_gene(og_list,ofile,extra=extra_id2name)
@@ -346,12 +364,13 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
     ID2add_type.update({ID:'reference genome' 
                    for ID in final_ID_list
                    if id2org.get(ID,'nan') in g_df.index})
-    matrix_text = to_matrix_shape(ID2add_type,'From',color={"reference":'#FF0000',
-                                                            "reference genome":'#FF0000',
-                                                            "outgroup":'#00FF00',
-                                                            "MAGs":'#0000FF'})
-    with open(join(final_odir,f'{ko}_from.txt'),'w') as f1:
-        f1.write(matrix_text)
+    template_text = to_color_strip(
+    ID2add_type, {"reference":'#FF0000',
+                                                        "reference genome":'#FF0000',
+                                                        "outgroup":'#00FF00',
+                                                        "MAGs":'#0000FF'}, info_name='gene name')
+    with open(join(final_odir, f'{ko}_from_strip.txt'), 'w') as f1:
+        f1.write(template_text)
         
     ## annotate with habitat
     new_locus2habit = {id: mag2info_dict['habitat (manual)'][gid]
@@ -367,18 +386,35 @@ def process_ko(ko,og_list,final_odir,tree_exe='iqtree'):
                       for k,v in all_id2habitat.items()}
     
     habitats = list(set(all_id2habitat.values()))
-    habitat_colros = {}
-    for h in habitats:
-        if 'water' in h or h == 'marine':
-            habitat_colros[h] = '#0099FF'
-        elif h == 'terrestrial':
-            habitat_colros[h] = '#f99806'
-        else:
-            habitat_colros[h] = '#000000'
+    habitat_colros = {'marine': '#0011FF',
+                  'marine(symbiont)': '#0011FF',
+                  'terrestrial': '#f99806',
+                  'terrestrial(symbiont)': '#f99806',
+                  'freshwater': '#88bbFF',
+                  'waste water': '#50AF6E',
+                  'artifical system':'#FA3705'
+                  }
     matrix_text = to_matrix_shape(all_id2habitat,'habitat',color=habitat_colros)
     
     with open(join(final_odir,f'{ko}_habitat.txt'),'w') as f1:
         f1.write(matrix_text)
+    ## annotate with gene name 
+    gname = ['bmo','pmo','pxm','amo']
+    gcolors = '#2E91E5,#E15F99,#1CA71C,#FB0D0D'.split(',')
+    
+    id2info = {str(row['AA accession'])+'_'+str(row['gene name']): str(row['gene name'])
+                for _, row in sub_ref_df.iterrows()}
+    infos = set(id2info.values())
+    now_colors_dict = {}
+    for name in infos:
+        if name[:-1] in gname:
+            now_colors_dict[name] = dict(zip(gname,gcolors))[name[:-1]]
+    
+    id2info, info2col = get_colors_general(id2info,now_info2style=now_colors_dict)
+    template_text = to_color_strip(
+        id2info, info2col, info_name='gene name')
+    with open(join(final_odir, f'{ko}_gene_name_strip.txt'), 'w') as f1:
+        f1.write(template_text)
     #habitat_filewrite2colorstrip(id2info,final_odir,info2col,unique_id=ko,info_name='habitat')
     
     
@@ -401,6 +437,26 @@ with mp.Pool(processes=10) as tp:
     tp.map(run_c,params_list)
 
 
+
+final_odir = join('./align_v3', 'trees_removed_AOA')
+os.makedirs(final_odir, exist_ok=1)
+params_list = []
+for ko,og_list in ko2og.items():
+    if ko.startswith('K109'):
+        og_list = ko2og[ko]
+        og_list = og_list[::]
+        if ko == 'K10944':
+            og_list.remove('OG0006386')  # arachaea amoA
+            #og_list.append('OG0001887')  # amoA of Heterotrophic nitrification
+            
+        params_list.append((ko,og_list,final_odir))
+    
+def run_c(x):
+    process_ko(*x)
+
+with mp.Pool(processes=10) as tp:
+    tp.map(run_c,params_list)
+    
 
 # get_all_genome_name
 org_names = []

@@ -46,11 +46,13 @@ def write2binary_dataset(ID2infos, odir, info2style, unique_id):
         f1.write(annotate_text)
 
 
-habitat_colros = {'marine': '#0099FF',
-                  'marine(symbiont)': '#0099FF',
+habitat_colros = {'marine': '#0011FF',
+                  'marine(symbiont)': '#0011FF',
                   'terrestrial': '#f99806',
                   'terrestrial(symbiont)': '#f99806',
-                  'waste water': '#aaffaa',
+                  'freshwater': '#88bbFF',
+                  'waste water': '#50AF6E',
+                  'artifical system':'#FA3705'
                   }
 
 
@@ -90,7 +92,7 @@ def get_colors_general(ID2infos, now_info2style={}):
     for v in set(ID2infos.values()):
         if v in now_info2style:
             info2style.update({v: now_info2style[v]})
-            
+
         else:
             one_color = remained_colors.pop(0)
             info2style.update({v: one_color})
@@ -119,9 +121,10 @@ gene_info = {'nxrA': 'K00370',
              'amoC': 'K10946'}
 
 file_list = ['nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.treefile',
- 'nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/',
- 'nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
- 'nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile']
+             'nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/',
+             'nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
+             'nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
+             'nr_retrieve_removeENV_amoA/cluster_98_aln.dir/iqtree.treefile']
 
 if len(sys.argv) >= 2:
     file_list = sys.argv[1:]
@@ -147,7 +150,7 @@ if len(sys.argv) >= 2:
         new_id2habitat.update(
             {k: v for k, v in ref_id2habitat.items() if k in all_ids})
         to_habitat_matrix(new_id2habitat, fdir)
-        ####
+        #### seq source
 
         id2seq_type = {}
         for _, row in full_df.iterrows():
@@ -158,20 +161,29 @@ if len(sys.argv) >= 2:
         seq_type_style = {'amplicons': '#0000ff',
                           'with Genomes': '#ff0000', }
         id2seq_type = modify_ID(id2seq_type, all_ids)
-        matrix_text = to_matrix_shape(id2seq_type, 'seq type', seq_type_style)
-        with open(join(fdir, 'seqtype_matrix.txt'), 'w') as f1:
-            f1.write(matrix_text)
-        ####
+        content = to_color_strip(id2seq_type, seq_type_style,'seq type')
+        with open(join(fdir, 'seqtype_colorstrip.txt'), 'w') as f1:
+            f1.write(content)
+        ######## gene name 
+        
+        gname = ['bmo','pmo','pxm','amo']
+        gcolors = '#2E91E5,#E15F99,#1CA71C,#FB0D0D'.split(',')
         
         id2info = {str(row['AA accession'])+'_'+str(row['gene name']): str(row['gene name'])
                    for _, row in sub_ref_df.iterrows()}
-
-        id2info, info2col = get_colors_general(id2info,)
-        id2info = modify_ID(id2info,all_ids)
-        template_text = to_color_strip(id2info,info2col,info_name='gene name')
-        with open(join(fdir, 'gene_name_strip.txt'),'w') as f1:
+        infos = set(id2info.values())
+        now_colors_dict = {}
+        for name in infos:
+            if name[:-1] in gname:
+                now_colors_dict[name] = dict(zip(gname,gcolors))[name[:-1]]
+        
+        id2info, info2col = get_colors_general(id2info,now_info2style=now_colors_dict)
+        id2info = modify_ID(id2info, all_ids)
+        template_text = to_color_strip(
+            id2info, info2col, info_name='gene name')
+        with open(join(fdir, 'gene_name_strip.txt'), 'w') as f1:
             f1.write(template_text)
-        ##############
+        ############## taxonomy
         id2tax = {}
         for aid, tid in zip(full_df.index, full_df.loc[:, 'taxid']):
             if tid == 'unknown':
@@ -185,9 +197,9 @@ if len(sys.argv) >= 2:
                 id2tax[aid] = names.get(rank.get('class', ''), 'ENV')
             else:
                 id2tax[aid] = names.get(rank.get('phylum', ''), 'ENV')
-                
+
         id2tax = {k: 'CPR' if 'candidat' in v.lower() else v
-                  for k,v in id2tax.items()}
+                  for k, v in id2tax.items()}
         Interested_tax = {'Thaumarchaeota': '#358f0f',
                           'Nitrospirae': '#edc31d',
                           'Chloroflexi': '#e41a1c',
@@ -199,9 +211,10 @@ if len(sys.argv) >= 2:
                           'ENV': '#B54B4A',
                           'CPR': '#74A45B'
                           }
-        id2tax = {k: v for k,v in id2tax.items() if v in Interested_tax}
-        id2tax = modify_ID(id2tax,all_ids)
-        id2info, info2col = get_colors_general(id2tax,now_info2style=Interested_tax)
+        id2tax = {k: v for k, v in id2tax.items() if v in Interested_tax}
+        id2tax = modify_ID(id2tax, all_ids)
+        id2info, info2col = get_colors_general(
+            id2tax, now_info2style=Interested_tax)
         write2colorbranch_clade(id2info,
                                 dirname(tfile),
                                 info2col,
@@ -209,7 +222,7 @@ if len(sys.argv) >= 2:
                                 unique_id=ko,
                                 info_name='branch_color',
                                 no_legend=False)
-        
+
         # full_text = to_color_labels_bg(id2info,info2col,info_name='part tax')
         # with open(join(fdir, 'bg_phylum.txt'),'w') as f1:
         #     f1.write(full_text)
