@@ -37,6 +37,7 @@ def access_intermedia(obj,suffix=''):
     if exists(ofile):
         load_obj = json.load(open(ofile,'r'))
         if isinstance(load_obj,dict):
+            tqdm.write('Dectect same cache, use it instead of run it again.')
             return load_obj
     else:
         if isinstance(obj,list):

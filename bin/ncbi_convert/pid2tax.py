@@ -29,9 +29,16 @@ def GI2tax(id2gi):
                                        io.StringIO(x)))
     if failed:
         tqdm.write("failed retrieve summary of %s protein ID" % len(failed))
+        tqdm.write("retrieve each failed GI one by one")
+        _results, _failed = edl.esummary(db='protein',
+                                   ids=failed,
+                                   batch_size=1,
+                                   result_func=lambda x: Entrez.read(
+                                       io.StringIO(x)))
+        tqdm.write("failed ID is " % ';'.join(map(str,_failed)))
     tqdm.write('from summary to GI and taxonomy')
     pid2info_dict = defaultdict(dict)
-    for result in tqdm(results):
+    for result in tqdm(results+_results):
         aid = result['AccessionVersion']
         if aid not in id2gi:
             _aid = [_ for _ in id2gi if _ in aid]

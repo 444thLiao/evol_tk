@@ -301,7 +301,7 @@ class EntrezDownloader:
             results.pbar.close()
         return results.results, results.failed
 
-    def esummary(self, db, ids, result_func=lambda x: [x], **kwargs):
+    def esummary(self, db, ids, batch_size=None,result_func=lambda x: [x], **kwargs):
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
@@ -316,9 +316,11 @@ class EntrezDownloader:
         executor = ThreadPoolExecutor(max_workers=self.num_threads)
 
         fs = []
-        for start in range(0, len(ids), self.batch_size):
+        if not batch_size:
+            batch_size = self.batch_size
+        for start in range(0, len(ids), batch_size):
             num = len(ids)-start
-            num = self.batch_size if num > self.batch_size else num
+            num = batch_size if num > batch_size else num
             f = executor.submit(self._general_batch,
                                 db=db,
                                 ids=ids[start:start+num],
@@ -333,7 +335,7 @@ class EntrezDownloader:
             results.pbar.close()
         return results.results, results.failed
 
-    def esearch(self, db, ids, batch_size=20,result_func=lambda x: [x], **kwargs):
+    def esearch(self, db, ids, batch_size=None,result_func=lambda x: [x], **kwargs):
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
