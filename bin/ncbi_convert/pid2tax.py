@@ -11,9 +11,16 @@ import os
 import click
 from pid2GI import pid2GI
 from collections import defaultdict
-
+from ete3 import NCBITaxa
+ncbi = NCBITaxa()
 
 def GI2tax(id2gi):
+    suffix = 'pid2tax'
+    id_list = list(id2gi)
+    _cache = access_intermedia(id_list, suffix=suffix)
+    if _cache is not None:
+        pid2info_dict = _cache
+        return pid2info_dict
     all_GI = list(set(id2gi.values()))
     tqdm.write('get pid summary from each one')
     results, failed = edl.esummary(db='protein',
@@ -46,7 +53,8 @@ def GI2tax(id2gi):
                 if c in rank:
                     pid2info_dict[right_aid][c] = names[rank[c]]
         except:
-            tqdm.write("failed to parse taxonomy info for ", aid)
+            tqdm.write("failed to parse taxonomy info for "+ aid)
+    access_intermedia(pid2info_dict,suffix=suffix)
     return pid2info_dict
 
 def main(infile, ofile, force=False):

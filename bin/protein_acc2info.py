@@ -6,6 +6,8 @@ from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from global_search.classification_script import _classificated
 from global_search.thirty_party.metadata_parser import *
 from bin.ncbi_convert import edl,parse_id,tmp_dir,taxons,access_intermedia
+from bin.ncbi_convert.pid2GI import pid2GI
+from bin.ncbi_convert.pid2tax import GI2tax
 import random
 from Bio import Entrez
 from tqdm import tqdm
@@ -28,55 +30,10 @@ source_file = '/home-user/thliao/resource/NCBI2habitat.csv'
 
 
 def get_Normal_ID(id_list, fetch_size=30, edl=None):
-    _cache = access_intermedia(id_list)
-    if _cache is not None:
-        id2gi = _cache
-    else:
-        tqdm.write('from protein Accession ID to GI')
-        results, failed = edl.esearch(db='protein',
-                                    ids=id_list,
-                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'],
-                                    batch_size=1
-                                    )
-        id2gi = dict(results)
-        # stodge the result into intermedia file for second access.
-        access_intermedia(id2gi)
-    gi2id = {v:k for k,v in id2gi.items()}
-    all_GI = list(set(id2gi.values()))
-    tqdm.write('get pid summary from each one')
-    results, failed = edl.esummary(db='protein',
-                                   ids=all_GI,
-                                   result_func=lambda x: Entrez.read(
-                                       io.StringIO(x)))
-    if failed:
-        tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
-    tqdm.write('from summary to GI and taxonomy')
-    pid2info_dict = defaultdict(dict)
-    for result in tqdm(results):
-        aid = result['AccessionVersion']
-        if aid not in gi2id:
-            _aid = [_ for _ in id2gi if _ in aid]
-            if not _aid:
-                continue
-                #print('error from esummary with gi', aid)
-            else:
-                right_aid = _aid[0]
-        else:
-            right_aid = aid
-        pid2info_dict[right_aid]['GI'] = result['Gi'].real
-        pid2info_dict[right_aid]['taxid'] = result['TaxId'].real
-        pid2info_dict[right_aid]['accession'] = aid
-        try:
-            lineage = ncbi.get_lineage(result['TaxId'].real)
-            rank = ncbi.get_rank(lineage)
-            rank = {v: k for k, v in rank.items()}
-            names = ncbi.get_taxid_translator(lineage)
-            for c in taxons:
-                if c in rank:
-                    pid2info_dict[right_aid][c] = names[rank[c]]
-        except:
-            tqdm.write("failed to parse taxonomy info for ", aid)
-            
+    id2gi = pid2GI(id_list)
+    all_GI = list(id2gi.values())
+    pid2info_dict = GI2tax(id2gi)
+     
     tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
@@ -118,17 +75,7 @@ def get_WP_info(id_list, edl):
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
-    _cache = access_intermedia(id_list)
-    if _cache is not None:
-        id2gi = _cache
-    else:
-        tqdm.write('from protein Accession ID to GI')
-        results, failed = edl.esearch(db='protein',
-                                    ids=id_list,
-                                    result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'],
-                                    batch_size=1)
-        id2gi = dict(results)
-        access_intermedia(id2gi)
+    id2gi = pid2GI(id_list)
     gi2id = {v:k for k,v in id2gi.items()}
     all_GI = list(set(id2gi.values()))
 
