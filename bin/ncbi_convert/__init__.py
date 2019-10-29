@@ -28,7 +28,7 @@ def access_intermedia(obj,suffix=''):
     obj is necessary, normally it is a list of IDs/dictionary which also needed to genereate md5 hashed file name.
     ofile is optional depend on what you want
     """
-    nameofid = list(obj)
+    nameofid = list(set(obj))
     _md5 = str(shash(';'.join(list(sorted(nameofid)))  ))
     ofile = join(tmp_dir,_md5) +'_' +suffix
     if not exists(dirname(ofile)):
@@ -40,6 +40,7 @@ def access_intermedia(obj,suffix=''):
             return load_obj
     else:
         if isinstance(obj,list):
+            # just used to validate run it yet?
             pass
         elif isinstance(obj,dict):
             json.dump(obj,open(ofile,'w'))
