@@ -35,7 +35,7 @@ def GI2tax(id2gi):
                                    batch_size=1,
                                    result_func=lambda x: Entrez.read(
                                        io.StringIO(x)))
-        tqdm.write("failed ID is " % ';'.join(map(str,_failed)))
+        tqdm.write("failed ID is " + '\n'.join(map(str,_failed)))
     tqdm.write('from summary to GI and taxonomy')
     pid2info_dict = defaultdict(dict)
     for result in tqdm(results+_results):
