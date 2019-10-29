@@ -48,7 +48,7 @@ def main(infile, ofile, force=False):
 
     with open(ofile, 'w') as f1:
         print('#accession ID\tGI', file=f1)
-        for id, GI in id2gi:
+        for id, GI in id2gi.items():
             print(f'{id}\t{GI}', file=f1)
 
 
