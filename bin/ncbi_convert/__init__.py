@@ -15,8 +15,8 @@ import os
 tmp_dir = './.tmp_getINFO'
 taxons = ['superkingdom', 'phylum', 'class',
           'order', 'family', 'genus', 'species']
-
-def hash(astr):
+import hashlib
+def shash(astr):
     return hashlib.md5(astr.encode()).hexdigest()
 
 def access_intermedia(obj,suffix=''):
@@ -28,7 +28,8 @@ def access_intermedia(obj,suffix=''):
     obj is necessary, normally it is a list of IDs/dictionary which also needed to genereate md5 hashed file name.
     ofile is optional depend on what you want
     """
-    _md5 = str(hash(';'.join(list(sorted(obj)))))
+    obj = list(obj)
+    _md5 = str(shash(';'.join(list(sorted(obj)))  ))
     ofile = join(tmp_dir,_md5) +'_' +suffix
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile),exist_ok=1)

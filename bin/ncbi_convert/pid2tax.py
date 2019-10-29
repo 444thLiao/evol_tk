@@ -28,7 +28,7 @@ def GI2tax(id2gi):
                                    result_func=lambda x: Entrez.read(
                                        io.StringIO(x)))
     if failed:
-        tqdm.write("failed retrieve %s summary of protein ID" % len(failed))
+        tqdm.write("failed retrieve summary of %s protein ID" % len(failed))
     tqdm.write('from summary to GI and taxonomy')
     pid2info_dict = defaultdict(dict)
     for result in tqdm(results):
