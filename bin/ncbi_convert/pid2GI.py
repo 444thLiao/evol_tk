@@ -24,7 +24,9 @@ def pid2GI(id_list):
                                           io.StringIO(x))['IdList'],
                                       batch_size=1
                                       )
+        # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
+        id2gi = {pid:id2gi.get(pid,{}) for pid in id_list}
         # stodge the result into intermedia file for second access.
         access_intermedia(id2gi, suffix=suffix)
     return id2gi

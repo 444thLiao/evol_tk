@@ -33,18 +33,18 @@ def access_intermedia(obj,suffix=''):
     ofile = join(tmp_dir,_md5) +'_' +suffix
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile),exist_ok=1)
+    
+    if exists(ofile):
+        load_obj = json.load(open(ofile,'r'))
+        if isinstance(load_obj,dict):
+            return load_obj
+    else:
         if isinstance(obj,list):
             pass
         elif isinstance(obj,dict):
             json.dump(obj,open(ofile,'w'))
         else:
             raise Exception('unexpected data type')
-    elif exists(ofile):
-        tqdm.write("Detecting cache file. read it")
-        return json.load(open(ofile,'r'))
-    else:
-        os.makedirs(dirname(ofile),exist_ok=1)
-        json.dump(obj,open(ofile,'w'))
 
 def parse_id(infile, columns=0):
     """

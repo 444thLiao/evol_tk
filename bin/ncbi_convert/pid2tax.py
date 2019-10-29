@@ -54,6 +54,7 @@ def GI2tax(id2gi):
                     pid2info_dict[right_aid][c] = names[rank[c]]
         except:
             tqdm.write("failed to parse taxonomy info for "+ aid)
+    pid2info_dict = {pid:pid2info_dict.get(pid,{}) for pid in id_list}
     access_intermedia(pid2info_dict,suffix=suffix)
     return pid2info_dict
 
