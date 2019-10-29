@@ -60,6 +60,7 @@ def parse_id(infile, columns=0):
         if row.startswith('#'):
             # header row
             header_info = row.strip('\n').strip('#').split('\t')
+            continue
         if row:
             id = row.split('\t')[columns].strip().strip('\n')
             if '||' in id:
