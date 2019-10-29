@@ -215,13 +215,17 @@ if len(sys.argv) >= 2:
         id2tax = modify_ID(id2tax, all_ids)
         id2info, info2col = get_colors_general(
             id2tax, now_info2style=Interested_tax)
-        write2colorbranch_clade(id2info,
-                                dirname(tfile),
-                                info2col,
-                                treefile=tfile,
-                                unique_id=ko,
-                                info_name='branch_color',
-                                no_legend=False)
+        # write2colorbranch_clade(id2info,
+        #                         dirname(tfile),
+        #                         info2col,
+        #                         treefile=tfile,
+        #                         unique_id=ko,
+        #                         info_name='branch_color',
+        #                         no_legend=False)
+        template_text = to_color_strip(
+            id2info, info2col, info_name='gene name')
+        with open(join(fdir, 'tax_strip.txt'), 'w') as f1:
+            f1.write(template_text)
 
         # full_text = to_color_labels_bg(id2info,info2col,info_name='part tax')
         # with open(join(fdir, 'bg_phylum.txt'),'w') as f1:

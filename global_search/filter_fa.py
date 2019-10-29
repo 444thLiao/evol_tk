@@ -86,6 +86,12 @@ def filter_fa_by_length_dis(in_fa, ofile=None,output_records=True,down_threshold
         return remained_records
     return 
 
+
+def filter_fa_by_ENV(in_fa, ofile=None):
+    # first you need to know which one is ENV.
+    pass
+    
+
 def cluster_fa(infa):
     if not '/' in infa:
         infa = './' + infa

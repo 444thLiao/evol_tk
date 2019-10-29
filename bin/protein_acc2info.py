@@ -1,10 +1,11 @@
 """
 This script is mainly for retrieve infomation enough for following analysis
-
+receiveing a list of proteins which could
 """
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from global_search.classification_script import _classificated
 from global_search.thirty_party.metadata_parser import *
+from bin.ncbi_convert import edl,parse_id,tmp_dir,taxons,access_intermedia
 import random
 from Bio import Entrez
 from tqdm import tqdm
@@ -18,45 +19,18 @@ from os.path import exists, dirname, join
 import os
 import click
 from ete3 import NCBITaxa
-import json
-import hashlib
 
-def hash(astr):
-    return hashlib.md5(astr.encode()).hexdigest()
 
 ncbi = NCBITaxa()
 
-taxons = ['superkingdom', 'phylum', 'class',
-          'order', 'family', 'genus', 'species']
+# manually expanding classification database
 source_file = '/home-user/thliao/resource/NCBI2habitat.csv'
-tmp_dir = './.tmp_getINFO'
-def access_intermedia(obj=None,ofile=None):
-    if (ofile is not None) and (obj is not None):
-        if not exists(dirname(ofile)):
-            os.makedirs(dirname(ofile))
-        json.dump(obj,open(ofile,'w'))
-    elif (not obj) and ofile:
-        tqdm.write("Detecting cache file. read it")
-        return json.load(open(ofile,'r'))
-    
-def parse_id(infile, columns=1):
-    id_list = []
-    id2info = {}
-    for row in tqdm(open(infile, 'r')):
-        if row:
-            id = row.split('\t')[columns].strip().strip('\n')
-            if '||' in id:
-                id = id.split('||')[-1]
-            id_list.append(id)
-            id2info[id] = ';'.join(
-                row.split('\t')[columns+1:]).strip('\n')
-    return id_list, id2info
 
 
 def get_Normal_ID(id_list, fetch_size=30, edl=None):
-    _md5 = str(hash(';'.join(sorted(id_list))))
-    if exists(join(tmp_dir,_md5)):
-        id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
+    _cache = access_intermedia(id_list)
+    if _cache is not None:
+        id2gi = _cache
     else:
         tqdm.write('from protein Accession ID to GI')
         results, failed = edl.esearch(db='protein',
@@ -65,7 +39,8 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
                                     batch_size=1
                                     )
         id2gi = dict(results)
-        access_intermedia(id2gi,ofile=join(tmp_dir,_md5))
+        # stodge the result into intermedia file for second access.
+        access_intermedia(id2gi)
     gi2id = {v:k for k,v in id2gi.items()}
     all_GI = list(set(id2gi.values()))
     tqdm.write('get pid summary from each one')
@@ -143,9 +118,9 @@ def get_WP_info(id_list, edl):
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
-    _md5 = str(hash(';'.join(sorted(id_list))))
-    if exists(join(tmp_dir,_md5)):
-        id2gi = access_intermedia(ofile=join(tmp_dir,_md5))
+    _cache = access_intermedia(id_list)
+    if _cache is not None:
+        id2gi = _cache
     else:
         tqdm.write('from protein Accession ID to GI')
         results, failed = edl.esearch(db='protein',
@@ -153,7 +128,7 @@ def get_WP_info(id_list, edl):
                                     result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'],
                                     batch_size=1)
         id2gi = dict(results)
-        access_intermedia(id2gi,ofile=join(tmp_dir,_md5))
+        access_intermedia(id2gi)
     gi2id = {v:k for k,v in id2gi.items()}
     all_GI = list(set(id2gi.values()))
 
@@ -404,7 +379,6 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
         full_df.to_excel(join(odir, 'full_info.xlsx'),
                          index=1, index_label='protein accession')
 
-
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')
 @click.option('-o', 'odir', help='output directory')
@@ -414,17 +388,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
 @click.option('-only_seq', 'just_seq', help='only retrieve seq?', default=False, required=False, is_flag=True)
 def cli(infile, odir, test, batch_size, just_seq, fetch_size):
     batch_size = int(batch_size)
-
-    edl = EntrezDownloader(
-        # An email address. You might get blocked by the NCBI without specifying one.
-        email='l0404th@gmail.com',
-        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-        api_key='ccf9847611deebe1446b9814a356f14cde08',
-        num_threads=30,   # The number of parallel requests to make
-        # The number of IDs to fetch per request
-        batch_size=batch_size,
-        pbar=True  # Enables a progress bar, requires tqdm package
-    )
+    edl.batch_size = batch_size
     main(infile, odir, batch_size, fetch_size, test, just_seq, edl=edl)
 
 
