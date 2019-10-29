@@ -18,6 +18,7 @@ def GI2tax(id2gi):
     suffix = 'pid2tax'
     id_list = list(id2gi)
     _cache = access_intermedia(id_list, suffix=suffix)
+    _results = []
     if _cache is not None:
         pid2info_dict = _cache
         return pid2info_dict
