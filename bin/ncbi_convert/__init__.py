@@ -74,8 +74,44 @@ def parse_id(infile, columns=0):
                 row.strip('\n').split('\t')[columns+1:]))
     return id_list, id2info
 
-
-
+def unpack_gb(prot_t):
+    """
+    For standarizing unpack process from genbank
+    """
+    if not prot_t:
+        return {}
+    _cache_dict = {}
+    annotations = prot_t.annotations
+    ref_texts = [_
+                         for _ in annotations.get('references', [])
+                         if 'Direct' not in _.title and _.title]
+    seq = str(prot_t.seq)
+    org = annotations.get('organism', '')
+    source = annotations.get('source', '')
+    db_ = dict([_.split(':') for _ in prot_t.dbxrefs if ':' in _])
+    biop = db_.get('BioProject', '')
+    bios = db_.get('BioSample', '')
+    nuccore_ID = annotations.get('db_source', '').split(' ')[-1]
+    kw = ';'.join(annotations.get('keywords', []))
+    comment = annotations.get('comment', '')
+    for idx in range(10):
+        if idx < len(ref_texts):
+            ref_t = ref_texts[idx]
+            _cache_dict[f'reference title {idx+1}'] = ref_t.title
+            _cache_dict[f'reference journal {idx+1}'] = ref_t.journal
+            _cache_dict[f'reference authors {idx+1}'] = ref_t.authors
+    _cache_dict['organism'] = org
+    _cache_dict['sequence'] = seq
+    _cache_dict['source'] = source
+    _cache_dict['bioproject'] = biop
+    _cache_dict['biosample'] = bios
+    _cache_dict['nuccore ID'] = nuccore_ID
+    _cache_dict['keyword'] = kw
+    _cache_dict['comment'] = comment
+    return _cache_dict
+    
+    
+    
 edl = EntrezDownloader(
     # An email address. You might get blocked by the NCBI without specifying one.
     email='l0404th@gmail.com',

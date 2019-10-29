@@ -235,7 +235,7 @@ class EntrezDownloader:
             print(error)
 
     def elink(self, dbfrom, db, ids, result_func=lambda x: [x], **kwargs):
-        """Interface to the efetch database.
+        """Interface to the elink database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
 
