@@ -34,7 +34,6 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
     all_GI = list(id2gi.values())
     pid2info_dict = GI2tax(id2gi)
      
-    tqdm.write("successfully retrieve %s summary of protein ID" % len(results))
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
                                         ids=all_GI,
