@@ -1,6 +1,6 @@
 """
-This script is mainly for implementing genome ID with its protein accession id.
-It will generate a tab separated table.
+This script is the first kit of ncbi convertor. It is also a simple example for this convertor.
+Other convertor would follow the structure of this script.
 """
 from bin.ncbi_convert import edl, access_intermedia, parse_id
 from os.path import exists, join, dirname
@@ -9,10 +9,14 @@ from Bio import Entrez
 import io
 import os
 import click
-from pid2GI import pid2GI
 
-def pid2genome_assembly(pid2gi):
-    pass
+
+def pid2bio():
+    """
+    bio include BioSample and corresponding BioProject
+    """
+    
+    return id2gi
 
 
 def main(infile, ofile, force=False):
@@ -24,6 +28,7 @@ def main(infile, ofile, force=False):
             print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
             if not force:
                 id2gi = {k:id2annotate[k]['GI'] for k in order_id_list}
+            
         # todo: re-implemented original infomation into `ofile` from `infile`
     else:
         # no header, just a list of IDs
@@ -38,7 +43,6 @@ def main(infile, ofile, force=False):
         print('#accession ID\tGI', file=f1)
         for id, GI in id2gi.items():
             print(f'{id}\t{GI}', file=f1)
-
 
 
 @click.command()

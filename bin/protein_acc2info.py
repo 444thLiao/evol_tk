@@ -33,7 +33,6 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
     id2gi = pid2GI(id_list)
     all_GI = list(id2gi.values())
     pid2info_dict = GI2tax(id2gi)
-     
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
                                         ids=all_GI,
@@ -52,6 +51,7 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
         else:
             pid2gb[right_aid[0]] = record
     if set(pid2info_dict).difference(pid2gb):
+        
         remained_id = list(set(pid2info_dict).difference(pid2gb))
         remained_id_gis = [id2gi[_] for _ in remained_id]
         prot_results, prot_failed = edl.efetch(db='protein',
@@ -75,7 +75,7 @@ def get_WP_info(id_list, edl):
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
     id2gi = pid2GI(id_list)
-    gi2id = {v:k for k,v in id2gi.items()}
+    # gi2id = {v:k for k,v in id2gi.items()}
     all_GI = list(set(id2gi.values()))
 
     tqdm.write('get pid summary from each one')
@@ -91,7 +91,7 @@ def get_WP_info(id_list, edl):
         if aid not in id2gi:
             _c = [_ for _ in id2gi if aid.split('.')[0] in _]
             if not _c:
-                print('unexpected ',aid)
+                print('unexpected new accession ID: ',aid)
                 continue
             else:
                 aid = _c[0]
@@ -107,6 +107,7 @@ def get_WP_info(id_list, edl):
     results, failed = edl.esearch(db='assembly',
                                   ids=assembly_id_list,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
+    
     aid2gi = dict(results)
     all_GI = list(set(aid2gi.values()))
     results, failed = edl.esummary(db='assembly',
