@@ -103,8 +103,9 @@ class EntrezDownloader:
                     f'{self.baseurl}/{emode}.cgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
-                    if emode=='esearch':
-                        result_collector.add_results(list(zip([_.strip() for _ in ids.split(' OR ')], 
+                    if emode=='esearch' and ' OR ' not in ids:
+                        result_collector.add_results(list(zip([_.strip() 
+                                                               for _ in ids.split(' OR ')], 
                                                                results)))
                     else:
                         result_collector.add_results(results)

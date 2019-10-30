@@ -15,7 +15,39 @@ import click
 from pid2GI import pid2GI
 import pandas as pd
 
-
+def get_protein_pos_assembly_INFO(pid2info_dict):
+    def _parse_ipg(t):
+        bucket = []
+        whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
+        gb = whole_df.groupby(0)    
+        all_dfs = [gb.get_group(x) for x in gb.groups]
+        for indivi_df in all_dfs:
+            indivi_df.index = range(indivi_df.shape[0])
+            aid = indivi_df.iloc[0, 6]
+            indivi_df = indivi_df.fillna('')
+            pos = [(row[2],row[3],row[4],row[5]) 
+                   for row in indivi_df.values]
+            gb = [row[10 ]
+                   for row in indivi_df.values]
+            bucket.append((aid,pos,gb))
+        return bucket
+    # id_list = [_.get('accession','') for k,_ in pid2info_dict.items()]
+    # tqdm.write('from protein Accession ID to GI of Identical Protein Groups(ipg)')
+    # now, we don't get one by one, because the information from ipg cotanins the mapping relationship of GI to Accession ID.
+    # results, failed = edl.esearch(db='ipg',
+    #                             ids=id_list,
+    #                             result_func=lambda x: Entrez.read(
+    #                                 io.StringIO(x))['IdList'],
+    #                             )
+    # ipg_GI_list = 
+    all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
+    all_GI = [_ for _ in all_GI]
+    tqdm.write('get pid summary from Identical Protein Groups summary')
+    results, failed = edl.efetch(db='protein',
+                                    ids=all_GI,
+                                    retmode='ipg',
+                                    retype='xml',
+                                    result_func=lambda x: _parse_ipg(x))
     
     
 def get_normal_ID_gb(pid2info_dict,fetch_size):
@@ -38,7 +70,9 @@ def get_normal_ID_gb(pid2info_dict,fetch_size):
         tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
     pid2gb = {}
     for record in prot_results:
-        right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+        right_aid = [k 
+                     for k,v in pid2info_dict.items() 
+                     if v['accession']==record.id]
         if not right_aid:
             tqdm.write('get unexpected record: ' + record.id + '\n')
         else:
@@ -62,6 +96,7 @@ def get_normal_ID_gb(pid2info_dict,fetch_size):
                 pid2gb[right_aid[0]] = record
     
     final_pid2gb = {}
+    tqdm.write('writing genbank into a dict, it may take much memory of your computer. If you are retrieving over 10K pid, be careful.')
     for pid,info_dict in pid2info_dict.items():
         info_dict = info_dict.copy()
         info_dict.update(unpack_gb(pid2gb.get(pid,{})))
@@ -78,13 +113,15 @@ def get_WP_assembly(pid2info_dict, ):
     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
     all_GI = [_ for _ in all_GI if _]
 
-    tqdm.write('get pid summary from each one')
+    tqdm.write('get WP/refseq pid summary one by one')
     results, failed = edl.efetch(db='protein',
                                     ids=all_GI,
                                     retmode='ipg',
                                     retype='xml',
                                     batch_size=1,
                                     result_func=lambda x: _parse_wp(x))
+    if failed:
+        tqdm.write('%s GI failed' % len(failed))
     failed_id = []
     aid2info = {}
     for (aid, aid_df) in results:
@@ -96,6 +133,13 @@ def get_WP_assembly(pid2info_dict, ):
                 continue
             else:
                 aid = _c[0]
+        pinfo = {}
+        for _,row in aid_df.iterrows():
+            pinfo['assembly'] = row[10]
+            pinfo['nuccore id'] = row[2]
+            pinfo['nuc start'] = row[3]
+            pinfo['nuc end'] = row[4]
+            pinfo['nuc strand'] = row[5]
         assembly_id = [_ for _ in aid_df.iloc[:, -1] if not pd.isna(_)]
         # from last columns, get not nan one.
         if assembly_id:
@@ -110,6 +154,7 @@ def get_WP_assembly(pid2info_dict, ):
     for pid,info_dict in pid2info_dict.items():
         info_dict = info_dict.copy()
         info_dict.update({'assembly ID':aid2info.get(pid,'')} )
+        pid2assembly[pid] = info_dict
     return pid2assembly
 
 def pid2genome_assembly(pid2gi,fetch_size):
@@ -122,19 +167,28 @@ def pid2genome_assembly(pid2gi,fetch_size):
     """
     suffix = 'pid2genome_info'
     pid_list = list(pid2gi)
-    pid2info_dict = GI2tax(pid2gi)
-    _cache = access_intermedia(pid_list, suffix=suffix)
+    _cache = access_intermedia(pid_list, suffix='pid2tax')
+    if _cache is not None:
+        pid2info_dict = GI2tax(pid2gi)
+    else:
+        access_intermedia(pid2info_dict, suffix='pid2tax')
+    
     # this is important, because it contains exact accession ID and manual provided ID.
-    normal_IDs = [pid for pid in pid_list if pid and not pid.startwith('WP_')]
-    refseq_IDs = [pid for pid in pid_list if pid and pid.startwith('WP_')]
+    normal_IDs = [pid for pid in pid_list if pid and not pid.startswith('WP_')]
+    refseq_IDs = [pid for pid in pid_list if pid and pid.startswith('WP_')]
+    # refseq
+    refseq_pid2info_dict = {pid:v 
+                            for pid,v in pid2info_dict.items() 
+                            if pid in refseq_IDs}
+    pid2assembly = get_WP_assembly(refseq_pid2info_dict)
     
     # normal
-    normal_pid2info_dict = {pid:v for pid,v in pid2info_dict.items() if pid in normal_IDs}
+    normal_pid2info_dict = {pid:v 
+                            for pid,v in pid2info_dict.items() 
+                            if pid in normal_IDs}
     pid2gb = get_normal_ID_gb(normal_pid2info_dict,fetch_size=fetch_size)
     
-    # refseq
-    refseq_pid2info_dict = {pid:v for pid,v in pid2info_dict.items() if pid in refseq_IDs}
-    pid2assembly = get_WP_assembly(refseq_pid2info_dict)
+
     
     # summarized them
     

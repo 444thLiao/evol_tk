@@ -3,13 +3,13 @@ This script is mainly for implementing taxonomy information with its protein acc
 It will generate a tab separated table.
 """
 from bin.ncbi_convert import edl, access_intermedia, parse_id,taxons
+from bin.ncbi_convert.pid2GI import pid2GI
 from os.path import exists, join, dirname
 from tqdm import tqdm
 from Bio import Entrez
 import io
 import os
 import click
-from pid2GI import pid2GI
 from collections import defaultdict
 from ete3 import NCBITaxa
 ncbi = NCBITaxa()
@@ -62,7 +62,9 @@ def GI2tax(id2gi):
                     pid2info_dict[right_aid][c] = names[rank[c]]
         except:
             tqdm.write("failed to parse taxonomy info for "+ aid)
+            
     pid2info_dict = {pid:pid2info_dict.get(pid,{}) for pid in id_list}
+    assert len(pid2info_dict) == len(set(id_list))
     access_intermedia(pid2info_dict,suffix=suffix)
     return pid2info_dict
 
