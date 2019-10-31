@@ -1,6 +1,5 @@
 """
-This script is the first kit of ncbi convertor. It is also a simple example for this convertor.
-Other convertor would follow the structure of this script.
+This script is mainly for query requested protein accession id and retrieve relative BioSample and BioProject.
 """
 from bin.ncbi_convert import edl, access_intermedia, parse_id
 from os.path import exists, join, dirname

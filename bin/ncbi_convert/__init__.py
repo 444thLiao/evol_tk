@@ -7,12 +7,13 @@ from global_search.classification_script import _classificated
 from global_search.thirty_party.metadata_parser import *
 from tqdm import tqdm
 import hashlib
-from os.path import exists,dirname,join
+from os.path import exists,dirname,join,realpath,expanduser
 import json
 import os
 
 
-tmp_dir = './.tmp_getINFO'
+tmp_dir = '~/.tmp_getINFO'
+tmp_dir = expanduser(tmp_dir)
 taxons = ['superkingdom', 'phylum', 'class',
           'order', 'family', 'genus', 'species']
 import hashlib
