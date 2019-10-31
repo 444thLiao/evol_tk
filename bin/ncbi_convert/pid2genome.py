@@ -67,112 +67,112 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
     return pid2assembly_dict
 
 
-def get_normal_ID_gb(pid2info_dict,fetch_size):
-    """
-    No GI info inside the genbank file retrieved... 
-    with pid2info_dict which contained both exact accession ID and manual ID
+# def get_normal_ID_gb(pid2info_dict,fetch_size):
+#     """
+#     No GI info inside the genbank file retrieved... 
+#     with pid2info_dict which contained both exact accession ID and manual ID
     
     
-    """
-    all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
-    all_GI = [_ for _ in all_GI if _]
-    prot_results, prot_failed = edl.efetch(db='protein',
-                                        ids=all_GI,
-                                        retmode='text',
-                                        retype='gb',
-                                        batch_size=fetch_size,
-                                        result_func=lambda x: list(SeqIO.parse(
-                                            io.StringIO(x), format='genbank')))
-    if prot_failed:
-        tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
-    pid2gb = {}
-    for record in prot_results:
-        right_aid = [k 
-                     for k,v in pid2info_dict.items() 
-                     if v['accession']==record.id]
-        if not right_aid:
-            tqdm.write('get unexpected record: ' + record.id + '\n')
-        else:
-            pid2gb[right_aid[0]] = record
-    remained_pid = set(pid2info_dict).difference(set(pid2gb))
-    if remained_pid:
-        tqdm.write(str(len(remained_pid)) + ' proteins are missing, retrieve it one by one again. ')
-        remained_GI = [pid2info_dict[_]['GI'] for _ in remained_pid]
-        prot_results, prot_failed = edl.efetch(db='protein',
-                                        ids=remained_GI,
-                                        retmode='text',
-                                        retype='gb',
-                                        batch_size=1,
-                                        result_func=lambda x: list(SeqIO.read(
-                                            io.StringIO(x), format='genbank')))
-        for record in prot_results:
-            right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
-            if not right_aid:
-                tqdm.write('get unexpected record: '+record.id)
-            else:
-                pid2gb[right_aid[0]] = record
+#     """
+#     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
+#     all_GI = [_ for _ in all_GI if _]
+#     prot_results, prot_failed = edl.efetch(db='protein',
+#                                         ids=all_GI,
+#                                         retmode='text',
+#                                         retype='gb',
+#                                         batch_size=fetch_size,
+#                                         result_func=lambda x: list(SeqIO.parse(
+#                                             io.StringIO(x), format='genbank')))
+#     if prot_failed:
+#         tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
+#     pid2gb = {}
+#     for record in prot_results:
+#         right_aid = [k 
+#                      for k,v in pid2info_dict.items() 
+#                      if v['accession']==record.id]
+#         if not right_aid:
+#             tqdm.write('get unexpected record: ' + record.id + '\n')
+#         else:
+#             pid2gb[right_aid[0]] = record
+#     remained_pid = set(pid2info_dict).difference(set(pid2gb))
+#     if remained_pid:
+#         tqdm.write(str(len(remained_pid)) + ' proteins are missing, retrieve it one by one again. ')
+#         remained_GI = [pid2info_dict[_]['GI'] for _ in remained_pid]
+#         prot_results, prot_failed = edl.efetch(db='protein',
+#                                         ids=remained_GI,
+#                                         retmode='text',
+#                                         retype='gb',
+#                                         batch_size=1,
+#                                         result_func=lambda x: list(SeqIO.read(
+#                                             io.StringIO(x), format='genbank')))
+#         for record in prot_results:
+#             right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+#             if not right_aid:
+#                 tqdm.write('get unexpected record: '+record.id)
+#             else:
+#                 pid2gb[right_aid[0]] = record
     
-    final_pid2gb = {}
-    tqdm.write('writing genbank into a dict, it may take much memory of your computer. If you are retrieving over 10K pid, be careful.')
-    for pid,info_dict in pid2info_dict.items():
-        info_dict = info_dict.copy()
-        info_dict.update(unpack_gb(pid2gb.get(pid,{})))
-        final_pid2gb[pid] = info_dict
-    return final_pid2gb
+#     final_pid2gb = {}
+#     tqdm.write('writing genbank into a dict, it may take much memory of your computer. If you are retrieving over 10K pid, be careful.')
+#     for pid,info_dict in pid2info_dict.items():
+#         info_dict = info_dict.copy()
+#         info_dict.update(unpack_gb(pid2gb.get(pid,{})))
+#         final_pid2gb[pid] = info_dict
+#     return final_pid2gb
 
 
-def get_WP_assembly(pid2info_dict, ):
-    def _parse_wp(t):
-        whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
-        aid = whole_df.iloc[0, 6]
-        return [(aid, whole_df)]
+# def get_WP_assembly(pid2info_dict, ):
+#     def _parse_wp(t):
+#         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
+#         aid = whole_df.iloc[0, 6]
+#         return [(aid, whole_df)]
     
-    all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
-    all_GI = [_ for _ in all_GI if _]
+#     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
+#     all_GI = [_ for _ in all_GI if _]
 
-    tqdm.write('get WP/refseq pid summary one by one')
-    results, failed = edl.efetch(db='protein',
-                                    ids=all_GI,
-                                    retmode='ipg',
-                                    retype='xml',
-                                    batch_size=1,
-                                    result_func=lambda x: _parse_wp(x))
-    if failed:
-        tqdm.write('%s GI failed' % len(failed))
-    failed_id = []
-    aid2info = {}
-    for (aid, aid_df) in results:
-        if aid not in pid2info_dict:
-            _c = [pid for pid,v in pid2info_dict if v['accession'] == aid]
-            if not _c:
-                tqdm.write('get unexpected record: ' + aid)
-                tqdm.write('pass it')
-                continue
-            else:
-                aid = _c[0]
-        pinfo = {}
-        for _,row in aid_df.iterrows():
-            pinfo['assembly'] = row[10]
-            pinfo['nuccore id'] = row[2]
-            pinfo['nuc start'] = row[3]
-            pinfo['nuc end'] = row[4]
-            pinfo['nuc strand'] = row[5]
-        assembly_id = [_ for _ in aid_df.iloc[:, -1] if not pd.isna(_)]
-        # from last columns, get not nan one.
-        if assembly_id:
-            aid2info[aid] = assembly_id[-1]
-        else:
-            aid2info[aid] = ''
-            failed_id.append(aid)
-    if failed_id:
-        tqdm.write("failed id %s don't have any assembly id" % ';'.join(failed_id))
+#     tqdm.write('get WP/refseq pid summary one by one')
+#     results, failed = edl.efetch(db='protein',
+#                                     ids=all_GI,
+#                                     retmode='ipg',
+#                                     retype='xml',
+#                                     batch_size=1,
+#                                     result_func=lambda x: _parse_wp(x))
+#     if failed:
+#         tqdm.write('%s GI failed' % len(failed))
+#     failed_id = []
+#     aid2info = {}
+#     for (aid, aid_df) in results:
+#         if aid not in pid2info_dict:
+#             _c = [pid for pid,v in pid2info_dict if v['accession'] == aid]
+#             if not _c:
+#                 tqdm.write('get unexpected record: ' + aid)
+#                 tqdm.write('pass it')
+#                 continue
+#             else:
+#                 aid = _c[0]
+#         pinfo = {}
+#         for _,row in aid_df.iterrows():
+#             pinfo['assembly'] = row[10]
+#             pinfo['nuccore id'] = row[2]
+#             pinfo['nuc start'] = row[3]
+#             pinfo['nuc end'] = row[4]
+#             pinfo['nuc strand'] = row[5]
+#         assembly_id = [_ for _ in aid_df.iloc[:, -1] if not pd.isna(_)]
+#         # from last columns, get not nan one.
+#         if assembly_id:
+#             aid2info[aid] = assembly_id[-1]
+#         else:
+#             aid2info[aid] = ''
+#             failed_id.append(aid)
+#     if failed_id:
+#         tqdm.write("failed id %s don't have any assembly id" % ';'.join(failed_id))
     
-    pid2assembly = {}
-    for pid,info_dict in pid2info_dict.items():
-        info_dict = info_dict.copy()
-        info_dict.update({'assembly ID':aid2info.get(pid,'')} )
-        pid2assembly[pid] = info_dict
-    return pid2assembly
+#     pid2assembly = {}
+#     for pid,info_dict in pid2info_dict.items():
+#         info_dict = info_dict.copy()
+#         info_dict.update({'assembly ID':aid2info.get(pid,'')} )
+#         pid2assembly[pid] = info_dict
+#     return pid2assembly
 
 
 def pid2genome_assembly(pid2gi,redo=False):

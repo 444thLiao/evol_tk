@@ -97,6 +97,8 @@ def parse_assembly_xml(xml_text):
         aid = each_record.find('AssemblyAccession').text.strip().strip('\n')
         info_get_ = ['AssemblyAccession',
                      'SpeciesName',
+                     'Isolate',
+                     'Infraspecie',
                      'SpeciesTaxid',
                      'AssemblyStatus',
                      'BioSampleAccn',
@@ -106,7 +108,14 @@ def parse_assembly_xml(xml_text):
         for key in info_get_:
             _cache = each_record.find(key)
             if _cache:
-                assembly2info[aid][key] = _cache.text.strip().strip('\n')
+                if key == 'Infraspecie':
+                    _cache = _cache.find('Sub_value')
+                    key = 'Isolate'
+                    if _cache is None:
+                        continue
+                    assembly2info[aid][key] = _cache.text.strip().strip('\n')
+                else:
+                    assembly2info[aid][key] = _cache.text.strip().strip('\n')
         bioproject_total = each_record.find_all('GB_BioProjects')
         if bioproject_total:
             bioproject_total = bioproject_total[0]
