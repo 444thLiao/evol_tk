@@ -37,7 +37,7 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
                    for row in indivi_df.values]
             bucket.append((aid,pos,gb))
         return bucket
-    id_list = list(pid2info_dict)
+    # id_list = list(pid2info_dict)
     # id_list = [_.get('accession','') for k,_ in pid2info_dict.items()]
     # tqdm.write('from protein Accession ID to GI of Identical Protein Groups(ipg)')
     # now, we don't get one by one, because the information from ipg cotanins the mapping relationship of GI to Accession ID.
@@ -173,6 +173,7 @@ def get_WP_assembly(pid2info_dict, ):
         info_dict.update({'assembly ID':aid2info.get(pid,'')} )
         pid2assembly[pid] = info_dict
     return pid2assembly
+
 
 def pid2genome_assembly(pid2gi,redo=False):
     """
