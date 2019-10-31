@@ -1,6 +1,12 @@
 """
-This script is mainly for implementing genome ID with its protein accession id.
+This script is mainly for implementing genome ID and its assembly ID with its protein accession id.
 It will generate a tab separated table.
+Because each protein ID would corresponding a lots of identical protein groups (which this script mainly used database)
+it will generate more line than input ID. but the set of/deduplicated column 1 must match the input IDs. If not ,it will leave it blank row.
+
+For filtration amplicons, it could simply find proteins which only contain NONE assembly ID columns. (it simple!)
+header is ['accession ID', 'GI', 'assembly_ID', 'nuccore ID', 'start', 'end', 'strand']
+or look like accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand
 """
 from bin.ncbi_convert import edl, access_intermedia, parse_id,unpack_gb
 from bin.ncbi_convert.pid2GI import pid2GI
