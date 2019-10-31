@@ -222,7 +222,7 @@ def main(infile, ofile, force=False):
             GI = id2gi[pid]
             for assembly_id,info in nuc_dict.items():
                 print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
-    tqdm.write('finish writing into ',ofile)
+    tqdm.write('finish writing into ' + ofile)
 
 
 @click.command()
