@@ -11,9 +11,9 @@ import os
 import click
 
 
-def pid2GI(id_list):
+def pid2GI(id_list,redo=False):
     suffix = 'pid2gi'
-    _cache = access_intermedia(id_list, suffix=suffix)
+    _cache = access_intermedia(id_list, suffix=suffix,redo=redo)
     if _cache is not None:
         id2gi = _cache
     else:
@@ -32,7 +32,7 @@ def pid2GI(id_list):
     return id2gi
 
 
-def main(infile, ofile, force=False):
+def main(infile, ofile, force=False,redo=False):
     order_id_list, id2annotate = parse_id(infile)
     id2gi = {}
     if isinstance(id2annotate[order_id_list[0]], dict):
@@ -47,7 +47,7 @@ def main(infile, ofile, force=False):
         # no header, just a list of IDs
         pass
     if not id2gi:
-        id2gi = pid2GI(order_id_list)
+        id2gi = pid2GI(order_id_list,redo=redo)
     
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
@@ -56,14 +56,15 @@ def main(infile, ofile, force=False):
         print('#accession ID\tGI', file=f1)
         for id, GI in id2gi.items():
             print(f'{id}\t{GI}', file=f1)
-
+    tqdm.write('finish writing into ' + ofile)
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-o', 'ofile', help='output file')
 @click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
-def cli(infile, ofile, force):
-    main(infile, ofile, force)
+@click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
+def cli(infile, ofile, force,redo):
+    main(infile, ofile, force,redo)
 
 
 if __name__ == "__main__":

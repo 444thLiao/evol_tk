@@ -20,7 +20,7 @@ import hashlib
 def shash(astr):
     return hashlib.md5(astr.encode()).hexdigest()
 
-def access_intermedia(obj,suffix=''):
+def access_intermedia(obj,suffix='',redo=False):
     """
     It is mainly stodge intermediate result from previous results
     or provide a way to access it.
@@ -35,7 +35,7 @@ def access_intermedia(obj,suffix=''):
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile),exist_ok=1)
     
-    if exists(ofile):
+    if exists(ofile) and not redo:
         load_obj = json.load(open(ofile,'r'))
         if isinstance(load_obj,dict):
             tqdm.write('Dectect same cache, use it instead of run it again.')

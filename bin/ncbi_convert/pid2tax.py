@@ -14,10 +14,10 @@ from collections import defaultdict
 from ete3 import NCBITaxa
 ncbi = NCBITaxa()
 
-def GI2tax(id2gi):
+def GI2tax(id2gi,redo=False):
     suffix = 'pid2tax'
     id_list = list(id2gi)
-    _cache = access_intermedia(id_list, suffix=suffix)
+    _cache = access_intermedia(id_list, suffix=suffix,redo=redo)
     _results = []
     if _cache is not None:
         pid2info_dict = _cache
@@ -68,7 +68,7 @@ def GI2tax(id2gi):
     access_intermedia(pid2info_dict,suffix=suffix)
     return pid2info_dict
 
-def main(infile, ofile, force=False):
+def main(infile, ofile, force=False,redo=False):
     order_id_list, id2annotate = parse_id(infile)
     id2gi = {}
     if isinstance(id2annotate[order_id_list[0]], dict):
@@ -83,9 +83,9 @@ def main(infile, ofile, force=False):
         # no header, just a list of IDs
         pass
     if not id2gi:
-        id2gi = pid2GI(order_id_list)
+        id2gi = pid2GI(order_id_list,redo=redo)
     
-    pid2info_dict = GI2tax(id2gi)
+    pid2info_dict = GI2tax(id2gi,redo=redo)
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
 
@@ -95,14 +95,15 @@ def main(infile, ofile, force=False):
             GI = info_dict.get('GI','')
             taxid = info_dict.get('taxid','')
             print(f"{id}\t{GI}\t{taxid}\t" + '\t'.join([info_dict.get(tax,'') for tax in taxons]), file=f1)
-
+    tqdm.write('finish writing into ' + ofile)
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-o', 'ofile', help='output file')
 @click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
-def cli(infile, ofile, force):
-    main(infile, ofile, force)
+@click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
+def cli(infile, ofile, force,redo):
+    main(infile, ofile, force,redo)
 
 
 if __name__ == "__main__":
