@@ -125,7 +125,7 @@ file_list = ['nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.tre
              'nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
              'nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
              'nr_retrieve_removeENV_amoA/cluster_98_aln.dir/iqtree.treefile']
-
+# './nr_retrieve_removeENV_true_amoA/removed_ENV.faa_aln.dir/iqtree.treefile' 
 if len(sys.argv) >= 2:
     file_list = sys.argv[1:]
     failed_f = []
@@ -139,6 +139,8 @@ if len(sys.argv) >= 2:
                                                    'phylum/class'] != 'Thaumarchaeota', :]
 
         f = join(fdir, 'full_info_new.xlsx')
+        if not exists(f):
+            f = join(fdir, 'full_info.xlsx')
         tfile = glob(join(fdir, '*.sorted.newick'))[0]
         tree = Tree(tfile, format=3)
         all_ids = list(tree.get_leaf_names())

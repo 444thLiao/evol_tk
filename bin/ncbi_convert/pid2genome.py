@@ -15,7 +15,7 @@ import click
 from pid2GI import pid2GI
 import pandas as pd
 
-def get_protein_pos_assembly_INFO(pid2info_dict):
+def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
     def _parse_ipg(t):
         bucket = []
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
@@ -31,6 +31,7 @@ def get_protein_pos_assembly_INFO(pid2info_dict):
                    for row in indivi_df.values]
             bucket.append((aid,pos,gb))
         return bucket
+    id_list = list(pid2info_dict)
     # id_list = [_.get('accession','') for k,_ in pid2info_dict.items()]
     # tqdm.write('from protein Accession ID to GI of Identical Protein Groups(ipg)')
     # now, we don't get one by one, because the information from ipg cotanins the mapping relationship of GI to Accession ID.
@@ -48,8 +49,18 @@ def get_protein_pos_assembly_INFO(pid2info_dict):
                                     retmode='ipg',
                                     retype='xml',
                                     result_func=lambda x: _parse_ipg(x))
-    
-    
+    pid2assembly_dict = {}
+    for pid,nuc_info,assembly_info in tqdm(results):
+        pid2assembly_dict[pid] = dict(zip(assembly_info,nuc_info))
+        # for nuccore which no assembly ID, it will drop it by accident. by for now, it is ok.
+        
+    pid2assembly_dict = {pid:pid2assembly_dict.get(pid2info_dict[pid]['accession'],{})
+                         for pid in pid2info_dict}
+    assert len(pid2assembly_dict) == len(pid2info_dict)
+    access_intermedia(pid2assembly_dict,suffix=suffix)
+    return pid2assembly_dict
+
+
 def get_normal_ID_gb(pid2info_dict,fetch_size):
     """
     No GI info inside the genbank file retrieved... 
@@ -157,7 +168,7 @@ def get_WP_assembly(pid2info_dict, ):
         pid2assembly[pid] = info_dict
     return pid2assembly
 
-def pid2genome_assembly(pid2gi,fetch_size):
+def pid2genome_assembly(pid2gi):
     """
     could not use elink to directly from protein accession id -> assembly/biosample (So it is complicated and slowly)
     1. separate two kinds of protein ID.
@@ -167,33 +178,20 @@ def pid2genome_assembly(pid2gi,fetch_size):
     """
     suffix = 'pid2genome_info'
     pid_list = list(pid2gi)
+    _cache = access_intermedia(pid_list, suffix=suffix)
+    if _cache is not None:
+        return _cache
+    
     _cache = access_intermedia(pid_list, suffix='pid2tax')
     if _cache is not None:
-        pid2info_dict = GI2tax(pid2gi)
+        pid2info_dict = _cache
     else:
-        access_intermedia(pid2info_dict, suffix='pid2tax')
+        pid2info_dict = GI2tax(pid2gi)
     
-    # this is important, because it contains exact accession ID and manual provided ID.
-    normal_IDs = [pid for pid in pid_list if pid and not pid.startswith('WP_')]
-    refseq_IDs = [pid for pid in pid_list if pid and pid.startswith('WP_')]
-    # refseq
-    refseq_pid2info_dict = {pid:v 
-                            for pid,v in pid2info_dict.items() 
-                            if pid in refseq_IDs}
-    pid2assembly = get_WP_assembly(refseq_pid2info_dict)
+    pid2assembly_nuc_info = get_protein_pos_assembly_INFO(pid2info_dict,suffix=suffix)
+    return pid2assembly_nuc_info
     
-    # normal
-    normal_pid2info_dict = {pid:v 
-                            for pid,v in pid2info_dict.items() 
-                            if pid in normal_IDs}
-    pid2gb = get_normal_ID_gb(normal_pid2info_dict,fetch_size=fetch_size)
     
-
-    
-    # summarized them
-    
-
-
 def main(infile, ofile, force=False):
     order_id_list, id2annotate = parse_id(infile)
     id2gi = {}
@@ -209,15 +207,22 @@ def main(infile, ofile, force=False):
         pass
     if not id2gi:
         id2gi = pid2GI(order_id_list)
+    pid2assembly_dict = pid2genome_assembly(id2gi)
     
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
-
+        
+    if exists(ofile) and not force:
+        tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
+        return 
+    
     with open(ofile, 'w') as f1:
-        print('#accession ID\tGI', file=f1)
-        for id, GI in id2gi.items():
-            print(f'{id}\t{GI}', file=f1)
-
+        print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
+        for pid, nuc_dict in pid2assembly_dict.items():
+            GI = id2gi[pid]
+            for assembly_id,info in nuc_dict.items():
+                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
+    tqdm.write('finish writing into ',ofile)
 
 
 @click.command()
