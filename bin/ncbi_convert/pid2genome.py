@@ -28,13 +28,14 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
         all_dfs = [gb.get_group(x) for x in gb.groups]
         for indivi_df in all_dfs:
             indivi_df.index = range(indivi_df.shape[0])
-            aid = indivi_df.iloc[0, 6]
+            # aid = indivi_df.iloc[0, 6]
             indivi_df = indivi_df.fillna('')
             pos = [(row[2],row[3],row[4],row[5]) 
                    for row in indivi_df.values]
             gb = [row[10 ]
                    for row in indivi_df.values]
-            bucket.append((aid,pos,gb))
+            for row in indivi_df.values:
+                bucket.append((row[6],pos,gb))
         return bucket
     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
     all_GI = [_ for _ in all_GI]

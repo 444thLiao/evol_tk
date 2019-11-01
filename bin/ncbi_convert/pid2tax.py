@@ -76,7 +76,6 @@ def main(infile, ofile, force=False,redo=False):
             print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
             if not force:
                 id2gi = {k:id2annotate[k]['GI'] for k in order_id_list}
-            
         # todo: re-implemented original infomation into `ofile` from `infile`
     else:
         # no header, just a list of IDs
