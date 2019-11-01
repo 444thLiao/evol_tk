@@ -8,7 +8,7 @@ import sys
 from Bio import Entrez
 from bin.ncbi_convert import edl
 import io
-
+import pandas as pd
 def run(cmd):
     check_call(cmd,shell=True,stdout=open('/dev/null'))
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
@@ -64,10 +64,24 @@ def filter_by_relative_pos(full_df):
     return near_end_protein
         
 def filter_archaea(full_df):
-    remained_ids = full_df.index[full_df.loc[:,'phylum']=='Bacteria']
+    remained_ids = full_df.index[full_df.loc[:,'superkingdom']=='Bacteria']
     return remained_ids
 
+
+
+
+full_df = pd.read_csv('nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
+records = SeqIO.parse('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_result/nr_retrieve_amoB/filtered_by_kegg.faa',format='fasta')
+remained_ids = filter_archaea(full_df)
+near_end_protein = filter_by_relative_pos(full_df)
+
+remained_records = [_ for _ in records if _.id in remained_ids]
+remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
+with open('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_result/nr_retrieve_amoB/with_genome_Bacteria_intact.faa','w') as f1:
+    SeqIO.write(remained_records,f1,format='fasta-2line')
+    
 if __name__ == "__main__":
     import sys
     params = sys.argv[1:]
+    
     

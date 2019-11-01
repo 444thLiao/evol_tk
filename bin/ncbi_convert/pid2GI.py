@@ -25,7 +25,8 @@ def pid2GI(id_list,redo=False):
                                       batch_size=1
                                       )
         _results = {}
-        if failed:
+        _count = 0
+        while failed:
             failed_id_list = failed
             _results, failed = edl.esearch(db='protein',
                                 ids=failed_id_list,
@@ -34,6 +35,10 @@ def pid2GI(id_list,redo=False):
                                 batch_size=1
                                 )
             _results = dict(_results)
+            _count += 1
+            if _count >=5:
+                break
+        tqdm.write('still %s failed IDs, be careful.....')
         # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
         id2gi.update(_results)
