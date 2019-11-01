@@ -48,6 +48,7 @@ def main(infile, odir, force=False,redo=False):
     ofile = 'pro2basic_info.tab'
     df1 = pd.read_csv(join(odir,'pro2taxonomy.tab'),sep='\t',index_col=0)
     df2 = pd.read_csv(join(odir,'pro2genome.tab'),sep='\t',index_col=0)
+    df2 = df2.reindex(df1.index)
     basic_df = pd.concat([df1,df2],axis=1)
     basic_df = basic_df.loc[~basic_df.assembly_ID.str.startswith('GCF'),:]
     basic_df.to_csv(ofile,sep='\t',index=1)
