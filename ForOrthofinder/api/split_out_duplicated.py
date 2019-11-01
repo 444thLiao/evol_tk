@@ -1,6 +1,6 @@
 import pandas as pd
 import gffutils
-from os.path import join, dirname, basename, exists, abspath
+from os.path import join, dirname, basename, exists, abspath, expanduser
 import os
 from collections import defaultdict, Counter
 from tqdm import tqdm
@@ -10,7 +10,7 @@ import click
 import pickle
 from glob import glob
 
-
+tmp_dir = expanduser('~/.tmp')
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1]
     locus = locus.strip()
@@ -18,14 +18,15 @@ def preprocess_locus_name(locus):
 
 
 def read_gff(gff_file,id_spec):
-    os.makedirs('./tmp/', exist_ok=True)
-    odb_file = join('./tmp/', basename(gff_file) + '.db')
+    os.makedirs(tmp_dir, exist_ok=True)
+    odb_file = join(tmp_dir, basename(gff_file) + '.db')
     if not exists(odb_file):
         db = gffutils.create_db(gff_file,
                                 odb_file,
                                 id_spec=id_spec,
                                 force=True, 
-                                sort_attribute_values=True)
+                                sort_attribute_values=True,
+                                merge_strategy='merge')
     else:
         db = gffutils.FeatureDB(odb_file, keep_order=True, sort_attribute_values=True)
     return db
@@ -182,12 +183,16 @@ def main(infile, prokka_o):
     OG_df = pd.read_csv(infile, sep='\t', index_col=0)
     # get all index which contains duplicated genes
     genomes_files = [glob(join(prokka_o, _ + '*', '%s.gff' % _))[0]
+                     for _ in OG_df.columns 
+                     if glob(join(prokka_o, _ + '*', '%s.gff' % _))]
+    if not genomes_files:
+        genomes_files = [glob(join(prokka_o, '%s.gff' % _))[0]
                      for _ in OG_df.columns]
     # use glob and wildcard to capture all real gff files
-    if exists('./tmp/genome2gene_info'):
+    if exists(join(tmp_dir,'genome2gene_info')):
         tqdm.write('detect previous intermediated file, used it to process')
-        genome2gene_info = pickle.load(open('./tmp/genome2gene_info', 'rb'))
-        genome2order_tuple = pickle.load(open('./tmp/genome2order_tuple', 'rb'))
+        genome2gene_info = pickle.load(open(join(tmp_dir,'genome2gene_info'), 'rb'))
+        genome2order_tuple = pickle.load(open(join(tmp_dir,'genome2order_tuple'), 'rb'))
     else:
         genome2gene_info = {}
         genome2order_tuple = {}
@@ -201,9 +206,9 @@ def main(infile, prokka_o):
                 genome2gene_info[genome_name] = _gene_info
                 genome2order_tuple[genome_name] = _order_tuple
         # storge temp data
-        os.makedirs('./tmp', exist_ok=True)
-        pickle.dump(genome2gene_info, open('./tmp/genome2gene_info', 'wb'))
-        pickle.dump(genome2order_tuple, open('./tmp/genome2order_tuple', 'wb'))
+        os.makedirs(tmp_dir, exist_ok=True)
+        pickle.dump(genome2gene_info, open(join(tmp_dir,'genome2gene_info'), 'wb'))
+        pickle.dump(genome2order_tuple, open(join(tmp_dir,'genome2order_tuple'), 'wb'))
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
     if OG_df.applymap(lambda x: '|' in str(x)).any().any():
