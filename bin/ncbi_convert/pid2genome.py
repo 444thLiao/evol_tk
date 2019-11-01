@@ -37,16 +37,6 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
                    for row in indivi_df.values]
             bucket.append((aid,pos,gb))
         return bucket
-    # id_list = list(pid2info_dict)
-    # id_list = [_.get('accession','') for k,_ in pid2info_dict.items()]
-    # tqdm.write('from protein Accession ID to GI of Identical Protein Groups(ipg)')
-    # now, we don't get one by one, because the information from ipg cotanins the mapping relationship of GI to Accession ID.
-    # results, failed = edl.esearch(db='ipg',
-    #                             ids=id_list,
-    #                             result_func=lambda x: Entrez.read(
-    #                                 io.StringIO(x))['IdList'],
-    #                             )
-    # ipg_GI_list = 
     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
     all_GI = [_ for _ in all_GI]
     tqdm.write('get pid summary from Identical Protein Groups summary')
