@@ -215,12 +215,17 @@ def to_node_symbol(in_tree,dataset_name='bootstrap'):
         size = '5'
         shape = '2'
         filled = '1'
-        if int(s_v) >= 85:
+        if int(s_v) >= 95:
             color = '#000000'
+        elif int(s_v) >= 85 and int(s_v) < 95:
+            color = '#777777'
+        elif int(s_v) >= 85 and int(s_v) < 95:
+            color = '#eeeeee'
         else:
-            color = '#999999'
-        row = '\t'.join([id,shape,size,color,filled,'0',''])
-        rows.append(row)
+            color = ''
+        if color:
+            row = '\t'.join([id,shape,size,color,filled,'0',''])
+            rows.append(row)
         
     annotate_text = '\n'.join(rows)
     template_text = template_text.format(dataset_label=dataset_name,

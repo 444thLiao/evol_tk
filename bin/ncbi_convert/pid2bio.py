@@ -78,6 +78,7 @@ def genomeID2Bio(genome_IDs):
     
 
 def main(infile, ofile, force=False,redo=False):
+    
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
         
@@ -106,7 +107,7 @@ def main(infile, ofile, force=False,redo=False):
     # else...... too complicated...pass it
     if len(gid2assembly_info) <= 5000:
         ginfo_df = pd.DataFrame.from_dict(gid2assembly_info,orient='index')
-        ginfo_df.index = ginfo_df.iloc[:,0]
+        #ginfo_df.index = ginfo_df.iloc[:,0]
         bp_df = pd.DataFrame.from_dict(bp2info,orient='index')
         bs_df = pd.DataFrame.from_dict(bs2info,orient='index')
         _df1 = bp_df.reindex(ginfo_df.loc[:,'BioprojectAccn'])
@@ -126,7 +127,7 @@ def main(infile, ofile, force=False,redo=False):
         tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
         return 
     
-    full_df.to_csv(ofile,sep='\t',index=0)
+    full_df.to_csv(ofile,sep='\t',index=1,index_label='AssemblyAccn raw')
     tqdm.write('finish writing into ' + ofile+ ' with tab separator format.')
 
 
