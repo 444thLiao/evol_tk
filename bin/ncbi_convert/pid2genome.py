@@ -18,7 +18,6 @@ from Bio import Entrez,SeqIO
 import io
 import os
 import click
-from pid2GI import pid2GI
 import pandas as pd
 
 def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
@@ -59,10 +58,6 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
 def pid2genome_assembly(pid2gi,redo=False):
     """
     could not use elink to directly from protein accession id -> assembly/biosample (So it is complicated and slowly)
-    1. separate two kinds of protein ID.
-        a. startwith WP, which mean refseq
-        b. others
-    
     """
     suffix = 'pid2genome_info'
     pid_list = list(pid2gi)

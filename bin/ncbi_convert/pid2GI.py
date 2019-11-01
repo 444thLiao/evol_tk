@@ -24,8 +24,17 @@ def pid2GI(id_list,redo=False):
                                           io.StringIO(x))['IdList'],
                                       batch_size=1
                                       )
+        if failed:
+            failed_id_list = failed
+            _results, failed = edl.esearch(db='protein',
+                                ids=failed_id_list,
+                                result_func=lambda x: Entrez.read(
+                                    io.StringIO(x))['IdList'],
+                                batch_size=1
+                                )
         # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
+        id2gi.update(_results)
         id2gi = {pid:id2gi.get(pid,'') for pid in id_list}
         # stodge the result into intermedia file for second access.
         access_intermedia(id2gi, suffix=suffix)
