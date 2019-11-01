@@ -50,17 +50,17 @@ def main(infile, odir, force=False,redo=False):
     df2 = pd.read_csv(join(odir,'pro2genome.tab'),sep='\t',index_col=0)
     df1 = df1.reindex(df2.index)
     basic_df = pd.concat([df1,df2],axis=1)
-    basic_df.to_csv(ofile,sep='\t',index=1)
+    basic_df.to_csv(join(odir,ofile),sep='\t',index=1)
     basic_df = basic_df.loc[~basic_df.assembly_ID.str.startswith('GCF').fillna(True),:]
     ofile = 'pro2basic_info_WITH_genome.tab'
-    basic_df.to_csv(ofile,sep='\t',index=1)
+    basic_df.to_csv(join(odir,ofile),sep='\t',index=1)
     ofile = 'pro2full_info.tab'
     df3 = pd.read_csv(join(odir,'pro2Bioinfo.tab'),sep='\t',index_col=0)
     df3 = df3.reindex(basic_df.assembly_ID)
     df3.index = basic_df.index
     full_df = pd.concat([df3,basic_df],axis=1)
     full_df = full_df.loc[:,~full_df.isna().all(0)]
-    full_df.to_csv(ofile,sep='\t',index=1)
+    full_df.to_csv(join(odir,ofile),sep='\t',index=1)
 
     
     
