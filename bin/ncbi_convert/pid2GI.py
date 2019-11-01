@@ -33,7 +33,7 @@ def pid2GI(id_list,redo=False):
                                     io.StringIO(x))['IdList'],
                                 batch_size=1
                                 )
-            _results = dict(_result)
+            _results = dict(_results)
         # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
         id2gi.update(_results)

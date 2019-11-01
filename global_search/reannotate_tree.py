@@ -74,7 +74,7 @@ def modify_ID(now_dict, treeIDs):
                 if _id not in now_dict:
                     continue
             else:
-                _id = [k for k in now_dict if k.split('.')[0] in id]
+                _id = [k for k in now_dict if k.split('.')[0] in id ]
                 if not _id:
                     failed_id.append(id)
                     continue
@@ -154,7 +154,7 @@ if len(sys.argv) >= 2:
         tree = Tree(tfile, format=3)
         all_ids = list(tree.get_leaf_names())
         full_df = pd.read_csv(f, index_col=0,sep='\t')
-        full_df = full_df.fillna('unknown')
+        
         full_df = _classificated(full_df)
         #full_df.loc[:,'habitat'] = ''
         if source_df is not None:
@@ -167,7 +167,7 @@ if len(sys.argv) >= 2:
                 if not pd.isna(_d1.iloc[idx, 2]) and pd.isna(v['habitat']):
                     # print(_,_d1.iloc[idx,2])
                     full_df.loc[_, 'habitat'] = _d1.iloc[idx, 2]
-                    
+        full_df = full_df.fillna('unknown')
         id2habitat = dict(zip(full_df.index,
                               full_df.loc[:, 'habitat']))
         new_id2habitat = modify_ID(id2habitat, all_ids)
@@ -185,6 +185,7 @@ if len(sys.argv) >= 2:
         seq_type_style = {'amplicons': '#0000ff',
                           'with Genomes': '#ff0000', }
         id2seq_type = modify_ID(id2seq_type, all_ids)
+        id2seq_type.update({_:'amplicons' for _ in all_ids if _ not in id2seq_type })
         content = to_color_strip(id2seq_type, seq_type_style,'seq type')
         with open(join(fdir, 'seqtype_colorstrip.txt'), 'w') as f1:
             f1.write(content)
@@ -247,7 +248,7 @@ if len(sys.argv) >= 2:
         #                         info_name='branch_color',
         #                         no_legend=False)
         template_text = to_color_strip(
-            id2info, info2col, info_name='gene name')
+            id2info, info2col, info_name='phylum/class')
         with open(join(fdir, 'tax_strip.txt'), 'w') as f1:
             f1.write(template_text)
 
