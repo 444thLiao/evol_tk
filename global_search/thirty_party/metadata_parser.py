@@ -95,7 +95,7 @@ def parse_assembly_xml(xml_text):
     for each_record in split_out:
         assembly2info = defaultdict(dict)
         aid = each_record.find('AssemblyAccession').text.strip().strip('\n')
-        info_get_ = ['AssemblyAccession',
+        info_get_ = ['Genbank',
                      'SpeciesName',
                      'Isolate',
                      'Infraspecie',
@@ -113,6 +113,9 @@ def parse_assembly_xml(xml_text):
                     key = 'Isolate'
                     if _cache is None:
                         continue
+                    assembly2info[aid][key] = _cache.text.strip().strip('\n')
+                elif key == 'Genbank':
+                    key = 'AssemblyAccession'
                     assembly2info[aid][key] = _cache.text.strip().strip('\n')
                 else:
                     assembly2info[aid][key] = _cache.text.strip().strip('\n')

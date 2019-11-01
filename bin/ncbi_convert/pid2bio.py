@@ -102,26 +102,32 @@ def main(infile, ofile, force=False,redo=False):
     
     gid2assembly_info,bp2info,bs2info = genomeID2Bio(genome_IDs)
     
-    #if not too big
+    #if not too big, use panda to concat them
+    # else...... too complicated...pass it
     if len(gid2assembly_info) <= 5000:
         ginfo_df = pd.DataFrame.from_dict(gid2assembly_info,orient='index')
+        ginfo_df.index = ginfo_df.iloc[:,0]
         bp_df = pd.DataFrame.from_dict(bp2info,orient='index')
         bs_df = pd.DataFrame.from_dict(bs2info,orient='index')
+        _df1 = bp_df.reindex(ginfo_df.loc[:,'BioprojectAccn'])
+        _df1.index = ginfo_df.index
+        _df2 = bs_df.reindex(ginfo_df.loc[:,'BioSampleAccn'])
+        _df2.index = ginfo_df.index
         full_df = pd.concat([ginfo_df,
-                             bp_df.reindex(ginfo_df.loc[:,'BioProject']),
-                             bp_df.reindex(ginfo_df.loc[:,'BioSample'])])
-        
+                             _df1,
+                             _df2],axis=1)
+        full_df = full_df.applymap(lambda x:x.replace('\n',' ') 
+                                   if isinstance(x,str) else x)
+        full_df = full_df.drop(['GI','relative biosample'],axis=1)
+    else:
+        raise Exception('too complicated to deal with it')
+    
     if exists(ofile) and not force:
         tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
         return 
     
-    with open(ofile, 'w') as f1:
-        print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
-        for pid, nuc_dict in pid2assembly_dict.items():
-            GI = id2gi[pid]
-            for assembly_id,info in nuc_dict.items():
-                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
-    tqdm.write('finish writing into ' + ofile)
+    full_df.to_csv(ofile,sep='\t',index=0)
+    tqdm.write('finish writing into ' + ofile+ ' with tab separator format.')
 
 
 @click.command()
