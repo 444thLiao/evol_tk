@@ -178,7 +178,7 @@ if len(sys.argv) >= 2:
 
         id2seq_type = {}
         for _, row in full_df.iterrows():
-            if row['BioSampleAccn'] == 'unknown':
+            if row['BioSampleAccn'] == 'unknown' and id2seq_type.get(_,'unknown')!='with Genomes':
                 id2seq_type[_] = 'amplicons'
             else:
                 id2seq_type[_] = 'with Genomes'
