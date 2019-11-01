@@ -66,6 +66,76 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
     access_intermedia(pid2assembly_dict,suffix=suffix)
     return pid2assembly_dict
 
+def pid2genome_assembly(pid2gi,redo=False):
+    """
+    could not use elink to directly from protein accession id -> assembly/biosample (So it is complicated and slowly)
+    1. separate two kinds of protein ID.
+        a. startwith WP, which mean refseq
+        b. others
+    
+    """
+    suffix = 'pid2genome_info'
+    pid_list = list(pid2gi)
+    # get itself cache? if have, just finish
+    _cache = access_intermedia(pid_list, suffix=suffix,redo=redo)
+    if _cache is not None:
+        return _cache
+    # get pre-requested cache? if have, just go on
+    _cache = access_intermedia(pid_list, suffix='pid2tax',redo=redo)
+    if _cache is not None:
+        pid2info_dict = _cache
+    else:
+        pid2info_dict = GI2tax(pid2gi,redo=redo)
+    
+    pid2assembly_nuc_info = get_protein_pos_assembly_INFO(pid2info_dict,suffix=suffix)
+    return pid2assembly_nuc_info
+    
+    
+def main(infile, ofile, force=False,redo=False):
+    order_id_list, id2annotate = parse_id(infile)
+    id2gi = {}
+    if isinstance(id2annotate[order_id_list[0]], dict):
+        # it is a dict, so it contains other infomation or implemented GI. it may be passed over.
+        if 'GI' in id2annotate[order_id_list[0]]:
+            print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
+            if not force:
+                id2gi = {k:id2annotate[k]['GI'] for k in order_id_list}
+        # todo: re-implemented original infomation into `ofile` from `infile`
+    else:
+        # no header, just a list of IDs
+        pass
+    if not id2gi:
+        id2gi = pid2GI(order_id_list,redo=redo)
+    pid2assembly_dict = pid2genome_assembly(id2gi,redo=redo)
+    
+    if not exists(dirname(ofile)):
+        os.makedirs(dirname(ofile))
+        
+    if exists(ofile) and not force:
+        tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
+        return 
+    
+    with open(ofile, 'w') as f1:
+        print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
+        for pid, nuc_dict in pid2assembly_dict.items():
+            GI = id2gi[pid]
+            for assembly_id,info in nuc_dict.items():
+                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
+    tqdm.write('finish writing into ' + ofile)
+
+
+@click.command()
+@click.option('-i', 'infile', help='input file which contains protein accession id ')
+@click.option('-o', 'ofile', help='output file')
+@click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
+@click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
+def cli(infile, ofile, force,redo):
+    main(infile, ofile, force,redo)
+
+
+if __name__ == "__main__":
+    cli()
+
 
 # def get_normal_ID_gb(pid2info_dict,fetch_size):
 #     """
@@ -174,73 +244,3 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
 #         pid2assembly[pid] = info_dict
 #     return pid2assembly
 
-
-def pid2genome_assembly(pid2gi,redo=False):
-    """
-    could not use elink to directly from protein accession id -> assembly/biosample (So it is complicated and slowly)
-    1. separate two kinds of protein ID.
-        a. startwith WP, which mean refseq
-        b. others
-    
-    """
-    suffix = 'pid2genome_info'
-    pid_list = list(pid2gi)
-    # get itself cache? if have, just finish
-    _cache = access_intermedia(pid_list, suffix=suffix,redo=redo)
-    if _cache is not None:
-        return _cache
-    # get pre-requested cache? if have, just go on
-    _cache = access_intermedia(pid_list, suffix='pid2tax',redo=redo)
-    if _cache is not None:
-        pid2info_dict = _cache
-    else:
-        pid2info_dict = GI2tax(pid2gi,redo=redo)
-    
-    pid2assembly_nuc_info = get_protein_pos_assembly_INFO(pid2info_dict,suffix=suffix)
-    return pid2assembly_nuc_info
-    
-    
-def main(infile, ofile, force=False,redo=False):
-    order_id_list, id2annotate = parse_id(infile)
-    id2gi = {}
-    if isinstance(id2annotate[order_id_list[0]], dict):
-        # it is a dict, so it contains other infomation or implemented GI. it may be passed over.
-        if 'GI' in id2annotate[order_id_list[0]]:
-            print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
-            if not force:
-                id2gi = {k:id2annotate[k]['GI'] for k in order_id_list}
-        # todo: re-implemented original infomation into `ofile` from `infile`
-    else:
-        # no header, just a list of IDs
-        pass
-    if not id2gi:
-        id2gi = pid2GI(order_id_list,redo=redo)
-    pid2assembly_dict = pid2genome_assembly(id2gi,redo=redo)
-    
-    if not exists(dirname(ofile)):
-        os.makedirs(dirname(ofile))
-        
-    if exists(ofile) and not force:
-        tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
-        return 
-    
-    with open(ofile, 'w') as f1:
-        print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
-        for pid, nuc_dict in pid2assembly_dict.items():
-            GI = id2gi[pid]
-            for assembly_id,info in nuc_dict.items():
-                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
-    tqdm.write('finish writing into ' + ofile)
-
-
-@click.command()
-@click.option('-i', 'infile', help='input file which contains protein accession id ')
-@click.option('-o', 'ofile', help='output file')
-@click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
-@click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
-def cli(infile, ofile, force,redo):
-    main(infile, ofile, force,redo)
-
-
-if __name__ == "__main__":
-    cli()

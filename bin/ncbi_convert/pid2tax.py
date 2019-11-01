@@ -41,27 +41,26 @@ def GI2tax(id2gi,redo=False):
     pid2info_dict = defaultdict(dict)
     for result in tqdm(results+_results):
         aid = result['AccessionVersion']
-        if aid not in id2gi:
-            _aid = [_ for _ in id2gi if _ in aid]
-            if not _aid:
-                continue
-            else:
-                right_aid = _aid[0]
+        _aid = [_ for _ in id2gi if _ in aid]
+        # sometime, pid maybe a part of some intace one.
+        if not _aid:
+            continue
         else:
-            right_aid = aid
-        pid2info_dict[right_aid]['GI'] = result['Gi'].real
-        pid2info_dict[right_aid]['taxid'] = result['TaxId'].real
-        pid2info_dict[right_aid]['accession'] = aid
-        try:
-            lineage = ncbi.get_lineage(result['TaxId'].real)
-            rank = ncbi.get_rank(lineage)
-            rank = {v: k for k, v in rank.items()}
-            names = ncbi.get_taxid_translator(lineage)
-            for c in taxons:
-                if c in rank:
-                    pid2info_dict[right_aid][c] = names[rank[c]]
-        except:
-            tqdm.write("failed to parse taxonomy info for "+ aid)
+            right_aids = _aid
+        for each_aid in right_aids:
+            pid2info_dict[each_aid]['GI'] = result['Gi'].real
+            pid2info_dict[each_aid]['taxid'] = result['TaxId'].real
+            pid2info_dict[each_aid]['accession'] = aid
+            try:
+                lineage = ncbi.get_lineage(result['TaxId'].real)
+                rank = ncbi.get_rank(lineage)
+                rank = {v: k for k, v in rank.items()}
+                names = ncbi.get_taxid_translator(lineage)
+                for c in taxons:
+                    if c in rank:
+                        pid2info_dict[each_aid][c] = names[rank[c]]
+            except:
+                tqdm.write("failed to parse taxonomy info for "+ aid)
             
     pid2info_dict = {pid:pid2info_dict.get(pid,{}) for pid in id_list}
     assert len(pid2info_dict) == len(set(id_list))

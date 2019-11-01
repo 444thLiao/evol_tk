@@ -9,7 +9,7 @@ from bin.ncbi_convert.pid2tax import GI2tax
 from bin.ncbi_convert.pid2genome import pid2genome_assembly
 from bin.ncbi_convert.pid2bio import genomeID2Bio
 from global_search.thirty_party.metadata_parser import parse_bioproject_xml,parse_biosample_xml,parse_assembly_xml
-from os.path import exists, join, dirname
+from os.path import exists, join, dirname,realpath
 from tqdm import tqdm
 from Bio import Entrez
 import io
@@ -24,7 +24,8 @@ def run(cmd,logf):
 def main(infile, odir, force=False,redo=False):
     if not exists(odir):
         os.makedirs(odir)
-    current_dir = dirname(__file__)
+    current_dir = dirname(realpath(__file__))
+    # realpath for soft link mistake.
     
     ext_cmd = ''
     if force:
