@@ -34,7 +34,7 @@ def pid2GI(id_list,redo=False):
                                     io.StringIO(x))['IdList'],
                                 batch_size=1
                                 )
-            _results = dict(_results)
+            _results.update(dict(_results))
             _count += 1
             if _count >=5:
                 break
