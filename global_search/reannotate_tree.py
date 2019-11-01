@@ -7,6 +7,7 @@ from glob import glob
 from ete3 import Tree
 import plotly.express as px
 from ete3 import NCBITaxa
+from global_search.classification_script import _classificated
 ncbi = NCBITaxa()
 
 
@@ -105,7 +106,15 @@ outgroup_gene_names = {'K00370': ['dms', 'tor'],
                        'K10944': ['bmo'],
                        'K10945': ['bmo'],
                        'K10946': ['bmo']}
-
+source_file = '/home-user/thliao/resource/NCBI2habitat.csv'
+source_df = None
+if exists(source_file):
+    source_df = pd.read_csv(source_file, encoding='GBK')
+    source_df.loc[:, 'tmp'] = source_df.iloc[:, 0] + \
+        ';'+source_df.iloc[:, 1]
+    source_df = source_df.set_index('tmp')
+    source_df = source_df.loc[~source_df.index.duplicated(), :]
+    
 ref_file = '/home-user/thliao/project/nitrogen_cycle/nitrification/reference_genomes/outgroup and reference.xlsx'
 ref_df = pd.read_excel(ref_file, index_col=None)
 ref_df = ref_df.loc[ref_df.loc[:, 'note'] != 'removed', :]
@@ -138,14 +147,27 @@ if len(sys.argv) >= 2:
         sub_ref_df = sub_ref_df.loc[sub_ref_df.loc[:,
                                                    'phylum/class'] != 'Thaumarchaeota', :]
 
-        f = join(fdir, 'full_info_new.xlsx')
+        f = join(fdir,'info_dir', 'pro2full_info.tab')
         if not exists(f):
             f = join(fdir, 'full_info.xlsx')
         tfile = glob(join(fdir, '*.sorted.newick'))[0]
         tree = Tree(tfile, format=3)
         all_ids = list(tree.get_leaf_names())
-        full_df = pd.read_excel(f, index_col=0)
+        full_df = pd.read_csv(f, index_col=0,sep='\t')
         full_df = full_df.fillna('unknown')
+        full_df = _classificated(full_df)
+        #full_df.loc[:,'habitat'] = ''
+        if source_df is not None:
+            # bioproject
+            tmp = [';'.join(list(map(str, row))[:2])
+                    for row in full_df.loc[:, ['BioProjectAccn', 'BioSampleAccn']].values]
+
+            _d1 = source_df.reindex(tmp)
+            for idx, (_, v) in enumerate(full_df.iterrows()):
+                if not pd.isna(_d1.iloc[idx, 2]) and pd.isna(v['habitat']):
+                    # print(_,_d1.iloc[idx,2])
+                    full_df.loc[_, 'habitat'] = _d1.iloc[idx, 2]
+                    
         id2habitat = dict(zip(full_df.index,
                               full_df.loc[:, 'habitat']))
         new_id2habitat = modify_ID(id2habitat, all_ids)

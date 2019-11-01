@@ -52,7 +52,7 @@ def main(infile, odir, force=False,redo=False):
     df1 = df1.reindex(df2.index)
     basic_df = pd.concat([df1,df2],axis=1)
     basic_df.to_csv(join(odir,ofile),sep='\t',index=1)
-    basic_df = basic_df.loc[~basic_df.assembly_ID.str.startswith('GCF').fillna(True),:]
+    basic_df = basic_df.loc[~basic_df.assembly_ID.isna(),:]
     ofile = 'pro2basic_info_WITH_genome.tab'
     basic_df.to_csv(join(odir,ofile),sep='\t',index=1)
     ofile = 'pro2full_info.tab'
