@@ -1,6 +1,5 @@
 """
-This script is mainly for query requested protein accession id and retrieve relative BioSample and BioProject.
-Of course including its relative metadata.
+This script is mainly for 
 
 """
 from bin.ncbi_convert import edl, access_intermedia, parse_id
