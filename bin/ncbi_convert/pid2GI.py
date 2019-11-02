@@ -24,7 +24,7 @@ def pid2GI(id_list,redo=False):
                                           io.StringIO(x))['IdList'],
                                       batch_size=1
                                       )
-        _results = {}
+        _results_dict = {}
         _count = 0
         while failed:
             failed_id_list = failed
@@ -34,14 +34,14 @@ def pid2GI(id_list,redo=False):
                                     io.StringIO(x))['IdList'],
                                 batch_size=1
                                 )
-            _results.update(dict(_results))
+            _results_dict.update(dict(_results))
             _count += 1
             if _count >=5:
                 break
         tqdm.write('still %s failed IDs, be careful.....')
         # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
-        id2gi.update(_results)
+        id2gi.update(_results_dict)
         id2gi = {pid:id2gi.get(pid,'') for pid in id_list}
         # stodge the result into intermedia file for second access.
         access_intermedia(id2gi, suffix=suffix)

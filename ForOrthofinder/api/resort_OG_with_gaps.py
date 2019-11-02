@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 def preprocess_locus_name(locus):
-    locus = str(locus).split('|')[-1]
+    locus = str(locus).split('|')[-1].split(' ')[0]
     locus = locus.strip()
     return locus
 

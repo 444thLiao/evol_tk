@@ -70,16 +70,19 @@ def filter_archaea(full_df):
 
 
 
-full_df = pd.read_csv('nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
-records = SeqIO.parse('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_result/nr_retrieve_amoB/filtered_by_kegg.faa',format='fasta')
+full_df = pd.read_csv('nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
+records = list(SeqIO.parse('nr_retrieve_amoC/filtered_by_kegg.faa',format='fasta'))
 remained_ids = filter_archaea(full_df)
+num_ori = len(records)
 near_end_protein = filter_by_relative_pos(full_df)
 
 remained_records = [_ for _ in records if _.id in remained_ids]
 remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-with open('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_result/nr_retrieve_amoB/with_genome_Bacteria_intact.faa','w') as f1:
+with open('nr_retrieve_amoC/with_genome_Bacteria_intact.faa','w') as f1:
     SeqIO.write(remained_records,f1,format='fasta-2line')
-    
+print('remained %s fa' % len(remained_records))
+print('original %s fa' % num_ori)
+
 if __name__ == "__main__":
     import sys
     params = sys.argv[1:]

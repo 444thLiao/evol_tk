@@ -9,6 +9,9 @@ from sklearn.neighbors import NearestNeighbors
 import click
 import pickle
 from glob import glob
+from Bio import SeqIO
+import multiprocessing as mp
+
 
 tmp_dir = expanduser('~/.tmp')
 def preprocess_locus_name(locus):
@@ -33,6 +36,13 @@ def read_gff(gff_file,id_spec):
 
 
 def get_all_gene_pos(genome_file, CDS_names=None,id_spec='ID'):
+    """
+    major part for reading gff file.
+    1. giving a gff file.
+    2. iterating all features and retrieve its id. (normally is locus ID)
+    3. return gene2pos info like {locus1: {start:1,end:100,strand:'-',previous end:0}}
+    3.5. and also record the contig order
+    """
     if not exists(genome_file):
         tqdm.write('wrong file path[%s]... pass it' % genome_file)
         return None, None
@@ -66,6 +76,44 @@ def get_all_gene_pos(genome_file, CDS_names=None,id_spec='ID'):
     order_contig_list = tuple(order_contig_list)
     return gene2pos, order_contig_list
 
+
+def read_gbk(gbk_file):
+    records = SeqIO.parse(gbk_file,format='genbank')
+    records = list(records)
+    return records
+
+def get_all_CDS_from_gbk(gbk_file):
+    """
+    major part for reading gbk file.
+    1. giving a gbk file.
+    2. iterating all features and retrieve its id. (normally is locus ID)
+    3. return gene2pos info like {locus1: {start:1,end:100,strand:'-',previous end:0}}
+    3.5. and also record the contig order
+    """
+    if not exists(gbk_file):
+        tqdm.write('wrong file path[%s]... pass it' % gbk_file)
+        return None, None
+    contigs = read_gbk(gbk_file)
+    order_contig_list = []
+    gene2pos = defaultdict(dict)
+    last_end = None
+    for contig in contigs:
+        contig_list = []
+        contig_name = contig.id
+        all_cds = [fea for fea in contig.features if fea.type=='CDS']
+        for fea in all_cds:
+            fea_id = fea.qualifiers['locus_tag']
+            gene2pos[fea_id]['contig_name'] = contig_name
+            
+            gene2pos[fea_id]['strand'] = '+' if fea.strand==1 else '-'
+            gene2pos[fea_id]['start'] = fea.start
+            gene2pos[fea_id]['end'] = fea.end
+            gene2pos[fea_id]['previous end'] = last_end
+            last_end = fea.end
+            contig_list.append(fea_id)
+        order_contig_list.append(tuple(contig_list))
+    order_contig_list = tuple(order_contig_list)
+    return gene2pos, order_contig_list
 
 def get_neighbour(target_locus,
                   _order_tuple,
@@ -220,14 +268,31 @@ def main(infile, prokka_o):
     locus2group = get_locus2group(OG_df)
     modify_df = OG_df.copy()
     tqdm.write('collecting all required info, start to split duplicated OG. More duplications would make it slower.')
-    for group_id in tqdm(sub_idx):
+    
+    def _run(group_id):
         row = OG_df.loc[group_id, :]
         new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
         new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
         new_df.index = [group_id + '_%s' % _
                         for _ in new_df.index]
-        modify_df = modify_df.drop(group_id)
-        modify_df = modify_df.append(new_df, sort=True)
+        # modify_df = modify_df.drop(group_id)
+        # modify_df = modify_df.append(new_df, sort=True)
+        return group_id,new_df
+    
+    params = []
+    for group_id in tqdm(sub_idx):
+        # row = OG_df.loc[group_id, :]
+        # new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
+        # new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
+        # new_df.index = [group_id + '_%s' % _
+        #                 for _ in new_df.index]
+        params.append(group_id)
+    
+    r = []
+    with mp.Pool(processes=20) as tp:
+        for _ in tp.imap(_run,tqdm(params)):
+            r.append(_)
+
 
     # sort the genome with the number of contigs
     order_columns = sorted(modify_df.columns,

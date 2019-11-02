@@ -36,7 +36,8 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix=''):
                          basename(in_file))
         params.append((in_file,ofile))
     with mp.Pool(processes=num_parellel) as tp:
-        tp.imap(run,tqdm(params))
+        for _ in tp.imap(run,tqdm(params)):
+            pass
         
 @click.command()
 @click.option('-i','indir')
