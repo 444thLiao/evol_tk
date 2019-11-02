@@ -175,17 +175,17 @@ os.makedirs(join(odir, used_fa_basename), exist_ok=True)
 # step5 alignment and build tree
 ofile = join(odir, used_fa_basename, ko+'.aln')
 # , shell=1)
-print(
+run(
     f'mafft --maxiterate 1000 --genafpair --thread -1 {prepared_infa} > {ofile}')
 # , shell=1)
-print(
+run(
     f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60")
 # if not exists( ofile.replace('.aln','.treefile')):
 # pass
 if tree_exe == 'iqtree':
     # ,shell=1)
     print(
-        f"iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {ofile.replace('.aln','.iqtree')} -s {ofile.replace('.aln','.trimal')}")
+        f"iqtree -nt 20 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {ofile.replace('.aln','.iqtree')} -s {ofile.replace('.aln','.trimal')}")
 else:
     n_file = ofile.replace('.aln', '.treefile')
     # ,shell=1)

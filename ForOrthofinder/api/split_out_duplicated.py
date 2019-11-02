@@ -281,23 +281,22 @@ def main(infile, prokka_o):
     
     params = []
     for group_id in tqdm(sub_idx):
-        # row = OG_df.loc[group_id, :]
-        # new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
-        # new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
-        # new_df.index = [group_id + '_%s' % _
-        #                 for _ in new_df.index]
         params.append(group_id)
-    
+    tqdm.write('running with multiprocessing ')
     r = []
     with mp.Pool(processes=20) as tp:
         for _ in tp.imap(_run,tqdm(params)):
             r.append(_)
-
+    modify_df = modify_df.drop([_[0] for _ in r])
+    tqdm.write('mergeing all return results, it may take a while')
+    added_df = pd.concat([_[1] for _ in r],axis=0,sort=True)
+    modify_df = modify_df.append(added_df,sort=True)
 
     # sort the genome with the number of contigs
     order_columns = sorted(modify_df.columns,
                            key=lambda x: len(genome2order_tuple[x]))
     modify_df = modify_df.reindex(columns=order_columns)
+    tqdm.write('Done!!! return...')
     return modify_df
 
 

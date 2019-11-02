@@ -63,26 +63,44 @@ def filter_by_relative_pos(full_df):
                 pass
     return near_end_protein
         
-def filter_archaea(full_df):
-    remained_ids = full_df.index[full_df.loc[:,'superkingdom']=='Bacteria']
+def filter_archaea(full_df,remove_nc=False):
+    # filter out archaea and NC10
+    if remove_nc:
+        remained_ids = full_df.index[(full_df.loc[:,'superkingdom']=='Bacteria') & (~full_df.loc[:,'phylum'].str.contains('NC10').fillna(False))]
+    else:
+        remained_ids = full_df.index[full_df.loc[:,'superkingdom']=='Bacteria']
     return remained_ids
 
 
+target_dir = 'nr_retrieve_amoC'
 
-
-full_df = pd.read_csv('nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
-records = list(SeqIO.parse('nr_retrieve_amoC/filtered_by_kegg.faa',format='fasta'))
-remained_ids = filter_archaea(full_df)
-num_ori = len(records)
+full_df = pd.read_csv(f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
+records = list(SeqIO.parse(f'{target_dir}/filtered_by_kegg.faa',format='fasta'))
 near_end_protein = filter_by_relative_pos(full_df)
 
-remained_records = [_ for _ in records if _.id in remained_ids]
+remained_B_ids = filter_archaea(full_df,remove_nc=False)
+remained_B_remove_nc_ids = filter_archaea(full_df,remove_nc=True)
+num_ori = len(records)
+
+remained_records = [_ for _ in records if _.id in remained_B_ids]
 remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-with open('nr_retrieve_amoC/with_genome_Bacteria_intact.faa','w') as f1:
+with open(f'{target_dir}/with_genome_Bacteria_intact.faa','w') as f1:
     SeqIO.write(remained_records,f1,format='fasta-2line')
 print('remained %s fa' % len(remained_records))
 print('original %s fa' % num_ori)
 
+remained_records = [_ for _ in records if _.id in remained_B_remove_nc_ids]
+remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
+with open(f'{target_dir}/with_genome_Bacteria_drop_NC10_intact.faa','w') as f1:
+    SeqIO.write(remained_records,f1,format='fasta-2line')
+print('remained %s fa' % len(remained_records))
+print('original %s fa' % num_ori)
+
+cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_intact.faa'
+check_call(cmd,shell=1)
+
+cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa'
+check_call(cmd,shell=1)
 if __name__ == "__main__":
     import sys
     params = sys.argv[1:]
