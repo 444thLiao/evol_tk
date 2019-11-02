@@ -41,8 +41,8 @@ gene_info = {'kegg': {'nxrA': 'K00370',
 # narG: TIGR01580
 # narH: TIGR01660
 ####
-odir = infa.split('/')[0]
-ko = gene_info['kegg'].get(basename(odir).split('_')[-1], '')
+odir = dirname(infa)
+ko = gene_info['kegg'].get(infa.split('/')[0].split('_')[-1], '')
 if not ko:
     raise IOError
 

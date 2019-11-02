@@ -177,12 +177,13 @@ for target_dir in tds:
     final_fa = f'{target_dir}/with_genome_Bacteria_intact.faa'
     with open(final_fa,'w') as f1:
         SeqIO.write(remained_records,f1,format='fasta-2line')
+    # filter_fa_by_length_dis(final_fa,ofile=final_fa,hard_filter=660,output_records=False)
     if g == 'nxrA' and len(remained_records)>1000:
         cluster_fa(final_fa,
                    f'{final_fa}_aln.dir')
         final_fa = f'{final_fa}_aln.dir/cluster_95'
     compared(final_fa)
-    print('remained %s fa' % len(remained_records))
+    print('remained %s fa' % len([_ for _ in SeqIO.parse(final_fa,format='fasta')]))
     print('original %s fa' % num_ori)
 
     remained_records = [_ for _ in records if _.id in remained_B_remove_nc_ids]
@@ -191,12 +192,13 @@ for target_dir in tds:
     final_fa2 = f'{target_dir}/with_genome_Bacteria_drop_NC10_intact.faa'
     with open(final_fa2,'w') as f1:
         SeqIO.write(remained_records,f1,format='fasta-2line')
+    # filter_fa_by_length_dis(final_fa2,ofile=final_fa2,hard_filter=660,output_records=False)
     if g == 'nxrA' and len(remained_records)>1000:
         cluster_fa(final_fa2,
                    f'{final_fa2}_aln.dir')
         final_fa2 = f'{final_fa2}_aln.dir/cluster_95'
     compared(final_fa2)
-    print('remained %s fa' % len(remained_records))
+    print('remained %s fa' % len([_ for _ in SeqIO.parse(final_fa2,format='fasta')]))
     print('original %s fa' % num_ori)
 
     cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {final_fa}'
