@@ -159,19 +159,22 @@ print('shortest seq is %s, has %s AA' % (_s[0].id, len(_s[0].seq)))
 used_records = list(SeqIO.parse(new_fa_file, format='fasta'))
 final_records, ref_id2info = add_ref_seq(sub_ref_df, used_records)
 ref_id2info, ref_info2style = get_colors_general(ref_id2info)
-prepared_infa = join(odir, ko+'.fa')
+
 if exists(filter_id_txt):
     ids = [_.strip() for _ in open(filter_id_txt).read().split('\n')]
     final_records = [_
                      for _ in final_records
                      if (_.id not in ids) and (_.id.replace('_', ' ') not in ids)]
-with open(prepared_infa, 'w') as f1:
-    SeqIO.write(final_records, f1, format='fasta-2line')
-print('final prepared fa contains ', len(final_records), ' seqs')
+
 
 # if not exists(ofile):
 used_fa_basename = basename(infa).strip('.') + '_aln.dir'
 os.makedirs(join(odir, used_fa_basename), exist_ok=True)
+prepared_infa = join(odir,used_fa_basename, ko+'.fa')
+with open(prepared_infa, 'w') as f1:
+    SeqIO.write(final_records, f1, format='fasta-2line')
+print('final prepared fa contains ', len(final_records), ' seqs')
+
 # step5 alignment and build tree
 ofile = join(odir, used_fa_basename, ko+'.aln')
 # , shell=1)

@@ -96,7 +96,10 @@ def main(infile, backbone_column_idx=0):
                                    if not pd.isna(locus)][0]
         ordered_locus = genome2order_tuple[used_genome]
         ordered_locus = [_ for v in ordered_locus for _ in v]
-        ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
+        if used_genome == 'Bradyrhizobium_sp_CCGE-LA001':
+            ordered_locus = {preprocess_locus_name(locus.replace('_RS','_')):_ for _,locus in enumerate(ordered_locus)}
+        else:
+            ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
         # iterative to get the first not nan one to order whole row.
         genome_ordered_col = list(OG_df.reindex(order_OG_without_gap).loc[:, used_genome])
         # order this genome among all order_OG_without_gap OGs. (may nan, but for backbone is all full and order.)
