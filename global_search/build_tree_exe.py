@@ -178,12 +178,13 @@ print('final prepared fa contains ', len(final_records), ' seqs')
 # step5 alignment and build tree
 ofile = join(odir, used_fa_basename, ko+'.aln')
 # , shell=1)
-run(
-    f'mafft --maxiterate 1000 --genafpair --thread -1 {prepared_infa} > {ofile}')
-# , shell=1)
-run(
-    f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60")
-# if not exists( ofile.replace('.aln','.treefile')):
+if not exists(ofile):
+    run(
+        f'mafft --maxiterate 1000 --genafpair --thread -1 {prepared_infa} > {ofile}')
+    # , shell=1)
+    run(
+        f"trimal -in {ofile} -out {ofile.replace('.aln','.trimal')} -automated1 -resoverlap 0.55 -seqoverlap 60")
+    # if not exists( ofile.replace('.aln','.treefile')):
 # pass
 if tree_exe == 'iqtree':
     # ,shell=1)

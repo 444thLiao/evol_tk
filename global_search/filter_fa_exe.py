@@ -72,35 +72,53 @@ def filter_archaea(full_df,remove_nc=False):
     return remained_ids
 
 
-target_dir = 'nr_retrieve_amoC'
+tds = ['nr_retrieve_amoB','nr_retrieve_amoC','with_genome_amoA','nr_retrieve_hao']
+for target_dir in tds:
+    g = target_dir.split('_')[-1]
+    if g in ['amoB','amoC']:
+        pro2full_tab = f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/filtered_by_kegg.faa'
+    elif g == 'amoA':
+        pro2full_tab = f'{target_dir}/used.fasta_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/filtered_by_kegg.faa'
+    elif g == 'hao':
+        pro2full_tab = f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/filtered_by_kegg.faa'
+        
+    full_df = pd.read_csv(pro2full_tab,sep='\t',index_col=0)
+    records = list(SeqIO.parse(fa,format='fasta'))
+    near_end_protein = filter_by_relative_pos(full_df)
 
-full_df = pd.read_csv(f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab',sep='\t',index_col=0)
-records = list(SeqIO.parse(f'{target_dir}/filtered_by_kegg.faa',format='fasta'))
-near_end_protein = filter_by_relative_pos(full_df)
+    remained_B_ids = filter_archaea(full_df,remove_nc=False)
+    remained_B_remove_nc_ids = filter_archaea(full_df,remove_nc=True)
+    num_ori = len(records)
 
-remained_B_ids = filter_archaea(full_df,remove_nc=False)
-remained_B_remove_nc_ids = filter_archaea(full_df,remove_nc=True)
-num_ori = len(records)
+    remained_records = [_ for _ in records if _.id in remained_B_ids]
+    remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
+    with open(f'{target_dir}/with_genome_Bacteria_intact.faa','w') as f1:
+        SeqIO.write(remained_records,f1,format='fasta-2line')
+    print('remained %s fa' % len(remained_records))
+    print('original %s fa' % num_ori)
 
-remained_records = [_ for _ in records if _.id in remained_B_ids]
-remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-with open(f'{target_dir}/with_genome_Bacteria_intact.faa','w') as f1:
-    SeqIO.write(remained_records,f1,format='fasta-2line')
-print('remained %s fa' % len(remained_records))
-print('original %s fa' % num_ori)
+    remained_records = [_ for _ in records if _.id in remained_B_remove_nc_ids]
+    remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
+    with open(f'{target_dir}/with_genome_Bacteria_drop_NC10_intact.faa','w') as f1:
+        SeqIO.write(remained_records,f1,format='fasta-2line')
+    print('remained %s fa' % len(remained_records))
+    print('original %s fa' % num_ori)
 
-remained_records = [_ for _ in records if _.id in remained_B_remove_nc_ids]
-remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-with open(f'{target_dir}/with_genome_Bacteria_drop_NC10_intact.faa','w') as f1:
-    SeqIO.write(remained_records,f1,format='fasta-2line')
-print('remained %s fa' % len(remained_records))
-print('original %s fa' % num_ori)
+    cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_intact.faa'
+    check_call(cmd,shell=1)
 
-cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_intact.faa'
-check_call(cmd,shell=1)
+    cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa'
+    check_call(cmd,shell=1)
+    ####### after iqtree
+    cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_intact.faa .iqtree.treefile'
+    check_call(cmd,shell=1)
 
-cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa'
-check_call(cmd,shell=1)
+    cmd = f'python3 ~/script/evolution_relative/global_search/build_tree_exe.py {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa .iqtree.treefile'
+    check_call(cmd,shell=1)
+    
 if __name__ == "__main__":
     import sys
     params = sys.argv[1:]

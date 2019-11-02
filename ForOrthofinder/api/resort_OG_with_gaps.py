@@ -26,7 +26,8 @@ def order_a_column(Acolumn,ordered_locus):
     return sorted_series
 
 def get_next_locus_idx(genome_ordered_col,used_locus,ordered_locus):
-    reorder_col = sorted(genome_ordered_col + [used_locus], key=lambda x: ordered_locus[preprocess_locus_name(x)] if not pd.isna(x) else pd.np.inf)
+    reorder_col = sorted(genome_ordered_col + [used_locus], 
+                         key=lambda x: ordered_locus[preprocess_locus_name(x)] if not pd.isna(x) else pd.np.inf)
     # this is a ascending list
     # add this locus into these OG, and reorder it.
     # maybe reverse alignment, so it should compare the next and up idx.
@@ -68,6 +69,13 @@ def get_next_locus_idx(genome_ordered_col,used_locus,ordered_locus):
 def main(infile, backbone_column_idx=0):
     OG_df = pd.read_csv(infile, sep='\t', index_col=0,low_memory=False)
     sub_idx = OG_df.index[OG_df.applymap(lambda x: ',' in str(x)).any(1)]
+    # tmp
+    gfiles = glob('/mnt/home-backup/jjtao/protein/*.faa')
+    genome2order_tuple = {}
+    for g in tqdm(gfiles):
+        gname = basename(g).replace('.faa','')
+        genome2order_tuple[gname] = [preprocess_locus_name(_.description) for _ in SeqIO.parse(g,format='fasta')]
+        
     if len(sub_idx) != 0:
         raise Exception("It contains duplicated genes within single OG. Please use `split_out_duplicated.py` first. ")
     if isinstance(backbone_column_idx, int):
@@ -78,15 +86,16 @@ def main(infile, backbone_column_idx=0):
         used_genome = backbone_column_idx
     gap_OGs = OG_df.index[backbone_column_ori.isna()]
     gap_OG_df = OG_df.loc[gap_OGs, :]
-    genome2order_tuple = pickle.load(open(join(tmp_dir,'genome2order_tuple'), 'rb'))
+    # genome2order_tuple = pickle.load(open(join(tmp_dir,'genome2order_tuple'), 'rb'))
     ordered_locus = genome2order_tuple[used_genome]
-    ordered_locus = [_ for v in ordered_locus for _ in v]
+    # ordered_locus = [_ for v in ordered_locus for _ in v]
     ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
     backbone_c = order_a_column(backbone_column_ori,ordered_locus)
     order_OG_without_gap = list(backbone_c.index)
     order_OG_df = OG_df.reindex(backbone_c.index)
     tqdm.write("%s OG need to be reinserted into an ordered table" % len(gap_OGs))
     
+
     
     for gap_OG, row in tqdm(gap_OG_df.iterrows(),
                             total=gap_OG_df.shape[0]):
@@ -95,11 +104,8 @@ def main(infile, backbone_column_idx=0):
                                    for genome, locus in row.items()
                                    if not pd.isna(locus)][0]
         ordered_locus = genome2order_tuple[used_genome]
-        ordered_locus = [_ for v in ordered_locus for _ in v]
-        if used_genome == 'Bradyrhizobium_sp_CCGE-LA001':
-            ordered_locus = {preprocess_locus_name(locus.replace('_RS','_')):_ for _,locus in enumerate(ordered_locus)}
-        else:
-            ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
+        # ordered_locus = [v for v in ordered_locus]
+        ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
         # iterative to get the first not nan one to order whole row.
         genome_ordered_col = list(OG_df.reindex(order_OG_without_gap).loc[:, used_genome])
         # order this genome among all order_OG_without_gap OGs. (may nan, but for backbone is all full and order.)

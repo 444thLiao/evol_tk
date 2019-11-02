@@ -82,7 +82,7 @@ def read_gbk(gbk_file):
     records = list(records)
     return records
 
-def get_all_CDS_from_gbk(gbk_file):
+def get_all_CDS_from_gbk(gbk_file,tag='locus_tag'):
     """
     major part for reading gbk file.
     1. giving a gbk file.
@@ -102,14 +102,17 @@ def get_all_CDS_from_gbk(gbk_file):
         contig_name = contig.id
         all_cds = [fea for fea in contig.features if fea.type=='CDS']
         for fea in all_cds:
-            fea_id = fea.qualifiers['locus_tag']
+            if tag in fea.qualifiers:
+                fea_id = fea.qualifiers[tag][0]
+            else:
+                fea_id = fea.qualifiers['locus_tag'][0]
             gene2pos[fea_id]['contig_name'] = contig_name
             
             gene2pos[fea_id]['strand'] = '+' if fea.strand==1 else '-'
-            gene2pos[fea_id]['start'] = fea.start
-            gene2pos[fea_id]['end'] = fea.end
+            gene2pos[fea_id]['start'] = int(fea.location.start)
+            gene2pos[fea_id]['end'] = int(fea.location.end)
             gene2pos[fea_id]['previous end'] = last_end
-            last_end = fea.end
+            last_end = int(fea.location.end)
             contig_list.append(fea_id)
         order_contig_list.append(tuple(contig_list))
     order_contig_list = tuple(order_contig_list)
@@ -304,6 +307,7 @@ def main(infile, prokka_o):
 @click.option("-i", "infile", help='input file. normally is the concated orthfinder output')
 @click.option("-o", "ofile", help='output file')
 @click.option("-p", "prokka_dir", help='path of prokka output')
+@click.option("-gbk", "use_gbk", help='normally it use gff')
 def cli(infile, prokka_dir, ofile):
     modify_df = main(infile, prokka_dir)
     if not dirname(ofile):

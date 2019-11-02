@@ -32,10 +32,14 @@ def filter_fa_by_db(infa, ofile, gene_name):
     otab=join(dirname(infa),f'{ko}.kofam.out')
     if not exists(otab):
         run(f"{kofam_scan} -o {otab} --cpu 64 -f mapper-one-line --no-report-unannotated {infa}")
+    all_ids = [_.id for _ in SeqIO.parse(infa,format='fasta')]
+    annotated_ids = [_.strip().split('\t')[0] for _ in open(otab, 'r').read().split('\n')  if _]
     confirmed_id = [_.strip().split('\t')[0]
                     for _ in open(otab, 'r').read().split('\n') 
-                    if _ and ko in _]
-    confirmed_id = set(confirmed_id)
+                    if _ and _.strip().split('\t')[1] == ko]
+    remained_ids = set(all_ids).difference(set(annotated_ids))
+    
+    confirmed_id = set(confirmed_id).union(set(remained_ids))
     remained_records = [_ 
                         for _ in tqdm(SeqIO.parse(infa, format='fasta')) 
                         if _.id in confirmed_id]

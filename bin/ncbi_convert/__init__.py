@@ -34,7 +34,8 @@ def access_intermedia(obj,suffix='',redo=False):
     ofile = join(tmp_dir,_md5) +'_' +suffix
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile),exist_ok=1)
-    
+    if redo and exists(ofile):
+        os.remove(ofile)
     if exists(ofile) and not redo:
         load_obj = json.load(open(ofile,'r'))
         if isinstance(load_obj,dict):
