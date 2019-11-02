@@ -167,9 +167,11 @@ if len(sys.argv) >= 2:
                 if not pd.isna(_d1.iloc[idx, 2]) and pd.isna(v['habitat']):
                     # print(_,_d1.iloc[idx,2])
                     full_df.loc[_, 'habitat'] = _d1.iloc[idx, 2]
+                    
         full_df = full_df.fillna('unknown')
         id2habitat = dict(zip(full_df.index,
                               full_df.loc[:, 'habitat']))
+        id2habitat = {k:v if v else 'unknown' for k,v in id2habitat.items()}
         new_id2habitat = modify_ID(id2habitat, all_ids)
         new_id2habitat.update(
             {k: v for k, v in ref_id2habitat.items() if k in all_ids})
