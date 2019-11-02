@@ -149,7 +149,7 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-o', 'ofile', help='output file')
-@click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ')
+@click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ',default='protein',required=False)
 @click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
 @click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
 def cli(infile, ofile, force, redo,start_at):
