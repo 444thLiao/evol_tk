@@ -119,7 +119,7 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
 
     # if not too big, use panda to concat them
     # else...... too complicated...pass it
-    if len(gid2assembly_info) <= 5000:
+    if len(gid2assembly_info) <= 15000:
         ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
         #ginfo_df.index = ginfo_df.iloc[:,0]
         bp_df = pd.DataFrame.from_dict(bp2info, orient='index')

@@ -75,7 +75,11 @@ def filter_archaea(full_df,remove_nc=False):
 tds = ['nr_retrieve_amoB','nr_retrieve_amoC','with_genome_amoA','nr_retrieve_hao']
 for target_dir in tds:
     g = target_dir.split('_')[-1]
-    if g in ['amoB','amoC']:
+    if g == 'amoB':
+        # target_dir = './rough_amoB'
+        pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/used.faa'
+    if g == 'amoC':
         pro2full_tab = f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab'
         fa = f'{target_dir}/filtered_by_kegg.faa'
     elif g == 'amoA':
@@ -122,7 +126,7 @@ for target_dir in tds:
     check_call(cmd,shell=1)
     cmd = f"cp -r {dirname(pro2full_tab)} {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile" 
     check_call(cmd,shell=1)
-    cmd = f'python3 ~/script/evolution_relative/global_search/reannotate_tree.py {target_dir}/with_genome_Bacteria_intact.faa_aln.dir/iqtree.treefile {target_dir}/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile'
+    cmd = f"python3 ~/script/evolution_relative/global_search/reannotate_tree.py {target_dir.strip('.').strip('/')}/with_genome_Bacteria_intact.faa_aln.dir/iqtree.treefile {target_dir.strip('.').strip('/')}/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile"
     check_call(cmd,shell=1)
     
 if __name__ == "__main__":
