@@ -49,7 +49,7 @@ def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
     for pid,nuc_info,assembly_info in tqdm(results):
         pid2assembly_dict[pid] = dict(zip(assembly_info,nuc_info))
         # for nuccore which no assembly ID, it will drop it by accident. by for now, it is ok.
-    
+
     pid2assembly_dict = {pid:pid2assembly_dict.get(pid2info_dict[pid].get('accession',''),{})
                          for pid in pid2info_dict}
     assert len(pid2assembly_dict) == len(pid2info_dict)
@@ -94,7 +94,7 @@ def main(infile, ofile, force=False,redo=False):
         id2gi = pid2GI(order_id_list,redo=redo)
     pid2assembly_dict = pid2genome_assembly(id2gi,redo=redo)
     
-    if not exists(dirname(ofile)):
+    if not exists(dirname(ofile))  and dirname(ofile):
         os.makedirs(dirname(ofile))
         
     if exists(ofile) and not force:

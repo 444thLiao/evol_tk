@@ -84,7 +84,7 @@ def main(infile, ofile, force=False,redo=False):
         id2gi = pid2GI(order_id_list,redo=redo)
     
     pid2info_dict = GI2tax(id2gi,redo=redo)
-    if not exists(dirname(ofile)):
+    if not exists(dirname(ofile))  and dirname(ofile):
         os.makedirs(dirname(ofile))
 
     with open(ofile, 'w') as f1:

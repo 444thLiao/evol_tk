@@ -38,7 +38,7 @@ def pid2GI(id_list,redo=False):
             _count += 1
             if _count >=5:
                 break
-        tqdm.write('still %s failed IDs, be careful.....')
+        tqdm.write('still %s failed IDs, be careful.....' % len(failed))
         # for edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
         id2gi.update(_results_dict)
@@ -65,7 +65,7 @@ def main(infile, ofile, force=False,redo=False):
     if not id2gi:
         id2gi = pid2GI(order_id_list,redo=redo)
     
-    if not exists(dirname(ofile)):
+    if not exists(dirname(ofile)) and dirname(ofile):
         os.makedirs(dirname(ofile))
 
     with open(ofile, 'w') as f1:

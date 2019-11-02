@@ -88,7 +88,7 @@ def genomeID2Bio(genome_IDs):
 
 def main(infile, ofile,start_at='protein', force=False, redo=False):
 
-    if not exists(dirname(ofile)):
+    if not exists(dirname(ofile))  and dirname(ofile):
         os.makedirs(dirname(ofile))
 
     order_id_list, id2annotate = parse_id(infile)
