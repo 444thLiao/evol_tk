@@ -19,6 +19,7 @@ labels_template = join(indir,"labels_template.txt")
 
 def deduced_legend(info2color, info_name='dataset', sep=','):
     # for implemented a legend with dictinonary named info2color.
+    
     legend_title = info_name
     legend_shape = sep.join(['1'] * len(info2color))
     legend_colors = sep.join([_
@@ -32,7 +33,8 @@ LEGEND_LABELS{sep}{legend_labels}"""
     return legend_text
 
 
-def deduced_field(info2style, infos, sep='\t'):
+def deduced_legend2(info2style, infos, sep='\t'):
+    # for info2style instead of info2color
     colors_theme = px.colors.qualitative.Dark24
     shapes = []
     labels = []
@@ -51,7 +53,7 @@ def annotate_outgroup(ID2infos, info2style,):
     for ID, infos in ID2infos.items():
         # arbitary to choose a column of infos as template for deduced legend
         break
-    template_text = deduced_field(info2style, infos)
+    template_text = deduced_legend2(info2style, infos)
     annotate_text = ''
     for ID, infos in ID2infos.items():
         row = [ID]
@@ -75,7 +77,7 @@ def to_binary_shape(ID2info,info2style, info_name='dataset'):
         annotate_text.append(row)
     annotate_text = '\n'.join(annotate_text)
     
-    legend_text = deduced_field(info2style,all_v,sep='\t')
+    legend_text = deduced_legend2(info2style,all_v,sep='\t')
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
     return template_text+'\n'+annotate_text

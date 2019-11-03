@@ -48,7 +48,7 @@ for f in all_files:
             _cache = pro2genome.loc[_,'assembly_ID']
             if isinstance(_cache,str) and _cache !='None':
                 genomes_assembly.append(_cache)
-                genome2id.append((_cache_))
+                genome2id.append((_cache,_))
             elif str(_cache) == 'None':
                 print(_,g)
             else:
