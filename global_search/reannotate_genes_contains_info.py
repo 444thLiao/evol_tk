@@ -31,7 +31,7 @@ all_files = ['nr_retrieve_amoB/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir
 
 from collections import defaultdict
 g_genomes = defaultdict(list)
-genome2id = {}
+genome2id = []
 for f in all_files:
     
     g = f.split('/')[0].split('_')[-1]
@@ -48,12 +48,12 @@ for f in all_files:
             _cache = pro2genome.loc[_,'assembly_ID']
             if isinstance(_cache,str) and _cache !='None':
                 genomes_assembly.append(_cache)
-                genome2id[_cache] = _
+                genome2id.append((_cache_))
             elif str(_cache) == 'None':
                 print(_,g)
             else:
                 genomes_assembly+=list(_cache)
-                genome2id.update({_g:_ for _g in _cache})
+                genome2id+=[(_g,_) for _g in _cache]
         else:
             print(_,g)
     g_genomes[g] = genomes_assembly
@@ -66,7 +66,8 @@ for g,genomes in g_genomes.items():
 
 id2genes = {}
 for genome,genes in genome2genes.items():
-    id2genes[genome2id[genome]] = list(sorted(set(genes)))
+    ids = [id for g,id in genome2id if g == genome]
+    id2genes.update({id:list(sorted(set(genes))) for id in ids})
 
 info2style = {'amoA':{'color':'#ff0000',
                       'info':'amoA'},

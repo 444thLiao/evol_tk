@@ -43,7 +43,7 @@ def deduced_field(info2style, infos, sep='\t'):
         colors.append(info2style[info].get('color', colors_theme[idx]))
     legend_text = ['FIELD_SHAPES'+sep + sep.join(shapes),
                    'FIELD_LABELS'+sep + sep.join(labels),
-                   'FIELD_SHAPES'+sep + sep.join(colors),]
+                   'FIELD_COLORS'+sep + sep.join(colors),]
     legend_text = '\n'.join(legend_text)
     return legend_text
 
