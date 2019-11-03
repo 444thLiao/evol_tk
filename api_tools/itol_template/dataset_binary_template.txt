@@ -14,7 +14,7 @@ SEPARATOR TAB
 #SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
-DATASET_LABEL	label1
+DATASET_LABEL	{dataset_label}
 
 #dataset color (can be changed later)
 COLOR	#ff0000
@@ -26,17 +26,18 @@ COLOR	#ff0000
 #4: right pointing triangle
 #5: left pointing triangle
 #6: check mark
-FIELD_SHAPES	{field_shapes}
+{legend_text}
+#FIELD_SHAPES	
 
 #field labels
-FIELD_LABELS	{field_labels}
+#FIELD_LABELS	
 
 #=================================================================#
 #                    OPTIONAL SETTINGS                            #
 #=================================================================#
 
 #define colors for each individual field column (if not defined all symbols will use the main dataset color, defined in COLOR above)
-FIELD_COLORS	{field_colors}
+#FIELD_COLORS	
 
 
 #=================================================================#

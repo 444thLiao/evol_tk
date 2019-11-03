@@ -34,19 +34,18 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 def deduced_field(info2style, infos, sep='\t'):
     template_text = open(dataset_binary_template).read()
-    colors_theme = px.colors.qualitative.Light24
+    colors_theme = px.colors.qualitative.Dark24
     shapes = []
     labels = []
     colors = []
     for idx, info in enumerate(infos):
-        shapes.append(info2style[info].get('shape', '3'))
+        shapes.append(info2style[info].get('shape', '1'))
         labels.append(info2style[info].get('info', info))
         colors.append(info2style[info].get('color', colors_theme[idx]))
     template_text = template_text.format(field_shapes=sep.join(shapes),
                                          field_labels=sep.join(labels),
                                          field_colors=sep.join(colors))
     return template_text
-
 
 def annotate_outgroup(ID2infos, info2style,):
     for ID, infos in ID2infos.items():
@@ -64,16 +63,33 @@ def annotate_outgroup(ID2infos, info2style,):
         annotate_text += '\t'.join(row) + '\n'
     return template_text + annotate_text
 
+def to_binary_shape(ID2info,info2style, info_name='dataset'):
+    # id2info, could be {ID:list/set}
+    # info2color: could be {gene1: {shape:square,color:blabla},}
+    # None will use default.
+    template_text = open(dataset_binary_template).read()
+    all_v = list(set([_ for v in ID2info.values() for _ in v if _]))
+    annotate_text = []
+    for ID,vset in ID2info.items():
+        row = '\t'.join([ID] + ['1' if _ in vset else '0' for _ in all_v])
+        annotate_text.append(row)
+    annotate_text = '\n'.join(annotate_text)
+    
+    legend_text = deduced_field(info2style,all_v,sep='\t')
+    template_text = template_text.format(legend_text=legend_text,
+                                         dataset_label=info_name)
+    return template_text+'\n'+annotate_text
+
 def to_color_strip(ID2info, info2color, info_name='dataset'):
     template_text = open(color_strip_template).read()
     id2col = {id: info2color[info] for id, info in ID2info.items()}
     annotate_text = '\n'.join(['%s,%s\n' % (id, col)
                                for id, col in id2col.items()])
     legend_text = deduced_legend(info2color, info_name)
-
+    info_name = info_name.replace('/', '_')
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
-    info_name = info_name.replace('/', '_')
+    
     return template_text+'\n'+annotate_text
 
 
