@@ -33,7 +33,6 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 
 def deduced_field(info2style, infos, sep='\t'):
-    template_text = open(dataset_binary_template).read()
     colors_theme = px.colors.qualitative.Dark24
     shapes = []
     labels = []
@@ -42,10 +41,11 @@ def deduced_field(info2style, infos, sep='\t'):
         shapes.append(info2style[info].get('shape', '1'))
         labels.append(info2style[info].get('info', info))
         colors.append(info2style[info].get('color', colors_theme[idx]))
-    template_text = template_text.format(field_shapes=sep.join(shapes),
-                                         field_labels=sep.join(labels),
-                                         field_colors=sep.join(colors))
-    return template_text
+    legend_text = ['FIELD_SHAPES'+sep + sep.join(shapes),
+                   'FIELD_LABELS'+sep + sep.join(labels),
+                   'FIELD_SHAPES'+sep + sep.join(colors),]
+    legend_text = '\n'.join(legend_text)
+    return legend_text
 
 def annotate_outgroup(ID2infos, info2style,):
     for ID, infos in ID2infos.items():
