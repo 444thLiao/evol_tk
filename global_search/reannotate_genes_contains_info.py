@@ -8,6 +8,7 @@ from ete3 import Tree
 import plotly.express as px
 from ete3 import NCBITaxa
 from global_search.classification_script import _classificated
+from subprocess import check_call
 ncbi = NCBITaxa()
 
 def reformat(s):
@@ -27,9 +28,9 @@ all_files = ['nr_retrieve_amoB/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir
              'nr_retrieve_amoC/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile',
              'with_genome_amoA/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile',
              'nr_retrieve_hao/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile',
-             'nr_retrieve_nxrA/with_genome_Bacteria_intact.faa_aln.dir/cluster_95_aln.dir/iqtree.treefile'
+             #'nr_retrieve_nxrA/with_genome_Bacteria_intact.faa_aln.dir/cluster_95_aln.dir/iqtree.treefile'
              ]
-
+check_call('python3 ~/script/evolution_relative/global_search/reannotate_tree.py '+ ' '.join(all_files),shell=1)
 from collections import defaultdict
 g_genomes = defaultdict(list)
 genome2id = []

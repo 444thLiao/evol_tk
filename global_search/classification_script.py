@@ -15,6 +15,8 @@ def _classificated(ori_df):
         row_text = ';'.join(map(str,row.values)).lower()
         if 'metageno' in row_text:
             ori_df.loc[_,'classification'] = 'MAGs'
+        if 'single cell' in row_text:
+            ori_df.loc[_,'classification'] = 'SAGs'
         if 'soil' in row_text or 'terrestrial' in row_text or 'wetland' in row_text:
             ori_df.loc[_,'habitat'] = 'terrestrial'
         if 'sea' in row_text or 'marine' in row_text or 'ocean' in row_text:
@@ -37,8 +39,7 @@ def _classificated(ori_df):
             ori_df.loc[_,'habitat'] = 'artificial system'
         if 'Whole genome' in row_text or 'type strain' in row_text:
             ori_df.loc[_,'classification'] = 'isolate'
-        if 'single cell' in row_text:
-            ori_df.loc[_,'classification'] = 'SAGs'
+
         # if not pd.isna(row['attribute:host']) and str(row['attribute:host']) != 'not applicable':
         #     ori_df.loc[_,'habitat'] = 'host associated'
         if 'source' in row.index:
