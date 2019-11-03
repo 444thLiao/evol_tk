@@ -227,6 +227,7 @@ if len(sys.argv) >= 2:
 
         id2tax = {k: 'CPR' if 'candidat' in v.lower() else v
                   for k, v in id2tax.items()}
+        id2tax = {k:v for k,v in id2tax.items() if v != 'ENV'}
         Interested_tax = {'Thaumarchaeota': '#358f0f',
                           'Nitrospirae': '#edc31d',
                           'Chloroflexi': '#e41a1c',
@@ -235,8 +236,9 @@ if len(sys.argv) >= 2:
                           'Alphaproteobacteria': '#8c613c',
                           'Actinobacteria': '#11FF11',
                           'Planctomycetes': '#ff44bb',
-                          'ENV': '#B54B4A',
-                          'CPR': '#74A45B'
+                          #'ENV': '#B54B4A',
+                          'CPR': '#74A45B',
+                          'Verrucomicrobia':'#2e91e5'
                           }
         id2tax = {k: v for k, v in id2tax.items() if v in Interested_tax}
         id2tax = modify_ID(id2tax, all_ids)
