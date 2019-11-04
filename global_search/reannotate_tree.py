@@ -209,8 +209,9 @@ if len(sys.argv) >= 2:
         info2style = {info:{'color':color,
                             'shape':'3',
                             info:info} for info,color in info2col.items()}
+        id2infos = {id:[info] for id,info in id2info.items()}
         template_text = to_binary_shape(
-            id2info, info2style, info_name='gene name')
+            id2infos, info2style, info_name='gene name')
         with open(join(fdir, 'gene_name_binary.txt'), 'w') as f1:
             f1.write(template_text)
             
