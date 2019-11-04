@@ -206,10 +206,19 @@ if len(sys.argv) >= 2:
         
         id2info, info2col = get_colors_general(id2info,now_info2style=now_colors_dict)
         id2info = modify_ID(id2info, all_ids)
+        info2style = {info:{'color':color,
+                            'shape':'3',
+                            info:info} for info,color in info2col.items()}
+        template_text = to_binary_shape(
+            id2info, info2style, info_name='gene name')
+        with open(join(fdir, 'gene_name_binary.txt'), 'w') as f1:
+            f1.write(template_text)
+            
         template_text = to_color_strip(
             id2info, info2col, info_name='gene name')
         with open(join(fdir, 'gene_name_strip.txt'), 'w') as f1:
             f1.write(template_text)
+        
         ############## taxonomy
         id2tax = {}
         for aid, tid in zip(full_df.index, full_df.loc[:, 'taxid']):

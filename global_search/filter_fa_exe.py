@@ -216,7 +216,7 @@ for target_dir in tds:
     check_call(cmd,shell=1)
     cmd = f"cp -r {dirname(pro2full_tab)} {final_fa2}_aln.dir/iqtree.treefile" 
     check_call(cmd,shell=1)
-    cmd = f"python3 ~/script/evolution_relative/global_search/reannotate_tree.py {target_dir.strip('.').strip('/')}/with_genome_Bacteria_intact.faa_aln.dir/iqtree.treefile {target_dir.strip('.').strip('/')}/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile"
+    cmd = f"python3 ~/script/evolution_relative/global_search/reannotate_tree.py {final_fa}_aln.dir/iqtree.treefile {final_fa2}_aln.dir/iqtree.treefile"
     check_call(cmd,shell=1)
     
 if __name__ == "__main__":
