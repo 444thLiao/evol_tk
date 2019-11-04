@@ -206,14 +206,14 @@ if len(sys.argv) >= 2:
         
         id2info, info2col = get_colors_general(id2info,now_info2style=now_colors_dict)
         id2info = modify_ID(id2info, all_ids)
-        info2style = {info:{'color':color,
-                            'shape':'3',
-                            info:info} for info,color in info2col.items()}
-        id2infos = {id:[info] for id,info in id2info.items()}
-        template_text = to_binary_shape(
-            id2infos, info2style, info_name='gene name')
-        with open(join(fdir, 'gene_name_binary.txt'), 'w') as f1:
-            f1.write(template_text)
+        # info2style = {info:{'color':color,
+        #                     'shape':'3',
+        #                     info:info} for info,color in info2col.items()}
+        # id2infos = {id:[info] for id,info in id2info.items()}
+        # template_text = to_binary_shape(
+        #     id2infos, info2style, info_name='gene name')
+        # with open(join(fdir, 'gene_name_binary.txt'), 'w') as f1:
+        #     f1.write(template_text)
             
         template_text = to_color_strip(
             id2info, info2col, info_name='gene name')
@@ -246,7 +246,7 @@ if len(sys.argv) >= 2:
                           'Alphaproteobacteria': '#8c613c',
                           'Actinobacteria': '#11FF11',
                           'Planctomycetes': '#ff44bb',
-                          #'ENV': '#B54B4A',
+                          ###'ENV': '#B54B4A',
                           'CPR': '#74A45B',
                           'Verrucomicrobia':'#2e91e5'
                           }
