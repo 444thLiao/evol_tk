@@ -5,6 +5,11 @@ import string
 from os.path import expanduser,join
 import pickle
 
+
+from glob import glob
+from os.path import *
+from Bio import SeqIO
+
 tmp_dir = expanduser('~/.tmp')
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1].split(' ')[0]
@@ -74,8 +79,19 @@ def main(infile, backbone_column_idx=0):
     genome2order_tuple = {}
     for g in tqdm(gfiles):
         gname = basename(g).replace('.faa','')
-        genome2order_tuple[gname] = [preprocess_locus_name(_.description) for _ in SeqIO.parse(g,format='fasta')]
-        
+        if gname in OG_df.columns:
+            genome2order_tuple[gname] = [preprocess_locus_name(_.description) for _ in SeqIO.parse(g,format='fasta')]
+    # cal the contig cover
+    total_contig_for_each = {g:len(set([_.split(' ')[1].split(':')[0] for _ in gnames] )) for g,gnames in genome2order_tuple.items()}
+    backbone_column_ori = OG_df.iloc[:, backbone_column_idx]
+    ref_OGs = OG_df.index[~backbone_column_ori.isna()]
+    for other_g in total_contig_for_each:
+        gnames = genome2order_tuple[other_g]
+        ref_gnames = OG_df.loc[ref_OGs,other_g]
+        ref_gnames = [_ for _ in list(ref_gnames) if not pd.isna(_)]
+        its_g = 'pass'
+    
+    
     if len(sub_idx) != 0:
         raise Exception("It contains duplicated genes within single OG. Please use `split_out_duplicated.py` first. ")
     if isinstance(backbone_column_idx, int):
@@ -88,14 +104,15 @@ def main(infile, backbone_column_idx=0):
     gap_OG_df = OG_df.loc[gap_OGs, :]
     # genome2order_tuple = pickle.load(open(join(tmp_dir,'genome2order_tuple'), 'rb'))
     ordered_locus = genome2order_tuple[used_genome]
-    # ordered_locus = [_ for v in ordered_locus for _ in v]
-    ordered_locus = {preprocess_locus_name(locus):_ for _,locus in enumerate(ordered_locus)}
+    # ordered_locus = [_ for v in ordered_locus for _ in v]  
+    # This is mainly for expanding locus located at multiple contigs into a linear ordered list
+    ordered_locus = {preprocess_locus_name(locus):_ 
+                     for _,locus in enumerate(ordered_locus)}
     backbone_c = order_a_column(backbone_column_ori,ordered_locus)
     order_OG_without_gap = list(backbone_c.index)
     order_OG_df = OG_df.reindex(backbone_c.index)
+    # only backbone, without inserted genes
     tqdm.write("%s OG need to be reinserted into an ordered table" % len(gap_OGs))
-    
-
     
     for gap_OG, row in tqdm(gap_OG_df.iterrows(),
                             total=gap_OG_df.shape[0]):
@@ -120,6 +137,7 @@ def main(infile, backbone_column_idx=0):
 @click.option("-i", "infile", help="input file. The file must be file after splitting duplicated.")
 @click.option("-o", "ofile", help='output file')
 @click.option("-bc", "backbone_column", help='which columns you want to taken as backbone. default is the first one', default=0)
+@click.option("-sub","subset_columns")
 def cli(infile, ofile, backbone_column):
     final_OG_df = main(infile, backbone_column)
     final_OG_df.to_csv(ofile, sep='\t', index=1)
