@@ -155,12 +155,15 @@ for target_dir in tds:
         pro2full_tab = f'{target_dir}/used.fasta_aln.dir/iqtree.treefile/info_dir/pro2full_info.tab'
         fa = f'{target_dir}/filtered_by_kegg.faa'
     elif g == 'hao':
-        pro2full_tab = f'{target_dir}/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/info_dir/pro2full_info.tab'
+        pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
         fa = f'{target_dir}/filtered_by_kegg.faa'
     elif g == 'nxrA':
         pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
         fa = f'{target_dir}/filtered_by_kegg.faa'
         paralog_file = f'{target_dir}/paralog_TIGFAM.hmmscan'
+    elif g == 'nirK':
+        pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/used.faa'
         
     full_df = pd.read_csv(pro2full_tab,sep='\t',index_col=0)
     
@@ -173,7 +176,8 @@ for target_dir in tds:
 
     remained_records = [_ for _ in records if _.id in remained_B_ids]
     remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-    remained_records = remove_pralog(remained_records,paralog_file)
+    if g == 'nxrA':
+        remained_records = remove_pralog(remained_records,paralog_file)
     final_fa = f'{target_dir}/with_genome_Bacteria_intact.faa'
     with open(final_fa,'w') as f1:
         SeqIO.write(remained_records,f1,format='fasta-2line')
@@ -188,7 +192,8 @@ for target_dir in tds:
 
     remained_records = [_ for _ in records if _.id in remained_B_remove_nc_ids]
     remained_records = [_ for _ in remained_records if _.id not in near_end_protein]
-    remained_records = remove_pralog(remained_records,paralog_file)
+    if g == 'nxrA':
+        remained_records = remove_pralog(remained_records,paralog_file)
     final_fa2 = f'{target_dir}/with_genome_Bacteria_drop_NC10_intact.faa'
     with open(final_fa2,'w') as f1:
         SeqIO.write(remained_records,f1,format='fasta-2line')
@@ -196,7 +201,7 @@ for target_dir in tds:
     if g == 'nxrA' and len(remained_records)>1000:
         cluster_fa(final_fa2,
                    f'{final_fa2}_aln.dir')
-        final_fa2 = f'{final_fa2}_aln.dir/cluster_95'
+        final_fa2 = f'{final_fa2}_aln.dir/cluster_90'
     compared(final_fa2)
     print('remained %s fa' % len([_ for _ in SeqIO.parse(final_fa2,format='fasta')]))
     print('original %s fa' % num_ori)
