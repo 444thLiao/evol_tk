@@ -15,7 +15,8 @@ gene_info = {'kegg': {'nxrA': 'K00370',
                       'hao': 'K10535',
                       'amoA': 'K10944',
                       'amoB': 'K10945',
-                      'amoC': 'K10946'},
+                      'amoC': 'K10946',
+                      'nirK':'K00368'},
              'TIGFAM': {'nxrA': '',
                         'nxrB': '',
                         'hao': 'TIGR01703',
@@ -33,7 +34,8 @@ def filter_fa_by_db(infa, ofile, gene_name):
     if not exists(otab):
         run(f"{kofam_scan} -o {otab} --cpu 64 -f mapper-one-line --no-report-unannotated {infa}")
     all_ids = [_.id for _ in SeqIO.parse(infa,format='fasta')]
-    annotated_ids = [_.strip().split('\t')[0] for _ in open(otab, 'r').read().split('\n')  if _]
+    annotated_ids = [_.strip().split('\t')[0] 
+                     for _ in open(otab, 'r').read().split('\n')  if _]
     confirmed_id = [_.strip().split('\t')[0]
                     for _ in open(otab, 'r').read().split('\n') 
                     if _ and _.strip().split('\t')[1] == ko]
@@ -91,9 +93,9 @@ def filter_fa_by_length_dis(in_fa, ofile=None,output_records=True,down_threshold
     return 
 
 
-def filter_fa_by_ENV(in_fa, ofile=None):
-    # first you need to know which one is ENV.
-    pass
+# def filter_fa_by_ENV(in_fa, ofile=None):
+#     # first you need to know which one is ENV.
+#     pass
     
 
 def cluster_fa(infa):
