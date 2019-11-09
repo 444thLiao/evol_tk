@@ -14,4 +14,6 @@
 
 `orthofinder -f raw_genome_proteins -og -a 50 -1 -s diamond`
 
-## 4. 
+## 4. extract conserved protein to following dating
+
+## 5. alignment these step4 
