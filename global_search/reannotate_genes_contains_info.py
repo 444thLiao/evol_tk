@@ -30,7 +30,7 @@ def reformat(s):
         else:
             return s.rpartition('_')[0]
 under_nodes = {'nxrA':['I49_S100', 'I137_S88', 'I88_S99', 'I71_S100'],
-              'hao':['I49_S100','I32_S100'],
+              'hao':['I16_S100','I14_S90','I17_S100'],
               'amoA':['I43_S100','I30_S100',
                       #'I15_S76'
                       ],
@@ -137,15 +137,17 @@ for f in all_files:
 
 
 # new confirmed and extendable workflow after download all genomes...
+remained_g = []
 download_dir = expanduser('~/data/nitrification_for/genome_protein_files')
 for genome,genes in genome2genes.items():
     download_faa = glob(join(download_dir,f"*{genome.split('_')[1].split('.')[0]}*"))
     if not download_faa:
         # if not, should be download and go on
         print(genome.replace('GCF','GCA'))
-        
+        remained_g.append(genome.replace('GCF','GCA'))
+
 # step1. annotate gene to genome.
-new_genome2id = [(genome.split('_')[-1].split('.')[0],id) for genome,id in genome2id]
+new_genome2id = [(genome.split('_')[-1].replace('.','v'),id) for genome,id in genome2id]
 # step2. annotate requested gene(for extract), do not modify manually classified one.
 tmp_dir = join('./tmp/contained_genes/')
 redo = False
@@ -165,6 +167,7 @@ for fa in tqdm(glob(join(collected_gs,'*.faa'))):
         genome2collect_genes[genome_name].append(gene_name)
 genome2collect_genes = {k:set(v) for k,v in genome2collect_genes.items()}
 
+
 # 
 extra_g = ['cycA','cycB']
 for f in all_files:
@@ -172,15 +175,18 @@ for f in all_files:
     tree = glob(join(f,'*.sorted.newick'))[0]
     t = Tree(tree,format=1)
     all_ids = [reformat(_).strip() for _ in t.get_leaf_names()]
-        
-    this_id2genes = {reformat_id2ori[_]:id2genes.get(_,[]) 
-                     for _ in all_ids 
+
+    this_id2genes = {reformat_id2ori[_]:id2genes.get(_,[])
+                     for _ in all_ids
                      if _ in id2genes}
-    for id,genes in this_id2genes.items():
+    for id in all_ids:
+        genes = this_id2genes.get(reformat_id2ori[id],[])
         genomes = [genome for genome,_id in new_genome2id if id == _id]
         for _g in genomes:
-            this_id2genes[id]+=list(genome2collect_genes.get(_g,set()).intersection(set(extra_g)))
-            
+            _c = genes + list(genome2collect_genes.get(_g,set()).intersection(set(extra_g)))
+            if _c:
+                this_id2genes[id] = _c
+
     all_text = to_binary_shape(this_id2genes,
                     info2style,
                     info_name='genes set',
