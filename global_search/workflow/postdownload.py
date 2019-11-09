@@ -49,14 +49,17 @@ def cli(indir,odir=None):
         else:
             #print(p_file,ofile)
             pass
+        
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
         indir = sys.argv[1]
+        odir = sys.argv[2] #'./genome_protein_files'
+    else:
+        indir = './genbank'
         odir = './genome_protein_files'
         
     base_tab = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
-    indir = './genbank'
-    odir = './genome_protein_files'
+
     all_g_ids = set([basename(_) for _ in glob(join(indir,'bacteria','*'))])
 
     metadatas = open(base_tab).read().split('\n')
@@ -70,5 +73,4 @@ if __name__ == "__main__":
         os.makedirs(odir,exist_ok=True)
     if not exists(tmp_dir):
         os.makedirs(tmp_dir,exist_ok=True)
-    
     cli(indir,odir)

@@ -44,7 +44,8 @@ all_files = ['nr_retrieve_amoB/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir
              'nr_retrieve_amoC/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile',
              'with_genome_amoA/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/iqtree.treefile',
              'nr_retrieve_hao/with_genome_Bacteria_intact.faa_aln.dir/iqtree.treefile',
-             'nr_retrieve_nxrA/with_genome_Bacteria_drop_NC10_intact_lt_600.faa_aln.dir/iqtree.treefile'
+             'nr_retrieve_nxrA/with_genome_Bacteria_drop_NC10_intact_lt_600.faa_aln.dir/iqtree.treefile',
+             'nr_retrieve_nirK/with_genome_Bacteria_drop_NC10_intact.faa_aln.dir/cluster_90_aln.dir/iqtree.treefile',
              ]
 
 
@@ -67,6 +68,8 @@ for f in all_files:
         for _n in _ns:
             manuall_class_ids += list(_n.get_leaf_names())
         manuall_class_ids = [reformat(_).strip() for _ in manuall_class_ids]
+    else:
+        manuall_class_ids = all_ids[::]
     reformat_id2ori.update(dict(zip(all_ids,
                                     [_ for _ in t.get_leaf_names()])))
     pro2genome = pd.read_csv(join(f,'info_dir','pro2genome.tab'),
@@ -186,7 +189,10 @@ for f in all_files:
             _c = genes + list(genome2collect_genes.get(_g,set()).intersection(set(extra_g)))
             if _c:
                 this_id2genes[id] = _c
-
+    for id in list(this_id2genes):
+        v = this_id2genes[id]
+        if (len(v)==1 and g in v) or (not v):
+            this_id2genes.pop(id)
     all_text = to_binary_shape(this_id2genes,
                     info2style,
                     info_name='genes set',
