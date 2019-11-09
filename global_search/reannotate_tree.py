@@ -128,7 +128,7 @@ gene_info = {'nxrA': 'K00370',
              'amoA': 'K10944',
              'amoB': 'K10945',
              'amoC': 'K10946',
-             'nirk':"K00368"}
+             'nirK':"K00368"}
 
 file_list = ['nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.treefile',
              'nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/',
