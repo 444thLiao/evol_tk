@@ -109,12 +109,12 @@ def do_mafft(indir, suffix='faa'):
 
 
 @click.command()
-@click.option("-i", "infile")
+@click.option("-i", "infile",help="normally is the directory called `Results_Nov09_1/Orthogroups/Orthogroups.tsv`")
 @click.option("-o", "output_dir", help="the directory of output to")
 @click.option("--only_ortholog", help="use ortholog only or use paralog? default only use ortholog", is_flag=True, default=True)
 @click.option("-rr", "remained_ratio", help='choose ', default=0.5)
 @click.option("-rn", "remained_num", help='choose ', default=None)
-@click.option("-rgf", "remained_genomes_file", help="selecting single copy OG according a file whihc each line is a genome", default=None)
+@click.option("-rgf", "remained_genomes_file", help="selecting single copy OG according a file which each line is a genome", default=None)
 @click.option("-g", "group_file", help='choose ', default=None)
 @click.option("-gc", "group_column", default=None)
 @click.option("-doMSA", "doMSA", help='do MSA with mafft or not?', default=False, is_flag=True)

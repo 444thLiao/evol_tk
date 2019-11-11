@@ -11,7 +11,7 @@ def get_dict(file):
     for _ in contents:
         id, sep, name = _.partition(":")
         full_name = name.strip()
-        name = full_name.split('.')[0]
+        name = full_name.rpartition('.')[0] 
         name = name.split(' ')[0]
         if name and id:
             return_dict[id] = full_name
