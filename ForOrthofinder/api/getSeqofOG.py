@@ -14,7 +14,32 @@ from os.path import join, dirname
 import click
 from toolkit.utils import get_dict, get_protein, get_single_copy, get_summary_statistic
 from tqdm import tqdm
+import multiprocessing as mp
 
+def extract2file(args):
+    sub_data,output_dir,og,species_path_temp,id2spe,id2seq = args
+    with open(join(output_dir, og + '.faa'), 'w') as f1:
+        seqs = []
+        for speid, seq_id in sub_data.loc[og, :].items():
+            if speid != seq_id.split('_')[0] and seq_id != 'nan':
+                speid = seq_id.split('_')[0]
+            spe_file = species_path_temp.format(speid=speid)
+            if not os.path.exists(spe_file):
+                _cache = spe_file.rpartition('WorkingDirectory')
+                spe_file = _cache[0] + _cache[2]
+                _cache = spe_file.rpartition('WorkingDirectory')
+                spe_file = _cache[0] + '/WorkingDirectory/' + _cache[2].split('/')[-1]
+            genomes_fullname = id2spe[speid]
+            if seq_id == 'nan':
+                continue
+            record = get_protein(spe_file, seq_id)
+            if record is not None:
+                record_fullname = id2seq[record.id]
+                record.id = genomes_fullname + ' ' + record_fullname
+                seqs.append(record)
+            else:
+                print(seq_id, "doesn't exist?")
+        SeqIO.write(seqs, handle=f1, format='fasta-2line')
 
 def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_copy=True,
                     ):
@@ -27,7 +52,9 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_c
     SpeID_file = join(thisdir, "SpeciesIDs.txt")
     id2seq, seq2id = get_dict(SeqID_file)
     id2spe, spe2id = get_dict(SpeID_file)
-    if single_copy:
+    if isinstance(single_copy,pd.DataFrame):
+        data = single_copy
+    elif isinstance(single_copy,str):
         data = get_single_copy(orthogroups_path)
     else:
         data = pd.read_csv(orthogroups_path, sep='\t', index_col=0)
@@ -44,29 +71,11 @@ def get_seq_with_OG(orthogroups_path, OG, output_dir, genomes_list=None,single_c
     sub_data = sub_data.applymap(lambda x: seq2id.get(str(x).split('.')[0].split(' ')[0], 'nan'))
     species_path_temp = join(thisdir, "Species{speid}.fa")
 
-    for og in tqdm(OG):
-        with open(join(output_dir, og + '.faa'), 'w') as f1:
-            seqs = []
-            for speid, seq_id in sub_data.loc[og, :].items():
-                if speid != seq_id.split('_')[0] and seq_id != 'nan':
-                    speid = seq_id.split('_')[0]
-                spe_file = species_path_temp.format(speid=speid)
-                if not os.path.exists(spe_file):
-                    _cache = spe_file.rpartition('WorkingDirectory')
-                    spe_file = _cache[0] + _cache[2]
-                    _cache = spe_file.rpartition('WorkingDirectory')
-                    spe_file = _cache[0] + '/WorkingDirectory/' + _cache[2].split('/')[-1]
-                genomes_fullname = id2spe[speid]
-                if seq_id == 'nan':
-                    continue
-                record = get_protein(spe_file, seq_id)
-                if record is not None:
-                    record_fullname = id2seq[record.id]
-                    record.id = genomes_fullname.split('.')[0] + ' ' + record_fullname
-                    seqs.append(record)
-                else:
-                    print(seq_id, "doesn't exist?")
-            SeqIO.write(seqs, handle=f1, format='fasta-2line')
+    params = []
+    for og in OG:
+        params.append((sub_data,output_dir,og,species_path_temp,id2spe,id2seq))
+    with mp.Pool(processes=10) as tp:
+        list(tp.imap(extract2file,tqdm(params)))
 
 
 @click.command()

@@ -145,7 +145,8 @@ def main(infile,
         get_seq_with_OG(infile,
                         get_OGs,
                         genomes_list=result_genome,
-                        output_dir=output_dir)
+                        output_dir=output_dir,
+                        single_copy=data)
         if doMSA:
             tqdm.write("performing the MSA process")
             do_mafft(output_dir)

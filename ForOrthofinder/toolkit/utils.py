@@ -11,8 +11,12 @@ def get_dict(file):
     for _ in contents:
         id, sep, name = _.partition(":")
         full_name = name.strip()
-        name = full_name.rpartition('.')[0] 
-        name = name.split(' ')[0]
+        if '.' in full_name:
+            full_name = full_name.rpartition('.')[0] 
+        # extract name precisely, for `6: GCA_000011965.2.faa`, it need to remove suffix and get 'GCA_000011965.2'
+        # for `0_9: 000007985v2_00010 Phytochrome-like protein cph1`, it need to get '000007985v2_00010'
+        # if not '.' in full_name, it will return ['','',full_name]
+        name = full_name.split(' ')[0]
         if name and id:
             return_dict[id] = full_name
             rev_dict[name] = id

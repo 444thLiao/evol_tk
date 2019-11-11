@@ -14,6 +14,8 @@
 
 `orthofinder -f raw_genome_proteins -og -a 50 -1 -s diamond`
 
+`python3 ~/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov09_1/Orthogroups/Orthogroups.tsv -o ./og_extracted -rr 0.7`
+
 ## 4. extract conserved protein to following dating
 
 ## 5. alignment these step4 
