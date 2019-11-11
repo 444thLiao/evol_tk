@@ -102,7 +102,7 @@ def get_group_info(group_file,
 
 
 def do_mafft(indir, suffix='faa'):
-    for p_file in glob(join(indir, '*.' + suffix)):
+    for p_file in tqdm(glob(join(indir, '*.' + suffix))):
         pre_name = p_file.replace('.%s' % suffix,
                                   '')
         run_cmd(f"mafft --maxiterate 1000 --genafpair --thread -1 {pre_name}.{suffix} > {pre_name}.aln")

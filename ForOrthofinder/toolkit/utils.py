@@ -53,6 +53,9 @@ def get_single_copy(infile):
     return single_copy_data
 
 
-def run_cmd(cmd):
+def run_cmd(cmd,**kwargs):
     check_call(cmd,
-               shell=True)
+               shell=True,
+               stderr=open('/dev/null','w'),
+               stdout=open('/dev/null','w')
+               **kwargs)
