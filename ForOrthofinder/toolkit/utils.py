@@ -57,5 +57,5 @@ def run_cmd(cmd,**kwargs):
     check_call(cmd,
                shell=True,
                stderr=open('/dev/null','w'),
-               stdout=open('/dev/null','w')
+               stdout=open('/dev/null','w'),
                **kwargs)
