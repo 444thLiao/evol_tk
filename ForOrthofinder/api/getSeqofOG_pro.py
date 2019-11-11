@@ -105,7 +105,7 @@ def do_mafft(indir, suffix='faa'):
     for p_file in glob(join(indir, '*.' + suffix)):
         pre_name = p_file.replace('.%s' % suffix,
                                   '')
-        run_cmd(f"mafft {pre_name}.{suffix} > {pre_name}.aln")
+        run_cmd(f"mafft --maxiterate 1000 --genafpair --thread -1 {pre_name}.{suffix} > {pre_name}.aln")
 
 
 @click.command()
@@ -128,6 +128,10 @@ def main(infile,
          group_column,
          doMSA
          ):
+    if doMSA:
+        tqdm.write("performing the MSA process")
+        do_mafft(output_dir)
+        return 
     if only_ortholog:
         data = get_single_copy(infile)
         group_info = get_group_info(group_file, group_column)
@@ -147,9 +151,7 @@ def main(infile,
                         genomes_list=result_genome,
                         output_dir=output_dir,
                         single_copy=data)
-        if doMSA:
-            tqdm.write("performing the MSA process")
-            do_mafft(output_dir)
+
     else:
         # keep OG with paralog
         # choose paralog and get OGs
