@@ -23,3 +23,7 @@
 
 `python3 ~/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90`
 
+## 6. extract conserved proteins
+```
+
+```
