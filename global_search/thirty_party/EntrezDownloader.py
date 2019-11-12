@@ -63,7 +63,7 @@ class EntrezDownloader:
 
     def __init__(self, num_threads=30, batch_size=10, email=None, api_key=None, pbar=False):
         """The EntrezDownloader class enables parallel downloads via the NCBI Entrez interface"""
-        self.baseurl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'
+        self.baseurl = r"https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
         self.num_threads = num_threads
         self.batch_size = batch_size
         self.email = email
