@@ -101,7 +101,7 @@ class EntrezDownloader:
             try:
                 self.request_limiter.wait()
                 response = requests.post(
-                    f'{self.baseurl}/{emode}.cgi', post_data)
+                    f'{self.baseurl}/{emode}.fcgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
                     if emode=='esearch' and ' OR ' not in ids:
@@ -148,7 +148,7 @@ class EntrezDownloader:
             try:
                 self.request_limiter.wait()
                 response = requests.post(
-                    f'{self.baseurl}/efetch.cgi', post_data)
+                    f'{self.baseurl}/efetch.fcgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
                     result_collector.add_results(results)
@@ -184,7 +184,7 @@ class EntrezDownloader:
             try:
                 self.request_limiter.wait()
                 response = requests.post(
-                    f'{self.baseurl}/esummary.cgi', post_data)
+                    f'{self.baseurl}/esummary.fcgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
                     result_collector.add_results(results)
@@ -221,7 +221,7 @@ class EntrezDownloader:
             try:
                 self.request_limiter.wait()
                 response = requests.post(
-                    f'{self.baseurl}/elink.cgi', post_data)
+                    f'{self.baseurl}/elink.fcgi', post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
                     result_collector.add_results(results)
