@@ -94,7 +94,7 @@ def main(indir, genome_list, remove_identical, seed,concat_type, suffix='aln'):
     if concat_type.lower() in ['both','partition']:
         generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
     if concat_type.lower() in ['both','phy']:
-        generate_partition_file(join(indir, 'concat_aln.phy'), record_pos_info)
+        generate_phy_file(join(indir, 'concat_aln.phy'), record_pos_info)
     
 
 if __name__ == '__main__':
