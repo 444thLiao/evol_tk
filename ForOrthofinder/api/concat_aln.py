@@ -93,7 +93,7 @@ def main(indir, genome_list, remove_identical, seed,concat_type, suffix='aln'):
         remove_identical_seqs(join(indir, 'concat_aln.aln'), seed=seed)
     if concat_type.lower() in ['both','partition']:
         generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
-    elif concat_type.lower() in ['both','phy']:
+    if concat_type.lower() in ['both','phy']:
         generate_partition_file(join(indir, 'concat_aln.phy'), record_pos_info)
     
 
