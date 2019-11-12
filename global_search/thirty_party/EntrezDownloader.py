@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 "modified by thliao at 20191019"
 
 import requests

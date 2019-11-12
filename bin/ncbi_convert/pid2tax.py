@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script is mainly for implementing taxonomy information with its protein accession id.
 It will generate a tab separated table.
