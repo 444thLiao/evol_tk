@@ -42,17 +42,26 @@ def remove_identical_seqs(filename, seed=None):
 
 def generate_partition_file(outfile, record_pos_info):
     with open(outfile, 'w') as f1:
-        for name, start, end in record_pos_info:
+        for name, start, end,_ in record_pos_info:
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
-
+def generate_phy_file(outfile, record_pos_info):
+    with open(outfile, 'w') as f1:
+        for name, start, end, aln_record in record_pos_info:
+            num_seq = len(aln_record)
+            length_this_aln = aln_record.get_alignment_length()
+            f1.write(f'{num_seq} {length_this_aln}\n')
+            for _ in range(num_seq):
+                f1.write(f"{aln_record[_,:].id}\t{str(aln_record[_,:].seq)}\n")
+            
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-s", "suffix", default='aln')
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
-def main(indir, genome_list, remove_identical, seed, suffix='aln'):
+@click.option("-ct", "concat_type", help='partition or phy or both',default='partition')
+def main(indir, genome_list, remove_identical, seed,concat_type, suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -68,7 +77,7 @@ def main(indir, genome_list, remove_identical, seed, suffix='aln'):
         name = "part%s" % int(idx + 1)
         start, end = las_pos + 1, length_this_aln + las_pos
         las_pos = end
-        record_pos_info.append((name, start, end))
+        record_pos_info.append((name, start, end,aln_record ))
         # done record
         for gid in gid2record:
             records = [_ for _ in aln_record if _.id == gid]
@@ -82,8 +91,11 @@ def main(indir, genome_list, remove_identical, seed, suffix='aln'):
             f1.write(f'{seq}\n')
     if remove_identical:
         remove_identical_seqs(join(indir, 'concat_aln.aln'), seed=seed)
-    generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
-
+    if concat_type.lower() in ['both','partition']:
+        generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
+    elif concat_type.lower() in ['both','phy']:
+        generate_partition_file(join(indir, 'concat_aln.phy'), record_pos_info)
+    
 
 if __name__ == '__main__':
     main()

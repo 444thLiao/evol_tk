@@ -60,10 +60,13 @@ if __name__ == "__main__":
         
     base_tab = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
 
-    all_g_ids = set([basename(_) for _ in glob(join(indir,'bacteria','*'))])
+    all_g_ids = set([basename(_) 
+                     for _ in glob(join(indir,'bacteria','*'))])
 
     metadatas = open(base_tab).read().split('\n')
-    rows = [_ for _ in metadatas if _.split('\t')[0] in all_g_ids]
+    rows = [_ 
+            for _ in metadatas 
+            if _.split('\t')[0] in all_g_ids]
     with open('./metadata.csv','w') as f1:
         f1.write(metadatas[1].strip('# ') + '\n') 
         f1.write('\n'.join(rows))

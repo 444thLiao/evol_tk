@@ -105,7 +105,7 @@ def do_mafft(indir, suffix='faa'):
     for p_file in tqdm(glob(join(indir, '*.' + suffix))):
         pre_name = p_file.replace('.%s' % suffix,
                                   '')
-        if not exists(f"{pre_name}.aln") or getsize(f"{pre_name}.aln") ==0:
+        if (not exists(f"{pre_name}.aln")) or (getsize(f"{pre_name}.aln") ==0):
             run_cmd(f"mafft --maxiterate 1000 --genafpair --thread -1 {pre_name}.{suffix} > {pre_name}.aln")
 
 
