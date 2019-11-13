@@ -51,7 +51,7 @@ def generate_phy_file(outfile, record_pos_info,genome_ids):
             total_num = len(genome_ids)
             num_seq = len(aln_record)
             length_this_aln = aln_record.get_alignment_length()
-            f1.write(f'{num_seq}        {length_this_aln}\n')
+            f1.write(f'{total_num}        {length_this_aln}\n')
             used_ids = []
             for _ in range(num_seq):
                 if aln_record[_,:].id in genome_ids:
