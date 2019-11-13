@@ -3,6 +3,7 @@ from glob import glob
 from os.path import *
 from ForOrthofinder.api.concat_aln import generate_phy_file
 from Bio import AlignIO
+
 @click.command()
 @click.option('-i','infile',help='aln file')
 @click.option('-o','outfile',default=None,required=None)
@@ -26,7 +27,7 @@ def cli(infile,outfile,genome_list):
         if len(infiles) != 1:
             outfile = infile.rpartition('.')[0]+'.phy'
         aln_record = AlignIO.read(infile, format='fasta')
-        generate_phy_file(outfile,(0,0,0,aln_record),gids)
+        generate_phy_file(outfile,[(0,0,0,aln_record)],gids)
     
 
 if __name__ == "__main__":
