@@ -95,10 +95,17 @@ def main(indir, outfile,genome_list, remove_identical, seed,concat_type, suffix=
                 gid2record[gid] += '-' * length_this_aln
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
+        outpartition = join(indir, 'concat_aln.partition')
+        outphy = join(indir, 'concat_aln.phy')
     else:
+        if not '/' in outfile:
+            outfile = './' + outfile
         if not exists(dirname(outfile)):
             os.makedirs(dirname(outfile))
         outfile = outfile
+        outpartition = join(dirname(outfile), 'concat_aln.partition')
+        outphy = join(dirname(outfile), 'concat_aln.phy')
+        
         
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
@@ -107,9 +114,9 @@ def main(indir, outfile,genome_list, remove_identical, seed,concat_type, suffix=
     if remove_identical:
         remove_identical_seqs(outfile, seed=seed)
     if concat_type.lower() in ['both','partition']:
-        generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
+        generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both','phy']:
-        generate_phy_file(join(indir, 'concat_aln.phy'), record_pos_info,gids)
+        generate_phy_file(outphy, record_pos_info,gids)
     
 
 if __name__ == '__main__':

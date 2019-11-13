@@ -33,7 +33,7 @@
 
 
 ## (repeat)4. start with concat but add a genome_list
-`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 -gl og_extracted_90/new_genomes.list`
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 -gl og_extracted_90/new_genomes.list -o postcluster/concat.aln`
 
 
 
