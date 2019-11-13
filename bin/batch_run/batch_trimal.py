@@ -8,7 +8,7 @@ from glob import glob
 from tqdm import tqdm
 import multiprocessing as mp
 
-command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {in_file} > {o_file} '
+command_template = "trimal -in {in_file} -out {o_file} -automated1 -resoverlap 0.55 -seqoverlap 60"
 def run(args):
     unit_run(*args)
     
@@ -42,8 +42,8 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
 @click.command()
 @click.option('-i','indir')
 @click.option('-o','odir')
-@click.option('-s','suffix',default='faa')
-@click.option('-ns','new_suffix',default='aln')
+@click.option('-s','suffix',default='aln')
+@click.option('-ns','new_suffix',default='trimal')
 @click.option('-np','num_parellel',default=10)
 def cli(indir,odir,num_parellel,suffix,new_suffix):
     main(indir,odir,num_parellel,suffix,new_suffix)
