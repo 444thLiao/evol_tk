@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 from Bio import AlignIO, SeqIO
 from glob import glob
-from os.path import join,exists,dirname,
+from os.path import join,exists,dirname
 import click
 import random
 from collections import defaultdict
