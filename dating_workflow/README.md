@@ -18,7 +18,7 @@
 ## 4. extract conserved protein to following dating
 
 ### extract OG matched requirement and perform alignment
-`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov09_1/Orthogroups/Orthogroups.tsv -o ./og_extracted_90 -rr 0.9 -doMSA`
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov12_3/Orthogroups/Orthogroups.tsv -o ./og_extracted_90 -rr 0.9 -doMSA`
 
 ### concat these alignment
 `python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 `
@@ -33,6 +33,8 @@
 
 
 ## (repeat)4. start with concat but add a genome_list
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov12_3/Orthogroups/Orthogroups.tsv -rgf og_extracted_90/new_genomes.list -o ./postcluster_90 -rr 0.9 -doMSA `
+
 `python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 -gl og_extracted_90/new_genomes.list -o postcluster/concat.aln`
 
 
