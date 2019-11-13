@@ -54,7 +54,6 @@ def select_OG(data, rr, rn,rgf, total, group_info):
         rn = int(total * rr)
     else:
         rr = float(rr / total)
-    print("current %s selected genomes and %s OG presented at all these genomes" % (len(selected_genomes),len(keep_OG)))
     print("with input parameters, extract OG which present at %s genomes" % rn)
 
     if group_info is None:
