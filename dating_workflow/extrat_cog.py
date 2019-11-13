@@ -14,6 +14,8 @@ cdd_num = []
 for row in open(cdd_list,'r'):
     if row.split('\t')[1] in cog_list:
         cdd_num.append("CDD:%s" % row.split('\t')[0])
+# ABOVE is the default setting for luolab server.
+
 
 # cog out dir
 cog_out_dir = expanduser('~/data/nitrification_for/dating_for/target_genes')
@@ -26,6 +28,7 @@ for f in tqdm(glob(join(cog_out_dir,'*.out'))):
             genome2cdd[genome_name][row.split('\t')[1]].append(locus)
 
 # tmp (prokka)
+# rrna doesn't have protein sequences, pass it
 # tmp_list = [expanduser('~/data/nitrification_for/tmp'),
 #             expanduser('~/data/nitrification_for/cyano_basal/tmp'),
 #             expanduser('~/data/nitrification_for/backbone_others/tmp')]
@@ -41,7 +44,6 @@ for f in tqdm(glob(join(cog_out_dir,'*.out'))):
 #                 genome2cdd[genome_name]['23S'].append(row.split('\t')[0])
 
 # extract protein
-# rrna doesn't have protein sequences
 outdir = expanduser('~/data/nitrification_for/dating_for/conserved_protein')
 for genome_name,pset in tqdm(genome2cdd.items()):
     pfiles = glob(expanduser(f'~/data/nitrification_for/dating_for/raw_genome_proteins/{genome_name}.faa'))
@@ -63,7 +65,7 @@ for each_cdd in tqdm(cdd_num):
             record = get_records[0]
             record.id = gname
             cdd_records.append(record)
-    with open(join(outdir,f'{each_cdd}.faa'),'w') as f1:
+    with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
         SeqIO.write(cdd_records,f1,format='fasta-2line')
     
               

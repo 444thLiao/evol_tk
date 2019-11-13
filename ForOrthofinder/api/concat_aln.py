@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 from Bio import AlignIO, SeqIO
 from glob import glob
-from os.path import join
+from os.path import join,exists,dirname,
 import click
 import random
 from collections import defaultdict
@@ -62,12 +62,14 @@ def generate_phy_file(outfile, record_pos_info,genome_ids):
                 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
+@click.option("-o", "outfile", default=None,help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
 @click.option("-s", "suffix", default='aln')
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both',default='partition')
-def main(indir, genome_list, remove_identical, seed,concat_type, suffix='aln'):
+def main(indir, outfile,genome_list, remove_identical, seed,concat_type, suffix='aln'):
+
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -91,12 +93,19 @@ def main(indir, genome_list, remove_identical, seed,concat_type, suffix='aln'):
                 gid2record[gid] += str(records[0].seq)
             else:
                 gid2record[gid] += '-' * length_this_aln
-    with open(join(indir, 'concat_aln.aln'), 'w') as f1:
+    if outfile is None:
+        outfile = join(indir, 'concat_aln.aln')
+    else:
+        if not exists(dirname(outfile)):
+            os.makedirs(dirname(outfile))
+        outfile = outfile
+        
+    with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
             f1.write(f'>{gid}\n')
             f1.write(f'{seq}\n')
     if remove_identical:
-        remove_identical_seqs(join(indir, 'concat_aln.aln'), seed=seed)
+        remove_identical_seqs(outfile, seed=seed)
     if concat_type.lower() in ['both','partition']:
         generate_partition_file(join(indir, 'concat_aln.partition'), record_pos_info)
     if concat_type.lower() in ['both','phy']:

@@ -16,19 +16,26 @@
 
 
 ## 4. extract conserved protein to following dating
-`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov09_1/Orthogroups/Orthogroups.tsv -o ./og_extracted -rr 0.7 -doMSA`
 
-`for f in `ls *.faa`; do mafft --maxiterate 1000 --genafpair --thread -1 > $.fa; done `
-## 5. alignment these step4 
+### extract OG matched requirement and perform alignment
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/getSeqofOG_pro.py -i /home-backup/thliao/nitrification_for/dating_for/raw_genome_proteins/OrthoFinder/Results_Nov09_1/Orthogroups/Orthogroups.tsv -o ./og_extracted_90 -rr 0.9 -doMSA`
 
-`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90`
+### concat these alignment
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 `
 
-## 6. build the tree and cluster into smaller tree
+### build tree
 `iqtree -nt 50 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre og_extracted_90/iqtree -s og_extracted_90/concat_aln.aln -spp og_extracted_90/concat_aln.partition`
 
+## 6. cluster into smaller tree
 `/home-user/thliao/script/TreeCluster/TreeCluster.py -i  og_extracted_90/iqtree.treefile -tf argmax_clusters -t 1 > og_extracted_90/iqtree_treecluster`
 
 `python3 /home-user/thliao/script/evolution_relative/dating_workflow/step_script/subset_tre_with_cluster.py -i  og_extracted_90/iqtree_treecluster -o og_extracted_90/new_genomes.list -s 100`
+
+
+## (repeat)4. start with concat but add a genome_list
+`python3 /home-user/thliao/script/evolution_relative/ForOrthofinder/api/concat_aln.py -i ./og_extracted_90 -gl og_extracted_90/new_genomes.list`
+
+
 
 ## 6. extract conserved proteins
 
