@@ -45,8 +45,9 @@ def select_OG(data, rr, rn,rgf, total, group_info):
         selected_genomes = [_
                             for _ in selected_genomes
                             if _ and _ in data.columns]
-        total = len(selected_genomes)
+        
         data = data.loc[:,selected_genomes]
+        total = len(selected_genomes)
     # remained ratio/numbers, finally convert to number
     if rr is None and rn is None:
         
