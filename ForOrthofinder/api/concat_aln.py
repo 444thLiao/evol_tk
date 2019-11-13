@@ -48,15 +48,17 @@ def generate_partition_file(outfile, record_pos_info):
 def generate_phy_file(outfile, record_pos_info,genome_ids):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
-            num_seq = len(aln_record)
+            num_seq = len(genome_ids)
             length_this_aln = aln_record.get_alignment_length()
             f1.write(f'{num_seq}        {length_this_aln}\n')
             used_ids = []
             for _ in range(num_seq):
-                f1.write(f"{aln_record[_,:].id}        {str(aln_record[_,:].seq)}\n")
-                used_ids.append(aln_record[_,:].id)
+                if aln_record[_,:].id in genome_ids:
+                    f1.write(f"{aln_record[_,:].id}        {str(aln_record[_,:].seq)}\n")
+                    used_ids.append(aln_record[_,:].id)
             for remained_id in set(genome_ids).difference(set(used_ids)):
                 f1.write(f"{remained_id}        {'-'*length_this_aln}\n")
+                
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-s", "suffix", default='aln')
