@@ -24,16 +24,20 @@ for row in open(metadata):
             
 request_taxon = 'phylum'
 gid2taxon = {}
-for g,tid in gid2taxid:
+for g,tid in gid2taxid.items():
     lineage = ncbi.get_lineage(tid)
     ranks = ncbi.get_rank(lineage)
-    names = ncbi.get_taxid_translator(tid)
+    names = ncbi.get_taxid_translator(lineage)
     r2n = {ranks[_id]:names[_id] for _id in lineage}
     gid2taxon[g] = r2n.get('phylum','')
 gid2taxon = {k:v for k,v in gid2taxon.items() if v}
 
 text = to_label(gid2name)
 with open('./itol_txt/names.txt','w') as f1:
+    f1.write(text)
+
+text = to_label({k:k for k in gid2name})
+with open('./itol_txt/reset_names.txt','w') as f1:
     f1.write(text)
 
 color_scheme = {'type': {'NOB': '#e41a1c', 'comammox': '#edc31d',
@@ -65,7 +69,7 @@ def get_colors_general(ID2infos, now_info2style={}):
 
 id2info = gid2taxon
 id2info,info2color = get_colors_general(id2info)
-text = to_color_labels_bg(id2info,info2color,info_name='phylum')
+text = to_color_strip(id2info,info2color,info_name='phylum')
 with open('./itol_txt/phylum_annotate.txt','w') as f1:
     f1.write(text)
 

@@ -157,7 +157,6 @@ redo = False
 if not exists(tmp_dir):
     os.makedirs(tmp_dir)
 db_faa = join(dirname(download_dir),'concat_all_protein.faa')
-db_faa = './concat.faa'
 collected_gs = expanduser('~/project/nitrogen_cycle/curated_genes/')
 genome2collect_genes = defaultdict(list)
 for fa in tqdm(glob(join(collected_gs,'*.faa'))):
