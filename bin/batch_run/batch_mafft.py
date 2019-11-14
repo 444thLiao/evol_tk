@@ -17,7 +17,7 @@ def unit_run(in_file,o_file):
                                        o_file=o_file), 
                shell=1)
     
-def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
+def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,**kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -25,6 +25,11 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
     if suffix:
         suffix = '.'+suffix
     file_list = glob(join(in_dir,f'*{suffix}'))
+    if gids is not None:
+        gids = set(gids)
+        file_list = [_ 
+                     for _ in file_list 
+                     if basename(_).replace(f'.{suffix}','') in gids]
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list),suffix))
     params = []
     for in_file in tqdm(file_list):
@@ -45,8 +50,15 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
 @click.option('-s','suffix',default='faa')
 @click.option('-ns','new_suffix',default='aln')
 @click.option('-np','num_parellel',default=10)
-def cli(indir,odir,num_parellel,suffix,new_suffix):
-    main(indir,odir,num_parellel,suffix,new_suffix)
+@click.option("-gl", "genome_list", default=None, 
+              help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
+def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list):
+    if genome_list is None:
+        gids = None
+    else:
+        gids = open(genome_list).read().split('\n')
+        gids = [_ for _ in gids if _]
+    main(indir,odir,num_parellel,suffix,new_suffix,gids = gids)
 
 
 
