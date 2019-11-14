@@ -7,7 +7,7 @@ import click
 from glob import glob
 from tqdm import tqdm
 import multiprocessing as mp
-
+from Bio import SeqIO
 command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {in_file} > {o_file} '
 def run(args):
     unit_run(*args)
@@ -27,9 +27,18 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,**kwarg):
     file_list = glob(join(in_dir,f'*{suffix}'))
     if gids is not None:
         gids = set(gids)
-        file_list = [_ 
-                     for _ in file_list 
-                     if basename(_).replace(f'.{suffix}','') in gids]
+        os.makedirs(join(odir,'tmp'),exist_ok=1)
+        new_file_list = []
+        for f in file_list:
+            records = SeqIO.parse(f,format='fasta')
+            records = [_ for _ in records if _.id in gids]
+            n_f = join(odir,'tmp',basename(f))
+            if not records:
+                raise Exception('error not records')
+            with open(n_f,'w') as f1:
+                SeqIO.write(records,f1,format='fasta-2line')
+            new_file_list.append(n_f)
+        file_list = new_file_list[::]
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list),suffix))
     params = []
     for in_file in tqdm(file_list):
