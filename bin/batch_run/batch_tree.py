@@ -9,23 +9,31 @@ from tqdm import tqdm
 import multiprocessing as mp
 
 command_template = 'iqtree -nt 20 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {ofile} -s {infile}'
+command_template2 = '/home-user/thliao/anaconda3/bin/FastTreeMP {infile} > {ofile}'
+
+used_command = {'iqtree': command_template,
+                'fasttree': command_template2}
 
 
 def run(args):
     unit_run(*args)
 
 
-def unit_run(infile, ofile):
+def unit_run(infile, ofile, cmd):
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
-    check_call(command_template.format(infile=infile,
-                                       ofile=ofile),
+    check_call(cmd.format(infile=infile,
+                          ofile=ofile),
                shell=True)
 
 
-def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
+def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, software='iqtree'):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
+    if software not in used_command:
+        raise IOError
+    cmd = used_command[software]
+
     if not exists(odir):
         os.makedirs(odir)
     if suffix:
@@ -45,7 +53,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
                          name,
                          basename(in_file))
         if not exists(ofile) or force:
-            params.append((in_file, ofile))
+            params.append((in_file, ofile, cmd))
     with mp.Pool(processes=num_parellel) as tp:
         for _ in tp.imap(run, tqdm(params)):
             pass
@@ -58,13 +66,15 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
 @click.option('-ns', 'new_suffix', default='iqtree')
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def cli(indir, odir, suffix, new_suffix, force, num_parellel):
+@click.option('-use', 'software', help='which software used to build tree?', default='iqtree')
+def cli(indir, odir, suffix, new_suffix, force, num_parellel, software):
     main(indir=indir,
          odir=odir,
          num_parellel=num_parellel,
          suffix=suffix,
          new_suffix=new_suffix,
-         force=force)
+         force=force,
+         software=software)
 
 
 if __name__ == "__main__":

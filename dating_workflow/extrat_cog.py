@@ -85,7 +85,7 @@ def perform_iqtree(outdir):
     script = expanduser('~/bin/batch_run/batch_mafft.py')
     run(f"python3 {script} -i {outdir} -o {outdir}")
 
-    script = expanduser('~/bin/batch_run/batch_iqtree.py')
+    script = expanduser('~/bin/batch_run/batch_tree.py')
     run(f"python3 {script} -i {outdir} -o {outdir}")
 
 def stats_cog(genome2cdd,outdir):
