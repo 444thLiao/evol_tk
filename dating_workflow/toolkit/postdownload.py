@@ -1,3 +1,10 @@
+"""
+It mainly for running prokka after download genomes.
+It includes
+1. check the missing ID
+2. perform prokka and rename the ID
+3. generate metadata.csv
+"""
 import pandas as pd
 from os.path import join,exists,basename,dirname,isdir,expanduser
 from glob import glob
@@ -57,11 +64,16 @@ if __name__ == "__main__":
     else:
         indir = './genbank'
         odir = './genome_protein_files'
-        
+    default_name = './assembly_ids.list'
     base_tab = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
 
     all_g_ids = set([basename(_) 
                      for _ in glob(join(indir,'bacteria','*'))])
+    # from downloaded dir
+    all_ids = open(default_name).read().split('\n')
+    all_ids = [_ for _ in all_ids]
+    all_ids = set(all_ids)
+    # from id list
 
     metadatas = open(base_tab).read().split('\n')
     rows = [_ 
@@ -70,6 +82,10 @@ if __name__ == "__main__":
     with open('./metadata.csv','w') as f1:
         f1.write(metadatas[1].strip('# ') + '\n') 
         f1.write('\n'.join(rows))
+    if set(all_ids) != set(all_g_ids):
+        print('different id, missing ids: ' + '\n'.join(all_ids.difference(all_g_ids)))
+
+
     tmp_dir = './tmp'
     prokka_p = "/usr/local/bin/prokka"
     if not exists(odir):
