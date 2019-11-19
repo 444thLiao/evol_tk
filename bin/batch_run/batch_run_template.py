@@ -16,7 +16,7 @@ def run(args):
 def unit_run(in_file,o_file):
     check_call(command_template.format(), shell=1)
     
-def main(in_dir,odir,num_parellel,suffix='',new_suffix=''):
+def main(in_dir,odir,num_parellel,suffix='',new_suffix='',force=False):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -34,7 +34,8 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix=''):
         else:
             ofile = join(odir,
                          basename(in_file))
-        params.append((in_file,ofile))
+        if not exists(ofile) or force:
+            params.append((in_file,ofile))
     with mp.Pool(processes=num_parellel) as tp:
         for _ in tp.imap(run,tqdm(params)):
             pass
@@ -44,8 +45,9 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix=''):
 @click.option('-o','odir')
 @click.option('-s','suffix',default='')
 @click.option('-ns','new_suffix',default='')
-def cli(indir,odir,suffix,new_suffix):
-    main(indir,odir,suffix,new_suffix)
+@click.option('-f','force',help='overwrite?',default=False,required=False,is_flag=True)
+def cli(indir,odir,suffix,new_suffix,force):
+    main(indir,odir,suffix,new_suffix,force)
 
 
 

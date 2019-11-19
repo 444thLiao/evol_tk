@@ -65,37 +65,36 @@ def extra_cog(cog_out_dir):
 #                 genome2cdd[genome_name]['23S'].append(row.split('\t')[0])
 
 # extract protein
-def write_cog(outdir,genome2cdd,raw_proteins):
-    pdir = dirname(expanduser(raw_proteins))
-    for genome_name,pset in tqdm(genome2cdd.items()):
-        pfiles = glob(f'{pdir}/{genome_name}.faa')
-        if pfiles:
-            pfile = pfiles[0]
-            _cache = {record.id:record for record in SeqIO.parse(pfile,format='fasta')}
-            pset = {k:[_cache[_] for _ in v if _ in _cache] for k,v in pset.items()}
-            genome2cdd[genome_name] = pset
-        else:
-            continue
+def write_cog_multiple(outdir,genome2cdd):
     # concat/output proteins
-    os.makedirs(outdir,exist_ok=1)
+    if not exists(outdir):
+        os.makedirs(outdir)
     for each_cdd in tqdm(cdd_num):
         cdd_records = []
         for gname, p_d in genome2cdd.items():
             get_records = p_d.get(each_cdd,[])
             if len(get_records) >=1:
-                record = get_records[0]
-                record.id = gname
-                cdd_records.append(record)
+                #record = get_records
+                for record in get_records:
+                    record.id = gname
+                cdd_records+=get_records
         with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
             SeqIO.write(cdd_records,f1,format='fasta-2line')
-    
-              
 
-    from collections import Counter
-    for g,v in genome2cdd.items():
-        counter_v = Counter(v)
-        if [(k,v) for k,v in counter_v.items() if v >=2]:
-            print([(k,v) for k,v in counter_v.items() if v >=2])
+def perform_iqtree(outdir):
+    script = expanduser('~/bin/batch_run/batch_mafft.py')
+    run(f"python3 {script} -i {outdir} -o {outdir}")
+
+    script = expanduser('~/bin/batch_run/batch_iqtree.py')
+    run(f"python3 {script} -i {outdir} -o {outdir}")
+    
+def stats_cog(genome2cdd,outdir):
+    cog_multi = defaultdict(list)
+    for g,_d in genome2cdd.items():
+        for cog,v in _d.items():
+            if len(v) >=2:
+                cog_multi[cog].append(g)
+
             
 if __name__ == "__main__":
     import sys
@@ -111,4 +110,5 @@ if __name__ == "__main__":
         outdir = expanduser('~/data/nitrification_for/dating_for/conserved_protein')
     annotate_cog(raw_proteins, out_cog_dir)
     genome2cdd = extra_cog(out_cog_dir)
-    write_cog(outdir, genome2cdd,raw_proteins)
+    write_cog_multiple(outdir, genome2cdd)
+    perform_iqtree(outdir)

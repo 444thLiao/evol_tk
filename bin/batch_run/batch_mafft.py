@@ -17,7 +17,7 @@ def unit_run(in_file,o_file):
                                        o_file=o_file), 
                shell=1)
     
-def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,**kwarg):
+def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=False,**kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -49,7 +49,8 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,**kwarg):
         else:
             ofile = join(odir,
                          basename(in_file))
-        params.append((in_file,ofile))
+        if not exists(ofile) or force:
+            params.append((in_file,ofile))
     with mp.Pool(processes=num_parellel) as tp:
         list(tp.imap(run,tqdm(params)))
 
@@ -61,13 +62,14 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,**kwarg):
 @click.option('-np','num_parellel',default=10)
 @click.option("-gl", "genome_list", default=None, 
               help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list):
+@click.option('-f','force',help='overwrite?',default=False,required=False,is_flag=True)
+def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list,force):
     if genome_list is None:
         gids = None
     else:
         gids = open(genome_list).read().split('\n')
         gids = [_ for _ in gids if _]
-    main(indir,odir,num_parellel,suffix,new_suffix,gids = gids)
+    main(indir,odir,num_parellel,suffix,new_suffix,gids = gids,force=force)
 
 
 
