@@ -1,3 +1,6 @@
+"""
+This script is mainly for download genome from berry genomes company.
+"""
 import requests
 from tqdm import tqdm
 import json,io

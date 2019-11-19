@@ -130,7 +130,7 @@ gene_info = {'nxrA': 'K00370',
              'amoC': 'K10946',
              'nirK':"K00368"}
 
-file_list = ['nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.treefile',
+file_list = [#'nr_retrieve_nxrA/cluster_95_filtered_lengths.fa_aln.dir/iqtree.treefile',
              'nr_retrieve_hao/filtered_by_kegg.faa_aln.dir/iqtree.no_trim.treefile/',
              'nr_retrieve_amoB/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
              'nr_retrieve_amoC/filtered_by_kegg.faa_aln.dir/iqtree.treefile',
