@@ -87,7 +87,7 @@ def perform_iqtree(outdir):
 
     script = expanduser('~/bin/batch_run/batch_iqtree.py')
     run(f"python3 {script} -i {outdir} -o {outdir}")
-    
+
 def stats_cog(genome2cdd,outdir):
     cog_multi = defaultdict(list)
     for g,_d in genome2cdd.items():
