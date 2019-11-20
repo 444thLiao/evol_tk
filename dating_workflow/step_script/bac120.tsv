@@ -1,10 +1,10 @@
 Marker Id	Name	Description	Length (bp)	Single copy (%)	Ubiquity (%)
-PF00380.14	Ribosomal_S9	Ribosomal protein S9/S16	121	94.68	95.33
-PF00410.14	Ribosomal_S8	Ribosomal protein S8	129	94.1	94.65
-PF00466.15	Ribosomal_L10	Ribosomal protein L10	100	91.98	92.45
-PF01025.14	GrpE	GrpE	166	89	96.1
-PF02576.12	DUF150	Uncharacterised BCR, YhbC family COG0779	141	80.41	80.9
-PF03726.9	PNPase	Polyribonucleotide nucleotidyltransferase, RNA binding domain	83	86.92	87.27
+PF00380.19	Ribosomal_S9	Ribosomal protein S9/S16	121	94.68	95.33
+PF00410.19	Ribosomal_S8	Ribosomal protein S8	129	94.1	94.65
+PF00466.20	Ribosomal_L10	Ribosomal protein L10	100	91.98	92.45
+PF01025.19	GrpE	GrpE	166	89	96.1
+PF02576.17	DUF150	Uncharacterised BCR, YhbC family COG0779	141	80.41	80.9
+PF03726.14	PNPase	Polyribonucleotide nucleotidyltransferase, RNA binding domain	83	86.92	87.27
 TIGR00006	TIGR00006	16S rRNA (cytosine(1402)-N(4))-methyltransferase	310	93.42	96.4
 TIGR00019	prfA	peptide chain release factor 1	361	92.62	92.88
 TIGR00020	prfB	peptide chain release factor 2	365	90.98	91.26
