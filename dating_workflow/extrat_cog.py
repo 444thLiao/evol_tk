@@ -65,7 +65,21 @@ def extra_cog(cog_out_dir):
 #                 genome2cdd[genome_name]['23S'].append(row.split('\t')[0])
 
 # extract protein
-def write_cog_multiple(outdir,genome2cdd):
+def write_cog_multiple(outdir,genome2cdd,raw_proteins):
+    pdir = dirname(expanduser(raw_proteins))
+    for genome_name,pdict in tqdm(genome2cdd.items()):
+        pfiles = glob(f'{pdir}/{genome_name}.faa')
+        if pfiles:
+            pfile = pfiles[0]
+            _cache = {record.id:record
+                      for record in SeqIO.parse(pfile,format='fasta')}
+            pset = {k:[_cache[_]
+                       for _ in v
+                       if _ in _cache]
+                    for k,v in pdict.items()}
+            genome2cdd[genome_name] = pset
+        else:
+            continue
     # concat/output proteins
     if not exists(outdir):
         os.makedirs(outdir)
@@ -76,7 +90,7 @@ def write_cog_multiple(outdir,genome2cdd):
             if len(get_records) >=1:
                 #record = get_records
                 for record in get_records:
-                    record.id = gname
+                    record.name = gname
                 cdd_records+=get_records
         with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
             SeqIO.write(cdd_records,f1,format='fasta-2line')
@@ -86,7 +100,7 @@ def perform_iqtree(outdir):
     run(f"python3 {script} -i {outdir} -o {outdir}")
 
     script = expanduser('~/bin/batch_run/batch_tree.py')
-    run(f"python3 {script} -i {outdir} -o {outdir}")
+    run(f"python3 {script} -i {outdir} -o {outdir} -ns newick -use fasttree")
 
 def stats_cog(genome2cdd,outdir):
     cog_multi = defaultdict(list)
