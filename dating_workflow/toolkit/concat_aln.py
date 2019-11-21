@@ -43,7 +43,7 @@ def convert_genome_ID(genome_ID):
     return genome_ID.split('_')[-1].replace('.','v')
 
 def convert_genome_ID_rev(genome_ID):
-    # for GCA_900078535.2
+    # for 900078535v2
     # it will return
     return 'GCA_' + genome_ID.replace('v','.')
 
@@ -62,7 +62,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
             f1.write(f'{total_num}        {length_this_aln}\n')
             used_ids = []
             for _ in range(num_seq):
-                if aln_record[_, :].id in genome_ids:
+                if aln_record[_, :].id.split('_')[0] in genome_ids:
                     f1.write(f"{convert_genome_ID_rev(aln_record[_, :].id)}        {str(aln_record[_, :].seq)}\n")
                     used_ids.append(aln_record[_, :].id)
             for remained_id in set(genome_ids).difference(set(used_ids)):
