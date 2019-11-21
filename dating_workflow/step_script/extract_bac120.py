@@ -55,9 +55,10 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
             pass
 
 
-def parse_grep_result(ofile,filter_evalue):
+def parse_grep_result(ofile,filter_evalue,get_top=False):
     # for grep against hmm scan
     gid2locus = defaultdict(list)
+
     for row in open(ofile, 'r'):
         if row.startswith('#'):
             continue
@@ -66,13 +67,22 @@ def parse_grep_result(ofile,filter_evalue):
 
         gene_id = r[1]
         locus_tag = r[2]
-        evalue = r[4]
-        if float(evalue) <= filter_evalue :
-            gid2locus[gene_id].append(locus_tag)
+        evalue = float(r[4])
+        if filter_evalue and evalue <= filter_evalue:
+            if not get_top:
+                gid2locus[gene_id].append(locus_tag)
+            else:
+                gid2locus[gene_id].append((locus_tag, evalue))
+        else:
+            gid2locus[gene_id].append((locus_tag, evalue))
+    # if get_top:
+    #     gid2locus = {gene_id:[list(sorted(v_list,
+    #                                       key=lambda x:x[1]))[0][0]]
+    #                  for gene_id,v_list in gid2locus.items()}
     return gid2locus
 
 
-def extra_genes(odir,evalue=1e-10):
+def extra_genes(odir, evalue=1e-10, mode='multiple'):
     genome2gene_id = defaultdict(dict)
     odir_pfam = join(odir, 'PFAM')
     odir_tigrfam = join(odir, 'TIGRFAM')
@@ -80,8 +90,20 @@ def extra_genes(odir,evalue=1e-10):
     tqdm.write('start to read/parse output files')
     for outfile in tqdm(outfiles):
         gname = basename(outfile).replace('.out', '')
-        gid2locus = parse_grep_result(outfile,evalue)
+        if mode == 'multiple':
+            gid2locus = parse_grep_result(outfile,filter_evalue=evalue)
+        elif mode == 'top':
+            gid2locus = parse_grep_result(outfile, filter_evalue=None,get_top=True)
+        # else:
+        #     return
         genome2gene_id[gname].update(gid2locus)
+    if mode == 'top':
+        for gname in genome2gene_id.keys():
+            gid2locus = genome2gene_id[gname]
+            gid2locus = {gene_id: [list(sorted(v_list,
+                                               key=lambda x: x[1]))[0][0]]
+                         for gene_id, v_list in gid2locus.items()}
+            genome2gene_id[gname] = gid2locus
     return genome2gene_id
 
 
@@ -119,12 +141,12 @@ def write_genes_multiple(outdir, genome2gene_id, protein_files):
             SeqIO.write(gene_records, f1, format='fasta-2line')
     return genome2gene_seq
 
-def perform_iqtree(outdir):
+def perform_iqtree(indir):
     script = expanduser('~/bin/batch_run/batch_mafft.py')
-    run(f"python3 {script} -i {outdir} -o {outdir}")
+    run(f"python3 {script} -i {indir} -o {indir}")
 
     script = expanduser('~/bin/batch_run/batch_tree.py')
-    run(f"python3 {script} -i {outdir} -o {outdir} -ns newick -use fasttree")
+    run(f"python3 {script} -i {indir} -o {join(dirname(indir),'tree')} -ns newick -use fasttree")
 
 
 def stats_cog(genome2genes):
@@ -148,6 +170,7 @@ if __name__ == "__main__":
         raw_proteins = sys.argv[1]
         out_cog_dir = sys.argv[2]
         outdir = sys.argv[3]
+        protein_files = []
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
@@ -158,7 +181,12 @@ if __name__ == "__main__":
     annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
     annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
 
-    genome2genes = extra_genes(out_cog_dir)
+    genome2genes = extra_genes(out_cog_dir,mode='multiple')
+    gene_multi,gene_Ubiquity = stats_cog(genome2genes)
+
+
+
+    genome2genes = extra_genes(out_cog_dir, mode='top')
     genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
-    stats_cog(genome2genes)
+
     perform_iqtree(outdir)
