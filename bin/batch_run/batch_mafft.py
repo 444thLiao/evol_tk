@@ -1,7 +1,9 @@
-import sys
+"""
+For easily perform mafft for some
+"""
+
 from os.path import *
 import os
-#sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
 import click
 from glob import glob
@@ -15,7 +17,7 @@ def run(args):
 def unit_run(in_file,o_file):
     check_call(command_template.format(in_file=in_file,
                                        o_file=o_file), 
-               shell=1)
+               shell=True)
     
 def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=False,**kwarg):
     suffix = suffix.strip('.')
@@ -31,6 +33,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
         new_file_list = []
         for f in file_list:
             records = SeqIO.parse(f,format='fasta')
+
             records = [_ for _ in records if _.id in gids]
             n_f = join(odir,'tmp',basename(f))
             if not records:
@@ -57,7 +60,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
 @click.command()
 @click.option('-i','indir')
 @click.option('-o','odir')
-@click.option('-s','suffix',default='faa')
+@click.option('-s','suffix',help='suffix for files',default='faa')
 @click.option('-ns','new_suffix',default='aln')
 @click.option('-np','num_parellel',default=10)
 @click.option("-gl", "genome_list", default=None, 
