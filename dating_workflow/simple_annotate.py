@@ -1,18 +1,31 @@
 from api_tools.itol_func import *
 import sys
-from ete3 import NCBITaxa
-
+from ete3 import NCBITaxa,Tree
+import os
 ncbi = NCBITaxa()
+
+def convert_genome_ID(genome_ID):
+    # for GCA_900078535.2
+    # it will return
+    return genome_ID.split('_')[-1].replace('.','v')
+
+def convert_genome_ID_rev(genome_ID):
+    # for 900078535v2
+    # it will return
+    return genome_ID.replace('v','.')
 
 if len(sys.argv) != 3:
     raise Exception()
-selected_genomes = sys.argv[1]
+tree = sys.argv[1]
 metadata = sys.argv[2]
+gids = Tree(tree).get_leaf_names()
 
-gids = open(selected_genomes).read().split('\n')
-gids = [_ for _ in gids if _]
-gids = set(gids)
+# leafid2gids = {_:convert_genome_ID_rev(_)
+#                for _ in leafids}
 
+# gids = set(leafid2gids.values())
+
+gid2taxons_str = {}
 gid2name = {}
 gid2taxid = {}
 for row in open(metadata):
@@ -32,12 +45,19 @@ for g, tid in gid2taxid.items():
     gid2taxon[g] = r2n.get('phylum', '')
     if r2n.get('phylum', '') == 'Proteobacteria' and r2n.get('class', ''):
         gid2taxon[g] = r2n['class']
+    gid2taxons_str[g] = ';'.join([names[_] for _ in lineage[2:]])
 gid2taxon = {k: v for k, v in gid2taxon.items() if v}
 
 text = to_label(gid2name)
 os.makedirs('./itol_txt', exist_ok=1)
 with open('./itol_txt/names.txt', 'w') as f1:
     f1.write(text)
+
+text = to_label(gid2taxons_str)
+os.makedirs('./itol_txt', exist_ok=1)
+with open('./itol_txt/taxons_names.txt', 'w') as f1:
+    f1.write(text)
+
 
 text = to_label({k: k for k in gid2name})
 with open('./itol_txt/reset_names.txt', 'w') as f1:
@@ -74,5 +94,7 @@ def get_colors_general(ID2infos, now_info2style={}):
 id2info = gid2taxon
 id2info, info2color = get_colors_general(id2info)
 text = to_color_strip(id2info, info2color, info_name='phylum')
+
+
 with open('./itol_txt/phylum_annotate.txt', 'w') as f1:
     f1.write(text)

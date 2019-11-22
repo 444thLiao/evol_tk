@@ -30,7 +30,7 @@ def annotate_cog(raw_protein,out_cog_dir):
     for f in tqdm(glob(raw_protein)):
         gname = f.split('/')[-1].replace('.faa', '')
         ofile = f'{out_cog_dir}/{gname}.out'
-        cmd = f"/home-user/software/blast/latest/bin/rpsblast -query {f} -db /home-db/pub/protein_db/CDD/Cog -max_target_seqs 1 -num_threads 30 -outfmt 6 -evalue 1e-5 -out {ofile}"
+        cmd = f"blastp -query {f} -db /home-db/pub/protein_db/CDD/Cog -max_target_seqs 1 -num_threads 30 -outfmt 6 -evalue 1e-5 -out {ofile}"
         if not os.path.exists(ofile):
             params.append(cmd)
             # check_call(cmd, shell=1)
@@ -48,21 +48,6 @@ def extra_cog(cog_out_dir):
             if row.split('\t')[1] in cdd_num:
                 genome2cdd[genome_name][row.split('\t')[1]].append(locus)
     return genome2cdd
-# tmp (prokka)
-# rrna doesn't have protein sequences, pass it
-# tmp_list = [expanduser('~/data/nitrification_for/tmp'),
-#             expanduser('~/data/nitrification_for/cyano_basal/tmp'),
-#             expanduser('~/data/nitrification_for/backbone_others/tmp')]
-
-# for prokka_dir in tmp_list:
-#     for tsv in tqdm(glob(join(prokka_dir,'*/*.tsv'))):
-#         genome_name = tsv.split('/')[-1].replace('.tsv','')
-#         for row in open(tsv):
-#             if '16S ribosomal RNA' == row.split('\t')[-1].strip('\n'):
-                
-#                 genome2cdd[genome_name]['16S'].append(row.split('\t')[0])
-#             elif '23S ribosomal RNA' in row.split('\t')[-1].strip('\n'):
-#                 genome2cdd[genome_name]['23S'].append(row.split('\t')[0])
 
 # extract protein
 def write_cog_multiple(outdir,genome2cdd,raw_proteins):
@@ -102,12 +87,17 @@ def perform_iqtree(outdir):
     script = expanduser('~/bin/batch_run/batch_tree.py')
     run(f"python3 {script} -i {outdir} -o {outdir} -ns newick -use fasttree")
 
-def stats_cog(genome2cdd,outdir):
-    cog_multi = defaultdict(list)
-    for g,_d in genome2cdd.items():
-        for cog,v in _d.items():
-            if len(v) >=2:
-                cog_multi[cog].append(g)
+def stats_cog(genome2genes):
+    gene_multi = defaultdict(int)
+    for genome, pdict in genome2genes.items():
+        for gene, seqs in pdict.items():
+            if len(seqs) >= 2:
+                gene_multi[gene] += 1
+    gene_Ubiquity = defaultdict(int)
+    for genome, pdict in genome2genes.items():
+        for gene, seqs in pdict.items():
+            gene_Ubiquity[gene] += 1
+    return gene_multi,gene_Ubiquity
 
             
 if __name__ == "__main__":
@@ -121,8 +111,8 @@ if __name__ == "__main__":
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         out_cog_dir = expanduser('~/data/nitrification_for/dating_for/target_genes')
-        outdir = expanduser('~/data/nitrification_for/dating_for/conserved_protein')
+        outdir = expanduser('~/data/nitrification_for/dating_for/cog25')
     annotate_cog(raw_proteins, out_cog_dir)
     genome2cdd = extra_cog(out_cog_dir)
-    write_cog_multiple(outdir, genome2cdd)
+    write_cog_multiple(outdir, genome2cdd,raw_proteins)
     perform_iqtree(outdir)

@@ -134,7 +134,7 @@ def to_color_branch(ID2info, info2color, dataset_name='color branch',no_legend=F
                                  TYPE='branch',
                                  WHAT='node',
                                  COLOR=color,
-                                 WIDTH_OR_SIZE_FACTOR=7,
+                                 WIDTH_OR_SIZE_FACTOR=3,
                                  STYLE='normal',
                                  BACKGROUND_COLOR='')
             for ID, color in id2col.items()]

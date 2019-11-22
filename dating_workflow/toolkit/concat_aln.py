@@ -87,7 +87,8 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, suffi
     gid2record = {gid: '' for gid in gids}
 
     las_pos = 0
-    for idx, aln_file in enumerate(glob(join(indir, '*.%s' % suffix))):
+    order_seqs = sorted(glob(join(indir, '*.%s' % suffix)))
+    for idx, aln_file in enumerate(order_seqs):
         aln_record = AlignIO.read(aln_file, format='fasta')
         length_this_aln = aln_record.get_alignment_length()
         # record the partition

@@ -42,8 +42,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
         if not exists(ofile) or force:
             params.append((in_file, ofile))
     with mp.Pool(processes=num_parellel) as tp:
-        for _ in tp.imap(run, tqdm(params)):
-            pass
+        r = list(tqdm(tp.imap(run,params),total=len(params)))
 
 
 @click.command()

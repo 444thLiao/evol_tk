@@ -35,6 +35,7 @@ from collections import defaultdict
 db_faa = './concat.faa'
 redo = False
 tmp_dir = join('./tmp/contained_genes/')
+os.makedirs(tmp_dir,exist_ok=True)
 collected_gs = expanduser('~/project/nitrogen_cycle/curated_genes/')
 genome2collect_genes = defaultdict(list)
 for fa in tqdm(glob(join(collected_gs,'*.faa'))):
@@ -68,6 +69,13 @@ info2style = {'amoA':{'color':'#ff0000',
 requested_genes = ['amoA','amoB','amoC','hao','cycA','cycB','nxrA']
 g2id = {f"GCA_{k.replace('v','.')}":v for k,v in genome2collect_genes.items()}
 g2id = {k:v for k,v in g2id.items() if set(v).intersection(set(requested_genes))}
+
+## special for annotate nxrA
+nxrA_ids = open('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_result/manual_assigned_gids/nxrA_manual_assigned_ids').read().split('\n')
+for g,ids in g2id.items():
+    if 'nxrA' in ids and g not in nxrA_ids:
+        ids.remove('nxrA')
+g2id = {k:v for k,v in g2id.items() if v}
 all_text = to_binary_shape(g2id,
                 info2style,
                 info_name='genes set',

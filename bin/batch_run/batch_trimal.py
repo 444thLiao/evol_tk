@@ -27,7 +27,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
     file_list = glob(join(in_dir,f'*{suffix}'))
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list),suffix))
     params = []
-    for in_file in tqdm(file_list):
+    for in_file in file_list:
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
@@ -37,7 +37,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',**kwarg):
                          basename(in_file))
         params.append((in_file,ofile))
     with mp.Pool(processes=num_parellel) as tp:
-        list(tp.imap(run,tqdm(params)))
+        r = list(tqdm(tp.imap(run,params),total=len(params)))
 
 @click.command()
 @click.option('-i','indir')
