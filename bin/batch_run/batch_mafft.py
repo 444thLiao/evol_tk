@@ -48,6 +48,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
                        for _ in records
                        if _.id in gids]
             if not records:
+                records = SeqIO.parse(f, format='fasta')
                 records = [_
                        for _ in records
                        if convert_genome_ID_rev(_.id.split('_')[0]) in gids]
