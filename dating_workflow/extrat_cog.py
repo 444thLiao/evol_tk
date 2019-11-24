@@ -38,11 +38,15 @@ def annotate_cog(raw_protein,out_cog_dir):
         list(tqdm(tp.imap(run,params),total=len(params)))
 
 
-def extra_cog(cog_out_dir):
+def extra_cog(cog_out_dir,gids=None):
     # cog out dir
+
     genome2cdd = defaultdict(lambda:defaultdict(list))
     for f in tqdm(glob(join(cog_out_dir,'*.out'))):
         genome_name = f.split('/')[-1].replace('.out','')
+        if gids is not None:
+            if genome_name not in gids:
+                continue
         for row in open(f,'r'):
             locus = row.split('\t')[0]
             if row.split('\t')[1] in cdd_num:
@@ -115,4 +119,5 @@ if __name__ == "__main__":
     annotate_cog(raw_proteins, out_cog_dir)
     genome2cdd = extra_cog(out_cog_dir)
     write_cog_multiple(outdir, genome2cdd,raw_proteins)
+    stats_cog(genome2cdd)
     perform_iqtree(outdir)

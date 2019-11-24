@@ -64,7 +64,6 @@ def annotate_outgroup(ID2infos, info2style,):
                 row.append(info2style[info]['status'])
         annotate_text += '\t'.join(row) + '\n'
     return template_text + annotate_text
-
 def to_binary_shape(ID2info,info2style, info_name='dataset',manual_v=[]):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}

@@ -17,7 +17,8 @@ def run(args):
 def unit_run(in_file,o_file):
     check_call(command_template.format(in_file=in_file,
                                        o_file=o_file), 
-               shell=True)
+               shell=True,
+               stdout=open('/dev/null','w'))
 
 # two function for dating workflow
 def convert_genome_ID(genome_ID):
@@ -42,7 +43,8 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
         gids = set(gids)
         os.makedirs(join(odir,'tmp'),exist_ok=1)
         new_file_list = []
-        for f in file_list:
+        tqdm.write('iterating files to collect with giving genome ids')
+        for f in tqdm(file_list):
             records = SeqIO.parse(f,format='fasta')
             records = [_
                        for _ in records
@@ -89,7 +91,7 @@ def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list,force):
         gids = None
     else:
         gids = open(genome_list).read().split('\n')
-        gids = [_ for _ in gids if _]
+        gids = set([_ for _ in gids if _])
     main(indir,odir,num_parellel,suffix,new_suffix,gids = gids,force=force)
 
 
