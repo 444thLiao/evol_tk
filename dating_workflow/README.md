@@ -40,7 +40,10 @@
 
 
 ## 6. extract conserved proteins
-
+`python3 /home-user/thliao/script/evolution_relative/dating_workflow/extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./cog25_multiple`
+> first is the faa files from prokka 
+> second is the annotated output from rpsblast
+> third is the extracted faa file from cog25.  
 
 ## 7. convert it to phylip formatted file
 `python3 /home-user/thliao/script/evolution_relative/dating_workflow/step_script/aln2phy.py -i "*.aln" `

@@ -9,21 +9,22 @@ import multiprocessing as mp
 
 
 cdd_list = "/home-db/pub/protein_db/CDD/cdd.info.dat/cddid_all.tbl"
-__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/extrat_cog.py'
+__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/extract_cog.py'
 cog_list = join(dirname(__file__),'cog.list')
 cog_list = set([_ for _ in open(cog_list).read().split('\n') if _])
 
-cdd_num = []
+cdd_num = defaultdict(list)
 for row in open(cdd_list,'r'):
     if row.split('\t')[1] in cog_list:
-        cdd_num.append("CDD:%s" % row.split('\t')[0])
+        cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
 # ABOVE is the default setting for luolab server.
 
 
 
 def run(cmd):
     check_call(cmd,
-               shell=True)
+               shell=True,
+               stdout=open('/dev/null','w'))
 
 def annotate_cog(raw_protein,out_cog_dir):
     params = []
@@ -40,7 +41,7 @@ def annotate_cog(raw_protein,out_cog_dir):
 
 def extra_cog(cog_out_dir,gids=None):
     # cog out dir
-
+    _cdd_num = [_ for vl in cdd_num.values() for _ in vl]
     genome2cdd = defaultdict(lambda:defaultdict(list))
     for f in tqdm(glob(join(cog_out_dir,'*.out'))):
         genome_name = f.split('/')[-1].replace('.out','')
@@ -49,12 +50,13 @@ def extra_cog(cog_out_dir,gids=None):
                 continue
         for row in open(f,'r'):
             locus = row.split('\t')[0]
-            if row.split('\t')[1] in cdd_num:
+            if row.split('\t')[1] in _cdd_num:
                 genome2cdd[genome_name][row.split('\t')[1]].append(locus)
     return genome2cdd
 
 # extract protein
 def write_cog_multiple(outdir,genome2cdd,raw_proteins):
+    _cdd_num = [_ for vl in cdd_num.values() for _ in vl]
     pdir = dirname(expanduser(raw_proteins))
     for genome_name,pdict in tqdm(genome2cdd.items()):
         pfiles = glob(f'{pdir}/{genome_name}.faa')
@@ -72,7 +74,7 @@ def write_cog_multiple(outdir,genome2cdd,raw_proteins):
     # concat/output proteins
     if not exists(outdir):
         os.makedirs(outdir)
-    for each_cdd in tqdm(cdd_num):
+    for each_cdd in tqdm(_cdd_num):
         cdd_records = []
         for gname, p_d in genome2cdd.items():
             get_records = p_d.get(each_cdd,[])
@@ -83,6 +85,45 @@ def write_cog_multiple(outdir,genome2cdd,raw_proteins):
                 cdd_records+=get_records
         with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
             SeqIO.write(cdd_records,f1,format='fasta-2line')
+
+
+# extract protein
+def write_cog_nuc(outdir,genome2cdd,raw_proteins):
+    genome2seq = {}
+    _cdd_num = [_ for vl in cdd_num.values() for _ in vl]
+    pdir = dirname(expanduser(raw_proteins))
+    for genome_name,pdict in tqdm(genome2cdd.items()):
+        pfiles = glob(f'{pdir}/{genome_name}.faa')
+        if pfiles:
+            pfile = pfiles[0]
+            nuc_file = join(dirname(dirname(realpath(pfile))),
+                            'tmp',
+                            genome_name,
+                            f'{genome_name}.ffn')
+            _cache = {record.id:record
+                      for record in SeqIO.parse(nuc_file,format='fasta')}
+            pset = {k:[_cache[_]
+                       for _ in v
+                       if _ in _cache]
+                    for k,v in pdict.items()}
+            genome2seq[genome_name] = pset
+        else:
+            continue
+    # concat/output proteins
+    if not exists(outdir):
+        os.makedirs(outdir)
+    for each_cdd in tqdm(_cdd_num):
+        cdd_records = []
+        for gname, p_d in genome2seq.items():
+            get_records = p_d.get(each_cdd,[])
+            if len(get_records) >=1:
+                #record = get_records
+                for record in get_records:
+                    record.name = gname
+                cdd_records+=get_records
+        with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
+            SeqIO.write(cdd_records,f1,format='fasta-2line')
+
 
 def perform_iqtree(outdir):
     script = expanduser('~/bin/batch_run/batch_mafft.py')
@@ -115,9 +156,10 @@ if __name__ == "__main__":
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         out_cog_dir = expanduser('~/data/nitrification_for/dating_for/target_genes')
-        outdir = expanduser('~/data/nitrification_for/dating_for/cog25')
+        outdir = expanduser('~/data/nitrification_for/dating_for/cog25_multiple')
+        gids = open(expanduser('~/data/nitrification_for/dating_for/bac120_annoate/remained_ids_fullv1.list')).read().split('\n')
     annotate_cog(raw_proteins, out_cog_dir)
-    genome2cdd = extra_cog(out_cog_dir)
+    genome2cdd = extra_cog(out_cog_dir,gids=gids)
     write_cog_multiple(outdir, genome2cdd,raw_proteins)
     stats_cog(genome2cdd)
     perform_iqtree(outdir)
