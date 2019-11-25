@@ -10,13 +10,15 @@ from glob import glob
 from tqdm import tqdm
 import multiprocessing as mp
 from Bio import SeqIO
-command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {in_file} > {o_file} '
+default_mode = 'ginsi'
+command_template = '{mode} --maxiterate 1000 --genafpair --thread -1 {in_file} > {o_file} '
 def run(args):
     unit_run(*args)
     
-def unit_run(in_file,o_file):
+def unit_run(in_file,o_file,mode):
     check_call(command_template.format(in_file=in_file,
-                                       o_file=o_file), 
+                                       o_file=o_file,
+                                       mode=mode), 
                shell=True,
                stdout=open('/dev/null','w'))
 
@@ -31,7 +33,7 @@ def convert_genome_ID_rev(genome_ID):
     # it will return
     return 'GCA_' + genome_ID.replace('v', '.')
 
-def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=False,**kwarg):
+def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=False,mode=default_mode,**kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -72,7 +74,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
             ofile = join(odir,
                          basename(in_file))
         if not exists(ofile) or force:
-            params.append((in_file,ofile))
+            params.append((in_file,ofile,mode))
     with mp.Pool(processes=num_parellel) as tp:
         r = list(tqdm(tp.imap(run,params),total=len(params)))
 
@@ -85,14 +87,15 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
 @click.option("-gl", "genome_list", default=None, 
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+@click.option('-m','mode_mafft',default='ginsi')
 @click.option('-f','force',help='overwrite?',default=False,required=False,is_flag=True)
-def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list,force):
+def cli(indir,odir,num_parellel,suffix,new_suffix,genome_list,force,mode_mafft):
     if genome_list is None:
         gids = None
     else:
         gids = open(genome_list).read().split('\n')
         gids = set([_ for _ in gids if _])
-    main(indir,odir,num_parellel,suffix,new_suffix,gids = gids,force=force)
+    main(indir,odir,num_parellel,suffix,new_suffix,gids = gids,force=force,mode=mode_mafft)
 
 
 
