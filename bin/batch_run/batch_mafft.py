@@ -11,7 +11,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 from Bio import SeqIO
 default_mode = 'ginsi'
-command_template = '{mode} --maxiterate 1000 --genafpair --thread -1 {in_file} > {o_file} '
+command_template = '{mode} --thread -1 {in_file} > {o_file} '
 def run(args):
     unit_run(*args)
     
@@ -20,7 +20,8 @@ def unit_run(in_file,o_file,mode):
                                        o_file=o_file,
                                        mode=mode), 
                shell=True,
-               stdout=open('/dev/null','w'))
+               stdout=open('/dev/null','w'),
+               stderr=open('/dev/null','w'))
 
 # two function for dating workflow
 def convert_genome_ID(genome_ID):
@@ -56,7 +57,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
                 records = [_
                        for _ in records
                        if convert_genome_ID_rev(_.id.split('_')[0]) in gids]
-            n_f = join(odir,'tmp',basename(f))
+            n_f = join(odir,'tmp',basename(f)+'.pre')
             if not records:
                 raise Exception('error not records')
             with open(n_f,'w') as f1:
