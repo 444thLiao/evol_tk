@@ -24,8 +24,9 @@ def unit_run(infile, ofile, cmd):
         os.makedirs(dirname(ofile))
     check_call(cmd.format(infile=infile,
                           ofile=ofile),
-               shell=True)
-
+               shell=True,
+               stdout=open('/dev/null','w'),
+               stderr=open('/dev/null','w'))
 
 def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, software='iqtree'):
     suffix = suffix.strip('.')

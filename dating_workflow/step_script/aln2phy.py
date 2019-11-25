@@ -1,3 +1,7 @@
+"""
+This script is mainly for generating a phy file from a alignment file
+You should pass a genome id list(most exactly, the sequence id list) for let the code know how many genomes it actually has.
+"""
 import click
 from glob import glob
 from os.path import *

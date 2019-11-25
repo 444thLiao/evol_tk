@@ -57,7 +57,7 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
                 records = [_
                        for _ in records
                        if convert_genome_ID_rev(_.id.split('_')[0]) in gids]
-            n_f = join(odir,'tmp',basename(f)+'.pre')
+            n_f = join(odir,'tmp',basename(f))
             if not records:
                 raise Exception('error not records')
             with open(n_f,'w') as f1:
