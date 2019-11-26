@@ -106,8 +106,8 @@ def main(indir, odir, preset):
 if __name__ == '__main__':
     import sys
 
-    assert len(sys.argv) == 3
-
-    # extract_16s.py -i ./pipelines_o/prokka_o -o /home-user/thliao/data/jjtao_20191113/
+    #assert len(sys.argv) == 3
+    main()
+    # extract_rrna.py -i ./pipelines_o/prokka_o -o /home-user/thliao/data/jjtao_20191113/
     # if using dating
-    # extract_16s.py -i ~/data/nitrification_for/dating_for/raw_genome_proteins -o ~/data/nitrification_for/dating_for/raw_genome_proteins -ps dating
+    # extract_rrna.py -i ~/data/nitrification_for/dating_for/raw_genome_proteins -o ~/data/nitrification_for/dating_for/raw_genome_proteins -ps dating

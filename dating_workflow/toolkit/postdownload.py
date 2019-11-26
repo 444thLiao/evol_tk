@@ -38,7 +38,9 @@ def get_faa_from_prokka_r(infile,odir,sample_name,return_cmd=False):
 def cli(indir,odir=None):
     if odir is None:
         odir = './genome_protein_files'
-    all_dir = [_ for _ in glob(join(indir,'**','GCA*'),recursive=True) if isdir(_)]
+    all_dir = [_ for _ in glob(join(indir,'**','GCA*'),recursive=True) 
+               if isdir(_)]
+    
     for p_dir in tqdm(all_dir):
         p_files = glob(join(p_dir,'*.faa.gz'))
         if not p_files:
@@ -71,7 +73,7 @@ if __name__ == "__main__":
                      for _ in glob(join(indir,'bacteria','*'))])
     # from downloaded dir
     all_ids = open(default_name).read().split('\n')
-    all_ids = [_ for _ in all_ids]
+    all_ids = [_ for _ in all_ids if _]
     all_ids = set(all_ids)
     # from id list
 

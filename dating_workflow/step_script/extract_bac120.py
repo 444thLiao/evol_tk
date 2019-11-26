@@ -51,8 +51,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
             # check_call(cmd, shell=1)
     # print(params)
     with mp.Pool(processes=5) as tp:
-        for _ in tp.imap(run, tqdm(params)):
-            pass
+        r = list(tqdm(tp.imap(run, params),total=len(params)))
 
 
 def parse_grep_result(ofile,filter_evalue,get_top=False):
@@ -91,7 +90,7 @@ def extra_genes(odir, evalue=1e-10, mode='multiple'):
     for outfile in tqdm(outfiles):
         gname = basename(outfile).replace('.out', '')
         if mode == 'multiple':
-            gid2locus = parse_grep_result(outfile,filter_evalue=evalue)
+            gid2locus = parse_grep_result(outfile, filter_evalue=evalue)
         elif mode == 'top':
             gid2locus = parse_grep_result(outfile, filter_evalue=None,get_top=True)
         # else:
@@ -183,8 +182,6 @@ if __name__ == "__main__":
 
     genome2genes = extra_genes(out_cog_dir,mode='multiple')
     gene_multi,gene_Ubiquity = stats_cog(genome2genes)
-
-
 
     genome2genes = extra_genes(out_cog_dir, mode='top')
     genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)

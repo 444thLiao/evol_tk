@@ -10,9 +10,13 @@
 `python3 /home-user/thliao/script/evolution_relative/global_search/workflow/postdownload.py ./genbank ./genome_protein_files`
 
 
-## 3. Run Orthofinder For building a genome/species tree
+## 3.1 Run Orthofinder For building a genome/species tree
 
 `orthofinder -f raw_genome_proteins -og -a 50 -1 -s diamond`
+
+## 3.2 bac120 for building tree
+
+`/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extract_bac120.py`
 
 
 ## 4. extract conserved protein to following dating
