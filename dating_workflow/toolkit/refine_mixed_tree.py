@@ -1,4 +1,4 @@
-from sklearn.from Bio import SeqIO
+from Bio import SeqIO
 from ete3 import Tree,PhyloTree
 
 # two function for dating workflow
@@ -14,7 +14,7 @@ def convert_genome_ID_rev(genome_ID):
     return 'GCA_' + genome_ID.replace('v', '.')
 
 
-intree = './223556/223556.newick'
+intree = './223163/223163.newick'
 new_tree = intree.replace('.newick','_renamed.newick')
 t = Tree(intree)
 for l in t.get_leaves():
