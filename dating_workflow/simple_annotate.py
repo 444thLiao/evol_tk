@@ -107,5 +107,20 @@ with open('./itol_txt/phylum_annotate_branch.txt', 'w') as f1:
     
     
 # annotate 27 genes
+from Bio import SeqIO
+rrna_dir = './rrna'
 gid2genes = {k:[_k for _k,_v in v.items() if _v] for k,v in genome2cdd.items()}
-text = to_binary_shape(gid2genes)
+
+for record in SeqIO.parse(join(rrna_dir,'16S.fasta'),format='fasta'):
+    gname = 'GCA_'+convert_genome_ID_rev(record.id.split('_')[0])
+    gid2genes[gname].append('16S')
+for record in SeqIO.parse(join(rrna_dir,'23S.fasta'),format='fasta'):
+    gname = 'GCA_'+convert_genome_ID_rev(record.id.split('_')[0])
+    gid2genes[gname].append('23S')
+
+all_genes = set([_ for vl in gid2genes.values() for _ in vl])
+text = to_binary_shape(gid2genes,
+                       {g:{'color':'#007acc'} for g in all_genes})
+
+with open('./itol_txt/27genes.txt','w') as f1:
+    f1.write(text)

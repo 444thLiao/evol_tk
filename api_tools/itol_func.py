@@ -35,7 +35,7 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 def deduced_legend2(info2style, infos, sep='\t'):
     # for info2style instead of info2color
-    colors_theme = px.colors.qualitative.Dark24
+    colors_theme = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     shapes = []
     labels = []
     colors = []
