@@ -56,8 +56,10 @@ def extra_cog(cog_out_dir,gids=None):
 
 # extract protein
 def write_cog_multiple(outdir,genome2cdd,raw_proteins):
+    genome2cdd = genome2cdd.copy()
     _cdd_num = [_ for vl in cdd_num.values() for _ in vl]
     pdir = dirname(expanduser(raw_proteins))
+    tqdm.write('get sequence file')
     for genome_name,pdict in tqdm(genome2cdd.items()):
         pfiles = glob(f'{pdir}/{genome_name}.faa')
         if pfiles:
@@ -74,6 +76,7 @@ def write_cog_multiple(outdir,genome2cdd,raw_proteins):
     # concat/output proteins
     if not exists(outdir):
         os.makedirs(outdir)
+    tqdm.write('get sequence file')
     for each_cdd in tqdm(_cdd_num):
         cdd_records = []
         for gname, p_d in genome2cdd.items():
@@ -83,8 +86,14 @@ def write_cog_multiple(outdir,genome2cdd,raw_proteins):
                 for record in get_records:
                     record.name = gname
                 cdd_records+=get_records
+        unique_cdd_records = [] 
+        [unique_cdd_records.append(record) 
+         for record in cdd_records 
+         if record.id not in [_.id 
+                              for _ in unique_cdd_records]]  
+        
         with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
-            SeqIO.write(cdd_records,f1,format='fasta-2line')
+            SeqIO.write(unique_cdd_records,f1,format='fasta-2line')
 
 
 # extract protein
@@ -121,8 +130,13 @@ def write_cog_nuc(outdir,genome2cdd,raw_proteins):
                 for record in get_records:
                     record.name = gname
                 cdd_records+=get_records
+        unique_cdd_records = [] 
+        [unique_cdd_records.append(record) 
+         for record in cdd_records 
+         if record.id not in [_.id 
+                              for _ in unique_cdd_records]]  
         with open(join(outdir,f"{each_cdd.replace('CDD:','')}.faa"),'w') as f1:
-            SeqIO.write(cdd_records,f1,format='fasta-2line')
+            SeqIO.write(unique_cdd_records,f1,format='fasta-2line')
 
 
 def perform_iqtree(outdir):
@@ -161,5 +175,6 @@ if __name__ == "__main__":
     annotate_cog(raw_proteins, out_cog_dir)
     genome2cdd = extra_cog(out_cog_dir,gids=gids)
     write_cog_multiple(outdir, genome2cdd,raw_proteins)
+    write_cog_nuc(outdir+'_nuc', genome2cdd,raw_proteins)
     stats_cog(genome2cdd)
     perform_iqtree(outdir)

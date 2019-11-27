@@ -34,7 +34,8 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, softw
     if software not in used_command:
         raise IOError
     cmd = used_command[software]
-
+    if software=='fasttree' and new_suffix=='iqtree':
+        new_suffix = 'newick'
     if not exists(odir):
         os.makedirs(odir)
     if suffix:
