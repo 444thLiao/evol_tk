@@ -75,7 +75,7 @@ nxrA_ids = open('/home-user/thliao/project/nitrogen_cycle/fetch_genes/query_resu
 for g,ids in g2id.items():
     if 'nxrA' in ids and g not in nxrA_ids:
         ids.remove('nxrA')
-g2id = {k:v for k,v in g2id.items() if v}
+g2id = {k:v for k,v in g2id.items() if set(v).intersection(set(requested_genes))}
 all_text = to_binary_shape(g2id,
                 info2style,
                 info_name='genes set',

@@ -95,6 +95,12 @@ id2info = gid2taxon
 id2info, info2color = get_colors_general(id2info)
 text = to_color_strip(id2info, info2color, info_name='phylum')
 
-
 with open('./itol_txt/phylum_annotate.txt', 'w') as f1:
+    f1.write(text)
+
+id2info = gid2taxon
+id2info, info2color = get_colors_general(id2info)
+text = to_color_branch(id2info, info2color, dataset_name='phylum/class',no_legend=True)
+
+with open('./itol_txt/phylum_annotate_branch.txt', 'w') as f1:
     f1.write(text)

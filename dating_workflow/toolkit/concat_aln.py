@@ -2,12 +2,24 @@ import os
 
 from Bio import AlignIO, SeqIO
 from glob import glob
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname,basename
 import click
 import random
 from collections import defaultdict
+import plotly.graph_objs as go
+from tqdm import tqdm
 
-
+def generate_stats_graph(stats,total,ofile):
+    fig = go.Figure()
+    ascending_names = sorted(list(stats),
+                             key=lambda x:stats[x])
+    fig.add_bar(x=list(ascending_names),
+                    y=[stats[_] for _ in ascending_names])
+                    #text=[f"{stats[_]}/{total}" for _ in ascending_names])
+    miss_0_genes = len([k for k,v in stats.items() if v ==0])
+    fig.layout.title.text = f'stats graph of all alignment files ({total} genomes, {len(stats)} genes, {miss_0_genes} present at all genomes)'
+    fig.write_image(ofile,width=1200,height=900)
+    
 def remove_identical_seqs(filename, seed=None):
     if seed is not None:
         random.seed(seed)
@@ -75,9 +87,10 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
 @click.option("-s", "suffix", default='aln')
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
+@click.option("-no_graph", "graph", is_flag=True, default=True)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-def main(indir, outfile, genome_list, remove_identical, seed, concat_type, suffix='aln'):
+def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph,suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -85,10 +98,13 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, suffi
     gids = [convert_genome_ID(_) for _ in gids]
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
-
+    
     las_pos = 0
-    order_seqs = sorted(glob(join(indir, '*.%s' % suffix)))
-    for idx, aln_file in enumerate(order_seqs):
+    order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
+    g2num_miss = {basename(_).replace(f'.{suffix}',''):0 for _ in order_seqs}
+    tqdm.write('itering all requested files ')
+    for idx, aln_file in tqdm(enumerate(order_seqs),total=len(order_seqs)):
+        aln_file_name = basename(aln_file).replace(f'.{suffix}','')
         aln_record = AlignIO.read(aln_file, format='fasta')
         length_this_aln = aln_record.get_alignment_length()
         # record the partition
@@ -105,10 +121,13 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, suffi
                 gid2record[gid] += str(records[0].seq)
             else:
                 gid2record[gid] += '-' * length_this_aln
+                
+                g2num_miss[aln_file_name] +=1
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
         outphy = join(indir, 'concat_aln.phy')
+        ograph = join(indir, 'aln_stats.png')
     else:
         if not '/' in outfile:
             outfile = './' + outfile
@@ -117,11 +136,15 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, suffi
         outfile = outfile
         outpartition = join(dirname(outfile), 'concat_aln.partition')
         outphy = join(dirname(outfile), 'concat_aln.phy')
-
+        ograph = join(dirname(outfile), 'aln_stats.png')
+        
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
             f1.write(f'>{convert_genome_ID_rev(gid)}\n')
             f1.write(f'{seq}\n')
+            
+    if graph:
+        generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
     if remove_identical:
         remove_identical_seqs(outfile, seed=seed)
     if concat_type.lower() in ['both', 'partition']:
