@@ -64,15 +64,18 @@ def annotate_outgroup(ID2infos, info2style,):
                 row.append(info2style[info]['status'])
         annotate_text += '\t'.join(row) + '\n'
     return template_text + annotate_text
-def to_binary_shape(ID2info,info2style, info_name='dataset',manual_v=[]):
+def to_binary_shape(ID2info,info2style=None, info_name='dataset',manual_v=[]):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
+
     template_text = open(dataset_binary_template).read()
     if not manual_v:
         all_v = list(sorted(set([_ for v in ID2info.values() for _ in v if _])))
     else:
         all_v = manual_v
+    if info2style is None:
+        info2style = {k:{} for k in all_v}
     annotate_text = []
     for ID,vset in ID2info.items():
         row = '\t'.join([ID] + ['1' if _ in vset else '0' for _ in all_v])

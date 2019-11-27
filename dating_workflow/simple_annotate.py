@@ -104,3 +104,8 @@ text = to_color_branch(id2info, info2color, dataset_name='phylum/class',no_legen
 
 with open('./itol_txt/phylum_annotate_branch.txt', 'w') as f1:
     f1.write(text)
+    
+    
+# annotate 27 genes
+gid2genes = {k:[_k for _k,_v in v.items() if _v] for k,v in genome2cdd.items()}
+text = to_binary_shape(gid2genes)
