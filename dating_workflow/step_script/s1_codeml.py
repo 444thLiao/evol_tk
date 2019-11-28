@@ -6,12 +6,29 @@ import multiprocessing as mp
 from subprocess import check_call
 import os
 from os.path import *
-
+from tqdm import tqdm
 in_phyfile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/concat_aln.phy'
 in_treefile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/iqtree.treefile'
 
 
+in_phyfile = './concat_aln.phy'
+in_treefile = './iqtree_sorted_topology.newick'
 
+def separate_phy(in_phyfile):
+    part_collect = []
+    _cache = []
+    for row in open(in_phyfile):
+        if not row.strip('\n'):
+            continue
+        if not row.startswith('GCA') and row.split(' ')[0].isnumeric():
+            if _cache:
+                part_collect.append(_cache)
+            _cache = []
+        _cache.append(row.strip('\n'))
+    if _cache:
+        part_collect.append(_cache)
+    parts = ['\n'.join(_) for _ in part_collect]
+    return parts
 
 def modify(file,**kwargs):
     text = open(file).read()
@@ -24,34 +41,66 @@ def modify(file,**kwargs):
         else: 
             new_text.append(row)
     return '\n'.join(new_text)
+def run(args):
+    if isinstance(args,str):
+        cmd = args
+        check_call(cmd,shell=1,
+               stdout=open('/dev/null','w'))
+    else:
+        cmd,log = args
+        check_call(cmd,shell=1,
+               stdout=open(log,'w'),
+               stderr=open(log,'w'))
+    
+    
+parts = separate_phy(in_phyfile)
+template_ctl_01 = './01_mcmctree.ctl'
+
+params = {'ndata':1,
+          'seqfile':'',
+          'treefile':'../iqtree_sorted_topology.newick'}
+for _,p in enumerate(parts):
+    name = f"partition{_+1}"
+    params['seqfile'] = f'./{name}.phy'
+    os.makedirs(name,exist_ok=True)
+    text = modify(template_ctl_01,**params)
+    with open(join(name,'01_mcmctree.ctl'),'w') as f1:
+        f1.write(text)
+    with open(join(name,f'./{name}.phy'),'w') as f1:
+        f1.write(p)
+    
+
+params = []
+ctls = glob('./partition*/01_mcmctree.ctl')
+for ctl in ctls:
+    params.append((f'cd {dirname(ctl)}; mcmctree {basename(ctl)}',
+                   f"{join(dirname(ctl),'01_log.txt')}" ))
+    
+with mp.Pool(processes= 30) as tp:
+    r = list(tqdm((tp.imap(run,params)),total=len(params)))
+
+params = []
+ctls = glob('./partition*/tmp0001.ctl')
+for ctl in ctls:
+    new_text = modify(ctl,
+                      **{'model':2,'aaRatefile':'../lg.dat','fix_alpha':0,'alpha':0.5,'ncatG':4})
+    new_file = ctl.replace('.ctl','.modify.ctl')
+    with open(new_file,'w') as f1:
+        f1.write(new_text)
+        params.append(f'cd {dirname(new_file)}; /home-user/thliao/software/paml4.9j/bin/codeml {basename(new_file)}')
+
+with mp.Pool(processes= 30) as tp:
+    r = list(tqdm((tp.imap(run,params)),total=len(params)))
+
+
+run("cat tmp*/rst2 > in.BV")
+
 
 # param = {}
 # text = modify('./01_mcmctree.ctl',
 #                **param)
 
-def run(cmd):
-    check_call(cmd,shell=1)
-params = []
-ctls = glob('./tmp*.ctl')
-for ctl in ctls:
-    if 'modify.' in ctl:
-        continue
-    new_text = modify(ctl,
-                      **{'model':2,'aaRatefile':'../lg.dat','fix_alpha':0,'alpha':0.5,'ncatG':4})
-    new_file = join(ctl.replace('.ctl',''),
-                    basename(ctl))
-    os.makedirs(ctl.replace('.ctl',''),exist_ok=1)
-    run(f"cp {ctl.replace('ctl','*')} {ctl.replace('.ctl','')}/")
-    with open(new_file,'w') as f1:
-        f1.write(new_text)
-        params.append('cd %s; /home-user/thliao/software/paml4.9j/bin/codeml %s ' % (ctl.replace('.ctl',''),
-                                                                                     basename(ctl)))
 
-    
-with mp.Pool(processes= 30) as tp:
-    list(tp.imap(run,params))
-
-run("cat tmp*/rst2 > in.BV")
 
 
 # for final mcmctree
