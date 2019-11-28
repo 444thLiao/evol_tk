@@ -7,6 +7,11 @@ from subprocess import check_call
 import os
 from os.path import *
 
+in_phyfile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/concat_aln.phy'
+in_treefile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/iqtree.treefile'
+
+
+
 
 def modify(file,**kwargs):
     text = open(file).read()
@@ -19,6 +24,11 @@ def modify(file,**kwargs):
         else: 
             new_text.append(row)
     return '\n'.join(new_text)
+
+# param = {}
+# text = modify('./01_mcmctree.ctl',
+#                **param)
+
 def run(cmd):
     check_call(cmd,shell=1)
 params = []
@@ -56,7 +66,19 @@ treefile_b = '../iqtree_sorted_topology.newick'
 ndata = 23
 seqtype = 2
 clock = 2
-param = {'seqfile':seqfile_b, 'treefile':treefile_b, 'ndata':ndata, 'seqtype':seqtype, 'usedata':"2 in.BV 1", 'clock':clock, 'BDparas':bd_paras, 'rgene_gamma':rgene_gamma, 'sigma2_gamma':sigma2_gamma, 'burnin':burnin, 'sampfreq':sampfreq, 'nsample':nsample, 'alpha':0.5}
+param = {'seqfile':seqfile_b, 
+         'treefile':treefile_b, 
+         'ndata':ndata, 
+         'seqtype':seqtype, 
+         'usedata':"2 in.BV 1", 
+         'clock':clock, 
+         'BDparas':bd_paras, 
+         'rgene_gamma':rgene_gamma, 
+         'sigma2_gamma':sigma2_gamma, 
+         'burnin':burnin, 
+         'sampfreq':sampfreq, 
+         'nsample':nsample, 
+         'alpha':0.5}
 text = modify('./01_mcmctree.ctl',
                **param)
 

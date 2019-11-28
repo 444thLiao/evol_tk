@@ -57,8 +57,13 @@ def convert_genome_ID(genome_ID):
 def convert_genome_ID_rev(genome_ID):
     # for 900078535v2
     # it will return
-    return 'GCA_' + genome_ID.replace('v','.')
-
+    if not genome_ID.startswith('GCA'):
+        if '_' in genome_ID:
+            genome_ID = genome_ID.split('_')[0]
+        return 'GCA_' + genome_ID.replace('v','.')
+    else:
+        return genome_ID
+    
 def generate_partition_file(outfile, record_pos_info):
     with open(outfile, 'w') as f1:
         for name, start, end, _ in record_pos_info:
@@ -75,7 +80,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
             used_ids = []
             for _ in range(num_seq):
                 if aln_record[_, :].id.split('_')[0] in genome_ids:
-                    f1.write(f"{convert_genome_ID_rev(aln_record[_, :].id)}        {str(aln_record[_, :].seq)}\n")
+                    f1.write(f"{convert_genome_ID_rev(aln_record[_, :].id.split('_')[0])}        {str(aln_record[_, :].seq)}\n")
                     used_ids.append(aln_record[_, :].id)
             for remained_id in set(genome_ids).difference(set(used_ids)):
                 f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
@@ -143,15 +148,15 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
             f1.write(f'>{convert_genome_ID_rev(gid)}\n')
             f1.write(f'{seq}\n')
             
-    if graph:
-        generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
+
     if remove_identical:
         remove_identical_seqs(outfile, seed=seed)
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
         generate_phy_file(outphy, record_pos_info, gids)
-
+    if graph:
+        generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
 
 if __name__ == '__main__':
     main()

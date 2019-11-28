@@ -16,7 +16,7 @@ label_template = join(indir,'labels_template.txt')
 dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
 matrix_like_template = join(indir,"dataset_external_shapes_template.txt")
 labels_template = join(indir,"labels_template.txt")
-
+dataset_text_template = join(indir,"dataset_text_template.txt")
 def deduced_legend(info2color, info_name='dataset', sep=','):
     # for implemented a legend with dictinonary named info2color.
     
@@ -235,7 +235,7 @@ def to_node_symbol(in_tree,dataset_name='bootstrap'):
     # ID,symbol,size,color,fill,position,label
     rows = []
     for id,s_v in id2support.items():
-        size = '5'
+        size = '7'
         shape = '2'
         filled = '1'
         if int(s_v) >= 95:
@@ -247,7 +247,7 @@ def to_node_symbol(in_tree,dataset_name='bootstrap'):
         else:
             color = ''
         if color:
-            row = '\t'.join([id,shape,size,color,filled,'0',''])
+            row = '\t'.join([id,shape,size,color,filled,'1',''])
             rows.append(row)
         
     annotate_text = '\n'.join(rows)
