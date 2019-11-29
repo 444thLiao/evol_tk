@@ -3,7 +3,8 @@ from ete3 import Tree
 import click
 from glob import glob
 import multiprocessing as mp
-from subprocess import check_call
+from subprocess import check_call,check_output
+import subprocess
 import os
 from os.path import *
 from tqdm import tqdm
@@ -47,13 +48,24 @@ def modify(file,**kwargs):
 def run(args):
     if isinstance(args,str):
         cmd = args
-        check_call(cmd,shell=1,)
-               #stdout=open('/dev/null','w'))
     else:
         cmd,log = args
-        check_call(cmd,shell=1,
-               stdout=open(log,'w'),
-               stderr=open(log,'w'))
+    try:
+        subprocess.check_output(cmd,shell=1)
+    except subprocess.CalledProcessError as e:
+        print('error')
+        error = e.output
+        return error
+        
+    # if isinstance(args,str):
+    #     cmd = args
+    #     check_call(cmd,shell=1,)
+    #            #stdout=open('/dev/null','w'))
+    # else:
+    #     cmd,log = args
+    #     check_call(cmd,shell=1,
+    #            stdout=open(log,'w'),
+    #            stderr=open(log,'w'))
     
 
 # parts = separate_phy(in_phyfile)
@@ -68,43 +80,35 @@ with open(new_01_ctl,'w') as f1:
     f1.write(text)
 run(f"export PATH=''; /home-user/thliao/software/paml4.9j/bin/mcmctree {new_01_ctl}")
 
-
-
-for _,p in enumerate(parts):
-    name = f"partition{_+1}"
-    params['seqfile'] = f'./{name}.phy'
-    os.makedirs(name,exist_ok=True)
-    text = modify(template_ctl_01,**params)
-    with open(join(name,'01_mcmctree.ctl'),'w') as f1:
-        f1.write(text)
-    with open(join(name,f'./{name}.phy'),'w') as f1:
-        f1.write(p)
-    
-
-params = []
-ctls = glob('./partition*/01_mcmctree.ctl')
+ctls = glob('./tmp0*.ctl')
 for ctl in ctls:
-    params.append((f'cd {dirname(ctl)}; mcmctree {basename(ctl)}',
-                   f"{join(dirname(ctl),'01_log.txt')}" ))
+    name = basename(ctl).replace('.ctl','')
+    os.makedirs(f'./{name}',exist_ok=1)
+    os.system(f'mv {name}.* {name}/')
     
-with mp.Pool(processes= 30) as tp:
-    r = list(tqdm((tp.imap(run,params)),total=len(params)))
 
 params = []
-ctls = glob('./partition*/tmp0001.ctl')
+ctls = glob('./*/tmp0*.ctl')
+ctls = [_ for _ in ctls if 'modify' not in _]
 for ctl in ctls:
     new_text = modify(ctl,
                       **{'model':2,'aaRatefile':'../lg.dat','fix_alpha':0,'alpha':0.5,'ncatG':4})
     new_file = ctl.replace('.ctl','.modify.ctl')
     with open(new_file,'w') as f1:
         f1.write(new_text)
-        params.append(f'cd {dirname(new_file)}; /home-user/thliao/software/paml4.9j/bin/codeml {basename(new_file)}')
+        params.append(f"cd {dirname(new_file)}; /home-user/thliao/software/paml4.9j/bin/codeml {basename(new_file)} > {basename(new_file).replace('.modify.ctl','.log')}")
 
 with mp.Pool(processes= 30) as tp:
     r = list(tqdm((tp.imap(run,params)),total=len(params)))
 
 
-run("cat tmp*/rst2 > in.BV")
+text = ''
+for rst2 in sorted(glob("./tmp*/rst2"),
+                   key=lambda x: int(x.split('/')[1].replace('tmp',''))):
+    text += open(rst2).read()
+with open('./in.BV','w') as f1:
+    f1.write(text)
+# run("cat ./tmp*/rst2 > in.BV")
 
 
 # param = {}
@@ -121,8 +125,9 @@ sigma2_gamma = '1 10 1'
 burnin = '2000'
 sampfreq = '2'
 nsample = '20000'
-seqfile_b = '../concat_aln.phy'
-treefile_b = '../iqtree_sorted_topology.newick'
+seqfile_b = '.'+in_phyfile
+treefile_b = '.'+in_treefile
+outfile = './out'
 ndata = 23
 seqtype = 2
 clock = 2
@@ -131,6 +136,7 @@ param = {'seqfile':seqfile_b,
          'ndata':ndata, 
          'seqtype':seqtype, 
          'usedata':"2 in.BV 1", 
+         'outfile':outfile,
          'clock':clock, 
          'BDparas':bd_paras, 
          'rgene_gamma':rgene_gamma, 
@@ -141,10 +147,12 @@ param = {'seqfile':seqfile_b,
          'alpha':0.5}
 text = modify('./01_mcmctree.ctl',
                **param)
-
-with open('./03_mcmctree.ctl','w') as f1:
+os.makedirs('./03step',exist_ok=1)
+os.system('cp ./in.BV ./03step/')
+ofile = './03step/03_mcmctree.ctl'
+with open(ofile,'w') as f1:
     f1.write(text)
-run('/home-user/thliao/software/paml4.9j/bin/mcmctree %s' % './03_mcmctree.ctl')
+run(f"/home-user/thliao/software/paml4.9j/bin/mcmctree {ofile} > {ofile.replace('.ctl','.log')}")
 
 
 def cli(tree,aln_dir,odir):
