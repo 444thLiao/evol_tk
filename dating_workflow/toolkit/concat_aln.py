@@ -79,9 +79,11 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
             f1.write(f'{total_num}        {length_this_aln}\n')
             used_ids = []
             for _ in range(num_seq):
-                if aln_record[_, :].id.split('_')[0] in genome_ids:
-                    f1.write(f"{convert_genome_ID_rev(aln_record[_, :].id.split('_')[0])}        {str(aln_record[_, :].seq)}\n")
-                    used_ids.append(convert_genome_ID_rev(aln_record[_, :].id.split('_')[0]))
+                formatted_gid = aln_record[_, :].id.split('_')[0]
+                if formatted_gid in genome_ids:
+                    # before _ , should be the converted genome id
+                    f1.write(f"{convert_genome_ID_rev(formatted_gid)}        {str(aln_record[_, :].seq)}\n")
+                    used_ids.append(formatted_gid)
                     
             for remained_id in set(genome_ids).difference(set(used_ids)):
                 f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
@@ -102,6 +104,7 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
     with open(genome_list, 'r') as f1:
         gids = f1.read().split('\n')
     gids = [convert_genome_ID(_) for _ in gids]
+    # from GCA become locus_tag
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
     
