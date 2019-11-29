@@ -81,7 +81,8 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
             for _ in range(num_seq):
                 if aln_record[_, :].id.split('_')[0] in genome_ids:
                     f1.write(f"{convert_genome_ID_rev(aln_record[_, :].id.split('_')[0])}        {str(aln_record[_, :].seq)}\n")
-                    used_ids.append(aln_record[_, :].id)
+                    used_ids.append(convert_genome_ID_rev(aln_record[_, :].id.split('_')[0]))
+                    
             for remained_id in set(genome_ids).difference(set(used_ids)):
                 f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
 
@@ -128,6 +129,7 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
                 gid2record[gid] += '-' * length_this_aln
                 
                 g2num_miss[aln_file_name] +=1
+                
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')

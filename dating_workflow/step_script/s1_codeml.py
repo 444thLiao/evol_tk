@@ -7,28 +7,29 @@ from subprocess import check_call
 import os
 from os.path import *
 from tqdm import tqdm
-in_phyfile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/concat_aln.phy'
-in_treefile = '/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/255g/iqtree.treefile'
-
-
+indir = '/home-user/thliao/data/nitrification_for/dating_for/mcmc_for/proteins'
 in_phyfile = './concat_aln.phy'
-in_treefile = './iqtree_sorted_topology.newick'
+in_treefile = './243g_120gene.calibrations.newick'
 
-def separate_phy(in_phyfile):
-    part_collect = []
-    _cache = []
-    for row in open(in_phyfile):
-        if not row.strip('\n'):
-            continue
-        if not row.startswith('GCA') and row.split(' ')[0].isnumeric():
-            if _cache:
-                part_collect.append(_cache)
-            _cache = []
-        _cache.append(row.strip('\n'))
-    if _cache:
-        part_collect.append(_cache)
-    parts = ['\n'.join(_) for _ in part_collect]
-    return parts
+
+# in_phyfile = './concat_aln.phy'
+# in_treefile = './iqtree_sorted_topology.newick'
+
+# def separate_phy(in_phyfile):
+#     part_collect = []
+#     _cache = []
+#     for row in open(in_phyfile):
+#         if not row.strip('\n'):
+#             continue
+#         if not row.startswith('GCA') and row.split(' ')[0].isnumeric():
+#             if _cache:
+#                 part_collect.append(_cache)
+#             _cache = []
+#         _cache.append(row.strip('\n'))
+#     if _cache:
+#         part_collect.append(_cache)
+#     parts = ['\n'.join(_) for _ in part_collect]
+#     return parts
 
 def modify(file,**kwargs):
     text = open(file).read()
@@ -41,24 +42,34 @@ def modify(file,**kwargs):
         else: 
             new_text.append(row)
     return '\n'.join(new_text)
+
+
 def run(args):
     if isinstance(args,str):
         cmd = args
-        check_call(cmd,shell=1,
-               stdout=open('/dev/null','w'))
+        check_call(cmd,shell=1,)
+               #stdout=open('/dev/null','w'))
     else:
         cmd,log = args
         check_call(cmd,shell=1,
                stdout=open(log,'w'),
                stderr=open(log,'w'))
     
-    
-parts = separate_phy(in_phyfile)
-template_ctl_01 = './01_mcmctree.ctl'
 
-params = {'ndata':1,
-          'seqfile':'',
-          'treefile':'../iqtree_sorted_topology.newick'}
+# parts = separate_phy(in_phyfile)
+template_ctl_01 = './01_mcmctree.ctl'
+new_01_ctl = './01_mcmctree_modify.ctl'
+params = {'ndata':25,
+          'seqfile':in_phyfile,
+          'treefile':in_treefile,
+          'outfile':'01_out'}
+text = modify(template_ctl_01,**params)
+with open(new_01_ctl,'w') as f1:
+    f1.write(text)
+run(f"export PATH=''; /home-user/thliao/software/paml4.9j/bin/mcmctree {new_01_ctl}")
+
+
+
 for _,p in enumerate(parts):
     name = f"partition{_+1}"
     params['seqfile'] = f'./{name}.phy'

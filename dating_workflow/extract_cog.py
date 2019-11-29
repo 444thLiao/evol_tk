@@ -190,14 +190,13 @@ def stats_cog(genome2genes):
         for gene, seqs in pdict.items():
             gene_Ubiquity[gene] += 1
     
-    backbone_gene = {g:0 for g in gene_ids}
+    gene2genome_num = {}
     for gene in gene_ids:
-        
+        _cache = [k for k,v in genome2genes.items() if v.get(gene,[])]
     #for genome, pdict in genome2genes.items():
-        if all([pdict.get(gene,[]) for _, pdict in genome2genes.items()]):
-            backbone_gene[gene] += 1
+        gene2genome_num[gene] = len(_cache)
                 
-    return gene_multi,gene_Ubiquity,backbone_gene
+    return gene_multi,gene_Ubiquity,gene2genome_num
 
             
 if __name__ == "__main__":
@@ -218,5 +217,5 @@ if __name__ == "__main__":
     write_cog(outdir,genome2cdd,raw_proteins,genome_ids=gids,get_type='prot')
     write_cog(outdir+'_nuc',genome2cdd,raw_proteins,genome_ids=gids,get_type='nuc')
     
-    _subgenome2cdd = {k:v for k,v in genome2cdd if k in set(gids)}
-    gene_multi,gene_Ubiquity,backbone_gene = stats_cog(_subgenome2cdd)
+    _subgenome2cdd = {k:v for k,v in genome2cdd.items() if k in set(gids)}
+    gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(_subgenome2cdd)
