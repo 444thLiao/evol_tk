@@ -83,8 +83,8 @@ def collecting_tmp(tmp_indir, odir):
     ctls = glob(join(tmp_indir, 'tmp0*.ctl'))
     for ctl in ctls:
         name = basename(ctl).replace('.ctl', '')
-        os.makedirs(join(odir, './{name}'), exist_ok=1)
-        os.system(f'mv {name}.* {name}/')
+        os.makedirs(join(odir, f'{name}'), exist_ok=1)
+        os.system(f'mv {tmp_indir}/{name}.* {odir}/{name}/')
 
 
 def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
