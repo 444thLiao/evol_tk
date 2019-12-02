@@ -1,7 +1,6 @@
 seed = -1
 seqfile = 00_seqs.phy
 treefile = 00_iqtree.sort.tre
-mcmcfile = 02_mcmctree.mcmc.txt
 outfile = 02_mcmctree.out.txt
 
 ndata = 21
