@@ -1,6 +1,6 @@
 
 
-`python3 ~/script/evolution_relative/dating_workflow/toolkit/concat_aln.py -i ./cog25_single/243g -ct phy -gl ./bac120_annoate/remained_ids_fullv1.list -o mcmc_for/cog25_243g.aln -s aln -no_graph`
+`python3 ~/script/evolution_relative/dating_workflow/toolkit/concat_aln.py -i ./cog25_single/243g -ct phy -gl ./bac120_annoate/remained_ids_fullv1.list -o mcmc_for/cog25_243g.aln -s aln -no_graph -no_fill`
 
 
 ## problems of unfinished codoml within tmp directory. (no use trimal, or more relaxed parameters)

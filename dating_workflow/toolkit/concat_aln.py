@@ -70,13 +70,14 @@ def generate_partition_file(outfile, record_pos_info):
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids,no_fill_gaps=True):
+def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
-            total_num = len(genome_ids)
-            # total_num = len(aln_record)
-            if no_fill_gaps:
+            if fill_gaps:
+                total_num = len(genome_ids)
+            else:
                 total_num = len(aln_record)
+            # total_num = len(aln_record)
             num_seq = len(aln_record)
             length_this_aln = aln_record.get_alignment_length()
             f1.write(f'{total_num}        {length_this_aln}\n')
@@ -87,11 +88,9 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,no_fill_gaps=True):
                     # before _ , should be the converted genome id
                     f1.write(f"{convert_genome_ID_rev(formatted_gid)}        {str(aln_record[_, :].seq)}\n")
                     used_ids.append(formatted_gid)
-            if no_fill_gaps:
-                continue
-            
-            for remained_id in set(genome_ids).difference(set(used_ids)):
-                f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
+            if fill_gaps:
+                for remained_id in set(genome_ids).difference(set(used_ids)):
+                    f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
 
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
@@ -101,10 +100,10 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,no_fill_gaps=True):
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-no_graph", "graph", is_flag=True, default=True)
-@click.option("-no_fill", "no_fill_gaps", is_flag=True, default=True)
+@click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph,no_fill_gaps,suffix='aln'):
+def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph,fill_gaps,suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -150,8 +149,8 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
         if not exists(dirname(outfile)):
             os.makedirs(dirname(outfile))
         outfile = outfile
-        outpartition = join(dirname(outfile), 'concat_aln.partition')
-        outphy = join(dirname(outfile), 'concat_aln.phy')
+        outpartition = outfile.partition('.')[0] +'.partition'
+        outphy = outfile.partition('.')[0] +'.phy'
         ograph = join(dirname(outfile), 'aln_stats.png')
         
     with open(outfile, 'w') as f1:
@@ -165,7 +164,7 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        generate_phy_file(outphy, record_pos_info, gids,no_fill_gaps=no_fill_gaps)
+        generate_phy_file(outphy, record_pos_info, gids,fill_gaps=fill_gaps)
     if graph:
         generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
 
