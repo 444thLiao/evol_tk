@@ -158,21 +158,22 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
         f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl > 03_mcmctree.log")
 
 
-def main(in_phyfile, in_treefile, total_odir):
+def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
+    if run_tmp:
+        tmp_odir = join(total_odir,'tmp_files')
     
-    tmp_odir = join(total_odir,'tmp_files')
-    generate_tmp(in_phyfile, 
-                 in_treefile,
-                 tmp_odir,
-                 ndata)
-    collecting_tmp(tmp_odir,
-                   tmp_odir)
-    mcmc_for_dir = join(total_odir,'mcmc_for')
-    run_each_tmp(tmp_odir,
-                 mcmc_for_dir)
+        generate_tmp(in_phyfile, 
+                    in_treefile,
+                    tmp_odir,
+                    ndata)
+        collecting_tmp(tmp_odir,
+                    tmp_odir)
+        mcmc_for_dir = join(total_odir,'mcmc_for')
+        run_each_tmp(tmp_odir,
+                    mcmc_for_dir)
     final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
                    in_phyfile=in_phyfile,
                    in_treefile=in_treefile,
@@ -190,10 +191,11 @@ def process_path(path):
 @click.option('-i','--in_phy','in_phyfile')
 @click.option('-it','--in_tree','in_treefile')
 @click.option('-o','odir')
-def cli(in_phyfile, in_treefile, odir):
+@click.option('-no_tmp','run_tmp',is_flag=True, default=True)
+def cli(in_phyfile, in_treefile, odir,run_tmp):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
-    main(in_phyfile, in_treefile, total_odir=odir)
+    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp)
 
 
 if __name__ == "__main__":
