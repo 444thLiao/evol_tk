@@ -55,7 +55,7 @@ def run(args):
     except subprocess.CalledProcessError as e:
         print('error',e.output)
     if log != '/dev/null':
-        t = open(log,'r',newline='\n').read().replace('\r\n','\n')
+        t = open(log,'r',newline='\n').read().replace('\r','\n')
         with open(log,'w') as f1:
             f1.write(t)
 

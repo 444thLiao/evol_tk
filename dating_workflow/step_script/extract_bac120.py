@@ -169,7 +169,7 @@ if __name__ == "__main__":
         raw_proteins = sys.argv[1]
         out_cog_dir = sys.argv[2]
         outdir = sys.argv[3]
-        protein_files = []
+        protein_files = glob(raw_proteins)
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
