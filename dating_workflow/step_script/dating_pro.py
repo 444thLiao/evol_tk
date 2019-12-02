@@ -113,7 +113,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
     rst2_list = glob(join(tmp_indir, '*', 'rst2'))
     text = ''
     for rst2 in sorted(rst2_list,
-                       key=lambda x: int(basename(x).replace('tmp', ''))):
+                       key=lambda x: int(basename(dirname(x)).replace('tmp', ''))):
         text += open(rst2).read()
     with open(join(odir, 'in.BV'), 'w') as f1:
         f1.write(text)
