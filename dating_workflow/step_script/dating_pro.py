@@ -43,6 +43,7 @@ def modify(file, **kwargs):
 def run(args):
     if isinstance(args, str):
         cmd = args
+        log = '/dev/null'
     else:
         cmd, log = args
     try:
@@ -53,9 +54,10 @@ def run(args):
 
     except subprocess.CalledProcessError as e:
         print('error',e.output)
-    t = open(log,'r',newline='\n').read().replace('\r\n','\n')
-    with open(log,'w') as f1:
-        f1.write(t)
+    if log != '/dev/null':
+        t = open(log,'r',newline='\n').read().replace('\r\n','\n')
+        with open(log,'w') as f1:
+            f1.write(t)
 
 def get_num_phy_file(in_phyfile):
     ndata = 0
@@ -182,10 +184,10 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
         run_each_tmp(tmp_odir,
                     mcmc_for_dir)
     final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
-                   in_phyfile=in_phyfile,
-                   in_treefile=in_treefile,
-                   odir=mcmc_for_dir,
-                   ndata=ndata)
+                    in_phyfile=in_phyfile,
+                    in_treefile=in_treefile,
+                    odir=mcmc_for_dir,
+                    ndata=ndata)
 
 def process_path(path):
     if not '/' in path:
