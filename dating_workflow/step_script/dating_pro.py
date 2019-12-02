@@ -1,3 +1,12 @@
+"""
+20191202 Liao Tianhua
+This script is mainly wrriten for debugging the mcmctree problems.
+Of course it could run mainly mcmctree from input tree, alignment, aaRatemodel.
+
+For now, it is designed for protein alignment only. 
+
+For better understanding the usage of this script, see usage_dating.md
+"""
 
 from ete3 import Tree
 import click
@@ -8,13 +17,16 @@ import subprocess
 import os
 from os.path import *
 from tqdm import tqdm
-indir = '/home-user/thliao/data/nitrification_for/dating_for/mcmc_for/proteins'
+import click
 
-indir = '/home-user/thliao/data/nitrification_for/dating_for/mcmc_for/test_no_filled_gaps'
-in_phyfile = './concat_aln.phy'
-in_treefile = './243g_120gene.3calibrations.newick'
-aaRatefile = '../lg.dat'
+# __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/dating_pro.py'
+# template file dir
+template_dir = join(dirname(dirname(__file__)),'ctl_template')
+mcmc_ctl = join(template_dir,'mcmctree.ctl')
+codeml_ctl = join(template_dir,'codeml.ctl')
+aaRatefile = join(template_dir,'lg.dat')
 
+paml_bin = "/home-user/thliao/software/paml4.9j/bin"
 def modify(file, **kwargs):
     text = open(file).read()
     text = text.split('\n')
@@ -41,17 +53,26 @@ def run(args):
         return error
 
 
-def generate_tmp(template_ctl, ndata, odir):
+def get_num_phy_file(in_phyfile):
+    ndata = 0
+    for row in open(in_phyfile):
+        row = row.strip('\n').strip().split(' ')
+        row = [_ for _ in row if _]
+        if all([_.isnumeric() for _ in row]):
+            ndata +=1
+    return ndata
+
+def generate_tmp(in_phyfile,in_treefile,odir,ndata,template_ctl=mcmc_ctl):
     # template_ctl_01 = './01_mcmctree.ctl'
     new_01_ctl = join(odir, '01_mcmctree_modify.ctl')
     params = {'ndata': ndata,
-              'seqfile': abspath(in_phyfile),
-              'treefile': abspath(in_treefile),
+              'seqfile': in_phyfile,
+              'treefile': in_treefile,
               'outfile': './01_out'}
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
-    run(f"export PATH=''; cd {odir}; /home-user/thliao/software/paml4.9j/bin/mcmctree 01_mcmctree_modify.ctl")
+    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl")
 
 
 def collecting_tmp(tmp_indir, odir):
@@ -81,7 +102,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
         with open(new_file, 'w') as f1:
             f1.write(new_text)
         params.append(
-            f"cd {dirname(new_file)}; /home-user/thliao/software/paml4.9j/bin/codeml {basename(new_file)} > {basename(new_file).replace('.modify.ctl','.log')}")
+            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)} > {basename(new_file).replace('.modify.ctl','.log')}")
 
     with mp.Pool(processes=30) as tp:
         _ = list(tqdm((tp.imap(run, params)), total=len(params)))
@@ -96,7 +117,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
         f1.write(text)
 
 
-def final_mcmctree(template_ctl, inBV, odir, ndata):
+def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -106,9 +127,9 @@ def final_mcmctree(template_ctl, inBV, odir, ndata):
     burnin = '2000'
     sampfreq = '2'
     nsample = '20000'
-    seqfile_b = '.'+in_phyfile
-    treefile_b = '.'+in_treefile
-    outfile = './out'
+    seqfile_b = in_phyfile
+    treefile_b = in_treefile
+    outfile = './03_mcmctree.out'
     seqtype = 2
     clock = 2
     param = {'seqfile': seqfile_b,
@@ -132,11 +153,45 @@ def final_mcmctree(template_ctl, inBV, odir, ndata):
     with open(ofile, 'w') as f1:
         f1.write(text)
     run(
-        f"/home-user/thliao/software/paml4.9j/bin/mcmctree {ofile} > {ofile.replace('.ctl','.log')}")
+        f"{paml_bin}/mcmctree {ofile} > {ofile.replace('.ctl','.log')}")
 
 
-def cli(tree, aln_dir, odir):
-    pass
+def main(in_phyfile, in_treefile, total_odir):
+    if not exists(total_odir):
+        os.makedirs(total_odir)
+    ndata = get_num_phy_file(in_phyfile)
+    
+    tmp_odir = join(total_odir,'tmp_files')
+    generate_tmp(in_phyfile, 
+                 in_treefile,
+                 tmp_odir,
+                 ndata)
+    collecting_tmp(tmp_odir,
+                   tmp_odir)
+    mcmc_for_dir = join(total_odir,'mcmc_for')
+    run_each_tmp(tmp_odir,
+                 mcmc_for_dir)
+    final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
+                   in_phyfile=in_phyfile,
+                   in_treefile=in_treefile,
+                   odir=mcmc_for_dir,
+                   ndata=ndata)
+
+def process_path(path):
+    if not '/' in path:
+        path = './' + path
+    path = abspath(expanduser(path))
+    return path
+
+
+@click.command()
+@click.option('-i','--in_phy','in_phyfile')
+@click.option('-it','--in_tree','in_treefile')
+@click.option('-o','odir')
+def cli(in_phyfile, in_treefile, odir):
+    in_phyfile = process_path(in_phyfile)
+    in_treefile = process_path(in_treefile)
+    main(in_phyfile, in_treefile, total_odir=odir)
 
 
 if __name__ == "__main__":
