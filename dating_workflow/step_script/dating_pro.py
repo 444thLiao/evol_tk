@@ -46,12 +46,16 @@ def run(args):
     else:
         cmd, log = args
     try:
-        subprocess.check_output(cmd, shell=1)
-    except subprocess.CalledProcessError as e:
-        print('error')
-        error = e.output
-        return error
+        #subprocess.check_output(cmd, shell=1)
+        check_call(cmd,
+                   shell=1,
+                   stdout=open(log,'w'))
 
+    except subprocess.CalledProcessError as e:
+        print('error',e.output)
+    t = open(log,'r',newline='\n').read().replace('\r\n','\n')
+    with open(log,'w') as f1:
+        f1.write(t)
 
 def get_num_phy_file(in_phyfile):
     ndata = 0
@@ -103,8 +107,8 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
         new_file = ctl.replace('.ctl', '.modify.ctl')
         with open(new_file, 'w') as f1:
             f1.write(new_text)
-        params.append(
-            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)} > {basename(new_file).replace('.modify.ctl','.log')}")
+        params.append((
+            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", new_file.replace('.modify.ctl','.log')))
 
     with mp.Pool(processes=30) as tp:
         _ = list(tqdm((tp.imap(run, params)), total=len(params)))
@@ -155,8 +159,8 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run(
-        f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl > 03_mcmctree.log")
+    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl "),
+         ofile.replace('.ctl','.log'))
 
 
 def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
