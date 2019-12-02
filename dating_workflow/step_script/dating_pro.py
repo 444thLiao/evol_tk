@@ -64,6 +64,8 @@ def get_num_phy_file(in_phyfile):
 
 def generate_tmp(in_phyfile,in_treefile,odir,ndata,template_ctl=mcmc_ctl):
     # template_ctl_01 = './01_mcmctree.ctl'
+    if not exists(odir):
+        os.makedirs(odir)
     new_01_ctl = join(odir, '01_mcmctree_modify.ctl')
     params = {'ndata': ndata,
               'seqfile': in_phyfile,
