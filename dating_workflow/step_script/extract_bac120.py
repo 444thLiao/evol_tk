@@ -160,15 +160,22 @@ def stats_cog(genome2genes):
             gene_Ubiquity[gene] += 1
     return gene_multi,gene_Ubiquity
 
+def process_path(path):
+    if '~' in path:
+        path = expanduser('path')
+    if not '/' in path:
+        path = './' + path
+    path = abspath(path)
+    return path
 if __name__ == "__main__":
     import sys
 
     # usage :
     # extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./conserved_protein
     if len(sys.argv) >= 2:
-        raw_proteins = sys.argv[1]
-        out_cog_dir = sys.argv[2]
-        outdir = sys.argv[3]
+        raw_proteins = process_path(sys.argv[1])
+        out_cog_dir = process_path(sys.argv[2])
+        outdir = process_path(sys.argv[3])
         protein_files = glob(raw_proteins)
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
