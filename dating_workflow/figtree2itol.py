@@ -23,6 +23,7 @@ def sub_for(m):
     #t = t.replace(',','_')
     #print(t.string)
     return t
+
 mcmc_out_tre = './FigTree.newick'
 a = open(mcmc_out_tre)
 for row in a:

@@ -74,6 +74,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
             total_num = len(genome_ids)
+            total_num = len(aln_record)
             num_seq = len(aln_record)
             length_this_aln = aln_record.get_alignment_length()
             f1.write(f'{total_num}        {length_this_aln}\n')
