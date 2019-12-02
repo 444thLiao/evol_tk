@@ -162,8 +162,10 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
+    mcmc_for_dir = join(total_odir,'mcmc_for')
+    tmp_odir = join(total_odir,'tmp_files')
     if run_tmp:
-        tmp_odir = join(total_odir,'tmp_files')
+        
     
         generate_tmp(in_phyfile, 
                     in_treefile,
@@ -171,7 +173,7 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
                     ndata)
         collecting_tmp(tmp_odir,
                     tmp_odir)
-        mcmc_for_dir = join(total_odir,'mcmc_for')
+        
         run_each_tmp(tmp_odir,
                     mcmc_for_dir)
     final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
