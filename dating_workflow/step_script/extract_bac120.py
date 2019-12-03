@@ -170,12 +170,13 @@ if __name__ == "__main__":
         out_cog_dir = process_path(sys.argv[2])
         outdir = process_path(sys.argv[3])
         protein_files = glob(raw_proteins)
+        gids = []
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
         outdir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate/seq')
-
         protein_files = glob(raw_proteins)
+        
     # for tigfam_id in tigfam_ids:
     annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
     annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
@@ -184,6 +185,6 @@ if __name__ == "__main__":
     gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
 
     genome2genes = parse_annotation(out_cog_dir,top_hit=True)
-    write_cog(outdir,genome2cdd,raw_proteins,genome_ids=gids,get_type='prot')
+    write_cog(outdir,genome2genes,raw_proteins,genome_ids=gids,get_type='prot')
 
     # perform_iqtree(outdir)
