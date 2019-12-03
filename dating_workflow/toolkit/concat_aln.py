@@ -2,7 +2,7 @@ import os
 
 from Bio import AlignIO, SeqIO
 from glob import glob
-from os.path import join, exists, dirname,basename
+from os.path import join, exists, dirname,basename,expanduser,abspath
 import click
 import random
 from collections import defaultdict
