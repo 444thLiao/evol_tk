@@ -107,12 +107,13 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
 @click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
 @click.option("-s", "suffix", default='aln')
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
+@click.option("-genel", "gene_list", default=None, help="")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-no_graph", "graph", is_flag=True, default=True)
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph,fill_gaps,suffix='aln'):
+def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_type, graph,fill_gaps,suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -124,6 +125,13 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
     
     las_pos = 0
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
+    if exists(str(gene_list)):
+        gene_list = [_.strip() 
+                     for _ in open(gene_list).read().split('\n') 
+                     if _]
+        order_seqs = [_ 
+                      for _ in order_seqs
+                      if basename(_).replace(f'.{suffix}','') in gene_list]
     g2num_miss = {basename(_).replace(f'.{suffix}',''):0 for _ in order_seqs}
     tqdm.write('itering all requested files ')
     for idx, aln_file in tqdm(enumerate(order_seqs),total=len(order_seqs)):
