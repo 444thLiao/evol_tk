@@ -168,7 +168,7 @@ if __name__ == "__main__":
     genome2genes = parse_annotation(out_cog_dir,top_hit=False)
     gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
 
-    genome2genes = extra_genes(out_cog_dir, mode='top')
-    genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
+    genome2genes = parse_annotation(out_cog_dir,top_hit=True)
+    write_cog(outdir,genome2cdd,raw_proteins,genome_ids=gids,get_type='prot')
 
     # perform_iqtree(outdir)
