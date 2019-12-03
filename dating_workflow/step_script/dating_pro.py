@@ -161,8 +161,8 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl "),
-         ofile.replace('.ctl','.log'))
+    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
+          ofile.replace('.ctl','.log'))  )
 
 
 def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
