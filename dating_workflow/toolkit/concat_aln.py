@@ -78,7 +78,10 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
             else:
                 total_num = len(aln_record)
             if remove_identical:
-                total_num = len(set([str(_.seq) for _ in aln_record]))
+                _total_num = len(set([str(_.seq) for _ in aln_record]))
+                num_identical = total_num-_total_num
+                print(f"found {num_identical} identical seq")
+                total_num = _total_num
             # total_num = len(aln_record)
             num_seq = len(aln_record)
             length_this_aln = aln_record.get_alignment_length()
