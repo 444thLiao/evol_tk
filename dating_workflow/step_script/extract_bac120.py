@@ -108,12 +108,12 @@ def write_genes_multiple(outdir, genome2gene_id, protein_files):
             SeqIO.write(gene_records, f1, format='fasta-2line')
     return genome2gene_seq
 
-def perform_iqtree(indir):
-    script = expanduser('~/bin/batch_run/batch_mafft.py')
-    run(f"python3 {script} -i {indir} -o {indir}")
+# def perform_iqtree(indir):
+#     script = expanduser('~/bin/batch_run/batch_mafft.py')
+#     run(f"python3 {script} -i {indir} -o {indir}")
 
-    script = expanduser('~/bin/batch_run/batch_tree.py')
-    run(f"python3 {script} -i {indir} -o {join(dirname(indir),'tree')} -ns newick -use fasttree")
+#     script = expanduser('~/bin/batch_run/batch_tree.py')
+#     run(f"python3 {script} -i {indir} -o {join(dirname(indir),'tree')} -ns newick -use fasttree")
 
 
 def stats_cog(genome2genes):
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     genome2genes = parse_annotation(out_cog_dir,top_hit=False)
     gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
 
-    genome2genes = extra_genes(out_cog_dir, mode='top')
-    genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
+    # genome2genes = extra_genes(out_cog_dir, mode='top')
+    # genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
 
-    perform_iqtree(outdir)
+    # perform_iqtree(outdir)

@@ -16,14 +16,14 @@ cdd_tbl = f"{resource_dir}/cog/cddid_all.tbl"
 list27_genes = f"{resource_dir}/single.cog.list"
 cog_list = set([_.split('\t')[0] for _ in open(list27_genes).read().split('\n') if _])
 
-cdd_num = defaultdict(list)
-for row in open(cdd_tbl,'r'):
-    if row.split('\t')[1] in cog_list:
-        cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
-cdd_num.pop('TIGR00487')
+# cdd_num = defaultdict(list)
+# for row in open(cdd_tbl,'r'):
+#     if row.split('\t')[1] in cog_list:
+#         cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
+# cdd_num.pop('TIGR00487')
 
 cog_db = f"{resource_dir}/cog25_rps/sing"
-TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
+# TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
 
 def run(cmd):

@@ -70,7 +70,7 @@ def generate_partition_file(outfile, record_pos_info):
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True):
+def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove_identical=False):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
             if fill_gaps:
@@ -82,11 +82,15 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True):
             length_this_aln = aln_record.get_alignment_length()
             f1.write(f'{total_num}        {length_this_aln}\n')
             used_ids = []
+            added_seq = []
             for _ in range(num_seq):
                 formatted_gid = aln_record[_, :].id.split('_')[0]
+                if str(aln_record[_, :].seq) in set(added_seq):
+                    continue
                 if formatted_gid in genome_ids:
                     # before _ , should be the converted genome id
                     f1.write(f"{convert_genome_ID_rev(formatted_gid)}        {str(aln_record[_, :].seq)}\n")
+                    added_seq.append(str(aln_record[_, :].seq))
                     used_ids.append(formatted_gid)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
@@ -164,7 +168,7 @@ def main(indir, outfile, genome_list, remove_identical, seed, concat_type, graph
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        generate_phy_file(outphy, record_pos_info, gids,fill_gaps=fill_gaps)
+        generate_phy_file(outphy, record_pos_info, gids,fill_gaps=fill_gaps,remove_identical=remove_identical)
     if graph:
         generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
 
