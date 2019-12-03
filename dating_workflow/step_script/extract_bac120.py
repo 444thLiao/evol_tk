@@ -6,6 +6,7 @@ from os.path import *
 from collections import defaultdict
 from Bio import SeqIO
 import multiprocessing as mp
+from dating_workflow.step_script import _parse_blastp,_parse_hmmscan,_get_tophit
 
 pfam_db = '/home-user/thliao/data/protein_db/bac120/Pfam.v32.sub6.hmm'
 tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
@@ -53,57 +54,24 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
     with mp.Pool(processes=5) as tp:
         r = list(tqdm(tp.imap(run, params),total=len(params)))
 
+ 
+def parse_annotation(odir,top_hit = False):
+    # for cdd
+    _cdd_match_ids = pfam_ids
+    genome2annotate = defaultdict(lambda:defaultdict(list))
+    
+    # cdd annotations
+    tqdm.write('start to read/parse output files (cdd and tigrfam)')
+    cdd_anno_files = glob(join(odir,'PFAM','*.out'))
+    # tigrfam annotations
+    tigrfam_anno_files = glob(join(odir,'TIGRFAM','*.out'))
+    for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
+        gname = basename(ofile).replace('.out','')
+        locus_dict = _parse_hmmscan(ofile=ofile,
+                                   top_hit=top_hit)
+        genome2annotate[gname].update(locus_dict)
+    return genome2annotate
 
-def parse_grep_result(ofile,filter_evalue,get_top=False):
-    # for grep against hmm scan
-    gid2locus = defaultdict(list)
-
-    for row in open(ofile, 'r'):
-        if row.startswith('#'):
-            continue
-        r = row.split(' ')
-        r = [_ for _ in r if _]
-
-        gene_id = r[1]
-        locus_tag = r[2]
-        evalue = float(r[4])
-        if filter_evalue and evalue <= filter_evalue:
-            if not get_top:
-                gid2locus[gene_id].append(locus_tag)
-            else:
-                gid2locus[gene_id].append((locus_tag, evalue))
-        else:
-            gid2locus[gene_id].append((locus_tag, evalue))
-    # if get_top:
-    #     gid2locus = {gene_id:[list(sorted(v_list,
-    #                                       key=lambda x:x[1]))[0][0]]
-    #                  for gene_id,v_list in gid2locus.items()}
-    return gid2locus
-
-
-def extra_genes(odir, evalue=1e-10, mode='multiple'):
-    genome2gene_id = defaultdict(dict)
-    odir_pfam = join(odir, 'PFAM')
-    odir_tigrfam = join(odir, 'TIGRFAM')
-    outfiles = glob(join(odir_pfam, '*.out')) + glob(join(odir_tigrfam, '*.out'))
-    tqdm.write('start to read/parse output files')
-    for outfile in tqdm(outfiles):
-        gname = basename(outfile).replace('.out', '')
-        if mode == 'multiple':
-            gid2locus = parse_grep_result(outfile, filter_evalue=evalue)
-        elif mode == 'top':
-            gid2locus = parse_grep_result(outfile, filter_evalue=None,get_top=True)
-        # else:
-        #     return
-        genome2gene_id[gname].update(gid2locus)
-    if mode == 'top':
-        for gname in genome2gene_id.keys():
-            gid2locus = genome2gene_id[gname]
-            gid2locus = {gene_id: [list(sorted(v_list,
-                                               key=lambda x: x[1]))[0][0]]
-                         for gene_id, v_list in gid2locus.items()}
-            genome2gene_id[gname] = gid2locus
-    return genome2gene_id
 
 
 # extract protein
@@ -149,16 +117,25 @@ def perform_iqtree(indir):
 
 
 def stats_cog(genome2genes):
-    gene_multi = defaultdict(int)
+    gene_ids = pfam_ids+tigfam_ids
+    
+    gene_multi = {g:0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             if len(seqs) >= 2:
                 gene_multi[gene] += 1
-    gene_Ubiquity = defaultdict(int)
+    gene_Ubiquity = {g:0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             gene_Ubiquity[gene] += 1
-    return gene_multi,gene_Ubiquity
+    
+    gene2genome_num = {}
+    for gene in gene_ids:
+        _cache = [k for k,v in genome2genes.items() if v.get(gene,[])]
+    #for genome, pdict in genome2genes.items():
+        gene2genome_num[gene] = len(_cache)
+                
+    return gene_multi,gene_Ubiquity,gene2genome_num
 
 def process_path(path):
     if '~' in path:
@@ -188,8 +165,8 @@ if __name__ == "__main__":
     annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
     annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
 
-    genome2genes = extra_genes(out_cog_dir,mode='multiple')
-    gene_multi,gene_Ubiquity = stats_cog(genome2genes)
+    genome2genes = parse_annotation(out_cog_dir,top_hit=False)
+    gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
 
     genome2genes = extra_genes(out_cog_dir, mode='top')
     genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
