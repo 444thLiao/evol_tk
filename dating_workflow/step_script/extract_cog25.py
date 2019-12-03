@@ -38,7 +38,7 @@ def annotate_cog(raw_protein,cog_out_dir):
         gname = basename(f).replace('.faa', '')
         # for cdd
         ofile = f'{cog_out_dir}/{gname}.out'
-        cmd = f"/home-user/software/blast/latest/bin/rpsblast -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-5  -out {ofile}"
+        cmd = f"/home-user/software/blast/latest/bin/rpsblast -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-3  -out {ofile}"
         if not os.path.exists(ofile):
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))
