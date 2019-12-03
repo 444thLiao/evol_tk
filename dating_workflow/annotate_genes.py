@@ -38,7 +38,11 @@ tmp_dir = join('./tmp/contained_genes/')
 os.makedirs(tmp_dir,exist_ok=True)
 collected_gs = expanduser('~/project/nitrogen_cycle/curated_genes/')
 genome2collect_genes = defaultdict(list)
-for fa in tqdm(glob(join(collected_gs,'*.faa'))):
+
+genes = ['hzsA','hzsB','hzsC','hao','hdh','hzo',]
+do_genes = glob(join(collected_gs,'*.faa'))
+do_genes = [_ for _ in do_genes if basename(_).replace('.faa','') in genes]
+for fa in tqdm(do_genes):
     gene_name = basename(fa).replace('.faa','').strip()
     otab = join(tmp_dir,basename(fa).replace('.faa','').strip()+'.tab')
     if (not exists(otab)) or redo:
@@ -66,6 +70,7 @@ info2style = {'amoA':{'color':'#ff0000',
                       'info':'nxrA'},
               }
 
+# for nitrification
 requested_genes = ['amoA','amoB','amoC','hao','cycA','cycB','nxrA']
 g2id = {f"GCA_{k.replace('v','.')}":v for k,v in genome2collect_genes.items()}
 g2id = {k:v for k,v in g2id.items() if set(v).intersection(set(requested_genes))}
