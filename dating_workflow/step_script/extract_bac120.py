@@ -75,38 +75,53 @@ def parse_annotation(odir,top_hit = False):
 
 
 # extract protein
-def write_genes_multiple(outdir, genome2gene_id, protein_files):
-    pdir = dirname(expanduser(protein_files[0]))
-    genome2gene_seq = {}
-    for genome_name, pdict in tqdm(genome2gene_id.items()):
-        pfiles = glob(f'{pdir}/{genome_name}.faa')
-        if pfiles:
-            pfile = pfiles[0]
-            _cache = {record.id: record
-                      for record in SeqIO.parse(pfile, format='fasta')}
-            pset = {k: [_cache[_]
-                        for _ in v
-                        if _ in _cache]
-                    for k, v in pdict.items()}
-            genome2gene_seq[genome_name] = pset
-        else:
-            continue
-    all_ids = set([_ for v in genome2gene_seq.values() for _ in v.keys()])
-    # concat/output proteins
+def write_cog(outdir,genome2cdd,raw_proteins,genome_ids=[],get_type='prot'):
+    genome2seq = {}
+    if not genome_ids:
+        genome_ids = list(genome2cdd)
+    gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
+    pdir = dirname(expanduser(raw_proteins))
+    if get_type == 'nuc':
+        suffix = 'ffn'
+    elif get_type == 'prot':
+        suffix = 'faa'
+    else:
+        raise Exception
     if not exists(outdir):
         os.makedirs(outdir)
-    for gene_id in tqdm(all_ids):
+    tqdm.write('get sequence file')
+    for genome_name in tqdm(genome_ids):
+        g_dict = genome2cdd[genome_name]
+        gfile = f'{pdir}/{genome_name}.faa'
+        new_pdir = abspath(dirname(dirname(realpath(gfile))))
+        gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
+
+        if exists(gfile):
+            _cache = {record.id:record
+                      for record in SeqIO.parse(gfile,format='fasta')}
+            seq_set = {k:[_cache[_]
+                       for _ in v
+                       if _ in _cache]
+                    for k,v in g_dict.items()}
+            genome2seq[genome_name] = seq_set
+            
+    # concat/output proteins
+    tqdm.write('write out')
+    for each_gene in tqdm(gene_ids):
         gene_records = []
-        for gname, p_d in genome2gene_seq.items():
-            get_records = p_d.get(gene_id, [])
-            if len(get_records) >= 1:
-                # record = get_records
-                for record in get_records:
-                    record.name = gname
-                gene_records += get_records
-        with open(join(outdir, f"{gene_id}.faa"), 'w') as f1:
-            SeqIO.write(gene_records, f1, format='fasta-2line')
-    return genome2gene_seq
+        for gname, seq_dict in genome2seq.items():
+            get_records = seq_dict.get(each_gene,[])
+            for record in get_records:
+                record.name = gname
+            gene_records+=get_records
+        unique_cdd_records = [] 
+        [unique_cdd_records.append(record) 
+         for record in gene_records 
+         if record.id not in [_.id 
+                              for _ in unique_cdd_records]]  
+        
+        with open(join(outdir,f"{each_gene.replace('CDD:','')}.faa"),'w') as f1:
+            SeqIO.write(unique_cdd_records,f1,format='fasta-2line')
 
 # def perform_iqtree(indir):
 #     script = expanduser('~/bin/batch_run/batch_mafft.py')
