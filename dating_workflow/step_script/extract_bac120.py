@@ -167,6 +167,7 @@ def process_path(path):
         path = './' + path
     path = abspath(path)
     return path
+
 if __name__ == "__main__":
     import sys
 
