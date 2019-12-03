@@ -1,3 +1,6 @@
+"""
+extract 25 proteins for dating analysis
+"""
 from glob import glob
 from subprocess import check_call
 import os
@@ -19,7 +22,7 @@ for row in open(cdd_tbl,'r'):
         cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
 cdd_num.pop('TIGR00487')
 
-cog_db = f"{resource_dir}/cog_rps/sing"
+cog_db = f"{resource_dir}/cog25_rps/sing"
 TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
 
@@ -41,19 +44,19 @@ def annotate_cog(raw_protein,cog_out_dir):
                 os.makedirs(dirname(ofile))
             params.append(cmd)
         # for tigrfam
-        ofile = f'{cog_out_dir}/TIGRFAM/{gname}.out'
-        cmd = f"hmmscan --tblout {ofile} --acc --noali --notextw --cpu 10 {TIGRFAM_db} {f}"
-        if not os.path.exists(ofile):
-            if not exists(dirname(ofile)):
-                os.makedirs(dirname(ofile))
-            params.append(cmd)
+        # ofile = f'{cog_out_dir}/TIGRFAM/{gname}.out'
+        # cmd = f"hmmscan --tblout {ofile} --acc --noali --notextw --cpu 10 {TIGRFAM_db} {f}"
+        # if not os.path.exists(ofile):
+        #     if not exists(dirname(ofile)):
+        #         os.makedirs(dirname(ofile))
+        #     params.append(cmd)
     with mp.Pool(processes=5) as tp:
         list(tqdm(tp.imap(run,params),total=len(params)))
         
         
 def parse_annotation(cog_out_dir,top_hit = False):
     # for cdd
-    _cdd_match_ids = set([_ for vl in cdd_num.values() for _ in vl])
+    #_cdd_match_ids = set([_ for vl in cdd_num.values() for _ in vl])
     genome2cdd = defaultdict(lambda:defaultdict(list))
     
     # cdd annotations
@@ -62,16 +65,16 @@ def parse_annotation(cog_out_dir,top_hit = False):
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out','')
         locus_dict = _parse_blastp(ofile=ofile,
-                                   match_ids=_cdd_match_ids,
+                                   match_ids=[],
                                    top_hit=top_hit)
         genome2cdd[gname].update(locus_dict)
     # tigrfam annotations
-    tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
-    for ofile in tqdm(tigrfam_anno_files):
-        gname = basename(ofile).replace('.out','')
-        locus_dict = _parse_hmmscan(ofile=ofile,
-                                   top_hit=top_hit)
-        genome2cdd[gname].update(locus_dict)
+    # tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
+    # for ofile in tqdm(tigrfam_anno_files):
+    #     gname = basename(ofile).replace('.out','')
+    #     locus_dict = _parse_hmmscan(ofile=ofile,
+    #                                top_hit=top_hit)
+    #     genome2cdd[gname].update(locus_dict)
     return genome2cdd
 
 # extract protein
@@ -165,8 +168,8 @@ if __name__ == "__main__":
         gids = []
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
-        annotation_dir = expanduser('~/data/nitrification_for/dating_for/target_genes_blastp')
-        outdir = expanduser('~/data/nitrification_for/dating_for/cog25_multiple')
+        annotation_dir = expanduser('~/data/nitrification_for/dating_for/target_genes_rpsblast')
+        outdir = expanduser('~/data/nitrification_for/dating_for/cog25_single')
         gids = open(expanduser('~/data/nitrification_for/dating_for/bac120_annoate/remained_ids_fullv1.list')).read().split('\n')
     annotate_cog(raw_proteins, annotation_dir)
     genome2cdd = parse_annotation(annotation_dir,top_hit=True)
