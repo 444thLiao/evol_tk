@@ -171,7 +171,7 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
     else:
         outfile = process_path(outfile)
         outpartition = outfile.rpartition('.')[0] + '.partition'
-        outphy = outfile.rpartition('.')[0] +  +'.phy'
+        outphy = outfile.rpartition('.')[0]  +'.phy'
         ograph = join(dirname(outfile), 'aln_stats.png')
         
     with open(outfile, 'w') as f1:
