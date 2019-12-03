@@ -102,6 +102,14 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
                     f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
 
 
+def process_path(path):
+    if '~' in path:
+        path = expanduser('path')
+    if not '/' in path:
+        path = './' + path
+    path = abspath(path)
+    return path
+
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
@@ -161,13 +169,9 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
         outphy = join(indir, 'concat_aln.phy')
         ograph = join(indir, 'aln_stats.png')
     else:
-        if not '/' in outfile:
-            outfile = './' + outfile
-        if not exists(dirname(outfile)):
-            os.makedirs(dirname(outfile))
-        outfile = outfile
-        outpartition = outfile.partition('.')[0] +'.partition'
-        outphy = outfile.partition('.')[0] +'.phy'
+        outfile = process_path(outfile)
+        outpartition = outfile.rpartition('.')[0] + '.partition'
+        outphy = outfile.rpartition('.')[0] +  +'.phy'
         ograph = join(dirname(outfile), 'aln_stats.png')
         
     with open(outfile, 'w') as f1:
@@ -181,7 +185,9 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        generate_phy_file(outphy, record_pos_info, gids,fill_gaps=fill_gaps,remove_identical=remove_identical)
+        generate_phy_file(outphy, record_pos_info, gids,
+                          fill_gaps=fill_gaps,
+                          remove_identical=remove_identical)
     if graph:
         generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
 
