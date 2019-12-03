@@ -18,7 +18,7 @@ for row in open(cdd_tbl,'r'):
         cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
 cdd_num.pop('TIGR00487')
 
-cog_db = f"{resource_dir}/cog/Cog"
+cog_db = f"{resource_dir}/cog_rps/sing"
 TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
 
@@ -34,7 +34,7 @@ def annotate_cog(raw_protein,cog_out_dir):
         gname = basename(f).replace('.faa', '')
         # for cdd
         ofile = f'{cog_out_dir}/{gname}.out'
-        cmd = f"blastp -query {f} -db {cog_db} -max_hsps 1 -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-5 -out {ofile}"
+        cmd = f"/home-user/software/blast/latest/bin/rpsblast -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-5  -out {ofile}"
         if not os.path.exists(ofile):
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))
@@ -207,6 +207,7 @@ if __name__ == "__main__":
         raw_proteins = sys.argv[1]
         annotation_dir = sys.argv[2]
         outdir = sys.argv[3]
+        gids = []
     else:
         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
         annotation_dir = expanduser('~/data/nitrification_for/dating_for/target_genes_blastp')
