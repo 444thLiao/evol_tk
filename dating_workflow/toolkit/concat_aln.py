@@ -8,6 +8,7 @@ import random
 from collections import defaultdict
 import plotly.graph_objs as go
 from tqdm import tqdm
+from dating_workflow.step_script import process_path
 
 def generate_stats_graph(stats,total,ofile):
     fig = go.Figure()
@@ -102,14 +103,6 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
                     f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
 
 
-def process_path(path):
-    if '~' in path:
-        path = expanduser('path')
-    if not '/' in path:
-        path = './' + path
-    path = abspath(path)
-    return path
-
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
@@ -178,6 +171,8 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
         ograph = join(indir, 'aln_stats.png')
     else:
         outfile = process_path(outfile)
+        if not exists(dirname(outfile)):
+            os.makedirs(dirname(outfile))
         outpartition = outfile.rpartition('.')[0] + '.partition'
         outphy = outfile.rpartition('.')[0]  +'.phy'
         ograph = join(dirname(outfile), 'aln_stats.png')
