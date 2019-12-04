@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
 
     tmp_dir = './tmp'
-    prokka_p = "/usr/local/bin/prokka"
+    prokka_p = " `which prokka`"
     if not exists(odir):
         os.makedirs(odir,exist_ok=True)
     if not exists(tmp_dir):
