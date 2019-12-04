@@ -141,7 +141,7 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
             order_seqs = [_ 
                         for _ in order_seqs
                         if basename(_).replace(f'.{suffix}','') in gene_list]
-        elif isinstance(gene_list):
+        elif isinstance(gene_list,str):
             gene_list = [_.strip() 
                         for _ in gene_list.split(',')
                         if _]
