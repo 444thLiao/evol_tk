@@ -6,7 +6,7 @@ import os
 all_seq = './all_seqs.faa'
 # get unique faa from original nr sequence file.
 if not exists(all_seq):
-    a = open('nr_parse.output').read()
+    a = open('parse_hzsA.out').read()
     all_ids = [_.split('\t')[0] for _ in a.split('\n') if _]
     all_ids = set(all_ids)
 

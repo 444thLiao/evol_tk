@@ -133,13 +133,21 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
     
     las_pos = 0
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
-    if exists(str(gene_list)):
-        gene_list = [_.strip() 
-                     for _ in open(gene_list).read().split('\n') 
-                     if _]
-        order_seqs = [_ 
-                      for _ in order_seqs
-                      if basename(_).replace(f'.{suffix}','') in gene_list]
+    if gene_list is not None:
+        if exists(str(gene_list)):
+            gene_list = [_.strip() 
+                        for _ in open(gene_list).read().split('\n') 
+                        if _]
+            order_seqs = [_ 
+                        for _ in order_seqs
+                        if basename(_).replace(f'.{suffix}','') in gene_list]
+        elif isinstance(gene_list):
+            gene_list = [_.strip() 
+                        for _ in gene_list.split(',')
+                        if _]
+            order_seqs = [_ 
+                        for _ in order_seqs
+                        if basename(_).replace(f'.{suffix}','') in gene_list]
     g2num_miss = {basename(_).replace(f'.{suffix}',''):0 for _ in order_seqs}
     tqdm.write('itering all requested files ')
     for idx, aln_file in tqdm(enumerate(order_seqs),total=len(order_seqs)):
