@@ -36,6 +36,7 @@ def cli(indir,ofile,suffix,num_percentage,num_genomes,genome_list):
         num_percentage = 100
         num_genomes = len(gids)
     elif num_genomes is None:
+        num_percentage = int(num_percentage)
         num_genomes = len(gids)*num_percentage/100
     else:
         num_genomes = int(num_genomes)
