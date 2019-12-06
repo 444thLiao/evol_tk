@@ -164,7 +164,7 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
           ofile.replace('.ctl','.log'))  )
 
-def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct):
+def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
     bd_paras = '1 1 0.1'
     rgene_gamma = '1 35 1'
     sigma2_gamma = '1 10 1'
@@ -195,7 +195,7 @@ def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct):
     ofile = join(odir, 'nodata_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
+    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
           ofile.replace('.ctl','.log'))  )
     
 def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
