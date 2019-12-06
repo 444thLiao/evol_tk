@@ -12,22 +12,23 @@ from glob import glob
 from tqdm import tqdm
 import multiprocessing as mp
 
-command_template = 'checkm taxonomy_wf -t 10 -x {infile} domain Bacteria {indir} {odir}'
+command_template = 'checkm taxonomy_wf -t 10 -x {infile} {tax} {indir} {odir}'
 
 
 def run(args):
     unit_run(*args)
 
 
-def unit_run(infile,indir, odir):
+def unit_run(infile,indir,tax, odir):
     check_call(command_template.format(infile=infile,
                                        indir=indir,
+                                       tax=tax,
                                        odir=odir),
                shell=True,
                stdout=open('/dev/null','w'))
 
 
-def main(indir, odir, num_parellel, suffix='', force=False):
+def main(indir, odir, tax,num_parellel, suffix='', force=False):
     suffix = suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
@@ -43,6 +44,7 @@ def main(indir, odir, num_parellel, suffix='', force=False):
         if not exists(new_odir) or force:
             params.append((basename(in_file),
                            indir, 
+                           tax,
                            new_odir))
     with mp.Pool(processes=num_parellel) as tp:
         r = list(tqdm(tp.imap(run,params),total=len(params)))
@@ -53,10 +55,12 @@ def main(indir, odir, num_parellel, suffix='', force=False):
 @click.option('-o', 'odir')
 @click.option('-s', 'suffix', default='')
 @click.option('-np', 'num_parellel', default=10)
+@click.option('-t', 'tax', default='domain Bacteria')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def cli(indir, odir, suffix, new_suffix, force, num_parellel):
+def cli(indir, odir,tax, suffix, new_suffix, force, num_parellel):
     main(indir=indir,
          odir=odir,
+         tax=tax,
          num_parellel=num_parellel,
          suffix=suffix,
          force=force)
