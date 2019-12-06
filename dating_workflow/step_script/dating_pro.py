@@ -164,16 +164,54 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
           ofile.replace('.ctl','.log'))  )
 
-
-def main(in_phyfile, in_treefile, total_odir,run_tmp=True):
+def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct):
+    bd_paras = '1 1 0.1'
+    rgene_gamma = '1 35 1'
+    sigma2_gamma = '1 10 1'
+    burnin = '2000'
+    sampfreq = '2'
+    nsample = '20000'
+    seqfile_b = in_phyfile
+    treefile_b = in_treefile
+    outfile = './nodata_mcmctree.out'
+    seqtype = 2
+    clock = 2
+    param = {'seqfile': seqfile_b,
+             'treefile': treefile_b,
+             'ndata': ndata,
+             'seqtype': seqtype,
+             'usedata': "0",
+             'outfile': outfile,
+             'clock': clock,
+             'BDparas': bd_paras,
+             'rgene_gamma': rgene_gamma,
+             'sigma2_gamma': sigma2_gamma,
+             'burnin': burnin,
+             'sampfreq': sampfreq,
+             'nsample': nsample,
+             'alpha': 0.5}
+    text = modify(template_ctl,
+                  **param)
+    ofile = join(odir, 'nodata_mcmctree.ctl')
+    with open(ofile, 'w') as f1:
+        f1.write(text)
+    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
+          ofile.replace('.ctl','.log'))  )
+    
+def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
+    nodata_dir = join(total_odir,'prior')
     mcmc_for_dir = join(total_odir,'mcmc_for')
     tmp_odir = join(total_odir,'tmp_files')
+    if run_prior_only:
+        run_nodata_prior(in_phyfile=in_phyfile,
+                    in_treefile=in_treefile,
+                    odir=nodata_dir,
+                    ndata=ndata)
+        return
     if run_tmp:
-        
-    
         generate_tmp(in_phyfile, 
                     in_treefile,
                     tmp_odir,
@@ -201,10 +239,11 @@ def process_path(path):
 @click.option('-it','--in_tree','in_treefile')
 @click.option('-o','odir')
 @click.option('-no_tmp','run_tmp',is_flag=True, default=True)
-def cli(in_phyfile, in_treefile, odir,run_tmp):
+@click.option('-only_prior','only_prior',is_flag=True, default=False)
+def cli(in_phyfile, in_treefile, odir,run_tmp,only_prior):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
-    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp)
+    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp,run_prior_only=only_prior)
 
 
 if __name__ == "__main__":

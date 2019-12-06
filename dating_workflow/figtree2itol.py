@@ -24,7 +24,24 @@ def sub_for(m):
     #print(t.string)
     return t
 
-mcmc_out_tre = './FigTree.newick'
+indir = '/home-user/thliao/template_txt/'
+dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
+
+root_with = '''GCA_000011385.1
+GCA_000013205.1
+GCA_000317065.1
+GCA_000332175.1
+GCA_000332215.1
+GCA_000011345.1
+GCA_000022045.1
+GCA_000018105.1'''.split('\n')
+ori_tre = "/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/243g/iqtree.treefile"
+tree2 = Tree(ori_tre)
+tree2.set_outgroup(tree2.get_common_ancestor(root_with))
+
+
+
+mcmc_out_tre = './concat_into1/concat_1/mcmc_for/FigTree.tre'
 a = open(mcmc_out_tre)
 for row in a:
     if row.strip().startswith('UTREE 1 ='):
@@ -46,7 +63,7 @@ for n in tree.traverse():
 # tree.features.remove('support')
 text = tree.write(format=3)
 text = text.replace(')1:','):')
-with open('./manual_itol.nexus','w') as f1:
+with open('./pack_result/concat_into1.nexus','w') as f1:
     f1.write(text)
     
     
@@ -61,24 +78,11 @@ for n in tree.traverse():
                                     '1',
                                     '0'
                                ]))
-with open('./itol_txt/itol_ages.txt','w') as f1:
-    f1.write('\n'.join(raw_text))
+template = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
+with open('../itol_txt/itol_ages.txt','w') as f1:
+    f1.write(template+'\n'+'\n'.join(raw_text))
 
-    
-indir = '/home-user/thliao/template_txt/'
-dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
 
-root_with = '''GCA_000011385.1
-GCA_000013205.1
-GCA_000317065.1
-GCA_000332175.1
-GCA_000332215.1
-GCA_000011345.1
-GCA_000022045.1
-GCA_000018105.1'''.split('\n')
-ori_tre = "/home-user/thliao/data/nitrification_for/dating_for/ppostcluster/iqtree.treefile"
-tree2 = Tree(ori_tre)
-tree2.set_outgroup(tree2.get_common_ancestor(root_with))
 rows = []
 template_text = open(dataset_symbol_template).read()
 for n in tree2.traverse():

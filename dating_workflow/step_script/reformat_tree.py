@@ -1,3 +1,6 @@
+"""
+reformat the result tree from formatted into tree without branch and with calibrations.
+"""
 from ete3 import Tree
 
 tree_file = '243g.formatted.newick'

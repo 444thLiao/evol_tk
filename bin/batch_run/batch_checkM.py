@@ -57,7 +57,7 @@ def main(indir, odir, tax,num_parellel, suffix='', force=False):
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-t', 'tax', default='domain Bacteria')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def cli(indir, odir,tax, suffix, new_suffix, force, num_parellel):
+def cli(indir, odir,tax, suffix, force, num_parellel):
     main(indir=indir,
          odir=odir,
          tax=tax,
