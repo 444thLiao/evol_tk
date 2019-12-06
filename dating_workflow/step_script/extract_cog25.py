@@ -14,13 +14,19 @@ from dating_workflow.step_script import _parse_blastp,_parse_hmmscan,_get_tophit
 resource_dir = "/home-user/thliao/data/protein_db/dating_resource"
 cdd_tbl = f"{resource_dir}/cog/cddid_all.tbl"
 list27_genes = f"{resource_dir}/single.cog.list"
-cog_list = set([_.split('\t')[0] for _ in open(list27_genes).read().split('\n') if _])
+full_text = open(list27_genes).read().split('\n')
+cog_list = set([_.split('\t')[0] 
+                for _ in full_text 
+                if _])
 
-# cdd_num = defaultdict(list)
-# for row in open(cdd_tbl,'r'):
-#     if row.split('\t')[1] in cog_list:
-#         cdd_num[row.split('\t')[1]].append("CDD:%s" % row.split('\t')[0])
-# cdd_num.pop('TIGR00487')
+num_cdd2name = {}
+cdd_num = defaultdict(list)
+for row in open(cdd_tbl,'r'):
+    rows = row.split('\t')
+    if rows[1] in cog_list:
+        cdd_num[rows[1]].append("CDD:%s" % rows[0])
+        num_cdd2name[rows[0]] = rows[2]
+cdd_num.pop('TIGR00487')
 
 cog_db = f"{resource_dir}/cog25_rps/sing"
 # TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
