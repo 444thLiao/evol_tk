@@ -165,6 +165,8 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
           ofile.replace('.ctl','.log'))  )
 
 def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
+    if not exists(odir):
+        os.makedirs(odir)
     bd_paras = '1 1 0.1'
     rgene_gamma = '1 35 1'
     sigma2_gamma = '1 10 1'

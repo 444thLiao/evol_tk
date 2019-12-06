@@ -86,3 +86,12 @@ for infile in fs:
     r2 = draw_picture(infile,ofile,return_fig=False)
     collect_r2[gene_name] = r2
     
+infile = '/home-user/thliao/data/nitrification_for/dating_for/rough_dating/01_mcmctree_out/out'
+ofile = './pack_result/test_r2/rough_dating.png'
+r2 = draw_picture(infile,ofile,return_fig=False)
+collect_r2['rough dating'] = r2
+
+infile = '/home-user/thliao/data/nitrification_for/dating_for/rough_dating/01_mcmctree_out/out'
+ofile = './pack_result/test_r2/rough_dating.png'
+r2 = draw_picture(infile,ofile,return_fig=False)
+collect_r2['rough dating'] = r2
