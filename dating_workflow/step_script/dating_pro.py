@@ -205,11 +205,12 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
     nodata_dir = join(total_odir,'prior')
     mcmc_for_dir = join(total_odir,'mcmc_for')
     tmp_odir = join(total_odir,'tmp_files')
-    if run_prior_only:
-        run_nodata_prior(in_phyfile=in_phyfile,
+    
+    run_nodata_prior(in_phyfile=in_phyfile,
                     in_treefile=in_treefile,
                     odir=nodata_dir,
                     ndata=ndata)
+    if run_prior_only:
         return
     if run_tmp:
         generate_tmp(in_phyfile, 
