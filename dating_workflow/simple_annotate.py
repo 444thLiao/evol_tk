@@ -32,7 +32,7 @@ for row in open(metadata):
     if not row.startswith("assembly_accession"):
         row = row.split('\t')
         if row[0] in gids:
-            gid2name[row[0]] = row[7]
+            gid2name[row[0]] = row[7] + ' ' +row[9]
             gid2taxid[row[0]] = row[5]
 
 request_taxon = 'phylum'

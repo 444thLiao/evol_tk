@@ -119,7 +119,8 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
         gids = f1.read().split('\n')
-    gids = [convert_genome_ID(_) for _ in gids]
+    gids = [convert_genome_ID(_) for _ in gids if _]
+    gids = set(gids)
     # from GCA become locus_tag
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
