@@ -14,6 +14,7 @@ group = {"rpl_together":"223159,223168,223165,223172,223175,223158,223180,223275
 
 # TODO: run differnt number of locus indepently
 # test is it the fault of which locus?
+tree_used = "./243g_120gene_3cal.newick"
 indir = expanduser("~/data/nitrification_for/dating_for/cog25_single/243g")
 
 all_locus = glob(join(indir,'*.aln'))
@@ -50,7 +51,7 @@ def run(args):
 params = []
 for group_name,genes in group.items():
     ofile = f"./design_scheme/normal_rmI_25g_nofill_{group_name}.phy"
-    cmd = f"python3 ~/script/evolution_relative/dating_workflow/step_script/dating_pro.py -i {ofile} -it ./243g_120gene_5cal.newick -o ./design_scheme/normal_rmI_25g_nofill_{group_name}"
+    cmd = f"python3 ~/script/evolution_relative/dating_workflow/step_script/dating_pro.py -i {ofile} -it {tree_used} -o ./design_scheme/normal_rmI_25g_nofill_3c_{group_name}"
     params.append(cmd)
 
 with mp.Pool(processes=30) as tp:

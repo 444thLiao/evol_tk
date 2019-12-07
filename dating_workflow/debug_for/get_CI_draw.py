@@ -49,12 +49,15 @@ def get_r2(text):
     
     return f"{prefix} of {mode}={v}"
     
-def draw_picture(infile,infile2,ofile,return_fig=False):
+def draw_picture(infile,infile2=None,ofile=None,return_fig=False):
     df1 = get_vals(infile)
-    df2 = get_vals(infile2)
-    
     df1.loc[:,'mode'] = 'posterior'
-    df2.loc[:,'mode'] = 'prior'
+    if infile2 is not None:
+        df2 = get_vals(infile2)
+        df2.loc[:,'mode'] = 'prior'
+    else:
+        df2 = pd.DataFrame()
+        
     df = pd.concat([df1,df2],axis=0)
     
     fig = px.scatter(df, 
@@ -62,10 +65,13 @@ def draw_picture(infile,infile2,ofile,return_fig=False):
                     y="CI_width",
                     color="mode",
                     trendline="ols")
-    
-    r_squre_text = [get_r2(_)
-                    for _ in [fig.data[1],fig.data[3]] ]
-    
+    if infile2 is not None:
+        r_squre_text = [get_r2(_)
+                    for _ in [fig.data[1],
+                              fig.data[3]] ]
+    else:
+        r_squre_text = [get_r2(_)
+                    for _ in [fig.data[1]] ]
     fig.update_layout(
         showlegend=False,
         annotations=[
@@ -98,10 +104,10 @@ for infile in glob('./locus_each/*/mcmc_for/03_mcmctree.out'):
     r2 = draw_picture(infile,infile2,ofile,return_fig=False)
     collect_r2[gene_name] = r2
 
-fs = glob('./*/mcmc_for/03_mcmctree.out')
+fs = glob('./design_scheme/*/mcmc_for/03_mcmctree.out')
 for infile in fs:
     infile2 = infile.replace("mcmc_for/03_mcmctree.out","prior/nodata_mcmctree.out")
-    gene_name = infile.split('/')[1]
+    gene_name = infile.split('/')[2]
     ofile = f'./pack_result/test_r2/{gene_name}.png'
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))

@@ -80,7 +80,7 @@ def to_binary_shape(ID2info,info2style=None, info_name='dataset',manual_v=[],omi
     others_label = '-1' if omitted_other else '0'
     annotate_text = []
     for ID,vset in ID2info.items():
-        row = '\t'.join([ID] + ['1' if _ in vset else '0' for _ in all_v])
+        row = '\t'.join([ID] + ['1' if _ in vset else others_label for _ in all_v])
         annotate_text.append(row)
     annotate_text = '\n'.join(annotate_text)
     
