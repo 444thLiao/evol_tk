@@ -93,7 +93,7 @@ def collecting_tmp(tmp_indir, odir):
         os.system(f'mv {tmp_indir}/{name}.* {odir}/{name}/')
 
 
-def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
+def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile,extra_cmd=None):
     if not exists(odir):
         os.makedirs(odir)
     params = []
@@ -112,6 +112,8 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
         params.append((
             f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", new_file.replace('.modify.ctl','.log')))
 
+    if extra_cmd is not None:
+        params.append(extra_cmd)
     with mp.Pool(processes=30) as tp:
         _ = list(tqdm((tp.imap(run, params)), total=len(params)))
 
@@ -125,7 +127,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile):
         f1.write(text)
 
 
-def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
+def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl,params_dict={}):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -154,6 +156,8 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
              'sampfreq': sampfreq,
              'nsample': nsample,
              'alpha': 0.5}
+    if params_dict:
+        param.update(params_dict)
     text = modify(template_ctl,
                   **param)
     if not exists(f'{odir}/in.BV'):
@@ -164,7 +168,7 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
           ofile.replace('.ctl','.log'))  )
 
-def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
+def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl,params_dict={}):
     if not exists(odir):
         os.makedirs(odir)
     bd_paras = '1 1 0.1'
@@ -192,15 +196,17 @@ def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl):
              'sampfreq': sampfreq,
              'nsample': nsample,
              'alpha': 0.5}
+    if params_dict:
+        param.update(params_dict)
     text = modify(template_ctl,
                   **param)
     ofile = join(odir, 'nodata_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
-          ofile.replace('.ctl','.log'))  )
+    return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
+          ofile.replace('.ctl','.log'))
     
-def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
+def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True,params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
@@ -208,11 +214,13 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
     mcmc_for_dir = join(total_odir,'mcmc_for')
     tmp_odir = join(total_odir,'tmp_files')
     
-    run_nodata_prior(in_phyfile=in_phyfile,
+    prior_cmd = run_nodata_prior(in_phyfile=in_phyfile,
                     in_treefile=in_treefile,
                     odir=nodata_dir,
-                    ndata=ndata)
+                    ndata=ndata,
+                    params_dict=params_dict)
     if run_prior_only:
+        run(prior_cmd)
         return
     if run_tmp:
         generate_tmp(in_phyfile, 
@@ -223,12 +231,14 @@ def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True):
                     tmp_odir)
         
         run_each_tmp(tmp_odir,
-                    mcmc_for_dir)
+                    mcmc_for_dir,
+                    extra_cmd = prior_cmd)
     final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
                     in_phyfile=in_phyfile,
                     in_treefile=in_treefile,
                     odir=mcmc_for_dir,
-                    ndata=ndata)
+                    ndata=ndata,
+                    params_dict=params_dict)
 
 def process_path(path):
     if not '/' in path:
@@ -243,10 +253,12 @@ def process_path(path):
 @click.option('-o','odir')
 @click.option('-no_tmp','run_tmp',is_flag=True, default=True)
 @click.option('-only_prior','only_prior',is_flag=True, default=False)
-def cli(in_phyfile, in_treefile, odir,run_tmp,only_prior):
+@click.option('-sf','sampfreq',default='2')
+def cli(in_phyfile, in_treefile, odir,run_tmp,only_prior,sampfreq):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
-    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp,run_prior_only=only_prior)
+    params_dict = {'sampfreq':str(sampfreq)}
+    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp,run_prior_only=only_prior,params_dict=params_dict)
 
 
 if __name__ == "__main__":

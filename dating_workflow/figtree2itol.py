@@ -115,7 +115,7 @@ def main(intree_ori,mcmc_out_tree,output_dating_result_tree,itol_annotate,root_w
 @click.option('-o','output_dating_result_tree')
 @click.option('-od','itol_annotate',default='./itol_txt')
 @click.option('-r','root_with',help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
-def cli(intree_ori,mcmc_out_tree,output_dating_result_tree,itol_annotate,root_with,force):
+def cli(intree_ori,mcmc_out_tree,output_dating_result_tree,itol_annotate,root_with):
     output_dating_result_tree = process_path(output_dating_result_tree)
     itol_annotate = process_path(itol_annotate)
     if ',' in root_with:
