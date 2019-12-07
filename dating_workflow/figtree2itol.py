@@ -32,21 +32,9 @@ dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
 
 
 def main(intree_ori,mcmc_out_tree,output_dating_result_tree,itol_annotate,root_with):
-    # root_with = '''GCA_000011385.1
-    # GCA_000013205.1
-    # GCA_000317065.1
-    # GCA_000332175.1
-    # GCA_000332215.1
-    # GCA_000011345.1
-    # GCA_000022045.1
-    # GCA_000018105.1'''.split('\n')
-    # ori_tre = "/home-user/thliao/data/nitrification_for/dating_for/bac120_annoate/concat/243g/iqtree.treefile"
     tree2 = Tree(intree_ori)
     tree2.set_outgroup(tree2.get_common_ancestor(root_with))
-
-
-
-    # mcmc_out_tre = './concat_into1/concat_1/mcmc_for/FigTree.tre'
+    
     mcmc_out_tree_text = open(mcmc_out_tree)
     for row in mcmc_out_tree_text:
         if row.strip().startswith('UTREE 1 ='):
@@ -84,7 +72,7 @@ def main(intree_ori,mcmc_out_tree,output_dating_result_tree,itol_annotate,root_w
                                         '0'
                                 ]))
     template = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
-    with open(join(itol_annotate,'dating_tree__ages.txt'),'w') as f1:
+    with open(join(itol_annotate,'dating_tree_ages.txt'),'w') as f1:
         f1.write(template+'\n'+'\n'.join(raw_text))
 
 
