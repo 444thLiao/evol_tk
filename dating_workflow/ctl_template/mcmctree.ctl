@@ -23,7 +23,7 @@ sigma2_gamma = 1 10 1   * gamma prior for sigma^2     (for clock=2 or 3)
 
 finetune = 1: 0.1  0.1  0.1  0.01 .5  * auto (0 or 1) : times, musigma2, rates, mixing, paras, FossilErr
 
-print = 1
+print = 2
 burnin = 2000
 sampfreq = 2
 nsample = 20000

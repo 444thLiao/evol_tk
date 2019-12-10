@@ -9,7 +9,6 @@ def run(cmd):
     check_call(cmd,
                shell=True)
 
-def build
 
 
 def prepare_dating(genome_data_dir,genome_list,ofile):
