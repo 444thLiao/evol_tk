@@ -17,6 +17,8 @@ dataset_symbol_template = join(indir,'dataset_symbols_template.txt')
 matrix_like_template = join(indir,"dataset_external_shapes_template.txt")
 labels_template = join(indir,"labels_template.txt")
 dataset_text_template = join(indir,"dataset_text_template.txt")
+dataset_gradient_template = join(indir,"dataset_gradient_template.txt")
+
 def deduced_legend(info2color, info_name='dataset', sep=','):
     # for implemented a legend with dictinonary named info2color.
     
