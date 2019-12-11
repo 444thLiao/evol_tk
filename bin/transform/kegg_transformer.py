@@ -1,6 +1,9 @@
+"""
+This script is mainly for converting the output of diamond into a human reable/tabular format of kegg information
+
+"""
 #################################################################################
 #### get relative ko with diamond output against kegg database.
-####
 ####
 #################################################################################
 
@@ -29,8 +32,6 @@ def parse_id(ID, max_try=10):
             return
         for sub_id in ID.split('+'):
             get_dict = parse_id(sub_id)
-            if get_dict is None:
-                continue
             return_dict.update(get_dict)
         return return_dict
     info_dict_list = [kegg.parse('ENTRY ' + each_str)
