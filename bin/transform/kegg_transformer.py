@@ -15,6 +15,10 @@ import click
 import os
 from os.path import exists, join
 import pickle
+from dating_workflow import convert_genome_ID,convert_genome_ID_rev
+
+locusID2kegg_list = '/home-user/thliao/data/protein_db/kegg/latest/links/genes_ko.list'
+locusID2kegg_dict = dict([_.split('\t') for _ in open(locusID2kegg_list).read().split('\n') if _ ] )
 
 
 def parse_id(ID, max_try=10):
@@ -32,6 +36,8 @@ def parse_id(ID, max_try=10):
             return
         for sub_id in ID.split('+'):
             get_dict = parse_id(sub_id)
+            if get_dict is None:
+                continue
             return_dict.update(get_dict)
         return return_dict
     info_dict_list = [kegg.parse('ENTRY ' + each_str)
@@ -158,12 +164,17 @@ def batch_iter(iter, batch_size):
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
 
-
+def get_only_ko(df):
+    unique_DBlocus = set(df.loc[:, 1].unique())
+    subset_dict = {_:locusID2kegg_dict.get(_,'') for _ in unique_DBlocus}
+    new_df = df.copy()
+    new_df.loc[:,1] = list(map(lambda x:subset_dict[x],new_df.loc[:,1]))
 @click.command(
     help="This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
 @click.option("-test", "test", is_flag=True, default=False)
+@click.option('-only_ko','only_ko_info', is_flag=True, default=False)
 def main(input_tab, output_tab, test):
     tmp_dir = './tmp'
     os.makedirs(tmp_dir, exist_ok=True)
