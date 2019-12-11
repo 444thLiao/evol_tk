@@ -169,13 +169,16 @@ def get_only_ko(df):
     subset_dict = {_:locusID2kegg_dict.get(_,'') for _ in unique_DBlocus}
     new_df = df.copy()
     new_df.loc[:,1] = list(map(lambda x:subset_dict[x],new_df.loc[:,1]))
+    return new_df
+
+
 @click.command(
     help="This script mainly for annotate diamond output against kegg databse. For using this script, please use python3.5+ and first install the `requirements`.\n\n just simply use python3 thisscript.py -i input_tab -o output_name.tsv ")
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
 @click.option("-test", "test", is_flag=True, default=False)
 @click.option('-only_ko','only_ko_info', is_flag=True, default=False)
-def main(input_tab, output_tab, test):
+def main(input_tab, output_tab, test,only_ko_info):
     tmp_dir = './tmp'
     os.makedirs(tmp_dir, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
@@ -187,6 +190,11 @@ def main(input_tab, output_tab, test):
         random50 = pd.np.random.choice(df.index, 50)
         df = df.loc[random50, :]
     tqdm.write("Get all relative information of the subject locus... ...")
+    if only_ko_info:
+        new_df = get_only_ko(df)
+        new_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
+        return 
+    
     unique_DBlocus = set(df.loc[:, 1].unique())
     pack10_up = batch_iter(unique_DBlocus, 10)
     null_ID = []
