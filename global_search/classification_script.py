@@ -75,6 +75,8 @@ def diff_marine_non_marine(ori_df):
             ori_df.loc[_,kw2] = 'unknown'
         elif str(ori_df.loc[_,'habitat'])=='marine':
             ori_df.loc[_,kw2] = 'marine'
+        elif str(ori_df.loc[_,'habitat'])=='non-marine':
+            ori_df.loc[_,kw2] = 'non-marine'
         else:
             ori_df.loc[_,kw2] = 'non-marine'
         list_c = list(ori_df.columns)
@@ -84,7 +86,7 @@ def diff_marine_non_marine(ori_df):
     return ori_df
 
 
-metadata = './rawdata/biometadata_raw_952.xlsx'
+metadata = './rawdata/biometadata_952.xlsx'
 metadata_df = pd.read_excel(metadata,index_col=None)
 new_df = diff_marine_non_marine(metadata_df)
 id2habitat = dict(zip(new_df.iloc[:,1] ,
@@ -108,7 +110,7 @@ text = to_color_Clade(id2habitat,
                     if _=='non-marine' 
                     else '#0011FF' 
                     for _ in all_habitats},
-                   tree='./trees/fasttree/over20p_bac120.formatted.newick',
+                   tree='./trees/iqtree/over20p_bac120.formatted.newick',
                    dataset_name='habitat annotated')
 with open(join('./itol_txt','general_habitat_branch_color.txt'),'w') as f1:
     f1.write(text)

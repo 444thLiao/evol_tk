@@ -7,12 +7,12 @@ DATASET_GRADIENT
 #                    MANDATORY SETTINGS                           #
 #=================================================================#
 #select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throught this file (except in the SEPARATOR line, which uses space).
-SEPARATOR	TAB
+SEPARATOR TAB
 #SEPARATOR SPACE
 #SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
-DATASET_LABEL	label1
+DATASET_LABEL	{dataset_label}
 
 #dataset color (can be changed later)
 COLOR	#ff0000
@@ -58,7 +58,7 @@ COLOR_MIN	{color_min}
 COLOR_MAX	{color_max}
 
 #you can specify a gradient with three colors (e.g red to yellow to green) by setting 'USE_MID_COLOR' to 1, and specifying the midpoint color
-#USE_MID_COLOR 1
+USE_MID_COLOR 1
 COLOR_MID	{color_mid}
 
 #always show internal values; if set, values associated to internal nodes will be displayed even if these nodes are not collapsed. It could cause overlapping in the dataset display.
