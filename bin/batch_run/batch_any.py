@@ -38,14 +38,14 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=co
         exit(f"empty files, please check your suffix ({indir}/{suffix}) ")
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
-    for in_file in tqdm(file_list):
+    for infile in tqdm(file_list):
         if new_suffix and suffix:
             ofile = join(odir,
-                         basename(in_file).replace(suffix,
+                         basename(infile).replace(suffix,
                                                    '.' + new_suffix))
         else:
             ofile = join(odir,
-                         basename(in_file))
+                         basename(infile))
         if not exists(ofile) or force:
             cmd = cmd.format(infile=infile,
                                        ofile=ofile)
