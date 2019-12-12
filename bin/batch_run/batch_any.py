@@ -41,9 +41,9 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=co
             ofile = join(odir,
                          basename(infile))
         if not exists(ofile) or force:
-            cmd = cmd.format(infile=infile,
+            filled_cmd = cmd.format(infile=infile,
                                        ofile=ofile)
-            params.append(cmd)
+            params.append(filled_cmd)
     if test:
         print(params)
         return
