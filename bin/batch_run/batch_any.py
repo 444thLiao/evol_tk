@@ -29,6 +29,7 @@ def unit_run(infile, ofile):
 def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=command_template):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
+    odir = abspath(odir)
     if not exists(odir):
         os.makedirs(odir)
     if suffix:
