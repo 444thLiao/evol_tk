@@ -15,8 +15,9 @@ import multiprocessing as mp
 command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}'
 
 
-def run(args):
-    unit_run(*args)
+def run(cmd):
+    check_call(cmd,
+               shell=True)
 
 
 def unit_run(infile, ofile):
@@ -25,7 +26,7 @@ def unit_run(infile, ofile):
                shell=True)
 
 
-def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
+def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=command_template):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -46,7 +47,9 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
             ofile = join(odir,
                          basename(in_file))
         if not exists(ofile) or force:
-            params.append((in_file, ofile))
+            cmd = cmd.format(infile=infile,
+                                       ofile=ofile)
+            params.append(cmd)
     with mp.Pool(processes=num_parellel) as tp:
         r = list(tqdm(tp.imap(run,params),total=len(params)))
 
@@ -59,13 +62,14 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-cmd',"cmd",help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")
-def cli(indir, odir, suffix, new_suffix, force, num_parellel):
+def cli(indir, odir, suffix, new_suffix, force, num_parellel,cmd):
     main(indir=indir,
          odir=odir,
          num_parellel=num_parellel,
          suffix=suffix,
          new_suffix=new_suffix,
-         force=force)
+         force=force,
+         cmd=cmd)
 
 
 if __name__ == "__main__":

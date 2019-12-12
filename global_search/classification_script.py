@@ -83,7 +83,6 @@ def diff_marine_non_marine(ori_df):
         list_c = list_c[:-2]
         list_c.insert(12,kw2)
         #ori_df = ori_df.reindex(columns=list_c)
-        
     return ori_df
 
 if __name__ == "__main__":
@@ -115,3 +114,28 @@ if __name__ == "__main__":
                     dataset_name='habitat annotated')
     with open(join('./itol_txt','general_habitat_branch_color.txt'),'w') as f1:
         f1.write(text)
+        
+    # outgroup
+    id2habitat.update({"GCA_000019965.1":'non-marine',
+                       "GCA_000020225.1":'non-marine',
+                       "GCA_000172155.1":'non-marine',
+                       "GCA_001318295.1":'non-marine',
+                       "GCA_001613545.1":'non-marine',
+                       "GCA_900097105.1":'non-marine',
+                       "GCA_001746835.1":'non-marine'})
+    from ete3 import Tree
+    rows = []
+    tree = Tree('../trees/iqtree/over20p_bac120.formatted.newick',format=3)
+    for l in tree.get_leaves():
+        name = l.name
+        habitat = id2habitat.get(name,'-')
+        if habitat == 'marine':
+            rows.append('\t'.join([name,'1','0']))
+            
+        else:
+            rows.append('\t'.join([name,'0','1']))
+    with open('./m2nm.txt','w') as f1:
+        f1.write('\n'.join(rows))
+
+        
+        
