@@ -58,7 +58,7 @@ COLOR_MIN	{color_min}
 COLOR_MAX	{color_max}
 
 #you can specify a gradient with three colors (e.g red to yellow to green) by setting 'USE_MID_COLOR' to 1, and specifying the midpoint color
-USE_MID_COLOR 1
+USE_MID_COLOR	1
 COLOR_MID	{color_mid}
 
 #always show internal values; if set, values associated to internal nodes will be displayed even if these nodes are not collapsed. It could cause overlapping in the dataset display.

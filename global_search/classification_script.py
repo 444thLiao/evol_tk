@@ -63,7 +63,7 @@ def diff_marine_non_marine(ori_df):
 
     for _,row in tqdm(ori_df.iterrows(),total=ori_df.shape[0]):
         row_text = ';'.join(map(str,row.values)).lower()
-        if 'sea' in row_text or 'marine' in row_text or 'ocean' in row_text:
+        if 'sea' in row_text or ('marine' in row_text and 'non-marine' not in row_text) or 'ocean' in row_text :
             ori_df.loc[_,kw2] = 'marine'
         elif 'soda lake' in row_text:
             ori_df.loc[_,kw2] = 'marine'
@@ -83,34 +83,35 @@ def diff_marine_non_marine(ori_df):
         list_c = list_c[:-2]
         list_c.insert(12,kw2)
         #ori_df = ori_df.reindex(columns=list_c)
+        
     return ori_df
 
+if __name__ == "__main__":
+    metadata = './rawdata/biometadata_952.xlsx'
+    metadata_df = pd.read_excel(metadata,index_col=None)
+    new_df = diff_marine_non_marine(metadata_df)
+    id2habitat = dict(zip(new_df.iloc[:,1] ,
+                        new_df.loc[:,'habitat(auto,diff marine/non-marine)']
+                        )
+                    )
 
-metadata = './rawdata/biometadata_952.xlsx'
-metadata_df = pd.read_excel(metadata,index_col=None)
-new_df = diff_marine_non_marine(metadata_df)
-id2habitat = dict(zip(new_df.iloc[:,1] ,
-                      new_df.loc[:,'habitat(auto,diff marine/non-marine)']
-                      )
-                  )
+    id2habitats = {k:[v] if not pd.isna(v) else ['unknown'] for k,v in id2habitat.items()}
 
-id2habitats = {k:[v] if not pd.isna(v) else ['unknown'] for k,v in id2habitat.items()}
+    all_habitats = list(set([v[0] for k,v in id2habitats.items() ]))
+    all_text = to_binary_shape(id2habitats,
+                    {_:{'color':'#000000'} if _=='non-marine' else {'color':'#0011FF'} for _ in all_habitats},
+                    info_name='habitat',
+                    omitted_other=True)
+    with open(join('./itol_txt','general_habitat.txt'),'w') as f1:
+        f1.write(all_text)
+        
 
-all_habitats = list(set([v[0] for k,v in id2habitats.items() ]))
-all_text = to_binary_shape(id2habitats,
-                {_:{'color':'#000000'} if _=='non-marine' else {'color':'#0011FF'} for _ in all_habitats},
-                info_name='habitat',
-                omitted_other=True)
-with open(join('./itol_txt','general_habitat.txt'),'w') as f1:
-    f1.write(all_text)
-    
-
-text = to_color_Clade(id2habitat,
-                   {_:'#000000'
-                    if _=='non-marine' 
-                    else '#0011FF' 
-                    for _ in all_habitats},
-                   tree='./trees/iqtree/over20p_bac120.formatted.newick',
-                   dataset_name='habitat annotated')
-with open(join('./itol_txt','general_habitat_branch_color.txt'),'w') as f1:
-    f1.write(text)
+    text = to_color_Clade(id2habitat,
+                    {_:'#000000'
+                        if _=='non-marine' 
+                        else '#0011FF' 
+                        for _ in all_habitats},
+                    tree='./trees/iqtree/over20p_bac120.formatted.newick',
+                    dataset_name='habitat annotated')
+    with open(join('./itol_txt','general_habitat_branch_color.txt'),'w') as f1:
+        f1.write(text)

@@ -296,16 +296,21 @@ def to_label(id2new_id):
     return full_text
 
 
-def color_gradient(id2val,mid_val=None,dataset_label='Completness'):
+def color_gradient(id2val,
+                   dataset_label='Completness',
+                   max_val=100,
+                   min_val=0,
+                   mid_val=50):
     default_max = '#ff0000'
     default_min = '#0000ff'
     default_mid = '#FFFFFF'
+    
     import numpy as np
     all_vals = list(set([v for k,v in id2val.items()]))
-    if mid_val is None:
-        mid_val = np.mean(all_vals)
-    max_val = max(all_vals)
-    min_val = min(all_vals)
+    
+    mid_val = np.mean(all_vals) if mid_val is None else mid_val
+    max_val = max(all_vals) if mid_val is None else max_val
+    min_val = min(all_vals) if mid_val is None else min_val
 
     legend_text = f"""
 LEGEND_TITLE	{dataset_label}
