@@ -4,6 +4,9 @@ import os
 from tqdm import tqdm
 from subprocess import check_call
 import multiprocessing as mp
+from glob import glob
+
+
 gene_presence_tab = "./protein_annotations/kegg_diamond.crosstab"
 basic_habitat_txt = "./bayesTraits_test/m2nm.txt"
 intree = "./bayesTraits_test/test.trees"
@@ -56,3 +59,16 @@ def run(cmd):
                stdout=open("/dev/null",'w'))
 with mp.Pool(processes=5) as tp:
     r = list(tqdm(tp.imap(run,cmds),total=len(cmds)))
+    
+    
+# collect results
+ko2lr = {}
+for ko in tqdm(genes_df.columns):
+    g_dir = join(odir,'each_gene',ko.split(':')[-1])
+    Dresults = join(g_dir,'metadata_D.txt.Log.txt')
+    IDresults = join(g_dir,'metadata_ID.txt.Log.txt')
+    l_D = float(open(Dresults).read().split('\n')[-2].split('\t')[1])
+    l_ID = float(open(IDresults).read().split('\n')[-2].split('\t')[1])
+    lr = 2*(l_D-l_ID)
+    ko2lr[ko] = lr
+    

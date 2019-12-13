@@ -1,14 +1,26 @@
 
 from ete3 import Tree
 import sys
-intree = '../trees/iqtree/over20p_bac120.formatted.newick'
-otree = './test.trees'
+intree = './trees/iqtree/over20p_bac120.formatted.newick'
+#intree = './trees/iqtree/over20p_bac120.ufboot'
+otree = './bayesTraits_test/test.trees'
 
 intree,otree = sys.argv[1:]
 
+root_with = 'GCA_900097105.1,GCA_000020225.1,GCA_000172155.1,GCA_001318295.1,GCA_001613545.1,GCA_000019665.1,GCA_000019965.1,GCA_001746835.1'
 if __name__ == "__main__":
-    t = Tree(intree, format=3)
-
+    if len(open(intree).read().split('\n')) == 1:
+        t = Tree(intree, format=3)
+    else:
+        multiple_trees = []
+        for row in open(intree):
+            row = row.strip('\n')
+            multiple_trees.append(Tree(row))
+            
+        LCA = t.get_common_ancestor(root_with.split(','))
+        t.set_outgroup(LCA)
+        #TODO: finish it.
+        
     new_name2old_name = {}
     _count = 0
     for leaf in t.get_leaves():

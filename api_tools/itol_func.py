@@ -18,6 +18,7 @@ matrix_like_template = join(indir,"dataset_external_shapes_template.txt")
 labels_template = join(indir,"labels_template.txt")
 dataset_text_template = join(indir,"dataset_text_template.txt")
 dataset_gradient_template = join(indir,"dataset_gradient_template.txt")
+dataset_piechart_template = join(indir,"dataset_piechart_template.txt")
 
 def deduced_legend(info2color, info_name='dataset', sep=','):
     # for implemented a legend with dictinonary named info2color.
@@ -327,4 +328,34 @@ LEGEND_LABELS	{max_val}	{mid_val}	{min_val}"""
                                             color_max=default_max,
                                             color_mid=default_mid)
     return text+'\n'+annotate_text
+
+def pie_chart(id2cat2val,
+              cat2style,
+              dataset_label='habitat prob',
+              ):
+    template_text = dataset_piechart_template.copy()
+    annotate_text = []
+    all_cat = [_k for k,v in id2cat2val.items() for _k in v]
+    all_cat = list(set(all_cat))
+    sorted_cat = sorted(all_cat)
+    
+    for gid in id2cat2val:
+        cat_vals = []
+        for cat in sorted_cat:
+            cat_vals.append(str(id2cat2val[gid].get(cat,'0')))
+        cat_vals = '\t'.join(cat_vals)
+        annotate_text.append(f"{gid}    0   50  {cat_vals}")
+    
+    field_labels = '\t'.join(sorted_cat)
+    field_colors = '\t'.join([cat2style.get(c) for c in sorted_cat])
+    template_text = template_text.format(dataset_label=dataset_label,
+                         field_colors=field_colors,
+                         field_labels=field_labels,
+                         legend_text=deduced_legend(cat2style,
+                                                    sep='\t',
+                                                    info_name=dataset_label),
+                         )
+    final_text = template_text +'\n'+ '\n'.join(annotate_text)
+    return final_text
+    
     
