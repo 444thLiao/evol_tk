@@ -58,9 +58,9 @@ def main(in_dir,odir,num_parellel,suffix='',new_suffix='',gids = None,force=Fals
                        for _ in records
                        if convert_genome_ID_rev(_.id.split('_')[0]) in gids]
             n_f = join(odir,'tmp',basename(f))
-            if not records:
+            if not records or len(records)==1:
+                print(f'failed records,for {f}, pass it')
                 continue
-                print(f'error not records,for {f}, pass it')
             with open(n_f,'w') as f1:
                 SeqIO.write(records,f1,format='fasta-2line')
             new_file_list.append(n_f)
