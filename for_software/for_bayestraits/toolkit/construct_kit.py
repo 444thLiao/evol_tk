@@ -3,9 +3,9 @@
 
 from ete3 import Tree
 import sys
-intree = '../trees/iqtree/over20p_bac120.formatted.newick'
-#intree = './trees/iqtree/over20p_bac120.ufboot'
-ocommand = './tag.command'
+# intree = '../trees/iqtree/over20p_bac120.formatted.newick'
+# intree = './trees/iqtree/over20p_bac120.ufboot'
+# ocommand = './tag.command'
 
 def get_tags(intree):
     """
@@ -32,7 +32,7 @@ def nw2nexus(t,root_with=''):
     nexus_template = """#NEXUS
     begin trees;
                 translate
-    {translate_text};
+{translate_text};
 
                         tree tree1 = {tree_text}
                         
