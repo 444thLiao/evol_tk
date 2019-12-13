@@ -8,10 +8,14 @@ It accept
 """
 import click
 from ete3 import Tree
-from for_badirate import nw2nexus,get_tags
+from for_software.for_bayestraits import nw2nexus,get_tags
 from os.path import *
 import os
 from subprocess import check_call
+
+intree = '../trees/iqtree/over20p_bac120.formatted.newick'
+inmetadata = './bayesTraits_test/m2nm.txt'
+odir = './bayestraits_habitat'
 
 bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 #LogFile

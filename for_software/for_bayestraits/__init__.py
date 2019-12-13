@@ -1,1 +1,1 @@
-from for_software.for_badirate.toolkit import *
+from for_software.for_bayestraits.toolkit import *
