@@ -169,9 +169,7 @@ def process_path(path):
 @click.option("-s","suffix",)
 @click.option("-o",'outdir')
 @click.option("-evalue",'evalue',default=1e-50)
-@click.option("-gl", "genome_list", default=None, 
-              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
-                   "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+@click.option("-gl", "genome_list", default=None,               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "                   "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 def main(in_proteins,suffix,in_annotations,outdir,evalue,genome_list):
     if genome_list is None:
         gids = []
