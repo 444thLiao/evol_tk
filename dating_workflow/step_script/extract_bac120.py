@@ -6,7 +6,7 @@ from os.path import *
 from collections import defaultdict
 from Bio import SeqIO
 import multiprocessing as mp
-from dating_workflow.step_script import _parse_blastp,_parse_hmmscan,_get_tophit
+from dating_workflow.step_script import _parse_blastp, _parse_hmmscan, _get_tophit
 import click
 
 
@@ -54,31 +54,30 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
             # check_call(cmd, shell=1)
     # print(params)
     with mp.Pool(processes=5) as tp:
-        r = list(tqdm(tp.imap(run, params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
- 
-def parse_annotation(odir,top_hit = False,evalue=1e-50):
+
+def parse_annotation(odir, top_hit=False, evalue=1e-50):
     # for cdd
     _cdd_match_ids = pfam_ids
-    genome2annotate = defaultdict(lambda:defaultdict(list))
-    
+    genome2annotate = defaultdict(lambda: defaultdict(list))
+
     # cdd annotations
     tqdm.write('start to read/parse output files (cdd and tigrfam)')
-    cdd_anno_files = glob(join(odir,'PFAM','*.out'))
+    cdd_anno_files = glob(join(odir, 'PFAM', '*.out'))
     # tigrfam annotations
-    tigrfam_anno_files = glob(join(odir,'TIGRFAM','*.out'))
+    tigrfam_anno_files = glob(join(odir, 'TIGRFAM', '*.out'))
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
-        gname = basename(ofile).replace('.out','')
+        gname = basename(ofile).replace('.out', '')
         locus_dict = _parse_hmmscan(ofile=ofile,
-                                   top_hit=top_hit,
-                                   filter_evalue=evalue)
+                                    top_hit=top_hit,
+                                    filter_evalue=evalue)
         genome2annotate[gname].update(locus_dict)
     return genome2annotate
 
 
-
 # extract protein
-def write_cog(outdir,genome2cdd,raw_proteins,genome_ids=[],get_type='prot'):
+def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
     genome2seq = {}
     if not genome_ids:
         genome_ids = list(genome2cdd)
@@ -100,31 +99,31 @@ def write_cog(outdir,genome2cdd,raw_proteins,genome_ids=[],get_type='prot'):
         gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
 
         if exists(gfile):
-            _cache = {record.id:record
-                      for record in SeqIO.parse(gfile,format='fasta')}
-            seq_set = {k:[_cache[_]
-                       for _ in v
-                       if _ in _cache]
-                    for k,v in g_dict.items()}
+            _cache = {record.id: record
+                      for record in SeqIO.parse(gfile, format='fasta')}
+            seq_set = {k: [_cache[_]
+                           for _ in v
+                           if _ in _cache]
+                       for k, v in g_dict.items()}
             genome2seq[genome_name] = seq_set
-            
+
     # concat/output proteins
     tqdm.write('write out')
     for each_gene in tqdm(gene_ids):
         gene_records = []
         for gname, seq_dict in genome2seq.items():
-            get_records = seq_dict.get(each_gene,[])
+            get_records = seq_dict.get(each_gene, [])
             for record in get_records:
                 record.name = gname
-            gene_records+=get_records
-        unique_cdd_records = [] 
-        [unique_cdd_records.append(record) 
-         for record in gene_records 
-         if record.id not in [_.id 
-                              for _ in unique_cdd_records]]  
-        
-        with open(join(outdir,f"{each_gene.replace('CDD:','')}.faa"),'w') as f1:
-            SeqIO.write(unique_cdd_records,f1,format='fasta-2line')
+            gene_records += get_records
+        unique_cdd_records = []
+        [unique_cdd_records.append(record)
+         for record in gene_records
+         if record.id not in [_.id
+                              for _ in unique_cdd_records]]
+
+        with open(join(outdir, f"{each_gene.replace('CDD:','')}.faa"), 'w') as f1:
+            SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
 
 # def perform_iqtree(indir):
 #     script = expanduser('~/bin/batch_run/batch_mafft.py')
@@ -136,24 +135,25 @@ def write_cog(outdir,genome2cdd,raw_proteins,genome_ids=[],get_type='prot'):
 
 def stats_cog(genome2genes):
     gene_ids = pfam_ids+tigfam_ids
-    
-    gene_multi = {g:0 for g in gene_ids}
+
+    gene_multi = {g: 0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             if len(seqs) >= 2:
                 gene_multi[gene] += 1
-    gene_Ubiquity = {g:0 for g in gene_ids}
+    gene_Ubiquity = {g: 0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             gene_Ubiquity[gene] += 1
-    
+
     gene2genome_num = {}
     for gene in gene_ids:
-        _cache = [k for k,v in genome2genes.items() if v.get(gene,[])]
-    #for genome, pdict in genome2genes.items():
+        _cache = [k for k, v in genome2genes.items() if v.get(gene, [])]
+    # for genome, pdict in genome2genes.items():
         gene2genome_num[gene] = len(_cache)
-                
-    return gene_multi,gene_Ubiquity,gene2genome_num
+
+    return gene_multi, gene_Ubiquity, gene2genome_num
+
 
 def process_path(path):
     if '~' in path:
@@ -163,37 +163,41 @@ def process_path(path):
     path = abspath(path)
     return path
 
+
 @click.command()
-@click.option("-in_p",'in_proteins')
-@click.option("-in_a",'in_annotations')
-@click.option("-s","suffix",)
-@click.option("-o",'outdir')
-@click.option("-evalue",'evalue',default=1e-50)
-@click.option("-gl", "genome_list", default=None,               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "                   "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
-def main(in_proteins,suffix,in_annotations,outdir,evalue,genome_list):
+@click.option("-in_p", 'in_proteins',)
+@click.option("-in_a", 'in_annotations',)
+@click.option("-s", "suffix", default='faa')
+@click.option("-o", 'outdir',)
+@click.option("-evalue", 'evalue', default=1e-50)
+@click.option("-gl", "genome_list", default=None, help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     if genome_list is None:
         gids = []
     else:
         gids = open(genome_list).read().split('\n')
         gids = list(set([_ for _ in gids if _]))
-    in_proteins = join(in_proteins,'*.'+suffix.strip('.'))
+    in_proteins = join(in_proteins, '*.'+suffix.strip('.'))
     protein_files = glob(in_proteins)
     gids = []
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
-        
+
     annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
     annotate_bac120(protein_files, in_annotations, db_id='pfam')
 
-    genome2genes = parse_annotation(in_annotations,top_hit=False)
-    gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
+    genome2genes = parse_annotation(in_annotations, top_hit=False)
+    gene_multi, gene_Ubiquity, gene2genome_num = stats_cog(genome2genes)
 
-    genome2genes = parse_annotation(in_annotations,top_hit=True,evalue=evalue)
-    write_cog(outdir,genome2genes,in_proteins,genome_ids=gids,get_type='prot')
-    
+    genome2genes = parse_annotation(
+        in_annotations, top_hit=True, evalue=evalue)
+    write_cog(outdir, genome2genes, in_proteins,
+              genome_ids=gids, get_type='prot')
+
+
 if __name__ == "__main__":
     main()
-    
+
     # import sys
 
     # # usage :
@@ -209,7 +213,7 @@ if __name__ == "__main__":
     #     out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
     #     outdir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate/seq')
     #     protein_files = glob(raw_proteins)
-        
+
     # # for tigfam_id in tigfam_ids:
     # annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
     # annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
