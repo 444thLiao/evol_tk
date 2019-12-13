@@ -37,17 +37,18 @@ for row in tqdm(open(infile)):
 
 
 multi_match = []
-g2ko2num = defaultdict(lambda : dict())
+g2ko2num = defaultdict(lambda : defaultdict(int))
 for locus_tag,annotation in tqdm(used_dict.items()):
     gid = convert_genome_ID_rev(locus_tag)
     valid_annotations = list(set([_ for _ in annotation if _ is not None]))
     if len(valid_annotations) == 1:
         ko = valid_annotations[0].split(':')[-1]
-        g2ko2num[gid][ko] = 1
+        g2ko2num[gid][ko] += 1
     elif len(valid_annotations) > 1:
         multi_match.append(locus_tag)
     else:
         pass
+    
 total_df = pd.DataFrame.from_dict(g2ko2num,orient='index')
 totaldf = total_df.fillna(0)
 totaldf.to_csv('./protein_annotations/kegg_diamond.crosstab',sep='\t',index=1)

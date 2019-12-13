@@ -16,7 +16,7 @@ def _get_tophit(gid2locus,top_hit):
                       for k,v in gid2locus.items()}
     return gid2locus
 
-def _parse_blastp(ofile,match_ids=[],top_hit = False):
+def _parse_blastp(ofile,match_ids=[],filter_evalue=1e-20,top_hit = False):
     if not match_ids:
         gid2locus = defaultdict(list)
     else:
@@ -25,6 +25,8 @@ def _parse_blastp(ofile,match_ids=[],top_hit = False):
         sep_v = row.split('\t')
         locus = sep_v[0]
         evalue = sep_v[10]
+        if filter_evalue and evalue > filter_evalue:
+            continue
         if sep_v[1] in match_ids:
             gid2locus[sep_v[1]].append((locus,evalue))
         if not match_ids:
@@ -32,7 +34,7 @@ def _parse_blastp(ofile,match_ids=[],top_hit = False):
     gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
-def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
+def _parse_hmmscan(ofile,filter_evalue=1e-20,top_hit = False):
     gid2locus = defaultdict(list)
 
     for row in open(ofile, 'r'):
@@ -44,10 +46,9 @@ def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
         gene_id = r[1]
         locus_tag = r[2]
         evalue = float(r[4])
-        if filter_evalue and evalue <= filter_evalue:
-            gid2locus[gene_id].append((locus_tag, evalue))
-        else:
-            gid2locus[gene_id].append((locus_tag, evalue))
+        if filter_evalue and evalue > filter_evalue:
+            continue
+        gid2locus[gene_id].append((locus_tag, evalue))
     gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
