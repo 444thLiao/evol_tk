@@ -16,7 +16,7 @@ def _get_tophit(gid2locus,top_hit):
                       for k,v in gid2locus.items()}
     return gid2locus
 
-def _parse_blastp(ofile,match_ids=[],filter_evalue=1e-20,top_hit = False):
+def _parse_blastp(ofile,match_ids=[],filter_evalue=1e-3,top_hit = False):
     if not match_ids:
         gid2locus = defaultdict(list)
     else:
