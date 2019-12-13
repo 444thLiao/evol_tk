@@ -333,7 +333,7 @@ def pie_chart(id2cat2val,
               cat2style,
               dataset_label='habitat prob',
               ):
-    template_text = dataset_piechart_template.copy()
+    template_text = open(dataset_piechart_template).read()
     annotate_text = []
     all_cat = [_k for k,v in id2cat2val.items() for _k in v]
     all_cat = list(set(all_cat))
@@ -344,7 +344,7 @@ def pie_chart(id2cat2val,
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat,'0')))
         cat_vals = '\t'.join(cat_vals)
-        annotate_text.append(f"{gid}    0   50  {cat_vals}")
+        annotate_text.append(f"{gid}\t0\t10\t{cat_vals}")
     
     field_labels = '\t'.join(sorted_cat)
     field_colors = '\t'.join([cat2style.get(c) for c in sorted_cat])

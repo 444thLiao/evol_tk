@@ -1,7 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
 from os.path import join
-
+from api_tools.itol_func import *
 # classifiy_word_table = {'MAGs':['metageno'],
                         
 #                         }
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         
 
     text = to_color_Clade(id2habitat,
-                    {_:'#000000'
+                    {_:'#D68529'
                         if _=='non-marine' 
                         else '#0011FF' 
                         for _ in all_habitats},

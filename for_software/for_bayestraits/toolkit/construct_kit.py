@@ -7,7 +7,7 @@ intree = '../trees/iqtree/over20p_bac120.formatted.newick'
 #intree = './trees/iqtree/over20p_bac120.ufboot'
 ocommand = './tag.command'
 
-def get_cmd(intree):
+def get_tags(intree):
     """
     generate cmd for 'ADD all internal node'
     Use formatted newick which generate by thliao. (internal node has been named one)
@@ -15,7 +15,7 @@ def get_cmd(intree):
     rows = []
     t = Tree(intree,format=3)
     for _ in t.traverse():
-        if not _.is_leaf() and _.name:
+        if (not _.is_leaf()) and (_.name):
             rows.append(f"AddTag {_.name} {' '.join(_.get_leaf_names())}")
             rows.append(f"AddNode {_.name} {_.name}")
     return rows
