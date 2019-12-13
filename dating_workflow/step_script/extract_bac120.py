@@ -7,6 +7,8 @@ from collections import defaultdict
 from Bio import SeqIO
 import multiprocessing as mp
 from dating_workflow.step_script import _parse_blastp,_parse_hmmscan,_get_tophit
+import click
+
 
 pfam_db = '/home-user/thliao/data/protein_db/bac120/Pfam.v32.sub6.hmm'
 tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
@@ -55,7 +57,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
         r = list(tqdm(tp.imap(run, params),total=len(params)))
 
  
-def parse_annotation(odir,top_hit = False):
+def parse_annotation(odir,top_hit = False,evalue=1e-50):
     # for cdd
     _cdd_match_ids = pfam_ids
     genome2annotate = defaultdict(lambda:defaultdict(list))
@@ -68,7 +70,8 @@ def parse_annotation(odir,top_hit = False):
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out','')
         locus_dict = _parse_hmmscan(ofile=ofile,
-                                   top_hit=top_hit)
+                                   top_hit=top_hit,
+                                   filter_evalue=evalue)
         genome2annotate[gname].update(locus_dict)
     return genome2annotate
 
@@ -160,31 +163,63 @@ def process_path(path):
     path = abspath(path)
     return path
 
-if __name__ == "__main__":
-    import sys
-
-    # usage :
-    # extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./conserved_protein
-    if len(sys.argv) >= 2:
-        raw_proteins = process_path(sys.argv[1])
-        out_cog_dir = process_path(sys.argv[2])
-        outdir = process_path(sys.argv[3])
-        protein_files = glob(raw_proteins)
+@click.command()
+@click.option("-in_p",'in_proteins')
+@click.option("-in_a",'in_annotations')
+@click.option("-s","suffix",)
+@click.option("-o",'outdir')
+@click.option("-evalue",'evalue',default=1e-50)
+@click.option("-gl", "genome_list", default=None, 
+              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
+                   "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+def main(in_proteins,suffix,in_annotations,outdir,evalue,genome_list):
+    if genome_list is None:
         gids = []
     else:
-        raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
-        out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
-        outdir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate/seq')
-        protein_files = glob(raw_proteins)
+        gids = open(genome_list).read().split('\n')
+        gids = list(set([_ for _ in gids if _]))
+    in_proteins = join(in_proteins,'*.'+suffix.strip('.'))
+    protein_files = glob(in_proteins)
+    gids = []
+    if not protein_files:
+        exit(f"error input proteins dir {in_proteins}")
         
-    # for tigfam_id in tigfam_ids:
-    annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
-    annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
+    annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
+    annotate_bac120(protein_files, in_annotations, db_id='pfam')
 
-    genome2genes = parse_annotation(out_cog_dir,top_hit=False)
+    genome2genes = parse_annotation(in_annotations,top_hit=False)
     gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
 
-    genome2genes = parse_annotation(out_cog_dir,top_hit=True)
-    write_cog(outdir,genome2genes,raw_proteins,genome_ids=gids,get_type='prot')
+    genome2genes = parse_annotation(in_annotations,top_hit=True,evalue=evalue)
+    write_cog(outdir,genome2genes,in_proteins,genome_ids=gids,get_type='prot')
+    
+if __name__ == "__main__":
+    main()
+    
+    # import sys
 
-    # perform_iqtree(outdir)
+    # # usage :
+    # # extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./conserved_protein
+    # if len(sys.argv) >= 2:
+    #     raw_proteins = process_path(sys.argv[1])
+    #     out_cog_dir = process_path(sys.argv[2])
+    #     outdir = process_path(sys.argv[3])
+    #     protein_files = glob(raw_proteins)
+    #     gids = []
+    # else:
+    #     raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
+    #     out_cog_dir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate')
+    #     outdir = expanduser('~/data/nitrification_for/dating_for/bac120_annoate/seq')
+    #     protein_files = glob(raw_proteins)
+        
+    # # for tigfam_id in tigfam_ids:
+    # annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
+    # annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
+
+    # genome2genes = parse_annotation(out_cog_dir,top_hit=False)
+    # gene_multi,gene_Ubiquity,gene2genome_num = stats_cog(genome2genes)
+
+    # genome2genes = parse_annotation(out_cog_dir,top_hit=True)
+    # write_cog(outdir,genome2genes,raw_proteins,genome_ids=gids,get_type='prot')
+
+    # # perform_iqtree(outdir)
