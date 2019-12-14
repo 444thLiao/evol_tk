@@ -1,6 +1,6 @@
 """
 Take multiple-fasta file to construct a tree with iqtree / FastrTree
-
+It is suitable for building gene tree.
 """
 import click
 from subprocess import check_call

@@ -96,5 +96,6 @@ def main(infile, prokka_dir):
         result = choose_paralogs(single_copy, paralogs, g2order_locus,
                                  locus2g)
 
-
-main("/home-user/thliao/project/cyanophage/within_cyanophage/ortho_test/data/Results_Aug09/WorkingDirectory/Orthogroups_3.csv","/home-user/thliao/project/cyanophage/within_cyanophage/prokka_o")
+if __name__ == "__main__":
+    main("/home-user/thliao/project/cyanophage/within_cyanophage/ortho_test/data/Results_Aug09/WorkingDirectory/Orthogroups_3.csv",
+         "/home-user/thliao/project/cyanophage/within_cyanophage/prokka_o")
