@@ -82,4 +82,4 @@ def main(intree, inmetadata, odir):
 
 
 if __name__ == '__main__':
-    pass
+    main()
