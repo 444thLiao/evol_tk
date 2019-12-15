@@ -81,7 +81,7 @@ def download_summary(indir):
     return result_df
 
 
-@click.command(help="quickly get a summary file from pokka_o")
+@click.command(help="quickly get a summary file from prokka_o")
 @click.option("-i", "indir", help='input dir, normally is the output directory of prokka.')
 @click.option("-o", "outfile", help='output summary file')
 @click.option("-t", "typeOfdata", help='data type including prokka or download')
