@@ -10,10 +10,10 @@ import multiprocessing as mp
 from glob import glob
 from api_tools.itol_func import to_binary_shape
 
-gene_presence_tab = "./protein_annotations/kegg_diamond.crosstab"
-basic_habitat_txt = "./bayesTraits_test/m2nm.txt"
-intree = "./bayesTraits_test/test.trees"
-odir = './bayesTraits_genes_test'
+gene_presence_tab = "./protein_annotations/kegg_hmm_merged_info_e20.tab"
+basic_habitat_txt = "./habitat_txt/habitat_general_cat.txt"
+intree = "./bayestraits_habitat/over20p_bac120/over20p_bac120.formatted.newick"
+odir = './bayestraits_habitat/over20p_bac120/gene_test_hmm'
 habitat_mapping_dict = {"M":'1',
                         "N":'0',
                         "NM":'-'}
@@ -25,12 +25,13 @@ habitat_text = open(basic_habitat_txt).read()
 all_gids = [_.split('\t')[0] for _ in habitat_text.split('\n')]
 
 
-gid2habitat = dict([_.split('\t') for _ in habitat_text.split('\n')])
+gid2habitat = dict([_.split('\t') for _ in habitat_text.split('\n') if _])
 genes_df = pd.read_csv(gene_presence_tab,sep='\t',index_col=0)
 
 
 for ko in tqdm(genes_df.columns):
     gid2gene = genes_df.loc[:,ko].to_dict()
+    gid2gene = {k:'1' if '_' in str(v) else '0' for k,v in gid2gene.items()}
     g_dir = join(odir,'each_gene',ko.split(':')[-1])
     if not exists(g_dir):
         os.makedirs(g_dir)
@@ -63,7 +64,7 @@ for ko in tqdm(genes_df.columns):
 
 
 
-with mp.Pool(processes=5) as tp:
+with mp.Pool(processes=50) as tp:
     r = list(tqdm(tp.imap(run,cmds),total=len(cmds)))
 
 def read_log(infile,key='Tree No'):
@@ -110,16 +111,16 @@ corrected_ko2p = dict(zip([k for k,_ in collect_ko2lr.items()],
                           corrected_p[1]))
 
 significant_ko = [k for k,v in corrected_ko2p.items() if v<=0.05]
-with open('./bayesTraits_genes_test/significant_ko.list','w') as f1:
+with open(join(odir,'significant_ko.list'),'w') as f1:
     f1.write('\n'.join(significant_ko))
 kegg_info_tab = '/home-user/thliao/data/protein_db/kegg/ko_info.tab'
 rows = [row.strip('\n') for row in open(kegg_info_tab) if row.split('\t')[0] in set(significant_ko)]
-with open('./bayesTraits_genes_test/significant_ko_info.tab','w') as f1:
+with open(join(odir,'significant_ko_info.tab'),'w') as f1:
     f1.write('\n'.join(rows))
 
 subset_ko2D_rate = {ko:v for ko,v in ko2D_rate.items() if ko in significant_ko}
 subset_df = pd.DataFrame.from_dict(subset_ko2D_rate,orient='index')
-subset_df.to_csv("./bayesTraits_genes_test/significant_ko_rate.tab",sep='\t')
+subset_df.to_csv(join(odir,"significant_ko_rate.tab"),sep='\t')
 
 from sklearn.decomposition import PCA
 pca = PCA()
@@ -141,10 +142,13 @@ ko2odd_ratio = {}
 distinct_ko = {}
 for ko in tqdm(genes_df.columns):
     tab_num = []
-    ko1_g = genes_df.index[genes_df.loc[:,ko]==1]
-    ko0_g = genes_df.index[genes_df.loc[:,ko]==0]
+    ko1_g = genes_df.index[genes_df.loc[:,ko].fillna('').str.contains('_')]
+    ko0_g = genes_df.index[~genes_df.loc[:,ko].fillna('').str.contains('_')]
     
-    tab_num.append([len([g for g in ko1_g if gid2habitat.get(g,'')==h]) for h in  ["M","N"]])
+    tab_num.append([len([g 
+                         for g in ko1_g 
+                         if gid2habitat.get(g,'')==h]) 
+                    for h in  ["M","N"]])
     tab_num.append([len([g for g in ko0_g if gid2habitat.get(g,'')==h]) for h in  ["M","N"]])
     ko2tab[ko]= tab_num
     oddratio,p = fisher_exact(tab_num,alternative="two-sided")
@@ -165,7 +169,7 @@ t = sorted([(ko2odd_ratio[ko],ko) for ko in intersect_ko])[-30:]
 t = [_[1] for _ in t]
 tmp = genes_df.loc[:,t].to_dict(orient='index')
 ssubset_g2ko = {gid:[] for gid in tmp}
-{ssubset_g2ko[gid].append(ko) for gid,vdict in tmp.items() for ko,v in vdict.items() if v ==1}
+{ssubset_g2ko[gid].append(ko) for gid,vdict in tmp.items() for ko,v in vdict.items() if '_' in str(v)}
 text = to_binary_shape(ssubset_g2ko,info_name='test ko',omitted_other=True)
 with open('./test_ko.binary.txt','w') as f1:
     f1.write(text)
