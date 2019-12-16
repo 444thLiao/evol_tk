@@ -15,6 +15,7 @@ from for_software.for_bayestraits.toolkit.get_result import get_result, summaize
 from os.path import *
 import os
 from subprocess import check_call
+import click
 
 # intree = './trees/iqtree/over20p_bac120.formatted.newick'
 # inmetadata = './bayesTraits_test/m2nm.txt'
@@ -22,11 +23,14 @@ from subprocess import check_call
 
 bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 
-
+@click.command()
+@click.option('-i','intree')
+@click.option('-im','inmetadata')
+@click.option('-o','odir')
 def main(intree, inmetadata, odir):
     if not exists(odir):
         os.makedirs(odir)
-    tree_prepared_file = join(odir, 'formatted.trees')
+    tree_prepared_file = join(odir, basename(intree))
     metadata_pre_file = join(odir, 'metadata.txt')
 
     # format tree
@@ -78,4 +82,4 @@ def main(intree, inmetadata, odir):
 
 
 if __name__ == '__main__':
-    pass
+    main()
