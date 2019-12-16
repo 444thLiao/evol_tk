@@ -2,14 +2,15 @@ from tqdm import tqdm
 from glob import glob
 from collections import defaultdict
 import pandas as pd
-from dating_workflow.step_script import convert_genome_ID_rev
+from dating_workflow.step_script import convert_genome_ID_rev,process_path
 import click
 from os.path import join,exists
 import os
 
 def retrieve_info(indir, suffix):
+    suffix = suffix.strip('.')
     gid2locus2ko = defaultdict(list)
-    files_list = glob(join(indir, f'.{suffix}'))
+    files_list = glob(join(indir, f'.*{suffix}'))
     if not files_list:
         exit(f"no files could be found with input {join(indir, f'.{suffix}')},please check the parameters. ")
     tqdm.write("reading all annotated result")
@@ -58,11 +59,13 @@ def filtration_part(gid2locus2ko, evalue=1e-50):
 @click.command()
 @click.option("-i", "indir", )
 @click.option("-o", "odir", )
-@click.option("-s", 'suffix')
+@click.option("-s", 'suffix',default='tab')
 @click.option("-p", 'prefix',default=None,help='prefix of output file, just the file name, it does not need to include dir name. ')
 @click.option("-e", "evalue",default=1e-20)
 @click.option("-t", "transpose",default=False,is_flag=True)
 def main(indir, odir,suffix, evalue, transpose,prefix):
+    indir = process_path(indir)
+    odir = process_path(odir)
     gid2locus2ko = retrieve_info(indir, suffix)
     post_filtered = filtration_part(gid2locus2ko,evalue)
     if not exists(odir):
@@ -88,6 +91,6 @@ def main(indir, odir,suffix, evalue, transpose,prefix):
     bin_df.to_csv(ofile_binary,sep='\t',index=1)
     num_df.to_csv(ofile_num,sep='\t',index=1)
 
-    
+
 if __name__ == "__main__":
     main()
