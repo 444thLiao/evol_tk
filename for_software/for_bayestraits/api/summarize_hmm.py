@@ -10,9 +10,9 @@ import os
 def retrieve_info(indir, suffix):
     suffix = suffix.strip('.')
     gid2locus2ko = defaultdict(list)
-    files_list = glob(join(indir, f'.*{suffix}'))
+    files_list = glob(join(indir, f'*.{suffix}'))
     if not files_list:
-        exit(f"no files could be found with input {join(indir, f'.{suffix}')},please check the parameters. ")
+        exit(f"no files could be found with input {join(indir, f'*.{suffix}')},please check the parameters. ")
     tqdm.write("reading all annotated result")
     for hf in tqdm(files_list):
         for row in open(hf):
