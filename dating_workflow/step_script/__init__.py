@@ -74,8 +74,14 @@ def convert_genome_ID_rev(locus_ID):
     # for 900078535v2
     # it will return
     if isinstance(locus_ID,str):
+        if '|' in locus_ID:
+            # other labmater used
+            genome_name = locus_ID.partition('|')[0]
+            return genome_name
         if '_' in locus_ID:
+            # tianhua version, it won't contain |
             locus_ID = locus_ID.partition('_')[0]
-        return 'GCA_' + locus_ID.replace('v', '.')
+            return 'GCA_' + locus_ID.replace('v', '.')
+
     else:
         return locus_ID

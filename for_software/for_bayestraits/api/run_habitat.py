@@ -41,7 +41,8 @@ def main(intree, inmetadata, odir):
         f1.write(new_tree_text)
 
     # check metadata
-    m_text = [_.strip('\n') for _ in open(inmetadata)
+    m_text = [_.strip('\n') 
+              for _ in open(inmetadata)
               if _.split('\t')[0] in all_gids]
     with open(metadata_pre_file, 'w') as f1:
         f1.write('\n'.join(m_text))
@@ -64,6 +65,7 @@ def main(intree, inmetadata, odir):
     cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir,'complex_m','params.txt')}"
     cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir,'simple_m','params.txt')}"
 
+    print("start to run cmd")
     check_call(cmd1 + ' >/dev/null', shell=True)
     check_call(cmd2 + ' >/dev/null', shell=True)
 
