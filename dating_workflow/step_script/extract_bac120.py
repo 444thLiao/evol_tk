@@ -1,14 +1,15 @@
-from glob import glob
-from subprocess import check_call, check_output
-import os
-from tqdm import tqdm
-from os.path import *
-from collections import defaultdict
-from Bio import SeqIO
 import multiprocessing as mp
-from dating_workflow.step_script import _parse_blastp, _parse_hmmscan, _get_tophit
-import click
+import os
+from collections import defaultdict
+from glob import glob
+from os.path import *
+from subprocess import check_call
 
+import click
+from Bio import SeqIO
+from tqdm import tqdm
+
+from dating_workflow.step_script import _parse_hmmscan
 
 pfam_db = '/home-user/thliao/data/protein_db/bac120/Pfam.v32.sub6.hmm'
 tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
@@ -123,8 +124,9 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
          if record.id not in [_.id
                               for _ in unique_cdd_records]]
 
-        with open(join(outdir, f"{each_gene.replace('CDD:','')}.faa"), 'w') as f1:
+        with open(join(outdir, f"{each_gene.replace('CDD:', '')}.faa"), 'w') as f1:
             SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
+
 
 # def perform_iqtree(indir):
 #     script = expanduser('~/bin/batch_run/batch_mafft.py')
@@ -135,7 +137,7 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
 
 
 def stats_cog(genome2genes):
-    gene_ids = pfam_ids+tigfam_ids
+    gene_ids = pfam_ids + tigfam_ids
 
     gene_multi = {g: 0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
@@ -150,7 +152,7 @@ def stats_cog(genome2genes):
     gene2genome_num = {}
     for gene in gene_ids:
         _cache = [k for k, v in genome2genes.items() if v.get(gene, [])]
-    # for genome, pdict in genome2genes.items():
+        # for genome, pdict in genome2genes.items():
         gene2genome_num[gene] = len(_cache)
 
     return gene_multi, gene_Ubiquity, gene2genome_num
@@ -166,19 +168,20 @@ def process_path(path):
 
 
 @click.command()
-@click.option("-in_p", 'in_proteins',)
-@click.option("-in_a", 'in_annotations',)
+@click.option("-in_p", 'in_proteins', )
+@click.option("-in_a", 'in_annotations', )
 @click.option("-s", "suffix", default='faa')
-@click.option("-o", 'outdir',)
+@click.option("-o", 'outdir', )
 @click.option("-evalue", 'evalue', default=1e-50)
-@click.option("-gl", "genome_list", default=None, help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+@click.option("-gl", "genome_list", default=None,
+              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     if genome_list is None:
         gids = []
     else:
         gids = open(genome_list).read().split('\n')
         gids = list(set([_ for _ in gids if _]))
-    in_proteins = join(in_proteins, '*.'+suffix.strip('.'))
+    in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
     protein_files = glob(in_proteins)
     gids = []
     if not protein_files:

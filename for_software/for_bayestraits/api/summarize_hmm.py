@@ -1,14 +1,16 @@
 """
 For summarizing results output by batch_hmm(some script for annotating genes.)
 """
-from tqdm import tqdm
-from glob import glob
-from collections import defaultdict
-import pandas as pd
-from dating_workflow.step_script import convert_genome_ID_rev, process_path
-import click
-from os.path import join, exists
 import os
+from collections import defaultdict
+from glob import glob
+from os.path import join, exists
+
+import click
+import pandas as pd
+from tqdm import tqdm
+
+from dating_workflow.step_script import convert_genome_ID_rev, process_path
 
 
 def retrieve_info(indir, suffix):

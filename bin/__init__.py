@@ -1,6 +1,6 @@
-import os
 import sys
 from os.path import dirname
+
 sys.path.insert(0, dirname(dirname(__file__)))
 
 # gbk_collect = []
@@ -49,9 +49,9 @@ sys.path.insert(0, dirname(dirname(__file__)))
 # for g,ori_name in zip(gbk_collect,got_p):
 #     target_name = basename(ori_name).rpartition('.')[0]
 #     os.system('ln -s %s /home-user/thliao/tmp_gbk_jjtao/%s.gbk' % (g,target_name))
-    
+
 # for g in glob('./gbk'):
 #     cmd = f"ruby $SSW/tools/self_bao_cun/basic_process_mini/genbank2gff.rb --seq {gbk} --feature CDS > {new_file}"
-    
-    
+
+
 # '/home-user/jjtao/backup/OrthoFinder_1/Results_Brady346/'

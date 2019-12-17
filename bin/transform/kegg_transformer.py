@@ -7,18 +7,18 @@ This script is mainly for converting the output of diamond into a human reable/t
 ####
 #################################################################################
 
-from bioservices.kegg import KEGG
-from collections import defaultdict
-import pandas as pd
-from tqdm import tqdm
-import click
 import os
-from os.path import exists, join
 import pickle
-from dating_workflow import convert_genome_ID,convert_genome_ID_rev
+from collections import defaultdict
+from os.path import exists, join
+
+import click
+import pandas as pd
+from bioservices.kegg import KEGG
+from tqdm import tqdm
 
 locusID2kegg_list = '/home-user/thliao/data/protein_db/kegg/latest/links/genes_ko.list'
-locusID2kegg_dict = dict([_.split('\t') for _ in open(locusID2kegg_list).read().split('\n') if _ ] )
+locusID2kegg_dict = dict([_.split('\t') for _ in open(locusID2kegg_list).read().split('\n') if _])
 
 
 def parse_id(ID, max_try=10):
@@ -164,11 +164,12 @@ def batch_iter(iter, batch_size):
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
 
+
 def get_only_ko(df):
     unique_DBlocus = set(df.loc[:, 1].unique())
-    subset_dict = {_:locusID2kegg_dict.get(_,'') for _ in unique_DBlocus}
+    subset_dict = {_: locusID2kegg_dict.get(_, '') for _ in unique_DBlocus}
     new_df = df.copy()
-    new_df.loc[:,1] = list(map(lambda x:subset_dict[x],new_df.loc[:,1]))
+    new_df.loc[:, 1] = list(map(lambda x: subset_dict[x], new_df.loc[:, 1]))
     return new_df
 
 
@@ -177,8 +178,8 @@ def get_only_ko(df):
 @click.option("-i", "input_tab")
 @click.option("-o", "output_tab")
 @click.option("-test", "test", is_flag=True, default=False)
-@click.option('-only_ko','only_ko_info', is_flag=True, default=False)
-def main(input_tab, output_tab, test,only_ko_info):
+@click.option('-only_ko', 'only_ko_info', is_flag=True, default=False)
+def main(input_tab, output_tab, test, only_ko_info):
     tmp_dir = './tmp'
     os.makedirs(tmp_dir, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(output_tab)),
@@ -193,8 +194,8 @@ def main(input_tab, output_tab, test,only_ko_info):
     if only_ko_info:
         new_df = get_only_ko(df)
         new_df.to_csv(output_tab, sep='\t', index=1, index_label='locus_tag')
-        return 
-    
+        return
+
     unique_DBlocus = set(df.loc[:, 1].unique())
     pack10_up = batch_iter(unique_DBlocus, 10)
     null_ID = []

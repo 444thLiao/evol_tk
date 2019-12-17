@@ -3,13 +3,14 @@ From prokka output to extract rrna (mainly for 16S and 23S)
 it follow the structure of traditional prokka output
 """
 
-from Bio import SeqIO
+import os
+from collections import defaultdict
 from glob import glob
 from os.path import *
-from tqdm import tqdm
-from collections import defaultdict
+
 import click
-import os
+from Bio import SeqIO
+from tqdm import tqdm
 
 
 def extract_16s(gbk_files):
@@ -104,9 +105,7 @@ def main(indir, odir, preset):
 
 
 if __name__ == '__main__':
-    import sys
-
-    #assert len(sys.argv) == 3
+    # assert len(sys.argv) == 3
     main()
     # extract_rrna.py -i ./pipelines_o/prokka_o -o /home-user/thliao/data/jjtao_20191113/
     # if using dating

@@ -1,18 +1,24 @@
-from api_tools.itol_func import *
-import sys
-from ete3 import NCBITaxa,Tree
 import os
+import sys
+
+from ete3 import NCBITaxa, Tree
+
+from api_tools.itol_func import *
+
 ncbi = NCBITaxa()
+
 
 def convert_genome_ID(genome_ID):
     # for GCA_900078535.2
     # it will return
-    return genome_ID.split('_')[-1].replace('.','v')
+    return genome_ID.split('_')[-1].replace('.', 'v')
+
 
 def convert_genome_ID_rev(genome_ID):
     # for 900078535v2
     # it will return
-    return genome_ID.replace('v','.')
+    return genome_ID.replace('v', '.')
+
 
 if len(sys.argv) != 3:
     raise Exception()
@@ -32,7 +38,7 @@ for row in open(metadata):
     if not row.startswith("assembly_accession"):
         row = row.split('\t')
         if row[0] in gids:
-            gid2name[row[0]] = row[7] + ' ' +row[9]
+            gid2name[row[0]] = row[7] + ' ' + row[9]
             gid2taxid[row[0]] = row[5]
 
 request_taxon = 'phylum'
@@ -57,7 +63,6 @@ text = to_label(gid2taxons_str)
 os.makedirs('./itol_txt', exist_ok=1)
 with open('./itol_txt/taxons_names.txt', 'w') as f1:
     f1.write(text)
-
 
 text = to_label({k: k for k in gid2name})
 with open('./itol_txt/reset_names.txt', 'w') as f1:
@@ -100,29 +105,29 @@ with open('./itol_txt/phylum_annotate.txt', 'w') as f1:
 
 id2info = gid2taxon
 id2info, info2color = get_colors_general(id2info)
-text = to_color_branch(id2info, info2color, dataset_name='phylum/class',no_legend=True)
+text = to_color_branch(id2info, info2color, dataset_name='phylum/class', no_legend=True)
 
 with open('./itol_txt/phylum_annotate_branch.txt', 'w') as f1:
     f1.write(text)
-    
-    
+
 # annotate 27 genes
 from Bio import SeqIO
-rrna_dir = './rrna'
-gid2genes = {k:[_k for _k,_v in v.items() if _v] for k,v in _subgenome2cdd.items()}
 
-for record in SeqIO.parse(join(rrna_dir,'16S.fasta'),format='fasta'):
-    gname = 'GCA_'+convert_genome_ID_rev(record.id.split('_')[0])
+rrna_dir = './rrna'
+gid2genes = {k: [_k for _k, _v in v.items() if _v] for k, v in _subgenome2cdd.items()}
+
+for record in SeqIO.parse(join(rrna_dir, '16S.fasta'), format='fasta'):
+    gname = 'GCA_' + convert_genome_ID_rev(record.id.split('_')[0])
     if gname in gid2genes:
         gid2genes[gname].append('16S')
-for record in SeqIO.parse(join(rrna_dir,'23S.fasta'),format='fasta'):
-    gname = 'GCA_'+convert_genome_ID_rev(record.id.split('_')[0])
+for record in SeqIO.parse(join(rrna_dir, '23S.fasta'), format='fasta'):
+    gname = 'GCA_' + convert_genome_ID_rev(record.id.split('_')[0])
     if gname in gid2genes:
         gid2genes[gname].append('23S')
 
 all_genes = set([_ for vl in gid2genes.values() for _ in vl])
 text = to_binary_shape(gid2genes,
-                       {g:{'color':'#007acc'} for g in all_genes})
+                       {g: {'color': '#007acc'} for g in all_genes})
 
-with open('./itol_txt/27genes.txt','w') as f1:
+with open('./itol_txt/27genes.txt', 'w') as f1:
     f1.write(text)

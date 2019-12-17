@@ -2,15 +2,15 @@
 Advanced script for who wants to modify or manipulate the batch_run script
 """
 
-import sys
-from os.path import *
+import multiprocessing as mp
 import os
+from glob import glob
+from os.path import *
 # sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
+
 import click
-from glob import glob
 from tqdm import tqdm
-import multiprocessing as mp
 
 command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}'
 
@@ -19,7 +19,8 @@ def run(cmd):
     check_call(cmd,
                shell=True)
 
-def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=command_template,test=False):
+
+def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     odir = abspath(odir)
@@ -36,22 +37,23 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=co
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(infile).replace(suffix,
-                                                   '.' + new_suffix))
+                                                  '.' + new_suffix))
         else:
             ofile = join(odir,
                          basename(infile))
         if not exists(ofile) or force:
             filled_cmd = cmd.format(infile=infile,
-                                       ofile=ofile)
+                                    ofile=ofile)
             params.append(filled_cmd)
     if test:
         print(params)
         return
     with mp.Pool(processes=num_parellel) as tp:
-        r = list(tqdm(tp.imap(run,params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
-@click.command(help="This script accept input directory(-i) which contains files with suffix(-s) and output directory(-o) which will stodge result with its name and new suffix (-ns). It could auto parellel your command into (-np) times. ")
+@click.command(
+    help="This script accept input directory(-i) which contains files with suffix(-s) and output directory(-o) which will stodge result with its name and new suffix (-ns). It could auto parellel your command into (-np) times. ")
 @click.option('-i', 'indir')
 @click.option('-o', 'odir')
 @click.option('-s', 'suffix', default='')
@@ -59,8 +61,9 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False,cmd=co
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-t', 'test', help='test?', default=False, required=False, is_flag=True)
-@click.option('-cmd',"cmd",help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")
-def cli(indir, odir, suffix, new_suffix, force, test,num_parellel,cmd):
+@click.option('-cmd', "cmd",
+              help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")
+def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd):
     main(indir=indir,
          odir=odir,
          num_parellel=num_parellel,

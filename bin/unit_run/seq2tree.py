@@ -2,10 +2,11 @@
 Take multiple-fasta file to construct a tree with iqtree / FastrTree
 It is suitable for building gene tree.
 """
-import click
-from subprocess import check_call
 import os
-from os.path import join, dirname, abspath
+from os.path import abspath
+from subprocess import check_call
+
+import click
 
 mafft_p = "/usr/local/bin/mafft"
 iqtree_p = "/usr/local/bin/iqtree"
@@ -20,9 +21,9 @@ def run_cmd(cmd):
 @click.command()
 @click.option("-i", "infile")
 @click.option("-o", "odir", default=None)
-@click.option("-n","--name",default=None)
+@click.option("-n", "--name", default=None)
 @click.option("-redo", is_flag=True, default=False)
-def main(infile, odir, name,redo):
+def main(infile, odir, name, redo):
     infile = abspath(infile)
     if name is None:
         basename = os.path.basename(infile).split('.')[0]

@@ -8,76 +8,79 @@ For filtration amplicons, it could simply find proteins which only contain NONE 
 header is ['accession ID', 'GI', 'assembly_ID', 'nuccore ID', 'start', 'end', 'strand']
 or look like accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand
 """
-from bin.ncbi_convert import edl, access_intermedia, parse_id,unpack_gb
+import io
+import os
+from os.path import exists, dirname
+
+import click
+import pandas as pd
+from tqdm import tqdm
+
+from bin.ncbi_convert import edl, access_intermedia, parse_id
 from bin.ncbi_convert.pid2GI import pid2GI
 from bin.ncbi_convert.pid2tax import GI2tax
 
-from os.path import exists, join, dirname
-from tqdm import tqdm
-from Bio import Entrez,SeqIO
-import io
-import os
-import click
-import pandas as pd
 
-def get_protein_pos_assembly_INFO(pid2info_dict,suffix='pid2genome_info'):
+def get_protein_pos_assembly_INFO(pid2info_dict, suffix='pid2genome_info'):
     def _parse_ipg(t):
         bucket = []
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
-        gb = whole_df.groupby(0)    
+        gb = whole_df.groupby(0)
         all_dfs = [gb.get_group(x) for x in gb.groups]
         for indivi_df in all_dfs:
             indivi_df.index = range(indivi_df.shape[0])
             # aid = indivi_df.iloc[0, 6]
             indivi_df = indivi_df.fillna('')
-            pos = [(row[2],row[3],row[4],row[5]) 
+            pos = [(row[2], row[3], row[4], row[5])
                    for row in indivi_df.values]
-            gb = [row[10 ]
-                   for row in indivi_df.values]
+            gb = [row[10]
+                  for row in indivi_df.values]
             for row in indivi_df.values:
-                bucket.append((row[6],pos,gb))
+                bucket.append((row[6], pos, gb))
         return bucket
-    all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
+
+    all_GI = [_.get('GI', '') for k, _ in pid2info_dict.items()]
     all_GI = [_ for _ in all_GI]
     tqdm.write('get pid summary from Identical Protein Groups summary')
     results, failed = edl.efetch(db='protein',
-                                    ids=all_GI,
-                                    retmode='ipg',
-                                    retype='xml',
-                                    result_func=lambda x: _parse_ipg(x))
+                                 ids=all_GI,
+                                 retmode='ipg',
+                                 retype='xml',
+                                 result_func=lambda x: _parse_ipg(x))
     pid2assembly_dict = {}
-    for pid,nuc_info,assembly_info in tqdm(results):
-        pid2assembly_dict[pid] = dict(zip(assembly_info,nuc_info))
+    for pid, nuc_info, assembly_info in tqdm(results):
+        pid2assembly_dict[pid] = dict(zip(assembly_info, nuc_info))
         # for nuccore which no assembly ID, it will drop it by accident. by for now, it is ok.
 
-    pid2assembly_dict = {pid:pid2assembly_dict.get(pid2info_dict[pid].get('accession',''),{})
+    pid2assembly_dict = {pid: pid2assembly_dict.get(pid2info_dict[pid].get('accession', ''), {})
                          for pid in pid2info_dict}
     assert len(pid2assembly_dict) == len(pid2info_dict)
-    access_intermedia(pid2assembly_dict,suffix=suffix)
+    access_intermedia(pid2assembly_dict, suffix=suffix)
     return pid2assembly_dict
 
-def pid2genome_assembly(pid2gi,redo=False):
+
+def pid2genome_assembly(pid2gi, redo=False):
     """
     could not use elink to directly from protein accession id -> assembly/biosample (So it is complicated and slowly)
     """
     suffix = 'pid2genome_info'
     pid_list = list(pid2gi)
     # get itself cache? if have, just finish
-    _cache = access_intermedia(pid_list, suffix=suffix,redo=redo)
+    _cache = access_intermedia(pid_list, suffix=suffix, redo=redo)
     if _cache is not None:
         return _cache
     # get pre-requested cache? if have, just go on
-    _cache = access_intermedia(pid_list, suffix='pid2tax',redo=redo)
+    _cache = access_intermedia(pid_list, suffix='pid2tax', redo=redo)
     if _cache is not None:
         pid2info_dict = _cache
     else:
-        pid2info_dict = GI2tax(pid2gi,redo=redo)
-    
-    pid2assembly_nuc_info = get_protein_pos_assembly_INFO(pid2info_dict,suffix=suffix)
+        pid2info_dict = GI2tax(pid2gi, redo=redo)
+
+    pid2assembly_nuc_info = get_protein_pos_assembly_INFO(pid2info_dict, suffix=suffix)
     return pid2assembly_nuc_info
-    
-    
-def main(infile, ofile, force=False,redo=False):
+
+
+def main(infile, ofile, force=False, redo=False):
     order_id_list, id2annotate = parse_id(infile)
     id2gi = {}
     if isinstance(id2annotate[order_id_list[0]], dict):
@@ -85,28 +88,28 @@ def main(infile, ofile, force=False,redo=False):
         if 'GI' in id2annotate[order_id_list[0]]:
             print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
             if not force:
-                id2gi = {k:id2annotate[k]['GI'] for k in order_id_list}
+                id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
         # todo: re-implemented original infomation into `ofile` from `infile`
     else:
         # no header, just a list of IDs
         pass
     if not id2gi:
-        id2gi = pid2GI(order_id_list,redo=redo)
-    pid2assembly_dict = pid2genome_assembly(id2gi,redo=redo)
-    
-    if not exists(dirname(ofile))  and dirname(ofile):
+        id2gi = pid2GI(order_id_list, redo=redo)
+    pid2assembly_dict = pid2genome_assembly(id2gi, redo=redo)
+
+    if not exists(dirname(ofile)) and dirname(ofile):
         os.makedirs(dirname(ofile))
-        
+
     if exists(ofile) and not force:
-        tqdm.write("detect existing "+ofile+' no force param input, so it quit instead of writing.')
-        return 
-    
+        tqdm.write("detect existing " + ofile + ' no force param input, so it quit instead of writing.')
+        return
+
     with open(ofile, 'w') as f1:
         print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
         for pid, nuc_dict in pid2assembly_dict.items():
             GI = id2gi[pid]
-            for assembly_id,info in nuc_dict.items():
-                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str,info)), file=f1)
+            for assembly_id, info in nuc_dict.items():
+                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str, info)), file=f1)
     tqdm.write('finish writing into ' + ofile)
 
 
@@ -115,20 +118,19 @@ def main(infile, ofile, force=False,redo=False):
 @click.option('-o', 'ofile', help='output file')
 @click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
 @click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
-def cli(infile, ofile, force,redo):
-    main(infile, ofile, force,redo)
+def cli(infile, ofile, force, redo):
+    main(infile, ofile, force, redo)
 
 
 if __name__ == "__main__":
     cli()
 
-
 # def get_normal_ID_gb(pid2info_dict,fetch_size):
 #     """
 #     No GI info inside the genbank file retrieved... 
 #     with pid2info_dict which contained both exact accession ID and manual ID
-    
-    
+
+
 #     """
 #     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
 #     all_GI = [_ for _ in all_GI if _]
@@ -167,7 +169,7 @@ if __name__ == "__main__":
 #                 tqdm.write('get unexpected record: '+record.id)
 #             else:
 #                 pid2gb[right_aid[0]] = record
-    
+
 #     final_pid2gb = {}
 #     tqdm.write('writing genbank into a dict, it may take much memory of your computer. If you are retrieving over 10K pid, be careful.')
 #     for pid,info_dict in pid2info_dict.items():
@@ -182,7 +184,7 @@ if __name__ == "__main__":
 #         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
 #         aid = whole_df.iloc[0, 6]
 #         return [(aid, whole_df)]
-    
+
 #     all_GI = [_.get('GI','') for k,_ in pid2info_dict.items()]
 #     all_GI = [_ for _ in all_GI if _]
 
@@ -222,11 +224,10 @@ if __name__ == "__main__":
 #             failed_id.append(aid)
 #     if failed_id:
 #         tqdm.write("failed id %s don't have any assembly id" % ';'.join(failed_id))
-    
+
 #     pid2assembly = {}
 #     for pid,info_dict in pid2info_dict.items():
 #         info_dict = info_dict.copy()
 #         info_dict.update({'assembly ID':aid2info.get(pid,'')} )
 #         pid2assembly[pid] = info_dict
 #     return pid2assembly
-

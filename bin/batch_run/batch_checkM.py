@@ -2,15 +2,15 @@
 For parellel checkm, after that you could merge it by yourself
 """
 
-import sys
-from os.path import *
+import multiprocessing as mp
 import os
+from glob import glob
+from os.path import *
 # sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
+
 import click
-from glob import glob
 from tqdm import tqdm
-import multiprocessing as mp
 
 command_template = 'checkm taxonomy_wf -t 10 -x {infile} {tax} {indir} {odir}'
 
@@ -19,16 +19,16 @@ def run(args):
     unit_run(*args)
 
 
-def unit_run(infile,indir,tax, odir):
+def unit_run(infile, indir, tax, odir):
     check_call(command_template.format(infile=infile,
                                        indir=indir,
                                        tax=tax,
                                        odir=odir),
                shell=True,
-               stdout=open('/dev/null','w'))
+               stdout=open('/dev/null', 'w'))
 
 
-def main(indir, odir, tax,num_parellel, suffix='', force=False):
+def main(indir, odir, tax, num_parellel, suffix='', force=False):
     suffix = suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
@@ -40,14 +40,14 @@ def main(indir, odir, tax,num_parellel, suffix='', force=False):
     for in_file in file_list:
         new_odir = join(odir,
                         basename(in_file).replace(f'{suffix}',
-                                                       ''))
+                                                  ''))
         if not exists(new_odir) or force:
             params.append((basename(in_file),
-                           indir, 
+                           indir,
                            tax,
                            new_odir))
     with mp.Pool(processes=num_parellel) as tp:
-        r = list(tqdm(tp.imap(run,params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
 @click.command()
@@ -57,7 +57,7 @@ def main(indir, odir, tax,num_parellel, suffix='', force=False):
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-t', 'tax', default='domain Bacteria')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def cli(indir, odir,tax, suffix, force, num_parellel):
+def cli(indir, odir, tax, suffix, force, num_parellel):
     main(indir=indir,
          odir=odir,
          tax=tax,

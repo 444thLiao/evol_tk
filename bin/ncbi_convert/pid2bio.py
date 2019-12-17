@@ -3,18 +3,19 @@ This script is mainly for query requested protein accession id and retrieve rela
 Of course including its relative metadata.
 
 """
-from bin.ncbi_convert import edl, access_intermedia, parse_id
-from bin.ncbi_convert.pid2GI import pid2GI
-from bin.ncbi_convert.pid2tax import GI2tax
-from bin.ncbi_convert.pid2genome import pid2genome_assembly
-from global_search.thirty_party.metadata_parser import parse_bioproject_xml, parse_biosample_xml, parse_assembly_xml
-from os.path import exists, join, dirname
-from tqdm import tqdm
-from Bio import Entrez
 import io
 import os
+from os.path import exists, dirname
+
 import click
 import pandas as pd
+from Bio import Entrez
+from tqdm import tqdm
+
+from bin.ncbi_convert import edl, parse_id
+from bin.ncbi_convert.pid2GI import pid2GI
+from bin.ncbi_convert.pid2genome import pid2genome_assembly
+from global_search.thirty_party.metadata_parser import parse_bioproject_xml, parse_biosample_xml, parse_assembly_xml
 
 
 def get_bioproject(bp_list):
@@ -23,10 +24,10 @@ def get_bioproject(bp_list):
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
     all_GI = results[::]
     results, failed = edl.efetch(db='bioproject',
-                                    ids=all_GI,
-                                    retmode='xml',
-                                    retype='xml',
-                                    result_func=lambda x: parse_bioproject_xml(x))
+                                 ids=all_GI,
+                                 retmode='xml',
+                                 retype='xml',
+                                 result_func=lambda x: parse_bioproject_xml(x))
     bp2info = {}
     for _ in results:
         if isinstance(_, dict):
@@ -40,10 +41,10 @@ def get_biosample(bs_list):
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
     all_GI = results[::]
     results, failed = edl.efetch(db='biosample',
-                                    ids=all_GI,
-                                    retmode='xml',
-                                    retype='xml',
-                                    result_func=lambda x: parse_biosample_xml(x))
+                                 ids=all_GI,
+                                 retmode='xml',
+                                 retype='xml',
+                                 result_func=lambda x: parse_biosample_xml(x))
     bs2info = {}
     for _ in results:
         if isinstance(_, dict):
@@ -86,9 +87,8 @@ def genomeID2Bio(genome_IDs):
     return gid2assembly_info, bp2info, bs2info
 
 
-def main(infile, ofile,start_at='protein', force=False, redo=False):
-
-    if not exists(dirname(ofile))  and dirname(ofile):
+def main(infile, ofile, start_at='protein', force=False, redo=False):
+    if not exists(dirname(ofile)) and dirname(ofile):
         os.makedirs(dirname(ofile))
 
     order_id_list, id2annotate = parse_id(infile)
@@ -111,7 +111,7 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
             ''}}
         genome_IDs = set([_ for v in with_genome_pid2ass.values() for _ in v])
         genome_IDs = [_ for _ in genome_IDs if _]
-    elif start_at =='genome':
+    elif start_at == 'genome':
         genome_IDs = order_id_list[::]
     else:
         raise SyntaxError('wrong input of start_at')
@@ -121,7 +121,7 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
     # else...... too complicated...pass it
     if len(gid2assembly_info) <= 15000:
         ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
-        #ginfo_df.index = ginfo_df.iloc[:,0]
+        # ginfo_df.index = ginfo_df.iloc[:,0]
         bp_df = pd.DataFrame.from_dict(bp2info, orient='index')
         bs_df = pd.DataFrame.from_dict(bs2info, orient='index')
         _df1 = bp_df.reindex(ginfo_df.loc[:, 'BioprojectAccn'])
@@ -132,13 +132,13 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
                              _df1,
                              _df2], axis=1)
         full_df = full_df.applymap(lambda x: x.replace('\n', ' ')
-                                   if isinstance(x, str) else x)
+        if isinstance(x, str) else x)
         full_df = full_df.drop(['GI', 'relative biosample'], axis=1)
     else:
         raise Exception('too complicated to deal with it')
 
     if exists(ofile) and not force:
-        tqdm.write("detect existing "+ofile +
+        tqdm.write("detect existing " + ofile +
                    ' no force param input, so it quit instead of writing.')
         return
 
@@ -149,14 +149,15 @@ def main(infile, ofile,start_at='protein', force=False, redo=False):
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-o', 'ofile', help='output file')
-@click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ',default='protein',required=False)
+@click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ', default='protein',
+              required=False)
 @click.option('-f', 'force', help='force overwrite?', default=False, required=False, is_flag=True)
 @click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
-def cli(infile, ofile, force, redo,start_at):
+def cli(infile, ofile, force, redo, start_at):
     start_at = start_at.strip().lower()
-    if start_at not in ['genome','protein']:
+    if start_at not in ['genome', 'protein']:
         raise IOError('Unexpected params of start_at. giving `%s`?? ' % start_at)
-    main(infile, ofile,start_at, force, redo)
+    main(infile, ofile, start_at, force, redo)
 
 
 if __name__ == "__main__":

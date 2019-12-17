@@ -1,10 +1,8 @@
-import pandas as pd
-from collections import defaultdict
 import sys
-from os.path import *
-import os
-from tqdm import tqdm
+from collections import defaultdict
 
+import pandas as pd
+from tqdm import tqdm
 
 assert len(sys.argv) == 3
 
@@ -55,7 +53,7 @@ for g_name, names in tqdm(group_idx.items()):
     sub_g = sub_df.groupby('genename')
     result_df = result_df.append(pd.DataFrame.from_dict(
         {0: {'gene': g_name}}, orient='index'), sort=False)
-    
+
     tmp_result_df = pd.DataFrame(columns=result_df.columns)
     for genename, ssub_g_idxs in sub_g.groups.items():
         ssub_df = sub_df.loc[ssub_g_idxs, :]
@@ -70,18 +68,18 @@ for g_name, names in tqdm(group_idx.items()):
         for _, _row in ssub_df.iterrows():
             # _row = _row.astype(int)
             _cache = ','.join(
-                list(map(lambda x: str(int(x)), 
+                list(map(lambda x: str(int(x)),
                          _row[['extant', 'ancestral', 'gain or loss']])))
             new_dict[_row['nod to nif']] = '' if _cache == '0,0,0' else _cache
         new_series = pd.DataFrame.from_dict({0: new_dict}, orient='index')
-        
+
         tmp_result_df = tmp_result_df.append(new_series, sort=False)
-    tmp_result_df = tmp_result_df.sort_values(['appear times','gain','loss'],ascending=False)
-    result_df = result_df.append(tmp_result_df,sort=False)
+    tmp_result_df = tmp_result_df.sort_values(['appear times', 'gain', 'loss'], ascending=False)
+    result_df = result_df.append(tmp_result_df, sort=False)
     result_df = result_df.append(pd.DataFrame.from_dict(
         {0: {'gene': ''}}, orient='index'), sort=False)
     result_df = result_df.append(pd.DataFrame.from_dict(
         {0: {'gene': ''}}, orient='index'), sort=False)
-    
-result_df = result_df.drop('appear times',axis=1)
+
+result_df = result_df.drop('appear times', axis=1)
 result_df.to_excel(output_xlsx, index=False)

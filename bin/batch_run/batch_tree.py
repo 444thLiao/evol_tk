@@ -1,12 +1,12 @@
-import sys
-from os.path import *
+import multiprocessing as mp
 import os
+from glob import glob
+from os.path import *
 # sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
+
 import click
-from glob import glob
 from tqdm import tqdm
-import multiprocessing as mp
 
 command_template = 'iqtree -nt 20 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre {ofile} -s {infile}'
 command_template2 = '/home-user/thliao/anaconda3/bin/FastTreeMP {infile} > {ofile}'
@@ -25,8 +25,9 @@ def unit_run(infile, ofile, cmd):
     check_call(cmd.format(infile=infile,
                           ofile=ofile),
                shell=True,
-               stdout=open('/dev/null','w'),
-               stderr=open('/dev/null','w'))
+               stdout=open('/dev/null', 'w'),
+               stderr=open('/dev/null', 'w'))
+
 
 def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, software='iqtree'):
     suffix = suffix.strip('.')
@@ -34,7 +35,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, softw
     if software not in used_command:
         raise IOError
     cmd = used_command[software]
-    if software=='fasttree' and new_suffix=='iqtree':
+    if software == 'fasttree' and new_suffix == 'iqtree':
         new_suffix = 'newick'
     if not exists(odir):
         os.makedirs(odir)
@@ -57,7 +58,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, softw
         if not exists(ofile) or force:
             params.append((in_file, ofile, cmd))
     with mp.Pool(processes=num_parellel) as tp:
-        r = list(tqdm(tp.imap(run,params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
 @click.command()

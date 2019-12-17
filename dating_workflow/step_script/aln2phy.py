@@ -2,18 +2,21 @@
 This script is mainly for generating a phy file from a alignment file
 You should pass a genome id list(most exactly, the sequence id list) for let the code know how many genomes it actually has.
 """
-import click
 from glob import glob
 from os.path import *
-from ForOrthofinder.api.concat_aln import generate_phy_file
+
+import click
 from Bio import AlignIO
 
+from ForOrthofinder.api.concat_aln import generate_phy_file
+
+
 @click.command()
-@click.option('-i','infile',help='aln file')
-@click.option('-o','outfile',default=None,required=None)
-@click.option("-gl", "genome_list", default=None, 
+@click.option('-i', 'infile', help='aln file')
+@click.option('-o', 'outfile', default=None, required=None)
+@click.option("-gl", "genome_list", default=None,
               help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-def cli(infile,outfile,genome_list):
+def cli(infile, outfile, genome_list):
     if not '/' in infile:
         infile = f'./{infile}'
     if '*' in infile:
@@ -29,10 +32,10 @@ def cli(infile,outfile,genome_list):
         gids = f1.read().split('\n')
     for infile in infiles:
         if len(infiles) != 1:
-            outfile = infile.rpartition('.')[0]+'.phy'
+            outfile = infile.rpartition('.')[0] + '.phy'
         aln_record = AlignIO.read(infile, format='fasta')
-        generate_phy_file(outfile,[(0,0,0,aln_record)],gids)
-    
+        generate_phy_file(outfile, [(0, 0, 0, aln_record)], gids)
+
 
 if __name__ == "__main__":
     cli()

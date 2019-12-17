@@ -1,12 +1,12 @@
-import sys
-from os.path import *
+import multiprocessing as mp
 import os
+from glob import glob
+from os.path import *
 # sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
+
 import click
-from glob import glob
 from tqdm import tqdm
-import multiprocessing as mp
 
 command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}'
 
@@ -42,7 +42,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
         if not exists(ofile) or force:
             params.append((in_file, ofile))
     with mp.Pool(processes=num_parellel) as tp:
-        r = list(tqdm(tp.imap(run,params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
 @click.command()

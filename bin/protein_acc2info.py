@@ -2,26 +2,22 @@
 This script is mainly for retrieve infomation enough for following analysis
 receiveing a list of proteins which could
 """
-from global_search.thirty_party.EntrezDownloader import EntrezDownloader
-from global_search.classification_script import _classificated
-from global_search.thirty_party.metadata_parser import *
-from bin.ncbi_convert import edl,parse_id,tmp_dir,taxons,access_intermedia
+import io
+import os
+import random
+from os.path import exists, join
+
+import click
+import pandas as pd
+from Bio import Entrez, SeqIO
+from ete3 import NCBITaxa
+from tqdm import tqdm
+
+from bin.ncbi_convert import edl, parse_id, taxons
 from bin.ncbi_convert.pid2GI import pid2GI
 from bin.ncbi_convert.pid2tax import GI2tax
-import random
-from Bio import Entrez
-from tqdm import tqdm
-from Bio import Entrez, SeqIO
-import io
-from collections import defaultdict
-import multiprocessing as mp
-from bs4 import BeautifulSoup
-import pandas as pd
-from os.path import exists, dirname, join
-import os
-import click
-from ete3 import NCBITaxa
-
+from global_search.classification_script import _classificated
+from global_search.thirty_party.metadata_parser import *
 
 ncbi = NCBITaxa()
 
@@ -35,63 +31,65 @@ def get_Normal_ID(id_list, fetch_size=30, edl=None):
     pid2info_dict = GI2tax(id2gi)
     tqdm.write('retrieving protein info')
     prot_results, prot_failed = edl.efetch(db='protein',
-                                        ids=all_GI,
-                                        retmode='text',
-                                        retype='gb',
-                                        batch_size=fetch_size,
-                                        result_func=lambda x: list(SeqIO.parse(
-                                            io.StringIO(x), format='genbank')))
+                                           ids=all_GI,
+                                           retmode='text',
+                                           retype='gb',
+                                           batch_size=fetch_size,
+                                           result_func=lambda x: list(SeqIO.parse(
+                                               io.StringIO(x), format='genbank')))
     if prot_failed:
         tqdm.write("failed retrieve %s genbank of protein ID" % len(prot_failed))
     pid2gb = {}
     for record in prot_results:
-        right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+        right_aid = [k for k, v in pid2info_dict.items() if v['accession'] == record.id]
         if not right_aid:
-            print('Wrong ????',record.id)
+            print('Wrong ????', record.id)
         else:
             pid2gb[right_aid[0]] = record
     if set(pid2info_dict).difference(pid2gb):
-        
+
         remained_id = list(set(pid2info_dict).difference(pid2gb))
         remained_id_gis = [id2gi[_] for _ in remained_id]
         prot_results, prot_failed = edl.efetch(db='protein',
-                                        ids=remained_id_gis,
-                                        retmode='text',
-                                        retype='gb',
-                                        batch_size=1,
-                                        result_func=lambda x: list(SeqIO.read(
-                                            io.StringIO(x), format='genbank')))
+                                               ids=remained_id_gis,
+                                               retmode='text',
+                                               retype='gb',
+                                               batch_size=1,
+                                               result_func=lambda x: list(SeqIO.read(
+                                                   io.StringIO(x), format='genbank')))
         for record in prot_results:
-            right_aid = [k for k,v in pid2info_dict.items() if v['accession']==record.id]
+            right_aid = [k for k, v in pid2info_dict.items() if v['accession'] == record.id]
             if not right_aid:
-                print('Wrong ????',record.id)
+                print('Wrong ????', record.id)
             else:
                 pid2gb[right_aid[0]] = record
     return pid2gb, pid2info_dict
+
 
 def get_WP_info(id_list, edl):
     def _parse_wp(t):
         whole_df = pd.read_csv(io.StringIO(t), sep='\t', header=None)
         aid = whole_df.iloc[0, 6]
         return [(aid, whole_df)]
+
     id2gi = pid2GI(id_list)
     # gi2id = {v:k for k,v in id2gi.items()}
     all_GI = list(set(id2gi.values()))
 
     tqdm.write('get pid summary from each one')
     results, failed = edl.efetch(db='protein',
-                                    ids=all_GI,
-                                    retmode='ipg',
-                                    retype='xml',
-                                    batch_size=1,
-                                    result_func=lambda x: _parse_wp(x))
+                                 ids=all_GI,
+                                 retmode='ipg',
+                                 retype='xml',
+                                 batch_size=1,
+                                 result_func=lambda x: _parse_wp(x))
     failed_id = []
     aid2info = {}
     for (aid, aid_df) in results:
         if aid not in id2gi:
             _c = [_ for _ in id2gi if aid.split('.')[0] in _]
             if not _c:
-                print('unexpected new accession ID: ',aid)
+                print('unexpected new accession ID: ', aid)
                 continue
             else:
                 aid = _c[0]
@@ -107,7 +105,7 @@ def get_WP_info(id_list, edl):
     results, failed = edl.esearch(db='assembly',
                                   ids=assembly_id_list,
                                   result_func=lambda x: Entrez.read(io.StringIO(x))['IdList'])
-    
+
     aid2gi = dict(results)
     all_GI = list(set(aid2gi.values()))
     results, failed = edl.esummary(db='assembly',
@@ -151,10 +149,10 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
 
     pid2gb, pid2info_dict = get_Normal_ID(id_list, fetch_size=fetch_size, edl=edl)
     not_get_id = set(id_list).difference(set(pid2gb))
-    tqdm.write(str(len(not_get_id))+' failed retrieving...')
-    tqdm.write('including '+';'.join(not_get_id))
+    tqdm.write(str(len(not_get_id)) + ' failed retrieving...')
+    tqdm.write('including ' + ';'.join(not_get_id))
     # init header
-    refs = ['reference_' + str(_+1) + _suffix
+    refs = ['reference_' + str(_ + 1) + _suffix
             for _ in range(10)
             for _suffix in ['', ' journal', ' author']]
     new_columns = ['protein accession',
@@ -176,14 +174,15 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
         tqdm.write('write into a dictinoary and also write into a file')
 
         def write_in(t):
-            f1.write(t.replace('\n', ' ').replace('\t', ' ')+'\t')
+            f1.write(t.replace('\n', ' ').replace('\t', ' ') + '\t')
+
         for aid in tqdm(id_list):
             if aid in pid2gb:
                 prot_t = pid2gb[aid]
             else:
                 _c = [_ for _ in pid2gb if _.split('.')[0] in aid]
                 if not _c:
-                    print('not found',aid)
+                    print('not found', aid)
                     continue
                 else:
                     aid = _c[0]
@@ -193,8 +192,8 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
                          for _ in annotations.get('references', [])
                          if 'Direct' not in _.title and _.title]
             f1.write(f'{aid}\t')
-            f1.write(id2annotate.get(aid, '')+'\t')
-            f1.write(str(prot_t.seq)+'\t')
+            f1.write(id2annotate.get(aid, '') + '\t')
+            f1.write(str(prot_t.seq) + '\t')
             write_in(annotations.get('organism', ''))
             write_in(annotations.get('source', ''))
             db_ = dict([_.split(':') for _ in prot_t.dbxrefs if ':' in _])
@@ -206,7 +205,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
             write_in(';'.join(annotations.get('keywords', [])))
             write_in(annotations.get('comment', ''))
             for t in taxons:
-                f1.write(pid2info_dict.get(aid, {}).get(t, '')+'\t')
+                f1.write(pid2info_dict.get(aid, {}).get(t, '') + '\t')
             for idx in range(10):
                 if idx < len(ref_texts):
                     ref_t = ref_texts[idx]
@@ -311,7 +310,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
         if exists(source_file):
             source_df = pd.read_csv(source_file, encoding='GBK')
             source_df.loc[:, 'tmp'] = source_df.iloc[:, 0] + \
-                ';'+source_df.iloc[:, 1]
+                                      ';' + source_df.iloc[:, 1]
             source_df = source_df.set_index('tmp')
             source_df = source_df.loc[~source_df.index.duplicated(), :]
             # bioproject
@@ -325,6 +324,7 @@ def main(infile, odir, batch_size, fetch_size, test=False, just_seq=False, edl=N
                     full_df.loc[_, 'habitat'] = _d1.iloc[idx, 2]
         full_df.to_excel(join(odir, 'full_info.xlsx'),
                          index=1, index_label='protein accession')
+
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id and its annotation.')

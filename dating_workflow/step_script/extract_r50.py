@@ -1,11 +1,12 @@
-from glob import glob
-from subprocess import check_call, check_output
-import os
-from tqdm import tqdm
-from os.path import *
-from collections import defaultdict
-from Bio import SeqIO
 import multiprocessing as mp
+import os
+from collections import defaultdict
+from glob import glob
+from os.path import *
+from subprocess import check_call
+
+from Bio import SeqIO
+from tqdm import tqdm
 
 pfam_db = '/home-user/thliao/data/protein_db/bac120/Pfam.v32.sub6.hmm'
 tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
@@ -18,6 +19,8 @@ pfam_ids = [_ for _ in id_list if _.startswith('PF0')]
 tigfam_ids = [_ for _ in id_list if _.startswith('TIGR')]
 
 sing_rps = '/home-user/sswang/resource/db/singRps/sing'
+
+
 # ABOVE is the default setting for luolab server.
 
 
@@ -51,10 +54,10 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
             # check_call(cmd, shell=1)
     # print(params)
     with mp.Pool(processes=5) as tp:
-        r = list(tqdm(tp.imap(run, params),total=len(params)))
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
-def parse_grep_result(ofile,filter_evalue,get_top=False):
+def parse_grep_result(ofile, filter_evalue, get_top=False):
     # for grep against hmm scan
     gid2locus = defaultdict(list)
 
@@ -92,7 +95,7 @@ def extra_genes(odir, evalue=1e-10, mode='multiple'):
         if mode == 'multiple':
             gid2locus = parse_grep_result(outfile, filter_evalue=evalue)
         elif mode == 'top':
-            gid2locus = parse_grep_result(outfile, filter_evalue=None,get_top=True)
+            gid2locus = parse_grep_result(outfile, filter_evalue=None, get_top=True)
         # else:
         #     return
         genome2gene_id[gname].update(gid2locus)
@@ -140,12 +143,13 @@ def write_genes_multiple(outdir, genome2gene_id, protein_files):
             SeqIO.write(gene_records, f1, format='fasta-2line')
     return genome2gene_seq
 
+
 def perform_iqtree(indir):
     script = expanduser('~/bin/batch_run/batch_mafft.py')
     run(f"python3 {script} -i {indir} -o {indir}")
 
     script = expanduser('~/bin/batch_run/batch_tree.py')
-    run(f"python3 {script} -i {indir} -o {join(dirname(indir),'tree')} -ns newick -use fasttree")
+    run(f"python3 {script} -i {indir} -o {join(dirname(indir), 'tree')} -ns newick -use fasttree")
 
 
 def stats_cog(genome2genes):
@@ -158,7 +162,8 @@ def stats_cog(genome2genes):
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             gene_Ubiquity[gene] += 1
-    return gene_multi,gene_Ubiquity
+    return gene_multi, gene_Ubiquity
+
 
 def process_path(path):
     if '~' in path:
@@ -167,6 +172,7 @@ def process_path(path):
         path = './' + path
     path = abspath(path)
     return path
+
 
 if __name__ == "__main__":
     import sys
@@ -188,10 +194,10 @@ if __name__ == "__main__":
     annotate_bac120(protein_files, out_cog_dir, db_id='tigrfam')
     annotate_bac120(protein_files, out_cog_dir, db_id='pfam')
 
-    genome2genes = extra_genes(out_cog_dir,mode='multiple')
-    gene_multi,gene_Ubiquity = stats_cog(genome2genes)
+    genome2genes = extra_genes(out_cog_dir, mode='multiple')
+    gene_multi, gene_Ubiquity = stats_cog(genome2genes)
 
     genome2genes = extra_genes(out_cog_dir, mode='top')
-    genome2gene_seq = write_genes_multiple(outdir, genome2genes,protein_files)
+    genome2gene_seq = write_genes_multiple(outdir, genome2genes, protein_files)
 
     perform_iqtree(outdir)

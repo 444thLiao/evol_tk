@@ -1,26 +1,29 @@
 import os
-
-from Bio import AlignIO, SeqIO
-from glob import glob
-from os.path import join, exists, dirname,basename,expanduser,abspath
-import click
 import random
 from collections import defaultdict
+from glob import glob
+from os.path import join, exists, dirname, basename
+
+import click
 import plotly.graph_objs as go
+from Bio import AlignIO, SeqIO
 from tqdm import tqdm
+
 from dating_workflow.step_script import process_path
 
-def generate_stats_graph(stats,total,ofile):
+
+def generate_stats_graph(stats, total, ofile):
     fig = go.Figure()
     ascending_names = sorted(list(stats),
-                             key=lambda x:stats[x])
+                             key=lambda x: stats[x])
     fig.add_bar(x=list(ascending_names),
-                    y=[stats[_] for _ in ascending_names])
-                    #text=[f"{stats[_]}/{total}" for _ in ascending_names])
-    miss_0_genes = len([k for k,v in stats.items() if v ==0])
+                y=[stats[_] for _ in ascending_names])
+    # text=[f"{stats[_]}/{total}" for _ in ascending_names])
+    miss_0_genes = len([k for k, v in stats.items() if v == 0])
     fig.layout.title.text = f'stats graph of all alignment files ({total} genomes, {len(stats)} genes, {miss_0_genes} present at all genomes)'
-    fig.write_image(ofile,width=1200,height=900)
-    
+    fig.write_image(ofile, width=1200, height=900)
+
+
 def remove_identical_seqs(filename, seed=None):
     if seed is not None:
         random.seed(seed)
@@ -50,10 +53,12 @@ def remove_identical_seqs(filename, seed=None):
     with open(filename, 'w') as f1:
         SeqIO.write(new_records, f1, format='fasta-2line')
 
+
 def convert_genome_ID(genome_ID):
     # for GCA_900078535.2
     # it will return
-    return genome_ID.split('_')[-1].replace('.','v')
+    return genome_ID.split('_')[-1].replace('.', 'v')
+
 
 def convert_genome_ID_rev(genome_ID):
     # for 900078535v2
@@ -61,17 +66,18 @@ def convert_genome_ID_rev(genome_ID):
     if not genome_ID.startswith('GCA'):
         if '_' in genome_ID:
             genome_ID = genome_ID.split('_')[0]
-        return 'GCA_' + genome_ID.replace('v','.')
+        return 'GCA_' + genome_ID.replace('v', '.')
     else:
         return genome_ID
-    
+
+
 def generate_partition_file(outfile, record_pos_info):
     with open(outfile, 'w') as f1:
         for name, start, end, _ in record_pos_info:
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove_identical=False):
+def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
             if fill_gaps:
@@ -80,7 +86,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
                 total_num = len(aln_record)
             if remove_identical:
                 _total_num = len(set([str(_.seq) for _ in aln_record]))
-                num_identical = total_num-_total_num
+                num_identical = total_num - _total_num
                 print(f"found {num_identical} identical seq")
                 total_num = _total_num
             # total_num = len(aln_record)
@@ -114,7 +120,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids,fill_gaps=True,remove
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_type, graph,fill_gaps,suffix='aln'):
+def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -124,28 +130,28 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
     # from GCA become locus_tag
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
-    
+
     las_pos = 0
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
     if gene_list is not None:
         if exists(str(gene_list)):
-            gene_list = [_.strip() 
-                        for _ in open(gene_list).read().split('\n') 
-                        if _]
-            order_seqs = [_ 
-                        for _ in order_seqs
-                        if basename(_).replace(f'.{suffix}','') in gene_list]
-        elif isinstance(gene_list,str):
-            gene_list = [_.strip() 
-                        for _ in gene_list.split(',')
-                        if _]
-            order_seqs = [_ 
-                        for _ in order_seqs
-                        if basename(_).replace(f'.{suffix}','') in gene_list]
-    g2num_miss = {basename(_).replace(f'.{suffix}',''):0 for _ in order_seqs}
+            gene_list = [_.strip()
+                         for _ in open(gene_list).read().split('\n')
+                         if _]
+            order_seqs = [_
+                          for _ in order_seqs
+                          if basename(_).replace(f'.{suffix}', '') in gene_list]
+        elif isinstance(gene_list, str):
+            gene_list = [_.strip()
+                         for _ in gene_list.split(',')
+                         if _]
+            order_seqs = [_
+                          for _ in order_seqs
+                          if basename(_).replace(f'.{suffix}', '') in gene_list]
+    g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
     tqdm.write('itering all requested files ')
-    for idx, aln_file in tqdm(enumerate(order_seqs),total=len(order_seqs)):
-        aln_file_name = basename(aln_file).replace(f'.{suffix}','')
+    for idx, aln_file in tqdm(enumerate(order_seqs), total=len(order_seqs)):
+        aln_file_name = basename(aln_file).replace(f'.{suffix}', '')
         aln_record = AlignIO.read(aln_file, format='fasta')
         length_this_aln = aln_record.get_alignment_length()
         # record the partition
@@ -162,9 +168,9 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
                 gid2record[gid] += str(records[0].seq)
             else:
                 gid2record[gid] += '-' * length_this_aln
-                
-                g2num_miss[aln_file_name] +=1
-                
+
+                g2num_miss[aln_file_name] += 1
+
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
@@ -175,14 +181,13 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
         if not exists(dirname(outfile)):
             os.makedirs(dirname(outfile))
         outpartition = outfile.rpartition('.')[0] + '.partition'
-        outphy = outfile.rpartition('.')[0]  +'.phy'
+        outphy = outfile.rpartition('.')[0] + '.phy'
         ograph = join(dirname(outfile), 'aln_stats.png')
-        
+
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
             f1.write(f'>{convert_genome_ID_rev(gid)}\n')
             f1.write(f'{seq}\n')
-            
 
     if remove_identical:
         remove_identical_seqs(outfile, seed=seed)
@@ -193,7 +198,8 @@ def main(indir, outfile, genome_list, gene_list,remove_identical, seed, concat_t
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical)
     if graph:
-        generate_stats_graph(g2num_miss,total=len(gids),ofile=ograph)
+        generate_stats_graph(g2num_miss, total=len(gids), ofile=ograph)
+
 
 if __name__ == '__main__':
     main()

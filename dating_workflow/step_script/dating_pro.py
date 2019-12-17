@@ -8,25 +8,26 @@ For now, it is designed for protein alignment only.
 For better understanding the usage of this script, see usage_dating.md
 """
 
-from ete3 import Tree
-import click
-from glob import glob
 import multiprocessing as mp
-from subprocess import check_call, check_output
-import subprocess
 import os
+import subprocess
+from glob import glob
 from os.path import *
-from tqdm import tqdm
+from subprocess import check_call
+
 import click
+from tqdm import tqdm
 
 # __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/dating_pro.py'
 # template file dir
-template_dir = join(dirname(dirname(__file__)),'ctl_template')
-mcmc_ctl = join(template_dir,'mcmctree.ctl')
-codeml_ctl = join(template_dir,'codeml.ctl')
-aaRatefile = join(template_dir,'lg.dat')
+template_dir = join(dirname(dirname(__file__)), 'ctl_template')
+mcmc_ctl = join(template_dir, 'mcmctree.ctl')
+codeml_ctl = join(template_dir, 'codeml.ctl')
+aaRatefile = join(template_dir, 'lg.dat')
 
 paml_bin = "/home-user/thliao/software/paml4.9j/bin"
+
+
 def modify(file, **kwargs):
     text = open(file).read()
     text = text.split('\n')
@@ -47,17 +48,18 @@ def run(args):
     else:
         cmd, log = args
     try:
-        #subprocess.check_output(cmd, shell=1)
+        # subprocess.check_output(cmd, shell=1)
         check_call(cmd,
                    shell=1,
-                   stdout=open(log,'w'))
+                   stdout=open(log, 'w'))
 
     except subprocess.CalledProcessError as e:
-        print('error',e.output)
+        print('error', e.output)
     if log != '/dev/null':
-        t = open(log,'r',newline='\n').read().replace('\r','\n')
-        with open(log,'w') as f1:
+        t = open(log, 'r', newline='\n').read().replace('\r', '\n')
+        with open(log, 'w') as f1:
             f1.write(t)
+
 
 def get_num_phy_file(in_phyfile):
     ndata = 0
@@ -65,10 +67,11 @@ def get_num_phy_file(in_phyfile):
         row = row.strip('\n').strip().split(' ')
         row = [_ for _ in row if _]
         if all([_.isnumeric() for _ in row]):
-            ndata +=1
+            ndata += 1
     return ndata
 
-def generate_tmp(in_phyfile,in_treefile,odir,ndata,template_ctl=mcmc_ctl):
+
+def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl):
     # template_ctl_01 = './01_mcmctree.ctl'
     if not exists(odir):
         os.makedirs(odir)
@@ -93,7 +96,7 @@ def collecting_tmp(tmp_indir, odir):
         os.system(f'mv {tmp_indir}/{name}.* {odir}/{name}/')
 
 
-def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile,extra_cmd=None):
+def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None):
     if not exists(odir):
         os.makedirs(odir)
     params = []
@@ -110,7 +113,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile,extra_cmd=None):
         with open(new_file, 'w') as f1:
             f1.write(new_text)
         params.append((
-            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", new_file.replace('.modify.ctl','.log')))
+            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", new_file.replace('.modify.ctl', '.log')))
 
     if extra_cmd is not None:
         params.append(extra_cmd)
@@ -127,7 +130,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile,extra_cmd=None):
         f1.write(text)
 
 
-def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl,params_dict={}):
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -165,10 +168,11 @@ def final_mcmctree(inBV,in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ct
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run( (f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
-          ofile.replace('.ctl','.log'))  )
+    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
+         ofile.replace('.ctl', '.log')))
 
-def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl,params_dict={}):
+
+def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}):
     if not exists(odir):
         os.makedirs(odir)
     bd_paras = '1 1 0.1'
@@ -204,41 +208,43 @@ def run_nodata_prior(in_phyfile,in_treefile, odir, ndata,template_ctl=mcmc_ctl,p
     with open(ofile, 'w') as f1:
         f1.write(text)
     return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
-          ofile.replace('.ctl','.log'))
-    
-def main(in_phyfile, in_treefile, total_odir,run_tmp=True,run_prior_only=True,params_dict={}):
+            ofile.replace('.ctl', '.log'))
+
+
+def main(in_phyfile, in_treefile, total_odir, run_tmp=True, run_prior_only=True, params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
-    nodata_dir = join(total_odir,'prior')
-    mcmc_for_dir = join(total_odir,'mcmc_for')
-    tmp_odir = join(total_odir,'tmp_files')
-    
+    nodata_dir = join(total_odir, 'prior')
+    mcmc_for_dir = join(total_odir, 'mcmc_for')
+    tmp_odir = join(total_odir, 'tmp_files')
+
     prior_cmd = run_nodata_prior(in_phyfile=in_phyfile,
-                    in_treefile=in_treefile,
-                    odir=nodata_dir,
-                    ndata=ndata,
-                    params_dict=params_dict)
+                                 in_treefile=in_treefile,
+                                 odir=nodata_dir,
+                                 ndata=ndata,
+                                 params_dict=params_dict)
     if run_prior_only:
         run(prior_cmd)
         return
     if run_tmp:
-        generate_tmp(in_phyfile, 
-                    in_treefile,
-                    tmp_odir,
-                    ndata)
+        generate_tmp(in_phyfile,
+                     in_treefile,
+                     tmp_odir,
+                     ndata)
         collecting_tmp(tmp_odir,
-                    tmp_odir)
-        
+                       tmp_odir)
+
         run_each_tmp(tmp_odir,
-                    mcmc_for_dir,
-                    extra_cmd = prior_cmd)
-    final_mcmctree(inBV=join(mcmc_for_dir,'in.BV'),
-                    in_phyfile=in_phyfile,
-                    in_treefile=in_treefile,
-                    odir=mcmc_for_dir,
-                    ndata=ndata,
-                    params_dict=params_dict)
+                     mcmc_for_dir,
+                     extra_cmd=prior_cmd)
+    final_mcmctree(inBV=join(mcmc_for_dir, 'in.BV'),
+                   in_phyfile=in_phyfile,
+                   in_treefile=in_treefile,
+                   odir=mcmc_for_dir,
+                   ndata=ndata,
+                   params_dict=params_dict)
+
 
 def process_path(path):
     if not '/' in path:
@@ -248,17 +254,17 @@ def process_path(path):
 
 
 @click.command()
-@click.option('-i','--in_phy','in_phyfile')
-@click.option('-it','--in_tree','in_treefile')
-@click.option('-o','odir')
-@click.option('-no_tmp','run_tmp',is_flag=True, default=True)
-@click.option('-only_prior','only_prior',is_flag=True, default=False)
-@click.option('-sf','sampfreq',default='2')
-def cli(in_phyfile, in_treefile, odir,run_tmp,only_prior,sampfreq):
+@click.option('-i', '--in_phy', 'in_phyfile')
+@click.option('-it', '--in_tree', 'in_treefile')
+@click.option('-o', 'odir')
+@click.option('-no_tmp', 'run_tmp', is_flag=True, default=True)
+@click.option('-only_prior', 'only_prior', is_flag=True, default=False)
+@click.option('-sf', 'sampfreq', default='2')
+def cli(in_phyfile, in_treefile, odir, run_tmp, only_prior, sampfreq):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
-    params_dict = {'sampfreq':str(sampfreq)}
-    main(in_phyfile, in_treefile, total_odir=odir,run_tmp=run_tmp,run_prior_only=only_prior,params_dict=params_dict)
+    params_dict = {'sampfreq': str(sampfreq)}
+    main(in_phyfile, in_treefile, total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
 
 
 if __name__ == "__main__":
