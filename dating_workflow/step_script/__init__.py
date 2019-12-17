@@ -34,7 +34,7 @@ def _parse_blastp(ofile,match_ids=[],filter_evalue=1e-3,top_hit = False):
     gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
-def _parse_hmmscan(ofile,filter_evalue=1e-20,top_hit = False):
+def _parse_hmmscan(ofile,filter_evalue=1e-20,top_hit = False,gene_pos=0):
     gid2locus = defaultdict(list)
 
     for row in open(ofile, 'r'):
@@ -43,7 +43,7 @@ def _parse_hmmscan(ofile,filter_evalue=1e-20,top_hit = False):
         r = row.split(' ')
         r = [_ for _ in r if _]
 
-        gene_id = r[0]
+        gene_id = r[gene_pos]
         locus_tag = r[2]
         evalue = float(r[4])
         if filter_evalue and evalue > filter_evalue:

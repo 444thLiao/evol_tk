@@ -71,7 +71,8 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
         gname = basename(ofile).replace('.out', '')
         locus_dict = _parse_hmmscan(ofile=ofile,
                                     top_hit=top_hit,
-                                    filter_evalue=evalue)
+                                    filter_evalue=evalue,
+                                    gene_pos=1)
         genome2annotate[gname].update(locus_dict)
     return genome2annotate
 
