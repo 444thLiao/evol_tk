@@ -1,3 +1,6 @@
+"""
+For summarizing results output by batch_hmm(some script for annotating genes.)
+"""
 from tqdm import tqdm
 from glob import glob
 from collections import defaultdict
@@ -82,7 +85,7 @@ def main(indir, odir, suffix, evalue, transpose, prefix):
 
     final_df = pd.DataFrame.from_dict(post_filtered, orient='index')
     bin_df = final_df.applymap(lambda x: 1 if pd.isna(x) else 0)
-    num_df = final_df.applymap(lambda x: len(x.split(',')) if pd.isna(x) else 0)
+    num_df = final_df.applymap(lambda x: len(str(x).split(',')) if pd.isna(x) else 0)
     if transpose:
         final_df = final_df.T
         bin_df = bin_df.T
