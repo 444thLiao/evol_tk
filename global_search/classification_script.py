@@ -116,7 +116,7 @@ if __name__ == "__main__":
         f1.write(text)
         
     # outgroup
-    id2habitat.update({"GCA_000019965.1":'non-marine',
+    id2habitat.update({"GCA_000019665.1":'non-marine',
                        "GCA_000020225.1":'non-marine',
                        "GCA_000172155.1":'non-marine',
                        "GCA_001318295.1":'non-marine',

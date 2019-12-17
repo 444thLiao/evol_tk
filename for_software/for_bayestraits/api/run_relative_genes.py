@@ -12,9 +12,9 @@ independent_params = '/home-user/thliao/data/plancto/bayesTraits_genes_test/inde
 exe_path = "/home-user/thliao/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3"
 
 gene_presence_tab = "./protein_annotations/kegg_diamond.crosstab"
-basic_habitat_txt = "./bayesTraits_test/m2nm.txt"
-intree = "./bayesTraits_test/test.trees"
-odir = './bayesTraits_genes_test'
+basic_habitat_txt = "./bayestraits_habitat/over20p_bac120_fasttree/metadata.txt"
+intree = "./bayestraits_habitat/over20p_bac120_fasttree/over20p_bac120.formatted.newick"
+odir = './bayestraits_habitat/over20p_bac120_fasttree/gene_test'
 
 # read habitat metadata
 habitat_text = open(basic_habitat_txt).read()
@@ -31,6 +31,7 @@ habitat_mapping_dict = {"M":'1',
 tqdm.write("Iterating genes to generating metadata.txt for each gene")
 for ko in tqdm(genes_df.columns):
     gid2gene = genes_df.loc[:,ko].to_dict()
+    gid2gene = {k:1 if _ is not None else 0 for k,_ in gid2gene.items()}
     g_dir = join(odir,'each_gene',ko.split(':')[-1])
     if not exists(g_dir):
         os.makedirs(g_dir)
@@ -56,4 +57,3 @@ for ko in tqdm(genes_df.columns):
 
 with mp.Pool(processes=50) as tp:
     r = list(tqdm(tp.imap(run,cmds),total=len(cmds)))     
-        
