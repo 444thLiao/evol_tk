@@ -182,10 +182,11 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     gids = []
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
-
+    tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
     annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
     annotate_bac120(protein_files, in_annotations, db_id='pfam')
 
+    tqdm.write("Parsing the annotation results...")
     genome2genes = parse_annotation(in_annotations, top_hit=False)
     gene_multi, gene_Ubiquity, gene2genome_num = stats_cog(genome2genes)
 

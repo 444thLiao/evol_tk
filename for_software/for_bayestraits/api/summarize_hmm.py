@@ -82,7 +82,8 @@ def main(indir, odir, suffix, evalue, transpose, prefix):
         ofile_info = join(odir, "merged_hmm_info.tab")
         ofile_binary = join(odir, "merged_hmm_binary.tab")
         ofile_num = join(odir, "merged_hmm_num.tab")
-
+    tqdm.write("Complete filterations...")
+    tqdm.write("It need iterating df three times to convert it into three kinds of df. Be patient...")
     final_df = pd.DataFrame.from_dict(post_filtered, orient='index')
     bin_df = final_df.applymap(lambda x: 0 if pd.isna(x) else 1)
     num_df = final_df.applymap(lambda x: 0 if pd.isna(x) else len(str(x).split(',')))

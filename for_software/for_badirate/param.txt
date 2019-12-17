@@ -1,2 +1,7 @@
 BDI-FR-CWP
-–rmodel BDI -bmodel FR -ep CWP
+
+
+~/software/badirate/BadiRate.pl -treefile ./pruned_tree.newick -sizefile ./hmm_all.tsv –bmodel FR –ep CWP –family
+
+
+
