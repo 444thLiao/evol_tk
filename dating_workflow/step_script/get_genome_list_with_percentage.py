@@ -48,7 +48,7 @@ def cli(indir,ofile,suffix,num_percentage,num_genes,num_total_genes):
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
     with open(ofile,'w') as f1:
-        f1.write('\n'.join(genes))
+        f1.write('\n'.join(list(genomes)))
     
 if __name__ == "__main__":
     cli()
