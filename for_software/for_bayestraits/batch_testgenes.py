@@ -9,6 +9,7 @@ from subprocess import check_call
 import multiprocessing as mp
 from glob import glob
 from api_tools.itol_func import to_binary_shape
+from collections import defaultdict
 
 gene_presence_tab = "./protein_annotations/kegg_hmm_merged_info_e20.tab"
 basic_habitat_txt = "./habitat_txt/habitat_general_cat.txt"
@@ -17,6 +18,8 @@ odir = './bayestraits_habitat/over20p_bac120/gene_test_hmm'
 habitat_mapping_dict = {"M":'1',
                         "N":'0',
                         "NM":'-'}
+
+
 def run(cmd):
     check_call(cmd,shell=1,
                stdout=open("/dev/null",'w'))
@@ -26,7 +29,7 @@ all_gids = [_.split('\t')[0] for _ in habitat_text.split('\n')]
 
 
 gid2habitat = dict([_.split('\t') for _ in habitat_text.split('\n') if _])
-genes_df = pd.read_csv(gene_presence_tab,sep='\t',index_col=0)
+genes_df = pd.read_csv(gene_presence_tab,sep='\t',index_col=0,low_memory=False)
 
 
 for ko in tqdm(genes_df.columns):
@@ -113,10 +116,7 @@ corrected_ko2p = dict(zip([k for k,_ in collect_ko2lr.items()],
 significant_ko = [k for k,v in corrected_ko2p.items() if v<=0.05]
 with open(join(odir,'significant_ko.list'),'w') as f1:
     f1.write('\n'.join(significant_ko))
-kegg_info_tab = '/home-user/thliao/data/protein_db/kegg/ko_info.tab'
-rows = [row.strip('\n') for row in open(kegg_info_tab) if row.split('\t')[0] in set(significant_ko)]
-with open(join(odir,'significant_ko_info.tab'),'w') as f1:
-    f1.write('\n'.join(rows))
+
 
 subset_ko2D_rate = {ko:v for ko,v in ko2D_rate.items() if ko in significant_ko}
 subset_df = pd.DataFrame.from_dict(subset_ko2D_rate,orient='index')
@@ -163,7 +163,26 @@ set_fe_ko = set({k:v for k,v in fe_corrected_ko2p.items() if v<=0.05})
 set_bst_ko = set(significant_ko)
 intersect_ko = set_fe_ko.intersection(set_bst_ko)
 
+# classified and annotated with info
+from bin.transform.classify_kos import get_br_info,ko_classified_br,get_ko_infos
+import pandas as pd
+br2kos = ko_classified_br(intersect_ko)
+ko2info = get_ko_infos(intersect_ko)
+collect_df = []
 
+for _subbr,k in tqdm(br2kos.items()):
+    _subbr = {_subbr:k}
+    ko2brinfo = get_br_info(_subbr)
+    
+    ko2allinfo = {ko:{'def':info} for ko,info in ko2info.items() if ko in k}
+    for ko,brinfo in ko2brinfo.items():
+        ko2allinfo[ko].update(brinfo)
+    sub_df = pd.DataFrame.from_dict(ko2allinfo,orient='index')
+    collect_df.append(sub_df)
+    
+tmp_df = pd.concat(collect_df,axis=0)
+tmp_df = tmp_df.sort_values(['top','A','B','C','D'])
+tmp_df.to_csv(join(odir,'significant_ko_info.tab'),sep='\t',index=1,index_label='K number')
 # write out binary for visualization
 t = sorted([(ko2odd_ratio[ko],ko) for ko in intersect_ko])[-30:]
 t = [_[1] for _ in t]
