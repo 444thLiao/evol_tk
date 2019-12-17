@@ -2,10 +2,11 @@ from tqdm import tqdm
 from glob import glob
 from collections import defaultdict
 import pandas as pd
-from dating_workflow.step_script import convert_genome_ID_rev,process_path
+from dating_workflow.step_script import convert_genome_ID_rev, process_path
 import click
-from os.path import join,exists
+from os.path import join, exists
 import os
+
 
 def retrieve_info(indir, suffix):
     suffix = suffix.strip('.')
@@ -31,8 +32,8 @@ def retrieve_info(indir, suffix):
 def filtration_part(gid2locus2ko, evalue=1e-50):
     # filter out with hard threshold of evalue
     post_filtered = {k: [(_[1], _[0], _[2])
-                            for _ in v if _[2] <= evalue]
-                        for k, v in tqdm(gid2locus2ko.items())}
+                         for _ in v if _[2] <= evalue]
+                     for k, v in tqdm(gid2locus2ko.items())}
     # select minimum evalue among all matched KO for each locus
     # TODO: it may be corrected at following version
     # it could considerate the position overlapping situations
@@ -51,34 +52,33 @@ def filtration_part(gid2locus2ko, evalue=1e-50):
         post_filtered[gid][ko].append(locus)
 
     post_filtered = {g: {ko: ','.join(v) for ko, v in d.items()}
-                        for g, d in post_filtered.items()}
+                     for g, d in post_filtered.items()}
     return post_filtered
 
 
-
 @click.command()
-@click.option("-i", "indir", )
-@click.option("-o", "odir", )
-@click.option("-s", 'suffix',default='tab')
-@click.option("-p", 'prefix',default=None,help='prefix of output file, just the file name, it does not need to include dir name. ')
-@click.option("-e", "evalue",default=1e-20)
-@click.option("-t", "transpose",default=False,is_flag=True)
-def main(indir, odir,suffix, evalue, transpose,prefix):
+@click.option("-i", "indir", help="input directory.")
+@click.option("-o", "odir", help="output directory. If it doesn't exist, it will auto created.")
+@click.option("-s", 'suffix', default='tab')
+@click.option("-p", 'prefix', default=None, help='prefix of output file, just the file name, it does not need to include dir name. ')
+@click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
+@click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
+def main(indir, odir, suffix, evalue, transpose, prefix):
     indir = process_path(indir)
     odir = process_path(odir)
     gid2locus2ko = retrieve_info(indir, suffix)
-    post_filtered = filtration_part(gid2locus2ko,evalue)
+    post_filtered = filtration_part(gid2locus2ko, evalue)
     if not exists(odir):
         os.makedirs(odir)
 
     if prefix is not None:
-        ofile_info = join(odir,f"{prefix}_info.tab")
-        ofile_binary = join(odir,f"{prefix}_binary.tab")
-        ofile_num = join(odir,f"{prefix}_num.tab")
+        ofile_info = join(odir, f"{prefix}_info.tab")
+        ofile_binary = join(odir, f"{prefix}_binary.tab")
+        ofile_num = join(odir, f"{prefix}_num.tab")
     else:
-        ofile_info = join(odir,"merged_hmm_info.tab")
-        ofile_binary = join(odir,"merged_hmm_binary.tab")
-        ofile_num = join(odir,"merged_hmm_num.tab")
+        ofile_info = join(odir, "merged_hmm_info.tab")
+        ofile_binary = join(odir, "merged_hmm_binary.tab")
+        ofile_num = join(odir, "merged_hmm_num.tab")
 
     final_df = pd.DataFrame.from_dict(post_filtered, orient='index')
     bin_df = final_df.applymap(lambda x: 1 if pd.isna(x) else 0)
@@ -87,9 +87,9 @@ def main(indir, odir,suffix, evalue, transpose,prefix):
         final_df = final_df.T
         bin_df = bin_df.T
         num_df = num_df.T
-    final_df.to_csv(ofile_info,sep='\t',index=1)
-    bin_df.to_csv(ofile_binary,sep='\t',index=1)
-    num_df.to_csv(ofile_num,sep='\t',index=1)
+    final_df.to_csv(ofile_info, sep='\t', index=1)
+    bin_df.to_csv(ofile_binary, sep='\t', index=1)
+    num_df.to_csv(ofile_num, sep='\t', index=1)
 
 
 if __name__ == "__main__":
