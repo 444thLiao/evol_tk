@@ -4,10 +4,10 @@ from os.path import join,expanduser
 from api_tools.itol_func import *
 
 fpath = expanduser("~/script/evolution_relative/api_tools/metadata_for/keyword.csv")
-column_used=1
-keyword_mapping =  dict([(row.split('\t')[0],row.strip('\n').split('\t')[column_used])
-                         for row in open(fpath).readlines() 
-                         if row])
+
+
+kw_df =  pd.read_csv(fpath,sep='\t',index_col=0)
+kw_df.to_dict(orient='index')
 
 def _classificated(ori_df):
     kw1='classification(auto)'
