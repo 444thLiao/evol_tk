@@ -29,6 +29,7 @@ bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 @click.option('-i', 'intree')
 @click.option('-im', 'inmetadata')
 @click.option('-o', 'odir')
+@click.option('-color', 'color_dict')
 def main(intree, inmetadata, odir):
     if not exists(odir):
         os.makedirs(odir)
@@ -43,16 +44,22 @@ def main(intree, inmetadata, odir):
         f1.write(new_tree_text)
 
     # check metadata
-    m_text = [_.strip('\n')
-              for _ in open(inmetadata)
-              if _.split('\t')[0] in all_gids]
+    states_collect = []
+    m_text = []
+    for row in open(inmetadata):
+        if _.split('\t')[0] in all_gids:
+            m_text.append(_.strip('\n'))
+            states_collect+=list(_.strip('\n').split('\t')[1])
+    states = set(states_collect)
+    random_states = ''.join(list(states)[:2])
     with open(metadata_pre_file, 'w') as f1:
         f1.write('\n'.join(m_text))
 
     # run
     complex_model = ["1", "2", "PriorAll exp 10", "Stones 100 1000"]
     simple_model = ["1", "2", "PriorAll exp 10",
-                    "Restrict qNM qMN", "Stones 100 1000"]
+                    f"RestrictAll q{random_states}", 
+                    "Stones 100 1000"]
     tags_list = get_tags(intree)
 
     os.makedirs(join(odir, 'complex_m'), exist_ok=True)

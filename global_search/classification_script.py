@@ -1,7 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
 from os.path import join
-from api_tools.itol_func import *
+
 # classifiy_word_table = {'MAGs':['metageno'],
                         
 #                         }
@@ -84,11 +84,12 @@ def diff_marine_non_marine(ori_df):
     return ori_df
 
 if __name__ == "__main__":
-    metadata = './rawdata/biometadata_952.xlsx'
-    metadata_df = pd.read_excel(metadata,index_col=None)
-    new_df = diff_marine_non_marine(metadata_df)
+    from api_tools.itol_func import *
+    from ete3 import Tree
+    metadata = './rawdata/plancto_final_habitat.xlsx'
+    new_df = pd.read_excel(metadata)
     id2habitat = dict(zip(new_df.iloc[:,1] ,
-                        new_df.loc[:,'habitat(auto,diff marine/non-marine)']
+                        new_df.loc[:,'habitat (marine-non-marine)']
                         )
                     )
 
@@ -96,22 +97,11 @@ if __name__ == "__main__":
 
     all_habitats = list(set([v[0] for k,v in id2habitats.items() ]))
     all_text = to_binary_shape(id2habitats,
-                    {_:{'color':'#000000'} if _=='non-marine' else {'color':'#0011FF'} for _ in all_habitats},
+                    {_:{'color':'#D68529'} if _=='non-marine' else {'color':'#0011FF'} for _ in all_habitats},
                     info_name='habitat',
                     omitted_other=True)
     with open(join('./itol_txt','general_habitat.txt'),'w') as f1:
         f1.write(all_text)
-        
-
-    text = to_color_Clade(id2habitat,
-                    {_:'#D68529'
-                        if _=='non-marine' 
-                        else '#0011FF' 
-                        for _ in all_habitats},
-                    tree='./trees/iqtree/over20p_bac120.formatted.newick',
-                    dataset_name='habitat annotated')
-    with open(join('./itol_txt','general_habitat_branch_color.txt'),'w') as f1:
-        f1.write(text)
         
     # outgroup
     id2habitat.update({"GCA_000019665.1":'non-marine',
@@ -121,7 +111,7 @@ if __name__ == "__main__":
                        "GCA_001613545.1":'non-marine',
                        "GCA_900097105.1":'non-marine',
                        "GCA_001746835.1":'non-marine'})
-    from ete3 import Tree
+
     rows = []
     tree = Tree('../trees/iqtree/over20p_bac120.formatted.newick',format=3)
     for l in tree.get_leaves():

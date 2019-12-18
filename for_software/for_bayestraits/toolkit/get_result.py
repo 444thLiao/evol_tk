@@ -35,7 +35,7 @@ def get_df(infile, key='Iteration'):
     return result_df
 
 
-def get_result(infile):
+def get_result(infile,cat2info={}):
     result_df = get_df(infile)
 
     mean_vals = result_df.mean()

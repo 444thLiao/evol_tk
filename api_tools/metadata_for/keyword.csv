@@ -1,41 +1,42 @@
 kw	set1	set2	set3
-marine	marine	aquatic	""
-ocean	marine	aquatic	""
-lagoon	marine	aquatic	""
-brackish	marine	aquatic	""
-wastewater	marine	aquatic	""
-waste water	marine	aquatic	""
-activated sludge	marine	aquatic	""
-soda lake	marine	aquatic	""
-gulf of maine	marine	aquatic	""
-sargasso sea	marine	aquatic	""
-seawater	marine	aquatic	""
-soil	non-marine	others	""
-terrestrial	non-marine	others	""
-wetland	non-marine	others	""
-groundwater	non-marine	aquatic	""
-bioreactor	non-marine	others	""
-sludge	non-marine	others	""
-freshwater	non-marine	aquatic	""
-fresh water	non-marine	aquatic	""
-subsurface	non-marine	others	""
-biofilter	non-marine	others	""
-sand filter	non-marine	others	""
-feces	non-marine	others	"host-associated"
-gut	non-marine	others	"host-associated"
-stool	non-marine	others	"host-associated"
-caecum	non-marine	others	"host-associated"
-fecal	non-marine	others	"host-associated"
-intestine	non-marine	others	"host-associated"
-treatment plant	non-marine	others	""
-digester	non-marine	others	""
-spring	non-marine	aquatic	""
-geothermal	non-marine	others	""
--associated	non-marine	others	"host-associated"
-Human Microbiome Project	non-marine	others	"host-associated"
-mouse	non-marine	others	"host-associated"
-mice	non-marine	others	"host-associated"
-rumen	non-marine	others	"host-associated"
-seabass	marine	aquatic	"host-associated"
-biofilm	non-marine	others	""
-mud	non-marine	others	""
+marine	marine	aquatic	
+ocean	marine	aquatic	
+lagoon	marine	aquatic	
+brackish	marine	aquatic	
+wastewater	marine	aquatic	
+waste water	marine	aquatic	
+activated sludge	marine	aquatic	
+soda lake	marine	aquatic	
+gulf of maine	marine	aquatic	
+sargasso sea	marine	aquatic	
+seawater	marine	aquatic	
+soil	non-marine	others	
+terrestrial	non-marine	others	
+wetland	non-marine	others	
+groundwater	non-marine	aquatic	
+bioreactor	non-marine	others	
+sludge	non-marine	others	
+freshwater	non-marine	aquatic	
+fresh water	non-marine	aquatic	
+subsurface	non-marine	others	
+biofilter	non-marine	others	
+sand filter	non-marine	others	
+feces	non-marine	others	host-associated
+gut	non-marine	others	host-associated
+stool	non-marine	others	host-associated
+caecum	non-marine	others	host-associated
+fecal	non-marine	others	host-associated
+intestine	non-marine	others	host-associated
+treatment plant	non-marine	others	
+digester	non-marine	others	
+spring	non-marine	aquatic	
+geothermal	non-marine	others	
+-associated	non-marine	others	host-associated
+Human Microbiome Project	non-marine	others	host-associated
+mouse	non-marine	others	host-associated
+mice	non-marine	others	host-associated
+rumen	non-marine	others	host-associated
+seabass	marine	aquatic	host-associated
+biofilm	non-marine	others	
+mud	non-marine	others	
+forest	non-marine	others	""

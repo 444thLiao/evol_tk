@@ -26,19 +26,23 @@ for row in rows[fsize_idx + 2:]:
 
 def tree2tab(t):
     n2v = {}
-    for n in Tree(t).traverse():
+    for n in Tree(t,format=1).traverse():
         if not n.name:
             leaf_names = [_.rpartition('_')[0] for _ in n.get_leaf_names()]
             n.name = whole_tree.get_common_ancestor(leaf_names).name
         if '_' in n.name:
-            n.name = n.name.rpartition('_')[0]
-        n2v[n.name] = n.dist
+            n.name,_,num_g = n.name.rpartition('_')
+        else:
+            num_g = int(n.name)
+            leaf_names = [_.rpartition('_')[0] for _ in n.get_leaf_names()]
+            n.name = whole_tree.get_common_ancestor(leaf_names).name
+        n2v[n.name] = int(num_g)
     return n2v
 
 
 # transforming into the collected
 gene2n2v = {}
-for gene, text_tree in gene2tree.items():
+for gene, text_tree in tqdm(gene2tree.items()):
     if gene != 'Total Ancestral Size':
         n2v = tree2tab(text_tree)
         gene2n2v[gene] = n2v
