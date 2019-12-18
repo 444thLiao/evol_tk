@@ -4,35 +4,30 @@ from os.path import join,expanduser
 from api_tools.itol_func import *
 
 fpath = expanduser("~/script/evolution_relative/api_tools/metadata_for/keyword.csv")
-keyword_mapping =  dict([row.strip('\n').splti('\t') for row in open(fpath).readlines() if row])
+keyword_mapping =  dict([row.strip('\n').split('\t') for row in open(fpath).readlines() if row])
 
 def _classificated(ori_df):
-    # kw1='classification(auto)'
+    kw1='classification(auto)'
     kw2='habitat(auto)'
     kw3='collected keyword(auto)'
-    ori_df.loc[:,kw3] = ''
-    ori_df.loc[:,kw2] = ''
 
     for _,row in tqdm(ori_df.iterrows(),total=ori_df.shape[0]):
         row_text = ' ; '.join(map(str,row.values)).lower()
         _cache3 = set()
         _cache2 = set()
         for kw in keyword_mapping:
+            kw = kw.lower()
             if kw in row_text:
                 _cache3.add(kw)
                 _cache2.add(keyword_mapping[kw])
-            ori_df.loc[_,'kw2'] = ';'.join(sorted(_cache2))
-            ori_df.loc[_,'kw3'] = ';'.join(sorted(_cache3))
-        # if 'metageno' in row_text:
-        #     ori_df.loc[_,kw1] = 'MAGs'
-        # if 'single cell' in row_text:
-        #     ori_df.loc[_,kw1] = 'SAGs'
+            ori_df.loc[_,kw2] = ';'.join(sorted(_cache2))
+            ori_df.loc[_,kw3] = ';'.join(sorted(_cache3))
+        if 'metageno' in row_text:
+            ori_df.loc[_,kw1] = 'MAGs'
+        if 'single cell' in row_text:
+            ori_df.loc[_,kw1] = 'SAGs'
         if 'Whole genome' in row_text or 'type strain' in row_text:
             ori_df.loc[_,kw1] = 'isolate'
-
-        # if not pd.isna(row['attribute:host']) and str(row['attribute:host']) != 'not applicable':
-        #     ori_df.loc[_,'habitat'] = 'host associated'
-        
     return ori_df
     
 def diff_marine_non_marine(ori_df):
