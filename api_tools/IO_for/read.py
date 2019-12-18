@@ -1,6 +1,16 @@
 from collections import defaultdict
 from os.path import *
+import pandas as pd
 
+def read_table(infile,**kwargs):
+    if not exists(infile):
+        exit(f"{infile} doesn't exist")
+    if infile.endswith('xlsx') or infile.endswith('xls'):
+        df = pd.read_excel(infile,**kwargs)
+    else:
+        df = pd.read_csv(infile,**kwargs)
+    return df
+    
 def _get_tophit(gid2locus,top_hit):
                 
     if top_hit:
