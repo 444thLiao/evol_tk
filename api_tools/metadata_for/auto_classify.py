@@ -4,7 +4,10 @@ from os.path import join,expanduser
 from api_tools.itol_func import *
 
 fpath = expanduser("~/script/evolution_relative/api_tools/metadata_for/keyword.csv")
-keyword_mapping =  dict([row.strip('\n').split('\t') for row in open(fpath).readlines() if row])
+column_used=1
+keyword_mapping =  dict([(row.split('\t')[0],row.strip('\n').split('\t')[column_used])
+                         for row in open(fpath).readlines() 
+                         if row])
 
 def _classificated(ori_df):
     kw1='classification(auto)'
@@ -16,8 +19,8 @@ def _classificated(ori_df):
         _cache3 = set()
         _cache2 = set()
         for kw in keyword_mapping:
-            kw = kw.lower()
-            if kw in row_text:
+            l_kw = kw.lower()
+            if l_kw in row_text:
                 _cache3.add(kw)
                 _cache2.add(keyword_mapping[kw])
             ori_df.loc[_,kw2] = ';'.join(sorted(_cache2))
@@ -29,34 +32,4 @@ def _classificated(ori_df):
         if 'Whole genome' in row_text or 'type strain' in row_text:
             ori_df.loc[_,kw1] = 'isolate'
     return ori_df
-    
-def diff_marine_non_marine(ori_df):
-    ori_df = ori_df.copy()
-    kw2='habitat(auto,diff marine/non-marine)'
-    ori_df.loc[:,kw2] = ''
 
-    for _,row in tqdm(ori_df.iterrows(),
-                      total=ori_df.shape[0]):
-        row = row[[_ for _ in row.index if not '(auto)' in _]]
-        row_text = ';'.join(map(str,row.values)).lower()
-        if ('marine' in row_text and 'non-marine' not in row_text) or 'ocean' in row_text :
-            ori_df.loc[_,kw2] = 'marine'
-        elif 'soda lake' in row_text:
-            ori_df.loc[_,kw2] = 'marine'
-        elif 'lagoon' in row_text or 'brackish' in row_text:
-            ori_df.loc[_,kw2] = 'marine'
-        elif ('bioreactor' in row_text and 'sludge' in row_text) or 'wastewater' in row_text or 'activated sludge' in row_text:
-            ori_df.loc[_,kw2] = 'marine'
-        elif pd.isna(ori_df.loc[_,['habitat(auto)']]).all():
-            ori_df.loc[_,kw2] = 'unknown'
-        # elif str(ori_df.loc[_,'habitat'])=='marine':
-        #     ori_df.loc[_,kw2] = 'marine'
-        # elif str(ori_df.loc[_,'habitat'])=='non-marine':
-        #     ori_df.loc[_,kw2] = 'non-marine'
-        else:
-            ori_df.loc[_,kw2] = 'non-marine'
-        list_c = list(ori_df.columns)
-        list_c = list_c[:-2]
-        list_c.insert(12,kw2)
-        #ori_df = ori_df.reindex(columns=list_c)
-    return ori_df
