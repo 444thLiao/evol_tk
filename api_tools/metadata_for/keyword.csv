@@ -1,0 +1,26 @@
+soil	non-marine
+terrestrial	non-marine
+wetland	non-marine
+marine	marine
+ocean	marine
+lagoon	marine
+brackish	marine
+groundwater	non-marine
+bioreactor	non-marine
+sludge	non-marine
+wastewater	marine
+waste water	marine
+activated sludge	marine
+freshwater	non-marine
+fresh water	non-marine
+soda lake	marine
+subsurface	non-marine
+biofilter	non-marine
+sand filter	non-marine
+feces	non-marine
+gut	non-marine
+Gulf of Maine	marine
+stool	non-marine
+caecum	non-marine
+fecal	non-marine
+intestine	non-marine
