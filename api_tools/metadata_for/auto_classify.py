@@ -12,7 +12,7 @@ keyword_mapping =  dict([(row.split('\t')[0],row.strip('\n').split('\t')[column_
 def _classificated(ori_df):
     kw1='classification(auto)'
     kw2='habitat(auto)'
-    kw3='collected keyword(auto)'
+    kw3='matched keyword(auto)'
 
     for _,row in tqdm(ori_df.iterrows(),total=ori_df.shape[0]):
         row_text = ' ; '.join(map(str,row.values)).lower()
