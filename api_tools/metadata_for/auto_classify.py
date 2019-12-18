@@ -7,7 +7,7 @@ fpath = expanduser("~/script/evolution_relative/api_tools/metadata_for/keyword.c
 
 
 kw_df =  pd.read_csv(fpath,sep='\t',index_col=0)
-kw_df.to_dict(orient='index')
+kw_dict = kw_df.to_dict(orient='index')
 
 def _classificated(ori_df):
     kw1='classification(auto)'
