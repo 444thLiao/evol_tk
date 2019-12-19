@@ -57,7 +57,7 @@ def get_br_info(br, kos=None):
         hier_infos = kegg.http_get(f"get/{new_br}", frmt="txt").split('\n')
         br_name = hier_infos[0].split('\t')[-1]
         if '+' in br_name:
-            br_name = suppl_dict[br]
+            br_name = suppl_dict.get(br,'MISSING')
         if isinstance(kos, list):
             iter_ko = kos
         elif isinstance(kos, dict):
