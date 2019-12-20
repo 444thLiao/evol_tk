@@ -35,7 +35,8 @@ def get_df(infile, key='Iteration'):
     return result_df
 
 
-def get_result(infile,cat2info={}):
+def get_result(infile, cat2info={"M": '#0000ff',
+                                 "N": '#D68529'}):
     result_df = get_df(infile)
 
     mean_vals = result_df.mean()
@@ -53,8 +54,8 @@ def get_result(infile,cat2info={}):
             cat = key.split('(')[-1].strip(')')
             n2cat2prob[node_name][cat] = v
 
-    cat2info = {"M": '#0000ff',
-                "N": '#D68529'}
+    # cat2info = {"M": '#0000ff',
+    #             "N": '#D68529'}
 
     text = pie_chart(n2cat2prob, cat2info, )
 

@@ -29,8 +29,8 @@ bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 @click.option('-i', 'intree')
 @click.option('-im', 'inmetadata')
 @click.option('-o', 'odir')
-@click.option('-color', 'color_dict')
-def main(intree, inmetadata, odir):
+@click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529")
+def main(intree, inmetadata, odir,color_dict):
     if not exists(odir):
         os.makedirs(odir)
     tree_prepared_file = join(odir, basename(intree))
@@ -81,8 +81,11 @@ def main(intree, inmetadata, odir):
     print("start to run cmd")
     check_call(cmd1 + ' >/dev/null', shell=True)
     check_call(cmd2 + ' >/dev/null', shell=True)
-
-    text = get_result(join(odir, 'complex_m', 'bst_complex.Log.txt'))
+    if isinstance(color_dict,str):
+        cat2color = color_dict.split(';')
+        cat2color = {_.split(':')[0]:_.split(':')[1] for _ in color_dict if _}
+    text = get_result(join(odir, 'complex_m', 'bst_complex.Log.txt'),
+                      cat2info=cat2color)
 
     with open(join(odir, 'complex_habitat_prob.itol.txt'), 'w') as f1:
         f1.write(text)
