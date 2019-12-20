@@ -38,7 +38,7 @@ def retrieve_info(indir):
     files_list = glob(join(indir, '*', f'*.tsv'))
     if not files_list:
         exit(
-            f"no files could be found with input {join(indir,'*', f'*.tsv')},please check the parameters. ")
+            f"no files could be found with input {join(indir, '*', f'*.tsv')},please check the parameters. ")
     tqdm.write("reading all annotated result")
     for hf in tqdm(files_list):
         for row in open(hf):
@@ -76,7 +76,6 @@ def _sub_filter(post_filtered, show_progress=True):
 
 
 def filtration_part(gid2locus2ko, exists_db, evalue=1e-50):
-
     # filter out with hard threshold of evalue
     tqdm.write(f"filter with evalue {evalue}")
     post_filtered = {k: [(gene_id, db, sig_id, interpro_id, _evalue)
@@ -147,7 +146,7 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
 @click.option("-o", "odir", help="output directory. If it doesn't exist, it will auto created.")
 @click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
 @click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
-def main(indir, odir, suffix, evalue, transpose):
+def main(indir, odir, evalue, transpose):
     indir = process_path(indir)
     odir = process_path(odir)
     gid2locus2ko, exists_db = retrieve_info(indir)
