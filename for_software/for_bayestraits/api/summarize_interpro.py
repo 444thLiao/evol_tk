@@ -87,7 +87,7 @@ def filtration_part(gid2locus2ko, exists_db, evalue=1e-50):
     sep_db = {_db: {k: [(gene_id, db, sig_id, interpro_id, _evalue)
                         for (gene_id, db, sig_id, interpro_id, _evalue, Status) in v
                         if db == _db]
-                    for k, v in gid2locus2ko.items()}
+                    for k, v in post_filtered.items()}
               for _db in tqdm(exists_db)}
 
     # select minimum evalue among all matched KO for each locus
