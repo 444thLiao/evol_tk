@@ -78,13 +78,13 @@ def _sub_filter(post_filtered, show_progress=True):
 def filtration_part(gid2locus2ko, exists_db, evalue=1e-50):
     # filter out with hard threshold of evalue
     tqdm.write(f"filter with evalue {evalue}")
-    post_filtered = {k: [(gene_id, db, sig_id, interpro_id, _evalue, Status)
+    post_filtered = {k: [(gene_id, db, sig_id, interpro_id, _evalue)
                          for (gene_id, db, sig_id, interpro_id, _evalue, Status) in v
                          if _evalue <= evalue]
                      for k, v in tqdm(gid2locus2ko.items())}
     tqdm.write('separating with db, time consumed....')
     sep_db = {_db: {k: [(gene_id, db, sig_id, interpro_id, _evalue)
-                        for (gene_id, db, sig_id, interpro_id, _evalue, Status) in v
+                        for (gene_id, db, sig_id, interpro_id, _evalue) in v
                         if db == _db]
                     for k, v in post_filtered.items()}
               for _db in tqdm(exists_db)}
