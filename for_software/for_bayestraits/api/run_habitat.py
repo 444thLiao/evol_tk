@@ -47,9 +47,13 @@ def main(intree, inmetadata, odir):
     states_collect = []
     m_text = []
     for row in open(inmetadata):
-        if _.split('\t')[0] in all_gids:
-            m_text.append(_.strip('\n'))
-            states_collect+=list(_.strip('\n').split('\t')[1])
+        if ' ' in row:
+            row = row.replace(' ','\t')
+        if row.count('\t') >=2:
+            print(f"maybe something wrong, please check the output {metadata_pre_file}")
+        if row.split('\t')[0] in all_gids:
+            m_text.append(row.strip('\n'))
+            states_collect+=list(row.strip('\n').split('\t')[1])
     states = set(states_collect)
     random_states = ''.join(list(states)[:2])
     with open(metadata_pre_file, 'w') as f1:
