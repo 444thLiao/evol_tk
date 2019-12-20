@@ -304,22 +304,55 @@ def to_label(id2new_id):
     return full_text
 
 
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+
+def colorFader(c1,c2,mix=0): # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
+    c1=np.array(mpl.colors.to_rgb(c1))
+    c2=np.array(mpl.colors.to_rgb(c2))
+    return mpl.colors.to_hex((1-mix)*c1 + mix*c2)
+
+# generate_gradient_legend(100,50,0,'#ff0000','#FFFFFF','#0000ff')
 def generate_gradient_legend(max_val,mid_val,min_val,
                              max_c,mid_c,min_c,
-                             num_interval=5):
+                             num_interval=7):
+    
+    legened_v2color = {}
     if num_interval %2 ==1:
-        remained_i = (num_interval-1)/2
-        
+        remained_i = (num_interval-1)//2
+        legened_v2color[round(mid_val,2)] = mid_c
     else:
-        remained_i = num_interval/2
+        remained_i = num_interval//2
         
+    total_v = max_val-mid_val
+    inter_v = int(total_v/remained_i)
+    for _p in range(1,remained_i):
+        des_v = _p*inter_v + mid_val
+        per = _p*inter_v/total_v
+        new_color = colorFader(mid_c,max_c,per)
+        legened_v2color[round(des_v,2)] = new_color
+    legened_v2color[round(max_val,2)] = max_c
     
     
+    total_v = mid_val-min_val
+    inter_v = int(total_v/remained_i)
+    for _p in range(1,remained_i):
+        des_v = _p*inter_v + min_val
+        per = _p*inter_v/total_v
+        new_color = colorFader(min_c,mid_c,per)
+        legened_v2color[round(des_v,2)] = new_color
+    legened_v2color[round(min_val,2)] = min_c
+    return legened_v2color
+
+
 def color_gradient(id2val,
                    dataset_label='Completness',
-                   max_val=100,
-                   min_val=0,
+                   max_val=None,
+                   min_val=None,
                    mid_val=50):
+    
     default_max = '#ff0000'
     default_min = '#0000ff'
     default_mid = '#FFFFFF'
@@ -328,14 +361,18 @@ def color_gradient(id2val,
     all_vals = list(set([v for k, v in id2val.items()]))
 
     mid_val = np.mean(all_vals) if mid_val is None else mid_val
-    max_val = max(all_vals) if mid_val is None else max_val
-    min_val = min(all_vals) if mid_val is None else min_val
+    max_val = max(all_vals) if max_val is None else max_val
+    min_val = min(all_vals) if min_val is None else min_val
 
+    l2colors = generate_gradient_legend(max_val,mid_val,min_val,
+                             default_max,default_mid,default_min,
+                             num_interval=7)
+    sep = '\t'
     legend_text = f"""
 LEGEND_TITLE	{dataset_label}
-LEGEND_SHAPES	1	1	1
-LEGEND_COLORS	{default_max}	{default_mid}	{default_min}
-LEGEND_LABELS	{max_val}	{mid_val}	{min_val}"""
+LEGEND_SHAPES	{sep.join(['1']*7)}
+LEGEND_COLORS	{sep.join([_[1] for _ in list(sorted(l2colors.items()))])}
+LEGEND_LABELS	{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()))]))}"""
 
     annotate_text = '\n'.join([f"{label}\t{val}"
                                for label, val in id2val.items()])
