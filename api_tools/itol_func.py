@@ -304,6 +304,17 @@ def to_label(id2new_id):
     return full_text
 
 
+def generate_gradient_legend(max_val,mid_val,min_val,
+                             max_c,mid_c,min_c,
+                             num_interval=5):
+    if num_interval %2 ==1:
+        remained_i = (num_interval-1)/2
+        
+    else:
+        remained_i = num_interval/2
+        
+    
+    
 def color_gradient(id2val,
                    dataset_label='Completness',
                    max_val=100,

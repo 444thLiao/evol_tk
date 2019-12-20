@@ -83,7 +83,7 @@ def main(intree, inmetadata, odir,color_dict):
     check_call(cmd2 + ' >/dev/null', shell=True)
     if isinstance(color_dict,str):
         cat2color = color_dict.split(';')
-        cat2color = {_.split(':')[0]:_.split(':')[1] for _ in color_dict if _}
+        cat2color = {_.split(':')[0]:_.split(':')[1] for _ in cat2color if _}
     text = get_result(join(odir, 'complex_m', 'bst_complex.Log.txt'),
                       cat2info=cat2color)
 

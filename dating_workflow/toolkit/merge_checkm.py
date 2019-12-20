@@ -6,7 +6,7 @@ import click
 import pandas as pd
 
 from dating_workflow.step_script import process_path
-
+from tqdm import tqdm
 
 def main(indir, ofile):
     indir = process_path(indir)
@@ -16,7 +16,7 @@ def main(indir, ofile):
         os.makedirs(dirname(ofile))
     all_tsv = glob(join(indir, '*', 'storage', 'bin_stats_ext.tsv'))
     result = {}
-    for each_f in all_tsv:
+    for each_f in tqdm(all_tsv):
         text = open(each_f).read().strip('\n')
         gid, v = text.split('\t')
         v = eval(v)
