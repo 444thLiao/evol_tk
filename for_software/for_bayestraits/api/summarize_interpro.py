@@ -32,14 +32,17 @@ header = ['Protein Accession',
           'InterPro description']
 
 
-def retrieve_info(indir):
+def retrieve_info(indir,test=False):
     gid2locus2ko = defaultdict(list)
     exists_db = set()
     files_list = glob(join(indir, '*', f'*.tsv'))
+
     if not files_list:
         exit(
             f"no files could be found with input {join(indir, '*', f'*.tsv')},please check the parameters. ")
     tqdm.write("reading all annotated result")
+    if test:
+        files_list = files_list[:10]
     for hf in tqdm(files_list):
         for row in open(hf):
             if not row:
@@ -104,6 +107,9 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
         os.makedirs(odir)
     tqdm.write('converting into locus2gene side by side table...no progress')
     l2ko_df = pd.DataFrame.from_dict(l2ko).T
+    if l2ko_df.shape[1] != 3:
+        print(f"it might be something wrong for {name}")
+        return
     l2ko_df.columns = ["annotated ID", "database", 'interpro ID']
     l2ko_df.loc[:, 'genome'] = [
         convert_genome_ID_rev(_) for _ in l2ko_df.index]
@@ -146,10 +152,11 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
 @click.option("-o", "odir", help="output directory. If it doesn't exist, it will auto created.")
 @click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
 @click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
-def main(indir, odir, evalue, transpose):
+@click.option("-test", "test", default=False, is_flag=True, help="test")
+def main(indir, odir, evalue, transpose,test):
     indir = process_path(indir)
     odir = process_path(odir)
-    gid2locus2ko, exists_db = retrieve_info(indir)
+    gid2locus2ko, exists_db = retrieve_info(indir,test=test)
     locus2ko, sep_l2ko = filtration_part(gid2locus2ko, exists_db, evalue)
     tqdm.write("Complete filterations...")
     if not exists(odir):
