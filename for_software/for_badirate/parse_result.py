@@ -52,13 +52,13 @@ result_df = pd.DataFrame.from_dict(gene2n2v, orient='index')
 
 from bin.transform.classify_kos import ko_classified_br,get_ko_infos,get_br_info
 # calculating the number of genes transformed
-group_dict = {"I":'GCA_002709295.1;GCA_009691805.1',
-              "II":"GCA_000531095.1;GCA_007747995.1",
-              "III":"GCA_002737405.1;GCA_002477435.1",
-              "IV":"GCA_002967765.1;GCA_007859755.1",
-              "V":"GCA_003142275.1;GCA_002007645.1",
-              "VI":"GCA_005805195.1;GCA_007751475.1",
-              "VII":"GCA_001830285.1;GCA_002050325.1"
+group_dict = {"I":'GCA_009691705.1;GCA_009691805.1',
+              "II":"GCA_007747215.1;GCA_000242455.3",
+              "III":"GCA_002405515.1;GCA_002737405.1",
+              "IV":"GCA_003335525.1;GCA_003335505.1",
+              "V":"GCA_003142275.1;GCA_001824635.1",
+              "VI":"GCA_005805195.1;GCA_005800635.1",
+              "VII":"GCA_001830285.1;GCA_001830315.1"
               }
 for gnum,input_str in group_dict.items():
     # input_str =   # use ';' to separate the represented IDs from two clade need to be compared.

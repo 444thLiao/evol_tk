@@ -17,7 +17,7 @@ tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
 __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extrat_bac120.py'
 bac120_list = join(dirname(__file__), 'bac120.tsv')
 id_list = [row.split('\t')[0] for row in open(bac120_list) if row]
-id_list = id_list[1:]
+id_list = id_list[1:] #remove first row
 pfam_ids = [_ for _ in id_list if _.startswith('PF0')]
 tigfam_ids = [_ for _ in id_list if _.startswith('TIGR')]
 
@@ -139,12 +139,12 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
 def stats_cog(genome2genes):
     gene_ids = pfam_ids + tigfam_ids
 
-    gene_multi = {g: 0 for g in gene_ids}
+    gene_multi = defaultdict(int)
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             if len(seqs) >= 2:
                 gene_multi[gene] += 1
-    gene_Ubiquity = {g: 0 for g in gene_ids}
+    gene_Ubiquity = defaultdict(int)
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
             gene_Ubiquity[gene] += 1
