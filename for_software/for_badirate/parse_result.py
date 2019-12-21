@@ -60,20 +60,21 @@ group_dict = {"I":'GCA_009691705.1;GCA_009691805.1',
               "VI":"GCA_005805195.1;GCA_005800635.1",
               "VII":"GCA_001830285.1;GCA_001830315.1"
               }
+
 for gnum,input_str in group_dict.items():
     # input_str =   # use ';' to separate the represented IDs from two clade need to be compared.
-    for _ in input_str.split(';'):
-        if _ not in whole_tree.get_leaf_names():
-            print(_)
-    LCA = whole_tree.get_common_ancestor(input_str.split(';'))
-    LCA_anc = LCA.get_ancestors()[0]
-
+    assert '|' in input_str
+    leaf_ids,right_ids = input_str.split('|')
+    all_ids = [leaf for _id in input_str.split('|') for leaf in _id.split(',')]
+    LCA = whole_tree.get_common_ancestor(all_ids)
+    descendent_node = whole_tree.get_common_ancestor(right_ids.split(','))
+    
     LCA = LCA.name
-    LCA_anc = LCA_anc.name
-    sub_tab = result_df.loc[:, [LCA, LCA_anc]]
+    descendent_node = descendent_node.name
+    sub_tab = result_df.loc[:, [LCA, descendent_node]]
     new_df = pd.DataFrame(index=sub_tab.index, columns=['Gain', 'Loss', 'gain/loss'])
 
-    change = sub_tab[LCA] - sub_tab[LCA_anc]
+    change = sub_tab[LCA] - sub_tab[descendent_node]
     new_df.Gain = [0 if _ <= 0 else _ for _ in change]
     new_df.Loss = [0 if _ >= 0 else _ for _ in change]
     new_df.loc[:, 'gain/loss'] = change

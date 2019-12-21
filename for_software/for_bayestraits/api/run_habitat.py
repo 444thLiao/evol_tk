@@ -16,7 +16,7 @@ import click
 from ete3 import Tree
 
 from for_software.for_bayestraits.toolkit.construct_kit import nw2nexus, get_tags
-from for_software.for_bayestraits.toolkit.get_result import get_result, summaized_r
+from for_software.for_bayestraits.toolkit.get_result import get_result, summaized_r,summaized_rate
 
 # intree = './trees/iqtree/over20p_bac120.formatted.newick'
 # inmetadata = './bayesTraits_test/m2nm.txt'
@@ -91,12 +91,13 @@ def main(intree, inmetadata, odir,color_dict):
         f1.write(text)
 
     text = summaized_r(complex_f=join(odir, 'complex_m', 'bst_complex.Stones.txt'),
-                       simple_f=join(odir, 'simple_m',
-                                     'bst_simple.Stones.txt'),
+                       simple_f=join(odir, 'simple_m','bst_simple.Stones.txt'),
                        key='Stone')
-
+    text2 = summaized_rate(complex_f=join(odir, 'complex_m', 'bst_complex.Log.txt'),
+                           key='Iteration')
+    
     with open(join(odir, 'summaized_result.txt'), 'w') as f1:
-        f1.write(text)
+        f1.write(text+'\n'+text2)
 
 
 if __name__ == '__main__':

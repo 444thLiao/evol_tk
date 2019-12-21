@@ -23,6 +23,14 @@ def summaized_r(complex_f, simple_f, key=''):
     text = f"Log BF = 2({complex_lh}- {simple_lh})\nLog BF = {lrt}"
     return text
 
+def summaized_rate(complex_f, key=''):
+    assert complex_f.endswith('Log.txt')
+    complex_df = get_df(complex_f, key=key)
+    
+    rate_columns = [_ for _ in complex_df.columns if _.startswith('q')]
+    text = str(complex_df.loc[:,rate_columns].describe())
+
+    return text
 
 def get_df(infile, key='Iteration'):
     rows = open(infile).readlines()
