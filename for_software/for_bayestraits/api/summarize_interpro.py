@@ -119,7 +119,9 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
         gene = row['annotated ID']
         interpro = row['interpro ID']
         genome2gene2locus[genome][gene].add(locus)
-        genome2interpro2locus[genome][interpro].add(locus)
+        if interpro:
+            genome2interpro2locus[genome][interpro].add(locus)
+        
     tqdm.write(f"packing......")
     for _, r in enumerate([genome2gene2locus, genome2interpro2locus]):
         if _ == 1:
