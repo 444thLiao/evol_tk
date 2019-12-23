@@ -2,7 +2,7 @@ import pandas as pd
 from ete3 import Tree
 from tqdm import tqdm
 
-infile = "./output.test"
+infile = "./pruned_over90Comple_lower30Contain.result"
 
 l = '##NODES-INTERNAL_ID ASSOCIATION'
 l2 = "#Branch_Group\tBirth\tDeath\tInnovation"

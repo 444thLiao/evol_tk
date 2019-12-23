@@ -12,7 +12,7 @@ from api_tools.itol_func import pie_chart
 
 # infile = 'm2nm.txt.Log.txt'
 
-def summaized_r(complex_f, simple_f, key=''):
+def summaized_r(complex_f, simple_f, key='',return_BF_only=False):
     complex_df = get_df(complex_f, key=key)
     simple_df = get_df(simple_f, key=key)
 
@@ -20,6 +20,8 @@ def summaized_r(complex_f, simple_f, key=''):
     simple_lh = simple_df.iloc[-1, 1]
 
     lrt = 2 * (complex_lh - simple_lh)
+    if return_BF_only:
+        return lrt
     text = f"Log BF = 2({complex_lh}- {simple_lh})\nLog BF = {lrt}"
     return text
 
