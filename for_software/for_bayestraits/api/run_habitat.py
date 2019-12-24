@@ -11,7 +11,7 @@ It accept
 import os
 from os.path import *
 from subprocess import check_call
-
+import multiprocessing as mp
 import click
 from ete3 import Tree
 
@@ -24,7 +24,10 @@ from for_software.for_bayestraits.toolkit.get_result import get_result, summaize
 
 bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 
-
+def run(cmd):
+    check_call(cmd, shell=True)
+    
+    
 @click.command()
 @click.option('-i', 'intree')
 @click.option('-im', 'inmetadata')
@@ -79,16 +82,19 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd):
                            [f"LF {join(odir, 'simple_m', 'bst_simple')}",
                             extra_cmd, 
                             'run']))
-
-    cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')}"
-    cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')}"
-
+    
+    cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')} > /dev/null"
+    cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')} > /dev/null"
+    
     print("start to run cmd")
-    check_call(cmd1 + ' >/dev/null', shell=True)
-    check_call(cmd2 + ' >/dev/null', shell=True)
+    cmds = [cmd1,cmd2]
+    with mp.Pool(processes=2) as tp:
+        r = list(tp.imap(run, cmds))
+        
     if isinstance(color_dict,str):
         cat2color = color_dict.split(';')
         cat2color = {_.split(':')[0]:_.split(':')[1] for _ in cat2color if _}
+        
     text = get_result(join(odir, 'complex_m', 'bst_complex.Log.txt'),
                       cat2info=cat2color)
 
