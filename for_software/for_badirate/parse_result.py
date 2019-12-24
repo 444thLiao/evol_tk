@@ -141,7 +141,6 @@ for gnum,input_str in group_dict.items():
     fe_corrected_ko2p = dict(zip([k for k, _ in distinct_ko.items()],
                                 fe_corrected_p[1]))
     sig_ko_list = {k: v for k, v in fe_corrected_ko2p.items() if v <= 0.05}
-    len(new_df.index.intersection(set(sig_ko_list)))
     
     new_df.loc[new_df.index.intersection(set(sig_ko_list)),'significance'] = 'True'
     new_df.to_csv(f'./target_tran/group_{gnum}.csv',index_label='K number')
