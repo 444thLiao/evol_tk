@@ -27,54 +27,58 @@ bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 
 @click.command()
 @click.option('-i', 'intree')
-@click.option('-im', 'inmetadata')
 @click.option('-o', 'odir')
-@click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529")
-@click.option("-extra_cmd","extra_cmd",default='')
-def main(intree, inmetadata, odir,color_dict,extra_cmd):
+@click.option('-states',"states",default="M;N")
+def main(intree, odir,states):
     if not exists(odir):
         os.makedirs(odir)
     tree_prepared_file = join(odir, basename(intree))
     metadata_pre_file = join(odir, 'metadata.txt')
 
+    template_mode = ["1", "2", "PriorAll exp 10", "Stones 100 1000"]
     # format tree
     t = Tree(intree, format=3)
-    all_gids = set(t.get_leaf_names())
     new_tree_text = nw2nexus(t)
-    with open(tree_prepared_file, 'w') as f1:
-        f1.write(new_tree_text)
-
-    # check metadata
-    states_collect = []
-    m_text = []
-    for row in open(inmetadata):
-        if ' ' in row:
-            row = row.replace(' ','\t')
-        if row.count('\t') >=2:
-            print(f"maybe something wrong, please check the output {metadata_pre_file}")
-        if row.split('\t')[0] in all_gids:
-            m_text.append(row.strip('\n'))
-            states_collect+=list(row.strip('\n').split('\t')[1])
-    states = set(states_collect)
-    random_states = ''.join(list(states)[:2])
-    with open(metadata_pre_file, 'w') as f1:
-        f1.write('\n'.join(m_text))
-
-    # run
-    complex_model = ["1", "2", "PriorAll exp 10", "Stones 100 1000"]
-    simple_model = ["1", "2", "PriorAll exp 10",
-                    f"RestrictAll q{random_states}", 
-                    "Stones 100 1000"]
-    tags_list = get_tags(intree)
+    if not exists(tree_prepared_file):
+        with open(tree_prepared_file, 'w') as f1:
+            f1.write(new_tree_text)
+            
+    params = []
+    sig_test_dir = join(odir,'sig_test')
+    for node in t.traverse():
+        if not node.is_leaf():
+            node_name = node.name.split('_')[0]
+            tag1,tag2 = node.get_leaf_names()[0],node.get_leaf_names()[-1]
+            for state in states.split(';'):
+                complex_mode = template_mode+["AddTag FNode " + ' '.join([tag1,tag2]),
+                                                f"Fossil Node01 FNode {state}"]
+                
+                ofile = join(sig_test_dir, f'{node_name}_sigtest_{state}.txt')
+                with open(ofile, 'w') as f1:
+                    f1.write('\n'.join(complex_mode +
+                                       [f"LF {ofile.replace('.txt','')}",
+                                        'Run']))
+                cmd = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {ofile}"
+                if not exists(ofile.replace('.txt', '')+'.Stones.txt'):
+                    params.append(cmd)
+    with mp.Pool(processes=10) as tp:
+        r = list(tqdm(tp.imap(run, params), total=len(params)))
+                    
+            # run
+            complex_model = ["1", "2", "PriorAll exp 10", "Stones 100 1000"]
+            simple_model = ["1", "2", "PriorAll exp 10",
+                            f"RestrictAll q{random_states}", 
+                            "Stones 100 1000"]
+            tags_list = get_tags(intree)
 
     os.makedirs(join(odir, 'complex_m'), exist_ok=True)
     os.makedirs(join(odir, 'simple_m'), exist_ok=True)
     with open(join(odir, 'complex_m', 'params.txt'), 'w') as f1:
         f1.write('\n'.join(complex_model + tags_list +
-                           [f"LF {join(odir, 'complex_m', 'bst_complex')}",extra_cmd, 'run']))
+                           [f"LF {join(odir, 'complex_m', 'bst_complex')}", 'run']))
     with open(join(odir, 'simple_m', 'params.txt'), 'w') as f1:
         f1.write('\n'.join(simple_model + tags_list +
-                           [f"LF {join(odir, 'simple_m', 'bst_simple')}",extra_cmd, 'run']))
+                           [f"LF {join(odir, 'simple_m', 'bst_simple')}", 'run']))
 
     cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')}"
     cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')}"
