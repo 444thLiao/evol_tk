@@ -38,16 +38,20 @@ LEGEND_LABELS{sep}{legend_labels}"""
     return legend_text
 
 
-def deduced_legend2(info2style, infos, sep='\t'):
+def deduced_legend2(info2style, infos,same_colors = False, sep='\t'):
     # for info2style instead of info2color
     colors_theme = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     shapes = []
     labels = []
     colors = []
     for idx, info in enumerate(infos):
+        
         shapes.append(info2style[info].get('shape', '1'))
         labels.append(info2style[info].get('info', info))
-        colors.append(info2style[info].get('color', colors_theme[idx]))
+        if not same_colors:
+            colors.append(info2style[info].get('color', colors_theme[idx] ))
+        else:
+            colors.append(info2style[info].get('color', same_colors ))
     legend_text = ['FIELD_SHAPES' + sep + sep.join(shapes),
                    'FIELD_LABELS' + sep + sep.join(labels),
                    'FIELD_COLORS' + sep + sep.join(colors), ]
@@ -72,7 +76,7 @@ def annotate_outgroup(ID2infos, info2style, ):
     return template_text + annotate_text
 
 
-def to_binary_shape(ID2info, info2style=None, info_name='dataset', manual_v=[], omitted_other=False):
+def to_binary_shape(ID2info, info2style=None,same_color=False, info_name='dataset', manual_v=[], omitted_other=False):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
@@ -91,7 +95,7 @@ def to_binary_shape(ID2info, info2style=None, info_name='dataset', manual_v=[], 
         annotate_text.append(row)
     annotate_text = '\n'.join(annotate_text)
 
-    legend_text = deduced_legend2(info2style, all_v, sep='\t')
+    legend_text = deduced_legend2(info2style, all_v, sep='\t',same_colors=same_color)
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
     return template_text + '\n' + annotate_text

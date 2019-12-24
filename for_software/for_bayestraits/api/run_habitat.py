@@ -71,10 +71,14 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd):
     os.makedirs(join(odir, 'simple_m'), exist_ok=True)
     with open(join(odir, 'complex_m', 'params.txt'), 'w') as f1:
         f1.write('\n'.join(complex_model + tags_list +
-                           [f"LF {join(odir, 'complex_m', 'bst_complex')}",extra_cmd, 'run']))
+                           [f"LF {join(odir, 'complex_m', 'bst_complex')}",
+                            extra_cmd, 
+                            'run']))
     with open(join(odir, 'simple_m', 'params.txt'), 'w') as f1:
         f1.write('\n'.join(simple_model + tags_list +
-                           [f"LF {join(odir, 'simple_m', 'bst_simple')}",extra_cmd, 'run']))
+                           [f"LF {join(odir, 'simple_m', 'bst_simple')}",
+                            extra_cmd, 
+                            'run']))
 
     cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')}"
     cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')}"
