@@ -54,7 +54,11 @@ def get_br_info(br, kos=None):
     for br in iter_br:
         if not br.startswith('br'):
             new_br = f"br:{br}"
-        hier_infos = kegg.http_get(f"get/{new_br}", frmt="txt").split('\n')
+        else:
+            continue
+        hier_infos = str(kegg.http_get(f"get/{new_br}", frmt="txt")).split('\n')
+        if not hier_infos:
+            print(br)
         br_name = hier_infos[0].split('\t')[-1]
         if '+' in br_name:
             br_name = suppl_dict.get(br,'MISSING')

@@ -32,6 +32,8 @@ gene_presence_tab = "./protein_annotations/hmmsearch_merged/merged_hmm_binary.ta
 
 indir = "./bayestraits_habitat/over20p_m2nm_v2/"
 
+
+
 def batch_test_g(indir,odir=None):
     if odir is None:
         odir = join(indir,'gene_test')
@@ -110,10 +112,11 @@ def parse_result(odir):
         if lr >= 0:
             pval = 1-chi2.cdf(lr, 4)
             collect_ko2lr[ko] = pval
-
-    corrected_p = multipletests([_ for k, _ in collect_ko2lr.items()],
+    list_ko = [k for k, _ in collect_ko2lr.items()]
+    list_p = [collect_ko2lr[k] for k in list_ko]
+    corrected_p = multipletests(list_p,
                                 method='bonferroni')
-    corrected_ko2p = dict(zip([k for k, _ in collect_ko2lr.items()],
+    corrected_ko2p = dict(zip(list_ko,
                             corrected_p[1]))
 
     significant_ko = [k for k, v in corrected_ko2p.items() if v <= 0.05]
@@ -123,7 +126,7 @@ def parse_result(odir):
     br_kos = ko_classified_br(significant_ko)
     info_kos = get_ko_infos(significant_ko)
     infos = get_br_info(br_kos)
-    {ko:kd.update({'des':info_kos.get(ko,'')}) for ko,kd in infos.items()}
+    # {ko:kd.update({'des':info_kos.get(ko,'')}) for ko,kd in infos.items()}
     for ko in info_kos:
         if ko not in infos:
             infos[ko] = {'des':info_kos[ko]}
@@ -142,7 +145,7 @@ distinct_ko = {}
 for ko in tqdm(genes_df.columns):
     tab_num = []
     ko1_g = genes_df.index[genes_df.loc[:, ko]==1]
-    ko0_g = genes_df.index[~genes_df.loc[:, ko]==1]
+    ko0_g = genes_df.index[genes_df.loc[:, ko]==0]
 
     tab_num.append([len([g
                          for g in ko1_g
@@ -165,24 +168,58 @@ intersect_ko = set_fe_ko.intersection(set_bst_ko)
 # classified and annotated with info
 from bin.transform.classify_kos import get_br_info, ko_classified_br, get_ko_infos
 import pandas as pd
+cat2_gid2habitat = dict([_.split('\t') for _ in open("habitat_txt/habitat_general_cat2.txt").read().split('\n') if _])
 
-br2kos = ko_classified_br(intersect_ko)
-ko2info = get_ko_infos(intersect_ko)
-collect_df = []
+over90 = open('./over90Comple_lower30Contain.list').read().split('\n')
+over90 = [_ for _ in over90 if _]
+M_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'M'])
+N_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'N'])
 
-for _subbr, k in tqdm(br2kos.items()):
-    _subbr = {_subbr: k}
-    ko2brinfo = get_br_info(_subbr)
+over90_M_g = set([g for g in over90 if gid2habitat.get(g, '') == 'M'])
+over90_N_g = set([g for g in over90 if gid2habitat.get(g, '') == 'N'])
 
-    ko2allinfo = {ko: {'def': info} for ko, info in ko2info.items() if ko in k}
-    for ko, brinfo in ko2brinfo.items():
-        ko2allinfo[ko].update(brinfo)
-    sub_df = pd.DataFrame.from_dict(ko2allinfo, orient='index')
-    collect_df.append(sub_df)
+Aquatic_g = set([g for g in cat2_gid2habitat if cat2_gid2habitat.get(g, '') in ['M','W']])
+non_a_g = set([g for g in cat2_gid2habitat if cat2_gid2habitat.get(g, '') in ['S']])
 
-tmp_df = pd.concat(collect_df, axis=0)
-tmp_df = tmp_df.sort_values(['top', 'A', 'B', 'C', 'D'])
-tmp_df.to_csv(join(odir, 'significant_ko_info.tab'), sep='\t', index=1, index_label='K number')
+all_over80 = list(subset_df.index[(subset_df.loc[:,['q24','q42']] >=80).all(1)])
+
+for name,set_ko in [('only_bayes',set_bst_ko),('combine_fisher',intersect_ko)]:
+    br2kos = ko_classified_br(set_ko)
+    ko2info = get_ko_infos(set_ko)
+    collect_df = []
+
+    for _subbr, k in tqdm(br2kos.items()):
+        _subbr = {_subbr: k}
+        ko2brinfo = get_br_info(_subbr)
+        if not ko2brinfo:
+            continue
+        ko2allinfo = {ko: {'def': info} 
+                      for ko, info in ko2info.items() 
+                      if ko in k}
+        for ko, brinfo in ko2brinfo.items():
+            ko2allinfo[ko].update(brinfo)
+        sub_df = pd.DataFrame.from_dict(ko2allinfo, orient='index')
+        collect_df.append(sub_df)
+
+    tmp_df = pd.concat(collect_df, axis=0)
+    tmp_dict = {_:{'def':ko2info[_]}
+     for _ in set_ko if _ not in tmp_df.index}
+    tmp_df = tmp_df.append(pd.DataFrame.from_dict(tmp_dict,orient='index'))
+    tmp_df = tmp_df.sort_values(['top', 'A', 'B', 'C', 'D'])
+
+    for ko,row in tmp_df.iterrows():
+        ko1_g = genes_df.index[genes_df.loc[:, ko]==1]
+        tmp_df.loc[ko,'M %'] = len(ko1_g.intersection(M_g))/len(M_g) *100
+        tmp_df.loc[ko,'N %'] = len(ko1_g.intersection(N_g))/len(N_g) *100
+        
+        tmp_df.loc[ko,'M % over90Comple'] = len(ko1_g.intersection(over90_M_g))/len(over90_M_g) *100
+        tmp_df.loc[ko,'N % over90Comple'] = len(ko1_g.intersection(over90_N_g))/len(over90_N_g) *100
+        
+        tmp_df.loc[ko,'Aquatic %'] = len(ko1_g.intersection(Aquatic_g))/len(Aquatic_g) *100
+        tmp_df.loc[ko,'Non-Aquatic %'] = len(ko1_g.intersection(non_a_g))/len(non_a_g) *100
+    _all_over80 = [_ for _ in all_over80 if _ in tmp_df.index]
+    tmp_df.loc[_all_over80,'drive dual change'] = '+'
+    tmp_df.to_csv(join(odir, f'significant_ko_info_{name}.tab'), sep='\t', index=1, index_label='K number')
 # write out binary for visualization
 t = sorted([(ko2odd_ratio[ko], ko) for ko in intersect_ko])[-30:]
 t = [_[1] for _ in t]
@@ -192,3 +229,21 @@ ssubset_g2ko = {gid: [] for gid in tmp}
 text = to_binary_shape(ssubset_g2ko, info_name='test ko', omitted_other=True)
 with open('./test_ko.binary.txt', 'w') as f1:
     f1.write(text)
+
+
+# pca visualization
+from sklearn.decomposition import PCA
+import plotly.express as px
+pca = PCA()
+_t = subset_df.copy()
+_t = _t.div(_t.sum(1),axis=0)
+pca_r = pca.fit_transform(_t)
+pca_r = pd.DataFrame(pca_r,
+                     index=subset_df.index,
+                     columns=[f'PC{_+1}' for _ in range(pca_r.shape[1])])
+pca_r.loc[:,'name'] = pca_r.index
+fig = px.scatter(pca_r,x='PC1',y='PC2',hover_name ='name')
+fig.layout.xaxis.title.text = f'PC1 ({round(pca.explained_variance_ratio_[0]*100,2)} %)'
+fig.layout.yaxis.title.text = f'PC2 ({round(pca.explained_variance_ratio_[1]*100,2)} %)'
+fig.write_html(join(odir,'vis.html'))
+
