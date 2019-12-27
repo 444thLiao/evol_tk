@@ -32,13 +32,10 @@ gene_presence_tab = "./protein_annotations/hmmsearch_merged/merged_hmm_binary.ta
 
 indir = "./bayestraits_habitat/over20p_m2nm_v2/"
 
-
-
 def batch_test_g(indir,odir=None):
     if odir is None:
         odir = join(indir,'gene_test')
     basic_habitat_txt = join(indir,"metadata.txt")
-    # intree = join(indir,"over20p_bac120.formatted.newick")
     intree = glob(join(indir,'*.newick'))[0]
     
     # read habitat metadata
@@ -134,8 +131,55 @@ def parse_result(odir):
     
     subset_ko2D_rate = {ko: v for ko, v in ko2D_rate.items() if ko in significant_ko}
     subset_df = pd.DataFrame.from_dict(subset_ko2D_rate, orient='index')
+    # gene 0 and N & gene 1 and M
+    subset_df.loc[:,'sig rate M'] = subset_df.loc[:,['q21','q31','q34','q24']].sum(1) - subset_df.loc[:,['q12','q13','q43','q42']].sum(1)
     subset_df.to_csv(join(odir, "significant_ko_rate.tab"), sep='\t')
+    basic_habitat_txt = join(indir,"metadata.txt")
+    habitat_text = open(basic_habitat_txt).read()
+    gid2habitat = dict([_.split('\t') for _ in habitat_text.split('\n')])
+    M_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'M'])
+    N_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'N'])
 
+    all_over80 = list(subset_df.index[(subset_df.loc[:,['q24','q42']] >=80).all(1)])
+    rate_sig_M = list(subset_df.index[(subset_df.loc[:,'sig rate M'] >=0)])
+    
+    set_ko = set(significant_ko)
+    br2kos = ko_classified_br(set_ko)
+    ko2info = get_ko_infos(set_ko)
+    collect_df = []
+
+    for _subbr, k in tqdm(br2kos.items()):
+        _subbr = {_subbr: k}
+        ko2brinfo = get_br_info(_subbr)
+        if not ko2brinfo:
+            continue
+        ko2allinfo = {ko: {'def': info} 
+                      for ko, info in ko2info.items() 
+                      if ko in k}
+        for ko, brinfo in ko2brinfo.items():
+            ko2allinfo[ko].update(brinfo)
+        sub_df = pd.DataFrame.from_dict(ko2allinfo, orient='index')
+        collect_df.append(sub_df)
+
+    tmp_df = pd.concat(collect_df, axis=0)
+    tmp_dict = {_:{'def':ko2info[_]}
+     for _ in set_ko if _ not in tmp_df.index}
+    tmp_df = tmp_df.append(pd.DataFrame.from_dict(tmp_dict,orient='index'))
+    tmp_df = tmp_df.sort_values(['top', 'A', 'B', 'C', 'D'])
+
+    for ko,row in tmp_df.iterrows():
+        ko1_g = genes_df.index[genes_df.loc[:, ko]==1]
+        tmp_df.loc[ko,'M %'] = len(ko1_g.intersection(M_g))/len(M_g) *100
+        tmp_df.loc[ko,'N %'] = len(ko1_g.intersection(N_g))/len(N_g) *100
+        
+    _all_over80 = [_ for _ in all_over80 if _ in tmp_df.index]
+    _rate_sig_M = [_ for _ in rate_sig_M if _ in tmp_df.index]
+    tmp_df.loc[_all_over80,'drive dual change'] = '+'
+    tmp_df.loc[_rate_sig_M,'sig for M'] = '+'
+    tmp_df.to_csv(join(odir, f'significant_ko_info_only_bayes.tab'), sep='\t', index=1, index_label='K number')
+    
+    
+    
 # fisher exact test
 from scipy.stats import fisher_exact
 
@@ -168,21 +212,12 @@ intersect_ko = set_fe_ko.intersection(set_bst_ko)
 # classified and annotated with info
 from bin.transform.classify_kos import get_br_info, ko_classified_br, get_ko_infos
 import pandas as pd
-cat2_gid2habitat = dict([_.split('\t') for _ in open("habitat_txt/habitat_general_cat2.txt").read().split('\n') if _])
 
-over90 = open('./over90Comple_lower30Contain.list').read().split('\n')
-over90 = [_ for _ in over90 if _]
 M_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'M'])
 N_g = set([g for g in gid2habitat if gid2habitat.get(g, '') == 'N'])
 
-over90_M_g = set([g for g in over90 if gid2habitat.get(g, '') == 'M'])
-over90_N_g = set([g for g in over90 if gid2habitat.get(g, '') == 'N'])
-
-Aquatic_g = set([g for g in cat2_gid2habitat if cat2_gid2habitat.get(g, '') in ['M','W']])
-non_a_g = set([g for g in cat2_gid2habitat if cat2_gid2habitat.get(g, '') in ['S']])
-
 all_over80 = list(subset_df.index[(subset_df.loc[:,['q24','q42']] >=80).all(1)])
-
+rate_sig_M = list(subset_df.index[(subset_df.loc[:,'sig rate M'] >=0).all(1)])
 for name,set_ko in [('only_bayes',set_bst_ko),('combine_fisher',intersect_ko)]:
     br2kos = ko_classified_br(set_ko)
     ko2info = get_ko_infos(set_ko)
@@ -220,6 +255,7 @@ for name,set_ko in [('only_bayes',set_bst_ko),('combine_fisher',intersect_ko)]:
     _all_over80 = [_ for _ in all_over80 if _ in tmp_df.index]
     tmp_df.loc[_all_over80,'drive dual change'] = '+'
     tmp_df.to_csv(join(odir, f'significant_ko_info_{name}.tab'), sep='\t', index=1, index_label='K number')
+    
 # write out binary for visualization
 t = sorted([(ko2odd_ratio[ko], ko) for ko in intersect_ko])[-30:]
 t = [_[1] for _ in t]
@@ -246,4 +282,91 @@ fig = px.scatter(pca_r,x='PC1',y='PC2',hover_name ='name')
 fig.layout.xaxis.title.text = f'PC1 ({round(pca.explained_variance_ratio_[0]*100,2)} %)'
 fig.layout.yaxis.title.text = f'PC2 ({round(pca.explained_variance_ratio_[1]*100,2)} %)'
 fig.write_html(join(odir,'vis.html'))
+
+
+# 
+import itertools
+from scipy.stats import pearsonr
+
+pair2p = {}
+for g1,g2 in tqdm(itertools.combinations(significant_ko,2)):
+    g1_array = genes_df.loc[:,g1]
+    g2_array = genes_df.loc[:,g2]
+    r,p = pearsonr(g1_array,g2_array)
+    pair2p[(g1,g2)] = p
+    
+list_pair = [k for k, _ in pair2p.items()]
+list_p = [pair2p[k] for k in list_pair]
+corrected_pair2p = multipletests(list_p,
+                            method='bonferroni')
+corrected_pair2p = dict(zip(list_pair,
+                        corrected_pair2p[1]))
+
+_subset_df = subset_df.copy()
+_subset_df = _subset_df.div(_subset_df.sum(1),axis=0)
+pair2p = {}
+for g1,g2 in tqdm(itertools.combinations(significant_ko,2)):
+    g1_array = _subset_df.loc[g1,:]
+    g2_array = _subset_df.loc[g2,:]
+    r,p = pearsonr(g1_array,g2_array)
+    pair2p[(g1,g2)] = p
+    
+list_pair = [k for k, _ in pair2p.items()]
+list_p = [pair2p[k] for k in list_pair]
+corrected_pair2p = multipletests(list_p,
+                            method='bonferroni')
+corrected_pair2p = dict(zip(list_pair,
+                        corrected_pair2p[1]))
+rows = []
+for (k1,k2),p in corrected_pair2p.items():
+    if p<=0.05:
+        rows.append(f'{k1}\t{k2}\t{p}')
+with open('./bayestraits_habitat/phylo_pattern/network.tab','w') as f1:
+    f1.write('\n'.join(rows))
+
+
+from collections import defaultdict
+from api_tools.itol_func import to_binary_shape
+kos = '''K18889
+K18890
+K05685
+K09013
+K09696
+K09697
+K02006
+K02007
+K02008
+K11707
+K11708
+K11709
+K11710
+K01989
+K02075
+K02077
+K09816
+K02017
+K15497
+K02045
+K02046
+K02047
+K23163
+K02035
+K17062
+K01995
+K01996
+K01998
+K02038
+K07323
+K10439
+K10440
+K10441'''.split('\n')
+id2kos = defaultdict(list)
+for ko in kos:
+    ids = genes_df.index[genes_df.loc[:,ko]==1]
+    for id in ids:
+        id2kos[id].append(ko)
+text = to_binary_shape(id2kos,info_name='ABC transporters',manual_v=kos,info2style={k:{'shape':'2','color':'#000000'} for k in kos})
+
+with open('./bayestraits_habitat/phylo_pattern/ABC transporters.txt','w') as f1:
+    f1.write(text)
 
