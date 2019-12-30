@@ -2,8 +2,9 @@
 Transform KO id like K00928\nK13283 into a table with some columns could help use to classify them
 """
 import string
+from tqdm import tqdm
 from collections import defaultdict
-
+import pandas as pd
 from bioservices import KEGG
 
 kegg = KEGG()
@@ -21,9 +22,36 @@ def ko_classified_br(ko_set):
 
         if cur_ko in ko_set:
             br2kos[rows[1].split(':')[-1]].append(cur_ko)
-    br2kos.pop('ko00001')  # the top of Brite hierarchy, useless...
+    #br2kos.pop('ko00001')  # the top of Brite hierarchy, useless...
     return br2kos
 
+def ko_classified_module(ko_set):
+    md2kos = defaultdict(list)
+    mapping_file = f"{target_dir}/ko/ko_module.list"
+    for row in open(mapping_file):
+        row = row.strip('\n')
+        rows = row.split('\t')
+        cur_ko = rows[0].split(':')[-1]
+
+        if cur_ko in ko_set:
+            md2kos[rows[1].split(':')[-1]].append(cur_ko)
+    #br2kos.pop('ko00001')  # the top of Brite hierarchy, useless...
+    return md2kos
+def get_md_infos(mds):
+    if isinstance(mds, str):
+        mds = set([mds])
+    else:
+        mds = set(mds)
+    md2info = {}
+    for md in tqdm(mds):
+        text = kegg.get(md)
+        text = text.split('\n')
+        name = [_.split('  ')[-1] for _ in text if _.startswith('NAME')][-1]
+        all_kos = [_.split('  ')[-1] for _ in text if _.startswith('DEFINITION')][-1]
+        #all_kos = [ko for e in all_kos.strip().split(' ') for ko in e.split('+')]
+        md2info[md] = {'name':name,
+                       'all ko':all_kos}
+    return md2info
 
 def get_ko_infos(kos):
     if isinstance(kos, str):
@@ -50,7 +78,7 @@ def get_br_info(br, kos=None):
     else:
         iter_br = list(br)
 
-    infos = {}
+    infos = []
     for br in iter_br:
         if not br.startswith('br'):
             new_br = f"br:{br}"
@@ -79,6 +107,8 @@ def get_br_info(br, kos=None):
                     for _ in level_index[level_index.index(row[0]):]:
                         if _ in hier_dict:
                             hier_dict.pop(_)
-                    infos[ko] = hier_dict
+                    _cache = pd.DataFrame.from_dict({ko:hier_dict},orient='index')
+                    infos.append(_cache)
+                    # infos[ko] = hier_dict
                     break
     return infos

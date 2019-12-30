@@ -325,48 +325,35 @@ with open('./bayestraits_habitat/phylo_pattern/network.tab','w') as f1:
     f1.write('\n'.join(rows))
 
 
-from collections import defaultdict
 from api_tools.itol_func import to_binary_shape
-kos = '''K18889
-K18890
-K05685
-K09013
-K09696
-K09697
-K02006
-K02007
-K02008
-K11707
-K11708
-K11709
-K11710
-K01989
-K02075
-K02077
-K09816
-K02017
-K15497
-K02045
-K02046
-K02047
-K23163
-K02035
-K17062
-K01995
-K01996
-K01998
-K02038
-K07323
-K10439
-K10440
-K10441'''.split('\n')
-id2kos = defaultdict(list)
-for ko in kos:
-    ids = genes_df.index[genes_df.loc[:,ko]==1]
-    for id in ids:
-        id2kos[id].append(ko)
-text = to_binary_shape(id2kos,info_name='ABC transporters',manual_v=kos,info2style={k:{'shape':'2','color':'#000000'} for k in kos})
+draw_data = pd.read_excel('./bayestraits_habitat/phylo_pattern/significant_ko_info_only_bayes.xlsx')
+result_df = pd.read_csv('./protein_annotations/hmmsearch_merged/merged_hmm_binary.tab',sep='\t',index_col=0).T
+all_gids = list(result_df.columns)
 
-with open('./bayestraits_habitat/phylo_pattern/ABC transporters.txt','w') as f1:
-    f1.write(text)
+k2name = {}
+for _,row in draw_data.iterrows():
+    k2name[row['K number']] = row['def'].split(';')[0]
+
+k2name['K20932'] = 'hzsA'
+k2name['K20933'] = 'hzsB'
+k2name['K20934'] = 'hzsC'
+subset_df = draw_data.loc[~draw_data.label.isna()]
+gb = subset_df.groupby('label')
+for name,group_df in gb:
+    kos = list(group_df.iloc[:,0])
+    label = group_df.iloc[0,:]['label'].replace('/',' or ')
+    shape = group_df.iloc[0,:]['shape']
+    color = group_df.iloc[0,:]['color']
+
+    id2ko = {}
+    for gid in all_gids:
+        remained_kos = set(result_df.index[result_df.loc[:,gid] > 0]).intersection(set(kos))
+        id2ko[gid] = [k2name.get(_,_) for _ in list(remained_kos)]
+
+    text = to_binary_shape(id2ko,
+                           info_name=label,
+                           manual_v=[k2name[_] for _ in kos],
+                           info2style={k2name.get(k,k):{'shape':str(int(shape)),'color':color} for k in kos})
+    with open(f'./bayestraits_habitat/phylo_pattern/itol_{label}.txt','w') as f1:
+        f1.write(text)
 
