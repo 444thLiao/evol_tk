@@ -123,11 +123,8 @@ def parse_result(odir):
     br_kos = ko_classified_br(significant_ko)
     info_kos = get_ko_infos(significant_ko)
     infos = get_br_info(br_kos)
-    # {ko:kd.update({'des':info_kos.get(ko,'')}) for ko,kd in infos.items()}
-    for ko in info_kos:
-        if ko not in infos:
-            infos[ko] = {'des':info_kos[ko]}
-    ko_info_df = pd.DataFrame.from_dict(infos,orient='index')
+    df = pd.concat(infos,axis=0)
+    df.loc[:,'des'] = [info_kos.get(_,'') for _ in df.index]
     
     subset_ko2D_rate = {ko: v for ko, v in ko2D_rate.items() if ko in significant_ko}
     subset_df = pd.DataFrame.from_dict(subset_ko2D_rate, orient='index')
@@ -145,37 +142,42 @@ def parse_result(odir):
     
     set_ko = set(significant_ko)
     br2kos = ko_classified_br(set_ko)
+    md_kos = ko_classified_module(set_ko)
+    md2info = get_md_infos(md_kos.keys())
     ko2info = get_ko_infos(set_ko)
     collect_df = []
 
     for _subbr, k in tqdm(br2kos.items()):
         _subbr = {_subbr: k}
-        ko2brinfo = get_br_info(_subbr)
-        if not ko2brinfo:
+        df_list = get_br_info(_subbr)
+        if not df_list:
             continue
-        ko2allinfo = {ko: {'def': info} 
-                      for ko, info in ko2info.items() 
-                      if ko in k}
-        for ko, brinfo in ko2brinfo.items():
-            ko2allinfo[ko].update(brinfo)
-        sub_df = pd.DataFrame.from_dict(ko2allinfo, orient='index')
+        sub_df = pd.concat(df_list,axis=0,sort=False)
+        sub_df.loc[:,'def'] = [ko2info[_] for _ in sub_df.index]
         collect_df.append(sub_df)
 
-    tmp_df = pd.concat(collect_df, axis=0)
+    tmp_df = pd.concat(collect_df, axis=0,sort=False)
     tmp_dict = {_:{'def':ko2info[_]}
      for _ in set_ko if _ not in tmp_df.index}
-    tmp_df = tmp_df.append(pd.DataFrame.from_dict(tmp_dict,orient='index'))
-    tmp_df = tmp_df.sort_values(['top', 'A', 'B', 'C', 'D'])
+    tmp_df = tmp_df.append(pd.DataFrame.from_dict(tmp_dict,orient='index'),sort=False)
+    for md,kos in md_kos.items():
+        tmp_df.loc[kos,"module ID"] = md
+        tmp_df.loc[kos,"module name"] = md2info[md]['name']
+        tmp_df.loc[kos, "module all ko"] = md2info[md]['all ko']
 
     for ko,row in tmp_df.iterrows():
         ko1_g = genes_df.index[genes_df.loc[:, ko]==1]
-        tmp_df.loc[ko,'M %'] = len(ko1_g.intersection(M_g))/len(M_g) *100
-        tmp_df.loc[ko,'N %'] = len(ko1_g.intersection(N_g))/len(N_g) *100
+        tmp_df.loc[ko,'Ratio (M) (%)'] = len(ko1_g.intersection(M_g))/len(M_g) *100
+        tmp_df.loc[ko,'Ratio (N) (%)'] = len(ko1_g.intersection(N_g))/len(N_g) *100
         
     _all_over80 = [_ for _ in all_over80 if _ in tmp_df.index]
     _rate_sig_M = [_ for _ in rate_sig_M if _ in tmp_df.index]
     tmp_df.loc[_all_over80,'drive dual change'] = '+'
-    tmp_df.loc[_rate_sig_M,'sig for M'] = '+'
+    tmp_df.loc[_rate_sig_M,'sig for M'] = subset_df.loc[_rate_sig_M,'sig rate M']
+    tmp_df.loc[:,'LR'] = [ko2lr[_] for _ in tmp_df.index]
+    tmp_df = tmp_df.sort_values(['top_br', 'module name',])
+    tmp_df = tmp_df.reindex(columns=["LR",'Ratio (M) (%)','Ratio (N) (%)',"sig for M",'def',"module name",'module ID','module all ko',
+                            'top','top_br','A','B','C','D',])
     tmp_df.to_csv(join(odir, f'significant_ko_info_only_bayes.tab'), sep='\t', index=1, index_label='K number')
     
     
