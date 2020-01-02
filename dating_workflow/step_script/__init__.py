@@ -25,8 +25,8 @@ def _parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, top_hit=False):
     for row in open(ofile, 'r'):
         sep_v = row.split('\t')
         locus = sep_v[0]
-        evalue = sep_v[10]
-        if filter_evalue and float(evalue) > filter_evalue:
+        evalue = float(sep_v[10])
+        if filter_evalue and evalue > filter_evalue:
             continue
         if sep_v[1] in match_ids:
             gid2locus[sep_v[1]].append((locus, evalue))

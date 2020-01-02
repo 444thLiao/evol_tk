@@ -7,6 +7,7 @@ from collections import defaultdict
 from glob import glob
 from os.path import *
 from subprocess import check_call
+import click
 
 from Bio import SeqIO
 from tqdm import tqdm
@@ -43,9 +44,9 @@ def run(cmd):
                stderr=open('/dev/null', 'w'))
 
 
-def annotate_cog(raw_protein, cog_out_dir):
+def annotate_cog(protein_file_list, cog_out_dir):
     params = []
-    for f in glob(raw_protein):
+    for f in protein_file_list:
         gname = basename(f).replace('.faa', '')
         # for cdd
         ofile = f'{cog_out_dir}/{gname}.out'
@@ -65,7 +66,7 @@ def annotate_cog(raw_protein, cog_out_dir):
         list(tqdm(tp.imap(run, params), total=len(params)))
 
 
-def parse_annotation(cog_out_dir, top_hit=False):
+def parse_annotation(cog_out_dir, top_hit=False,evalue=1e-3):
     # for cdd
     # _cdd_match_ids = set([_ for vl in cdd_num.values() for _ in vl])
     genome2cdd = defaultdict(lambda: defaultdict(list))
@@ -77,7 +78,8 @@ def parse_annotation(cog_out_dir, top_hit=False):
         gname = basename(ofile).replace('.out', '')
         locus_dict = _parse_blastp(ofile=ofile,
                                    match_ids=[],
-                                   top_hit=top_hit)
+                                   top_hit=top_hit,
+                                   filter_evalue=evalue)
         genome2cdd[gname].update(locus_dict)
     # tigrfam annotations
     # tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
@@ -90,12 +92,11 @@ def parse_annotation(cog_out_dir, top_hit=False):
 
 
 # extract protein
-def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
+def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='prot'):
     genome2seq = {}
     if not genome_ids:
         genome_ids = list(genome2cdd)
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-    pdir = dirname(expanduser(raw_proteins))
     if get_type == 'nuc':
         suffix = 'ffn'
     elif get_type == 'prot':
@@ -104,12 +105,17 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
         raise Exception
     if not exists(outdir):
         os.makedirs(outdir)
+        
+    protein_file_list = [pf for _ in genome_ids for pf in protein_file_list if _ in pf]
+    if len(protein_file_list)!= len(genome_ids):
+        print("the length of files and ids doesn't match, may be wrong.")
     tqdm.write('get sequence file')
-    for genome_name in tqdm(genome_ids):
+    for pf in tqdm(protein_file_list):
+        genome_name = basename(pf).rpartition('.')[0]
         g_dict = genome2cdd[genome_name]
-        gfile = f'{pdir}/{genome_name}.faa'
+        gfile = pf
         new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
+        gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"  # found prokka,and its annotations 
 
         if exists(gfile):
             _cache = {record.id: record
@@ -119,7 +125,8 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
                            if _ in _cache]
                        for k, v in g_dict.items()}
             genome2seq[genome_name] = seq_set
-
+        else:
+            print(f'error for {genome_name}')
     # concat/output proteins
     tqdm.write('write out')
     for each_gene in tqdm(gene_ids):
@@ -169,25 +176,59 @@ def stats_cog(genome2genes):
     return gene_multi, gene_Ubiquity, gene2genome_num,gene2genomes
 
 
-if __name__ == "__main__":
-    import sys
-
-    # usage :
-    # extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./conserved_protein
-    if len(sys.argv) >= 2:
-        raw_proteins = sys.argv[1]
-        annotation_dir = sys.argv[2]
-        outdir = sys.argv[3]
+@click.command()
+@click.option("-in_p", 'in_proteins', )
+@click.option("-in_a", 'in_annotations', )
+@click.option("-s", "suffix", default='faa')
+@click.option("-o", 'outdir', )
+@click.option("-evalue", 'evalue', default=1e-50)
+@click.option("-gl", "genome_list", default=None,
+              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
+    if genome_list is None:
         gids = []
     else:
-        raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
-        annotation_dir = expanduser('~/data/nitrification_for/dating_for/target_genes_rpsblast')
-        outdir = expanduser('~/data/nitrification_for/dating_for/cog25_single')
-        gids = open(expanduser('~/data/nitrification_for/dating_for/bac120_annoate/remained_ids_fullv1.list')).read().split('\n')
-    annotate_cog(raw_proteins, annotation_dir)
-    genome2cdd = parse_annotation(annotation_dir, top_hit=True)
-    write_cog(outdir, genome2cdd, raw_proteins, genome_ids=gids, get_type='prot')
-    write_cog(outdir + '_nuc', genome2cdd, raw_proteins, genome_ids=gids, get_type='nuc')
+        gids = open(genome_list).read().split('\n')
+        gids = list(set([_ for _ in gids if _]))
+    in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
+    protein_files = glob(in_proteins)
+    gids = []
+    if not protein_files:
+        exit(f"error input proteins dir {in_proteins}")
+    if not exists(in_annotations):
+        os.makedirs(in_annotations)
+        
+    annotate_cog(protein_files, in_annotations)
+    genome2cdd = parse_annotation(in_annotations, top_hit=True,evalue=evalue)
+    write_cog(outdir, genome2cdd, protein_files, genome_ids=gids, get_type='prot')
+    write_cog(outdir + '_nuc', genome2cdd, protein_files, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
     gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes = stats_cog(_subgenome2cdd)
+    
+    bb_g = [k for k,v in gene2genome_num.items() if v == len(gids)]
+    if bb_g:
+        print(f"backbone genes is {str(bb_g)}")
+    else:
+        print("No backbone genes... all gene2genomes data could be reviewed at .. ")
+
+
+if __name__ == "__main__":
+    main()
+    
+# if __name__ == "__main__":
+#     import sys
+
+#     # usage :
+#     # extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./conserved_protein
+#     if len(sys.argv) >= 2:
+#         raw_proteins = sys.argv[1]
+#         annotation_dir = sys.argv[2]
+#         outdir = sys.argv[3]
+#         gids = []
+#     else:
+#         raw_proteins = expanduser('~/data/nitrification_for/dating_for/raw_genome_proteins/*.faa')
+#         annotation_dir = expanduser('~/data/nitrification_for/dating_for/target_genes_rpsblast')
+#         outdir = expanduser('~/data/nitrification_for/dating_for/cog25_single')
+#         gids = open(expanduser('~/data/nitrification_for/dating_for/bac120_annoate/remained_ids_fullv1.list')).read().split('\n')
+
