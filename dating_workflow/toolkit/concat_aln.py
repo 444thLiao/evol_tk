@@ -9,7 +9,7 @@ import plotly.graph_objs as go
 from Bio import AlignIO, SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import process_path
+from dating_workflow.step_script import process_path,convert_genome_ID,convert_genome_ID_rev
 
 
 def generate_stats_graph(stats, total, ofile):
@@ -54,21 +54,21 @@ def remove_identical_seqs(filename, seed=None):
         SeqIO.write(new_records, f1, format='fasta-2line')
 
 
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return
-    return genome_ID.split('_')[-1].replace('.', 'v')
+# def convert_genome_ID(genome_ID):
+#     # for GCA_900078535.2
+#     # it will return
+#     return genome_ID.split('_')[-1].replace('.', 'v')
 
 
-def convert_genome_ID_rev(genome_ID):
-    # for 900078535v2
-    # it will return
-    if not genome_ID.startswith('GCA'):
-        if '_' in genome_ID:
-            genome_ID = genome_ID.split('_')[0]
-        return 'GCA_' + genome_ID.replace('v', '.')
-    else:
-        return genome_ID
+# def convert_genome_ID_rev(genome_ID):
+#     # for 900078535v2
+#     # it will return
+#     if not genome_ID.startswith('GCA'):
+#         if '_' in genome_ID:
+#             genome_ID = genome_ID.split('_')[0]
+#         return 'GCA_' + genome_ID.replace('v', '.')
+#     else:
+#         return genome_ID
 
 
 def generate_partition_file(outfile, record_pos_info):
