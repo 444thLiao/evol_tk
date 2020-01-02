@@ -8,7 +8,7 @@ from os.path import *
 import click
 from Bio import AlignIO
 
-from dating_workflow.toolkit.concat_aln import generate_phy_file
+from dating_workflow.toolkit import generate_phy_file
 
 @click.command()
 @click.option('-i', 'infile', help='aln file')
