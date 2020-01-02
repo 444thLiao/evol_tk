@@ -182,7 +182,6 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
         gids = list(set([_ for _ in gids if _]))
     in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
     protein_files = glob(in_proteins)
-    gids = []
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     if not exists(in_annotations):
@@ -198,7 +197,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes = stats_cog(_subgenome2cdd,gene_ids)
     
     bb_g = [k for k,v in gene2genome_num.items() if v == len(gids)]
-    if bb_g:
+    if bb_g and gids:
         print(f"backbone genes is {str(bb_g)}")
     else:
         print("No backbone genes... all gene2genomes data could be reviewed at .. ")
