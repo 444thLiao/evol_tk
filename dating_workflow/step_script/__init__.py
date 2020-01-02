@@ -87,6 +87,7 @@ def convert_genome_ID_rev(locus_ID):
             # tianhua version, it won't contain |
             locus_ID = locus_ID.partition('_')[0]
             return 'GCA_' + locus_ID.replace('v', '.')
-
+        else:
+            return 'GCA_' + locus_ID.replace('v', '.')
     else:
         return locus_ID

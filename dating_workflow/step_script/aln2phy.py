@@ -35,7 +35,11 @@ def cli(infile, outfile, genome_list,remove_identical,fill_gaps):
         if len(infiles) != 1:
             outfile = infile.rpartition('.')[0] + '.phy'
         aln_record = AlignIO.read(infile, format='fasta')
-        generate_phy_file(outfile, [(0, 0, 0, aln_record)], gids,fill_gaps=fill_gaps, remove_identical=remove_identical)
+        generate_phy_file(outfile, 
+                          [(0, 0, 0, aln_record)], 
+                          gids,
+                          fill_gaps=fill_gaps, 
+                          remove_identical=remove_identical)
 
 
 if __name__ == "__main__":
