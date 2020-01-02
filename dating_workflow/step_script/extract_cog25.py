@@ -145,17 +145,7 @@ def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='pr
         with open(join(outdir, f"{each_gene.replace('CDD:', '')}.faa"), 'w') as f1:
             SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
 
-
-# def perform_iqtree(outdir):
-#     script = expanduser('~/bin/batch_run/batch_mafft.py')
-#     run(f"python3 {script} -i {outdir} -o {outdir}")
-
-#     script = expanduser('~/bin/batch_run/batch_tree.py')
-#     run(f"python3 {script} -i {outdir} -o {outdir} -ns newick -use fasttree")
-
-def stats_cog(genome2genes):
-    gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-
+def stats_cog(genome2genes,gene_ids):
     gene_multi = {g: 0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
         for gene, seqs in pdict.items():
@@ -204,7 +194,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     write_cog(outdir + '_nuc', genome2cdd, protein_files, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
-    gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes = stats_cog(_subgenome2cdd)
+    gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
+    gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes = stats_cog(_subgenome2cdd,gene_ids)
     
     bb_g = [k for k,v in gene2genome_num.items() if v == len(gids)]
     if bb_g:
