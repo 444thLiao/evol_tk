@@ -78,7 +78,7 @@ def convert_genome_ID(genome_ID):
 def convert_genome_ID_rev(locus_ID):
     # for 900078535v2
     # it will return
-    if isinstance(locus_ID, str):
+    if isinstance(locus_ID, str) and not locus_ID.startswith('GC'):
         if '|' in locus_ID:
             # other labmater used
             genome_name = locus_ID.partition('|')[0]
