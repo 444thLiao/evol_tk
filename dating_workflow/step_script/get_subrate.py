@@ -86,3 +86,17 @@ import multiprocessing as mp
 with mp.Pool(processes=30) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))
                 
+g2rate = {}
+for outfile in glob(join(odir,'*.out')):
+    gene_name = basename(outfile).partition('.')[0]
+    rows = open(outfile).readlines()
+    idx = [_ for _,r in enumerate(rows) if 'Substitution rate' in r]
+    if not idx:
+        continue
+    idx = idx[0]
+    rate = rows[idx+1].strip()
+    rate = float(rate.split('+-')[0].strip())
+    g2rate[gene_name] = rate/3.5/10
+
+import scipy.stats as stats 
+fit_alpha, fit_loc, fit_beta=stats.gamma.fit(list(g2rate.values()))

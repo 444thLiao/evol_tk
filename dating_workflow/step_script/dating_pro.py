@@ -113,7 +113,8 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None):
         with open(new_file, 'w') as f1:
             f1.write(new_text)
         params.append((
-            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", new_file.replace('.modify.ctl', '.log')))
+            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", 
+            new_file.replace('.modify.ctl', '.log')))
 
     if extra_cmd is not None:
         params.append(extra_cmd)

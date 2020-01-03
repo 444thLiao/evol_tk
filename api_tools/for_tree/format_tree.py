@@ -10,8 +10,8 @@ def read_tree(in_tree,format):
         raise IOError('unknown input')
     return t
 
-def earse_name(in_tree_file):
-    t = read_tree(in_tree_file)
+def earse_name(in_tree_file,format=0):
+    t = read_tree(in_tree_file,format=format)
     for n in t.traverse():
         if not n.is_leaf():
             n.name = ''
