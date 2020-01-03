@@ -56,8 +56,8 @@ if not exists(odir):
 cmds = []
 for f in glob(join(aln_dir,'*.trimal')):
     ofile = join(odir,basename(f).replace('.trimal','.phy'))
-    if not exists(ofile):
-        run(f'python3 ~/script/evolution_relative/dating_workflow/step_script/aln2phy.py -i {f} -o {ofile} -gl {genome_id} -rm_I -no_fill')
+    #if not exists(ofile):
+    run(f'python3 ~/script/evolution_relative/dating_workflow/step_script/aln2phy.py -i {f} -o {ofile} -gl {genome_id}')
 
 
     if not exists(odir):
@@ -80,7 +80,7 @@ for f in glob(join(aln_dir,'*.trimal')):
     with open(ctl_f,'w') as f1:
         f1.write(text)
         
-    cmds.append(f"cd {dirname(ctl_f)}; {paml_bin} {ctl_f} ")
+    cmds.append(f"cd {dirname(ctl_f)}; {paml_bin} {basename(ctl_f)} ")
 
 import multiprocessing as mp
 with mp.Pool(processes=30) as tp:
