@@ -48,8 +48,6 @@ def main(tree_file, ofile, itol_odir, calibration_txt=calibration_txt):
     filled = '1'
     color = '#ff9900'
 
-    calibration_dict = {}
-
     rows_str = []
     rows = []
     for row in open(calibration_txt):

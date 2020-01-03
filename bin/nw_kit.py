@@ -9,12 +9,11 @@ from os.path import dirname
 
 sys.path.insert(0, dirname(__file__))
 import click
-# required format for binary python
 from api_tools.for_tree.format_tree import *
 import os
-from os.path import exists
+from os.path import exists,abspath,expanduser
 
-'''
+_t = '''
 ete(v3.0) toolkits format table 
 0	flexible with support values	((D:0.723274,F:0.567784)1.000000:0.067192,(B:0.279326,H:0.756049)1.000000:0.807788);
 1	flexible with internal node names	((D:0.723274,F:0.567784)E:0.067192,(B:0.279326,H:0.756049)B:0.807788);
@@ -31,48 +30,34 @@ ete(v3.0) toolkits format table
 '''
 
 
-def main(in_tree, o_file, outgroup_names):
-    t = renamed_tree(in_tree,
-                     outfile=o_file,
-                     ascending=True)
-    t = root_tree_with(t,
-                       gene_names=outgroup_names,
-                       format=0)
-    t = sort_tree(t, ascending=True)
-    t.write(outfile=o_file, format=3)
-
-
-@click.command()
-@click.option('-i', 'in_newick')
-@click.option('-o', 'o_newick')
-@click.option('-r', 'root_name', help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
-@click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def main(in_newick, o_newick, root_name, force):
-    if ',' in root_name:
-        root_names = [_.strip() for _ in root_name.split(',')]
-    else:
-        root_names = [root_name.strip()]
-    if not os.path.exists(dirname(o_newick)):
-        os.makedirs(o_newick)
-
-    if os.path.exists(o_newick) and not force:
-        print(o_newick, ' exists and not overwrite it.')
-        return
-    main(in_newick, o_newick, root_names)
-
+def process_path(path):
+    if path is None:
+        return path
+    if not '/' in path:
+        path = './' + path
+    path = abspath(expanduser(path))
+    return path
 
 def process_IO(infile, out):
-    if out is None:
+    infile = process_path(infile)
+    if out is not None:
         out = infile.rpartition('.')[0] + '.newick'
-    else:
+    elif isinstance(out,str):
         if not exists(dirname(out)):
             os.makedirs(dirname(out))
+    elif out is None:
+        return out
+    else:
+        raise IOError
+    out = process_path(out)
     return out
 
 
-@click.group()
-def cli():
-    pass
+@click.group(invoke_without_command=True)
+@click.option('-f', 'print_tree_format', default=False, required=False, is_flag=True)
+def cli(print_tree_format):
+    if print_tree_format:
+        print(_t)
 
 
 @cli.command()
@@ -143,8 +128,8 @@ def add_cal(in_newick, calibration_txt, out_newick, tree_format):
 @click.option('-f', 'tree_format', default=0)
 def cat(in_newick, in_newick2, out_newick, tree_format):
     t = Tree()
-    t1 = read_tree(in_newick, format=tree_format)
-    t2 = read_tree(in_newick2, format=tree_format)
+    t1 = read_tree(process_path(in_newick), format=tree_format)
+    t2 = read_tree(process_path(in_newick2), format=tree_format)
     t.add_child(t1)
     t.add_child(t2)
     t.write(out_newick, format=tree_format)
