@@ -97,7 +97,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
             added_seq = []
             for _ in range(num_seq):
                 formatted_gid = aln_record[_, :].id.split('_')[0]
-                if str(aln_record[_, :].seq) in set(added_seq):
+                if str(aln_record[_, :].seq) in set(added_seq) and remove_identical:
                     continue
                 if formatted_gid in genome_ids:
                     # before _ , should be the converted genome id
