@@ -75,7 +75,7 @@ def convert_genome_ID(genome_ID):
         return genome_ID
 
 
-def convert_genome_ID_rev(locus_ID):
+def convert_genome_ID_rev(locus_ID,prefix='GCA_'):
     # for 900078535v2
     # it will return
     if isinstance(locus_ID, str) and not locus_ID.startswith('GC'):
@@ -86,8 +86,8 @@ def convert_genome_ID_rev(locus_ID):
         if '_' in locus_ID:
             # tianhua version, it won't contain |
             locus_ID = locus_ID.partition('_')[0]
-            return 'GCA_' + locus_ID.replace('v', '.')
+            return prefix + locus_ID.replace('v', '.')
         else:
-            return 'GCA_' + locus_ID.replace('v', '.')
+            return prefix + locus_ID.replace('v', '.')
     else:
         return locus_ID

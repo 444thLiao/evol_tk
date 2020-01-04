@@ -11,7 +11,7 @@ from subprocess import check_call
 import click
 from Bio import SeqIO
 from tqdm import tqdm
-
+from dating_workflow.step_script import convert_genome_ID_rev
 default_mode = 'ginsi'
 command_template = '{mode} --thread -1 {in_file} > {o_file} '
 
@@ -29,20 +29,7 @@ def unit_run(in_file, o_file, mode):
                stderr=open('/dev/null', 'w'))
 
 
-# two function for dating workflow
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return
-    return genome_ID.split('_')[-1].replace('.', 'v')
-
-
-def convert_genome_ID_rev(genome_ID):
-    # for 900078535v2
-    # it will return
-    return 'GCA_' + genome_ID.replace('v', '.')
-
-
-def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=False, mode=default_mode, **kwarg):
+def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=False, mode=default_mode,fix_refseq=False, **kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -62,9 +49,15 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
                        if _.id in gids]
             if not records:
                 records = SeqIO.parse(f, format='fasta')
-                records = [_
+                if not fix_refseq:
+                    records = [_
                            for _ in records
-                           if convert_genome_ID_rev(_.id.split('_')[0]) in gids]
+                           if convert_genome_ID_rev(_.id.split('_')[0],) in gids]
+                else:
+                    gids = [_.split('_')[-1] for _ in gids]
+                    records = [_
+                           for _ in records
+                           if convert_genome_ID_rev(_.id.split('_')[0],prefix='') in gids]
             n_f = join(odir, 'tmp', basename(f))
             if not records or len(records) == 1:
                 print(f'failed records,for {f}, pass it')
@@ -100,13 +93,14 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-m', 'mode_mafft', default='ginsi')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft):
+@click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
+def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft,fix_refseq):
     if genome_list is None:
         gids = None
     else:
         gids = open(genome_list).read().split('\n')
         gids = set([_ for _ in gids if _])
-    main(indir, odir, num_parellel, suffix, new_suffix, gids=gids, force=force, mode=mode_mafft)
+    main(indir, odir, num_parellel, suffix, new_suffix, gids=gids, force=force, mode=mode_mafft,fix_refseq=fix_refseq)
 
 
 if __name__ == "__main__":

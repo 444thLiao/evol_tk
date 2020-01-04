@@ -31,7 +31,7 @@ The parameters of them are similar.
 export extract_dir
 
 `python3 ~/bin/batch_run/batch_mafft.py -i ./bac120_extract/seq_e50 -s faa -o ./bac120_extract/232g_cyano -f -m einsi -gl ../rawdata/assembly_ids.list`
-`python3 ~/bin/batch_run/batch_trimal.py -o ./bac120_extract/cyano_aln -i ./bac120_extract/cyano_aln`
+`python3 ~/bin/batch_run/batch_trimal.py -o ./bac120_extract/232g_cyano -i ./bac120_extract/232g_cyano`
 `python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/concat_aln.py -i ./bac120_extract/cyano_aln -o ./trees/concat/cyano_concat.trimal -s trimal -gl ./rawdata/cyano_basal/assembly_ids.list -ct partition -no_graph`
 `iqtree -nt 35 -m MFP -redo -mset WAG,LG,JTT,Dayhoff -mrate E,I,G,I+G -mfreq FU -wbtl -bb 1000 -pre ./trees/iqtree/cyano_concat -s ./trees/concat/cyano_concat.trimal -spp ./trees/concat/cyano_concat.partition`
 `iqtree -nt 30 -wbtl -bb 1000 -m LG+C20+F+G -redo -ft ./trees/iqtree/cyano_concat.contree -s ./trees/concat/cyano_concat.trimal -pre ./trees/iqtree/cyano_complex_bac120`
