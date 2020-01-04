@@ -17,13 +17,13 @@ def run(args):
 
 def unit_run(in_file, o_file,resoverlap,seqoverlap):
     check_call(command_template.format(in_file=in_file,
-                                       o_file=o_file，
+                                       o_file=o_file,
                                        resoverlap=resoverlap,
                                        seqoverlap=seqoverlap),
                shell=1)
 
 
-def main(in_dir, odir, num_parellel, suffix='', new_suffix='',resoverlap=0.55,seqoverlap=60 **kwarg):
+def main(in_dir, odir, num_parellel, suffix='', new_suffix='',resoverlap=0.55,seqoverlap=60,**kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
