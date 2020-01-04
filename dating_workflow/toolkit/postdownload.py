@@ -10,9 +10,9 @@ import sys
 from glob import glob
 from os.path import join, exists, basename, dirname, isdir, expanduser
 from subprocess import check_call
-
+from Bio import SeqIO
 from tqdm import tqdm
-
+from dating_workflow.toolkit.concat_aln import convert_genome_ID
 
 def convert_genome_ID(genome_ID):
     # for GCA_900078535.2
@@ -61,8 +61,19 @@ def cli(indir, odir=None):
         else:
             # print(p_file,ofile)
             pass
-
-
+    # format protein id 
+    name_map = {}
+    for p in tqdm(glob(join(odir,'*.faa'))):
+        name = basename(p).replace('.faa','')
+        locus_prefix = convert_genome_ID(name)
+        records = []
+        for idx,record in enumerate(SeqIO.parse(p,format='fasta')):
+            new_name = locus_prefix + '_{:0>5}'.format(idx+1)
+            name_map[record.id ] = new_name
+            record.id = new_name
+            records.append(record)
+        SeqIO.write(records,open(p,'w'),format='fasta-2line')
+        
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
         indir = sys.argv[1]

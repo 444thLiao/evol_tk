@@ -98,9 +98,18 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
         g_dict = genome2cdd[genome_name]
         gfile = f'{pdir}/{genome_name}.faa'
         new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
+        new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
 
-        if exists(gfile):
+        if exists(new_gfile):
+            _cache = {record.id: record
+                      for record in SeqIO.parse(new_gfile, format='fasta')}
+            seq_set = {k: [_cache[_]
+                           for _ in v
+                           if _ in _cache]
+                       for k, v in g_dict.items()}
+            genome2seq[genome_name] = seq_set
+        else:
+            # not with prokka annotations
             _cache = {record.id: record
                       for record in SeqIO.parse(gfile, format='fasta')}
             seq_set = {k: [_cache[_]
@@ -108,7 +117,7 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
                            if _ in _cache]
                        for k, v in g_dict.items()}
             genome2seq[genome_name] = seq_set
-
+            
     # concat/output proteins
     tqdm.write('write out')
     for each_gene in tqdm(gene_ids):
