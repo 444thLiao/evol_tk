@@ -120,13 +120,18 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln'):
+@click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
+def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln',fix_refseq=False):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
         gids = f1.read().split('\n')
     gids = [convert_genome_ID(_) for _ in gids if _]
     gids = set(gids)
+    if fix_refseq:
+        prefix = 'GCF_'
+    else:
+        prefix = 'GCA_'
     # from GCA become locus_tag
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
@@ -186,7 +191,7 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
 
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
-            f1.write(f'>{convert_genome_ID_rev(gid)}\n')
+            f1.write(f'>{convert_genome_ID_rev(gid,prefix=prefix)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:

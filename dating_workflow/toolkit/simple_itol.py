@@ -4,28 +4,16 @@ import sys
 from ete3 import NCBITaxa, Tree
 
 from api_tools.itol_func import *
-
+from dating_workflow.step_script import process_path,convert_genome_ID,convert_genome_ID_rev
 ncbi = NCBITaxa()
-
-
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return
-    return genome_ID.split('_')[-1].replace('.', 'v')
-
-
-def convert_genome_ID_rev(genome_ID):
-    # for 900078535v2
-    # it will return
-    return genome_ID.replace('v', '.')
 
 
 if len(sys.argv) != 3:
     raise Exception()
-tree = sys.argv[1]
+genome_list = sys.argv[1]
 metadata = sys.argv[2]
 
-gids = Tree(tree).get_leaf_names()
+gids = [_ for _ in open(genome_list).read().split('\n') if _]
 
 # leafid2gids = {_:convert_genome_ID_rev(_)
 #                for _ in leafids}

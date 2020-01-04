@@ -1,9 +1,12 @@
-from os.path import join,dirname
+from os.path import join,dirname,exists
 
 from ete3 import Tree
 
-from api_tools.itol_func import dataset_symbol_template
-
+indir = '/home-user/thliao/template_txt/'
+if not exists(indir):
+    indir = join(dirname(__file__), 'itol_template')
+    
+dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 def read_tree(in_tree, format):
     if isinstance(in_tree, str):

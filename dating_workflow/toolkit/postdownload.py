@@ -14,12 +14,6 @@ from Bio import SeqIO
 from tqdm import tqdm
 from dating_workflow.toolkit.concat_aln import convert_genome_ID
 
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return 
-    return genome_ID.split('_')[-1].replace('.', 'v')
-
-
 def run_cmd(cmd):
     check_call(cmd, shell=True,
                stderr=open('/dev/null', 'w'),
