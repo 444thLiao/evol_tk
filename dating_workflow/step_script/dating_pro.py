@@ -264,13 +264,15 @@ def process_path(path):
 @click.option('-p', 'print_f', default='2')
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
-def cli(in_phyfile, in_treefile, odir, run_tmp, only_prior, sampfreq,print_f,rgene_gamma,sigma2_gamma):
+@click.option('-c', 'clock', default='2')
+def cli(in_phyfile, in_treefile, odir, run_tmp, only_prior, sampfreq,print_f,rgene_gamma,sigma2_gamma,clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),
                    'print':str(print_f),
                    'rgene_gamma':rgene_gamma,
-                   'sigma2_gamma':sigma2_gamma}
+                   'sigma2_gamma':sigma2_gamma,
+                   'clock':clock}
     main(in_phyfile, in_treefile, total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
 
 
