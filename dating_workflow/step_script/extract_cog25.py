@@ -92,11 +92,12 @@ def parse_annotation(cog_out_dir, top_hit=False,evalue=1e-3):
 
 
 # extract protein
-def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='prot'):
+def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
     genome2seq = {}
     if not genome_ids:
         genome_ids = list(genome2cdd)
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
+    pdir = dirname(expanduser(raw_proteins))
     if get_type == 'nuc':
         suffix = 'ffn'
     elif get_type == 'prot':
@@ -105,21 +106,16 @@ def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='pr
         raise Exception
     if not exists(outdir):
         os.makedirs(outdir)
-        
-    protein_file_list = [pf for _ in genome_ids for pf in protein_file_list if _ in pf]
-    if len(protein_file_list)!= len(genome_ids):
-        print("the length of files and ids doesn't match, may be wrong.")
     tqdm.write('get sequence file')
-    for pf in tqdm(protein_file_list):
-        genome_name = basename(pf).rpartition('.')[0]
+    for genome_name in tqdm(genome_ids):
         g_dict = genome2cdd[genome_name]
-        gfile = pf
+        gfile = f'{pdir}/{genome_name}.faa'
         new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"  # found prokka,and its annotations 
+        new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
 
-        if exists(gfile):
+        if exists(new_gfile):
             _cache = {record.id: record
-                      for record in SeqIO.parse(gfile, format='fasta')}
+                      for record in SeqIO.parse(new_gfile, format='fasta')}
             seq_set = {k: [_cache[_]
                            for _ in v
                            if _ in _cache]
@@ -134,6 +130,7 @@ def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='pr
                            if _ in _cache]
                        for k, v in g_dict.items()}
             genome2seq[genome_name] = seq_set
+            
     # concat/output proteins
     tqdm.write('write out')
     for each_gene in tqdm(gene_ids):
@@ -151,6 +148,7 @@ def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='pr
 
         with open(join(outdir, f"{each_gene.replace('CDD:', '')}.faa"), 'w') as f1:
             SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
+
 
 def stats_cog(genome2genes,gene_ids):
     gene_multi = {g: 0 for g in gene_ids}
