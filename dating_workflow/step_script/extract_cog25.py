@@ -123,6 +123,10 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
             genome2seq[genome_name] = seq_set
         else:
             # not with prokka annotations
+            print('not annotated with prokka')
+            if not gfile.endswith(suffix):
+                print(f'not {suffix},past it')
+                continue
             _cache = {record.id: record
                       for record in SeqIO.parse(gfile, format='fasta')}
             seq_set = {k: [_cache[_]
@@ -194,8 +198,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
         
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True,evalue=evalue)
-    write_cog(outdir, genome2cdd, protein_files, genome_ids=gids, get_type='prot')
-    write_cog(outdir + '_nuc', genome2cdd, protein_files, genome_ids=gids, get_type='nuc')
+    write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
+    write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
