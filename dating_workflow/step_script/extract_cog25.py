@@ -126,7 +126,14 @@ def write_cog(outdir, genome2cdd, protein_file_list, genome_ids=[], get_type='pr
                        for k, v in g_dict.items()}
             genome2seq[genome_name] = seq_set
         else:
-            print(f'error for {genome_name}')
+            # not with prokka annotations
+            _cache = {record.id: record
+                      for record in SeqIO.parse(gfile, format='fasta')}
+            seq_set = {k: [_cache[_]
+                           for _ in v
+                           if _ in _cache]
+                       for k, v in g_dict.items()}
+            genome2seq[genome_name] = seq_set
     # concat/output proteins
     tqdm.write('write out')
     for each_gene in tqdm(gene_ids):
