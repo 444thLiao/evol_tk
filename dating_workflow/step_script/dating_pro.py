@@ -228,7 +228,7 @@ def main(in_phyfile, in_treefile, total_odir, run_tmp=True, run_prior_only=True,
     if run_prior_only:
         run(prior_cmd)
         return
-    if run_tmp:
+    if run_tmp and not isinstance(run_tmp,str):
         generate_tmp(in_phyfile,
                      in_treefile,
                      tmp_odir,
@@ -239,6 +239,9 @@ def main(in_phyfile, in_treefile, total_odir, run_tmp=True, run_prior_only=True,
         run_each_tmp(tmp_odir,
                      mcmc_for_dir,
                      extra_cmd=prior_cmd)
+    elif isinstance(run_tmp,str):
+        collecting_tmp(run_tmp,
+                tmp_odir)
     final_mcmctree(inBV=join(mcmc_for_dir, 'in.BV'),
                    in_phyfile=in_phyfile,
                    in_treefile=in_treefile,
@@ -258,7 +261,7 @@ def process_path(path):
 @click.option('-i', '--in_phy', 'in_phyfile')
 @click.option('-it', '--in_tree', 'in_treefile')
 @click.option('-o', 'odir')
-@click.option('-no_tmp', 'run_tmp', is_flag=True, default=True)
+@click.option('-no_tmp', 'run_tmp', default=True)
 @click.option('-only_prior', 'only_prior', is_flag=True, default=False)
 @click.option('-sf', 'sampfreq', default='2')
 @click.option('-p', 'print_f', default='2')

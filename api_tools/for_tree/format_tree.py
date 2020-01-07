@@ -84,12 +84,12 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
     return t
 
 
-def add_cal(in_tree_file, out_newick, calibration_txt, format=0, generate_itol=False):
+def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     t = read_tree(in_tree_file, format=format)
     calibration_dict = {}
     for row in open(calibration_txt):
         if row and not row.startswith('#'):
-            LCA, time, remained = row.split('\t')
+            LCA, time, _remained = row.split('\t')
             calibration_dict[LCA] = time
     t = earse_name(t)
     for LCA, time in calibration_dict.items():
@@ -103,34 +103,34 @@ def add_cal(in_tree_file, out_newick, calibration_txt, format=0, generate_itol=F
     text = f'{len(t.get_leaves())}\n' + final_tree
     with open(out_newick, 'w') as f1:
         f1.write(text)
-
-    if generate_itol:
-        itol_odir = dirname(out_newick)
-        size = '12'
-        shape = '2'
-        filled = '1'
-        color = '#ff9900'
-
-        rows_str = []
-        rows = []
-        for row in open(calibration_txt):
-            if row and not row.startswith('#'):
-                LCA, time, remained = row.split('\t')
-
-                row = '\t'.join([LCA, shape, size, color, filled, '1', time])
-                rows.append(row)
-                row = '\t'.join([LCA, time, '1', '#FF0000', 'bold', '2', '0'])
-                rows_str.append(row)
-        template_text = open(dataset_symbol_template).read()
-        annotate_text = '\n'.join(rows)
-        template_text = template_text.format(dataset_label='calibration',
-                                             legend_text='',
-                                             maximum_size=size)
-        with open(join(itol_odir, 'dating_tree_calibration.txt'), 'w') as f1:
-            f1.write(template_text + '\n' + annotate_text)
-
-        template_text = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
-        annotate_text = '\n'.join(rows_str)
-        with open(join(itol_odir, 'dating_tree_calibration_str.txt'), 'w') as f1:
-            f1.write(template_text + '\n' + annotate_text)
     return text
+
+def draw_cal_itol(calibration_txt,odir):
+    itol_odir = odir
+    size = '12'
+    shape = '2'
+    filled = '1'
+    color = '#ff9900'
+
+    rows_str = []
+    rows = []
+    for row in open(calibration_txt):
+        if row and not row.startswith('#'):
+            LCA, time, _remained = row.split('\t')
+
+            row = '\t'.join([LCA, shape, size, color, filled, '1', time])
+            rows.append(row)
+            row = '\t'.join([LCA, time, '1', '#FF0000', 'bold', '2', '0'])
+            rows_str.append(row)
+    template_text = open(dataset_symbol_template).read()
+    annotate_text = '\n'.join(rows)
+    template_text = template_text.format(dataset_label='calibration',
+                                            legend_text='',
+                                            maximum_size=size)
+    with open(join(itol_odir, 'dating_tree_calibration.txt'), 'w') as f1:
+        f1.write(template_text + '\n' + annotate_text)
+
+    template_text = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
+    annotate_text = '\n'.join(rows_str)
+    with open(join(itol_odir, 'dating_tree_calibration_str.txt'), 'w') as f1:
+        f1.write(template_text + '\n' + annotate_text)
