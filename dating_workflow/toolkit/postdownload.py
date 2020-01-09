@@ -76,30 +76,38 @@ if __name__ == "__main__":
         indir = './genbank'
         odir = './genome_protein_files'
     default_name = './assembly_ids.list'
-    base_tab = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
+    
+    for indir in ['./genbank','./refseq']:
+        if exists(indir):
+            name = indir.split('/')[-1]
+            base_tab = expanduser(f'~/.cache/ncbi-genome-download/{name}_bacteria_assembly_summary.txt')
+            all_g_ids = set([basename(_)
+                            for _ in glob(join(indir, 'bacteria', '*'))])
+            # from downloaded dir
+            all_ids = open(default_name).read().split('\n')
+            all_ids = [_ for _ in all_ids if _]
+            all_ids = set(all_ids)
+            # from id list
 
-    all_g_ids = set([basename(_)
-                     for _ in glob(join(indir, 'bacteria', '*'))])
-    # from downloaded dir
-    all_ids = open(default_name).read().split('\n')
-    all_ids = [_ for _ in all_ids if _]
-    all_ids = set(all_ids)
-    # from id list
+            metadatas = open(base_tab).read().split('\n')
+            rows = [_
+                    for _ in metadatas
+                    if _.split('\t')[0] in all_g_ids]
+            
+            if exists('./metadata.csv'):
+                f1 = open('./metadata.csv', 'a')
+            else:
+                f1 = open('./metadata.csv', 'w')
+            f1.write(metadatas[1].strip('# ') + '\n')
+            f1.write('\n'.join(rows))
+            f1.close()
+            if set(all_ids) != set(all_g_ids):
+                print('different id, missing ids: ' + '\n'.join(all_ids.difference(all_g_ids)))
 
-    metadatas = open(base_tab).read().split('\n')
-    rows = [_
-            for _ in metadatas
-            if _.split('\t')[0] in all_g_ids]
-    with open('./metadata.csv', 'w') as f1:
-        f1.write(metadatas[1].strip('# ') + '\n')
-        f1.write('\n'.join(rows))
-    if set(all_ids) != set(all_g_ids):
-        print('different id, missing ids: ' + '\n'.join(all_ids.difference(all_g_ids)))
-
-    tmp_dir = './tmp'
-    prokka_p = " `which prokka`"
-    if not exists(odir):
-        os.makedirs(odir, exist_ok=True)
-    if not exists(tmp_dir):
-        os.makedirs(tmp_dir, exist_ok=True)
-    cli(indir, odir)
+            tmp_dir = './tmp'
+            prokka_p = " `which prokka`"
+            if not exists(odir):
+                os.makedirs(odir, exist_ok=True)
+            if not exists(tmp_dir):
+                os.makedirs(tmp_dir, exist_ok=True)
+            cli(indir, odir)
