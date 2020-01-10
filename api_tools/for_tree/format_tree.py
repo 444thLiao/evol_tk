@@ -77,7 +77,14 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
             else:
                 n.name = 'I%s_S%s' % (count, str(int(n.support)))
             count += 1
-
+        elif isinstance(n.name,str) and n.name.startswith('I'):
+            S_ori = n.name.split('_')[-1]
+            S_ori = S_ori.strip('S')
+            if not S_ori.isnumeric():
+                #print(S_ori)
+                S_ori = '100'
+            n.name = f'I{count}_S{S_ori}'
+            count +=1
     if outfile is None:
         return t
     t.write(outfile=outfile, format=3)

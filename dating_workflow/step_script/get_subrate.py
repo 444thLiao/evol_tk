@@ -8,7 +8,7 @@ from subprocess import check_call
 import click
 from tqdm import tqdm
 
-template_dir = join(dirname(dirname(__file__)), 'ctl_template')
+template_dir = abspath(join(dirname(dirname(__file__)), 'ctl_template'))
 codeml_ctl = join(template_dir, 'codeml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
 
@@ -46,10 +46,10 @@ def run(args):
         with open(log, 'w') as f1:
             f1.write(t)
             
-odir = './dating_for/phy_files/195g_SubRate'
-aln_dir = './cog25_single/195g_aln/'
-genome_id = './dating_for_195g.list'
-in_treefile = abspath('./dating_for/phy_files/195g_SubRate/195g_point.fasttree.newick')
+odir = './dating_for/phy_files/198g_subrate'
+aln_dir = './cog25_single/198g_aln/'
+genome_id = './dating_for_198g.list'
+in_treefile = abspath('./dating_for/phy_files/198g_subrate/198g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
     

@@ -55,13 +55,13 @@ def _parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, gene_pos=0):
         gid2locus = _get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
 
-
 def process_path(path):
-    if '~' in path:
-        path = expanduser('path')
     if not '/' in path:
         path = './' + path
-    path = abspath(path)
+    if path.startswith('~'):
+        path = expanduser(path)
+    if path.startswith('.'):
+        path = abspath(path)
     return path
 
 

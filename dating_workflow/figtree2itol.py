@@ -36,7 +36,7 @@ dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
 def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with):
-    tree2 = Tree(intree_ori)
+    tree2 = Tree(intree_ori,format=3)
     tree2.set_outgroup(tree2.get_common_ancestor(root_with))
 
     mcmc_out_tree_text = open(mcmc_out_tree)
@@ -47,16 +47,15 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, ro
             t = t.replace(' ', '')
             tree = Tree(t, format=1)
 
-    count = 0
     for n in tree.traverse():
         if not n.is_leaf():
-            dates = n.name
-            n.name = 'I%s' % count
-            n.add_features(ages=dates, )
+            # dates = n.name
+            # n.name = 'I%s' % count
+            # n.add_features(ages=dates, )
             all_leafs = n.get_leaf_names()
             nin2 = tree2.get_common_ancestor(all_leafs)
-            n.add_features(support=nin2.support)
-            count += 1
+            n.name = nin2.name
+            # n.add_features(support=nin2.support)
     # tree.features.remove('support')
     text = tree.write(format=3)
     text = text.replace(')1:', '):')
@@ -114,10 +113,12 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, ro
 @click.option('-i', 'intree_ori')
 @click.option('-i2', 'mcmc_out_tree')
 @click.option('-o', 'output_dating_result_tree')
-@click.option('-od', 'itol_annotate', default='./itol_txt')
+@click.option('-od', 'itol_annotate', default=None)
 @click.option('-r', 'root_with', help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
 def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with):
     output_dating_result_tree = process_path(output_dating_result_tree)
+    if itol_annotate is None:
+        itol_annotate = dirname(output_dating_result_tree)
     itol_annotate = process_path(itol_annotate)
     if ',' in root_with:
         root_with = [_.strip() for _ in root_with.split(',')]

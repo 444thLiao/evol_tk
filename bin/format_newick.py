@@ -14,7 +14,7 @@ import click
 from api_tools.for_tree.format_tree import renamed_tree,root_tree_with,add_cal_api,Tree,read_tree,sort_tree,earse_name,draw_cal_itol
 import os
 from os.path import exists
-
+from dating_workflow.step_script import process_path
 '''
 ete(v3.0) toolkits format table 
 
@@ -63,6 +63,7 @@ def process_IO(infile, out):
     if out is None:
         out = infile.rpartition('.')[0] + '.newick'
     else:
+        out = process_path(out)
         if not exists(dirname(out)):
             os.makedirs(dirname(out))
     return out
