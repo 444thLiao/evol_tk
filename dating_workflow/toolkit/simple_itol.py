@@ -2,7 +2,7 @@ import os
 import sys
 
 from ete3 import NCBITaxa, Tree
-
+from os.path import *
 from api_tools.itol_func import *
 from dating_workflow.step_script import process_path,convert_genome_ID,convert_genome_ID_rev
 ncbi = NCBITaxa()
@@ -11,7 +11,7 @@ ncbi = NCBITaxa()
 if len(sys.argv) != 3:
     raise Exception()
 genome_list = sys.argv[1]
-metadata = sys.argv[2]
+metadata = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
 
 gids = [_ for _ in open(genome_list).read().split('\n') if _]
 

@@ -7,7 +7,7 @@ from subprocess import check_call
 
 import click
 from tqdm import tqdm
-
+#__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/get_subrate.py'
 template_dir = abspath(join(dirname(dirname(__file__)), 'ctl_template'))
 codeml_ctl = join(template_dir, 'codeml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
@@ -45,7 +45,13 @@ def run(args):
         t = open(log, 'r', newline='\n').read().replace('\r', '\n')
         with open(log, 'w') as f1:
             f1.write(t)
-            
+
+odir = './'
+aln_dir = '../cog25_single/210g_aln/'
+genome_id = '../dating_for_210g.list'
+in_treefile = abspath('./210g_point.newick')
+
+        
 odir = './dating_for/phy_files/198g_subrate'
 aln_dir = './cog25_single/198g_aln/'
 genome_id = './dating_for_198g.list'

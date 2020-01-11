@@ -19,29 +19,42 @@ param = {
     #          'treefile': treefile_b,
     #          'ndata': ndata,
     #          'seqtype': seqtype,
-    #          'usedata': "2 in.BV 1",
-    #          'outfile': outfile,
+              'usedata': "2 ../in.BV 1",
+              'outfile': './04_mcmctree.out',
     #          'clock': clock,
     #          'BDparas': bd_paras,
-    #          'rgene_gamma': rgene_gamma,
+              'rgene_gamma': '1 100 1',
     #          'sigma2_gamma': sigma2_gamma,
     #          'burnin': burnin,
-             'sampfreq': 5,
+             'sampfreq': 10,
     #          'nsample': nsample,
     #          'alpha': 0.5
              }
 
 # modify these ctl
+onew_name = 'repeat_rg1_100'
 for d in process_dirs:
     ori_ctl = join(d,'mcmc_for','03_mcmctree.ctl')
     if exists(ori_ctl):
         text = modify(ori_ctl,**param)
-        with open(join(d,'mcmc_for','04_mcmctree.ctl'),'w') as f1:
+        os.makedirs(join(d,'mcmc_for',onew_name),exist_ok=True)
+        with open(join(d,'mcmc_for',onew_name,'04_mcmctree.ctl'),'w') as f1:
             f1.write(text)
-
+# remove previous
+# for d in process_dirs:
+#     ori_f = join(d,'mcmc_for','mcmc.txt')
+#     if exists(ori_f):
+#         os.system(f'rm -rf {ori_f}',shell=1)
+#     ori_f = join(d,'mcmc_for','FigTree.tre')
+#     if exists(ori_f):
+#         os.system(f'rm -rf {ori_f}',shell=1)
+#     ori_f = join(d,'mcmc_for','SeedUsed')
+#     if exists(ori_f):
+#         os.system(f'rm -rf {ori_f}',shell=1)        
+        
 cmds = []
 for d in process_dirs:
-    cmd = f"cd {join(d,'mcmc_for')} ; mcmctree ./04_mcmctree.ctl"
+    cmd = f"cd {join(d,'mcmc_for',onew_name,)} ; mcmctree ./04_mcmctree.ctl"
     cmds.append(cmd)
     
     
