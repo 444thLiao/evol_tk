@@ -11,11 +11,11 @@ import pickle
 from glob import glob
 from Bio import SeqIO
 import multiprocessing as mp
-
+import io,re
 
 tmp_dir = expanduser('~/.tmp')
 def preprocess_locus_name(locus):
-    locus = str(locus).split('|')[-1]
+    locus = str(locus).split('|')[-1].split(' ')[0]
     locus = locus.strip()
     return locus
 
@@ -76,9 +76,24 @@ def get_all_gene_pos(genome_file, CDS_names=None,id_spec='ID'):
     order_contig_list = tuple(order_contig_list)
     return gene2pos, order_contig_list
 
-
+def process_locus_name_of_gbk(row):
+    infos = row.split(' ')
+    infos = [_ for _ in infos if _]
+    if len(infos)<=2:
+        print(infos)
+    try:
+        length = infos[1].split('_length_')[1].split('_')[0]
+    except:
+        import pdb;pdb.set_trace()
+    name = 'LOCUS' + ' '*7 + infos[1].split('_length')[0] + f' {length} bp  ' + '  DNA  linear  20-Jan-2020'
+    return name+'\n'
+    
 def read_gbk(gbk_file):
-    records = SeqIO.parse(gbk_file,format='genbank')
+    rows = open(gbk_file).readlines()
+    rows = [process_locus_name_of_gbk(_)
+            if '_length_' in _ and _.startswith('LOCUS') else _ 
+            for _ in rows]
+    records = SeqIO.parse(io.StringIO(''.join(rows)),format='genbank')
     records = list(records)
     return records
 
@@ -227,18 +242,21 @@ def get_locus2group(df):
             locus2group[locus] = group
     return locus2group
 
-
-def main(infile, prokka_o):
+def main(infile, prokka_o,use_gbk=False):
     if not exists(abspath(prokka_o)):
         raise Exception("wrong prokka output directory")
     OG_df = pd.read_csv(infile, sep='\t', index_col=0)
     # get all index which contains duplicated genes
-    genomes_files = [glob(join(prokka_o, _ + '*', '%s.gff' % _))[0]
+    SUFFIX = 'gff'
+    if use_gbk:
+        SUFFIX = 'gbk'
+    genomes_files = [glob(join(prokka_o, _ + '*', f'{_}.{SUFFIX}' % _))[0]
                      for _ in OG_df.columns 
-                     if glob(join(prokka_o, _ + '*', '%s.gff' % _))]
+                     if glob(join(prokka_o, _ + '*', f'{_}.{SUFFIX}'))]
     if not genomes_files:
-        genomes_files = [glob(join(prokka_o, '%s.gff' % _))[0]
-                     for _ in OG_df.columns]
+        genomes_files = [join(prokka_o, f'{_}.{SUFFIX}')
+                     for _ in OG_df.columns
+                     if exists(join(prokka_o, f'{_}.{SUFFIX}'))]
     # use glob and wildcard to capture all real gff files
     if exists(join(tmp_dir,'genome2gene_info')):
         tqdm.write('detect previous intermediated file, used it to process')
@@ -249,10 +267,15 @@ def main(infile, prokka_o):
         genome2order_tuple = {}
         tqdm.write('iterating all gff for collecting positional information')
         for genome_file in tqdm(genomes_files):
-            genome_name = basename(genome_file).replace('.gff', '')
+            genome_name = basename(genome_file).rpartition('.')[0]
+            if genome2gene_info.get(genome_name,''):
+                continue
             # use the file name instead of the directory name
             # prokka may remove some string from directory to construct the genome name
-            _gene_info, _order_tuple = get_all_gene_pos(genome_file)
+            if use_gbk:
+                _gene_info, _order_tuple = get_all_CDS_from_gbk(genome_file)
+            else:
+                _gene_info, _order_tuple = get_all_gene_pos(genome_file)
             if _gene_info is not None:
                 genome2gene_info[genome_name] = _gene_info
                 genome2order_tuple[genome_name] = _order_tuple
@@ -286,13 +309,14 @@ def main(infile, prokka_o):
     for group_id in tqdm(sub_idx):
         params.append(group_id)
     tqdm.write('running with multiprocessing ')
-    r = []
     with mp.Pool(processes=20) as tp:
-        for _ in tp.imap(_run,tqdm(params)):
-            r.append(_)
+        r = list(tqdm(tp.imap(_run, params), total=len(params)))
+        
     modify_df = modify_df.drop([_[0] for _ in r])
     tqdm.write('mergeing all return results, it may take a while')
     added_df = pd.concat([_[1] for _ in r],axis=0,sort=True)
+    added_df = added_df.reindex(column=modify_df.columns)
+    _df = pd.concat([modify_df,added_df],axis=1,sort=True)
     modify_df = modify_df.append(added_df,sort=True)
 
     # sort the genome with the number of contigs
@@ -308,8 +332,8 @@ def main(infile, prokka_o):
 @click.option("-o", "ofile", help='output file')
 @click.option("-p", "prokka_dir", help='path of prokka output')
 @click.option("-gbk", "use_gbk", help='normally it use gff')
-def cli(infile, prokka_dir, ofile):
-    modify_df = main(infile, prokka_dir)
+def cli(infile, prokka_dir, ofile,use_gbk):
+    modify_df = main(infile, prokka_dir,use_gbk)
     if not dirname(ofile):
         os.makedirs(dirname(ofile))
     modify_df.to_csv(ofile, sep='\t', index=1)
