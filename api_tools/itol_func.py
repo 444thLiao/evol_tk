@@ -3,8 +3,6 @@ from os.path import join, exists, dirname
 
 sys.path.insert(0, dirname(__file__))
 from ete3 import Tree
-import plotly.express as px
-from .for_tree.format_tree import *
 
 indir = '/home-user/thliao/template_txt/'
 if not exists(indir):
@@ -40,6 +38,7 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 def deduced_legend2(info2style, infos,same_colors = False, sep='\t'):
     # for info2style instead of info2color
+    import plotly.express as px
     colors_theme = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     shapes = []
     labels = []

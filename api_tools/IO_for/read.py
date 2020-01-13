@@ -1,8 +1,8 @@
 from collections import defaultdict
 from os.path import *
-import pandas as pd
 
 def read_table(infile,**kwargs):
+    import pandas as pd
     if not exists(infile):
         exit(f"{infile} doesn't exist")
     if infile.endswith('xlsx') or infile.endswith('xls'):
