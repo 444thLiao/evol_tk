@@ -1,5 +1,8 @@
 import sys
 from os.path import join, exists, dirname
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.insert(0, dirname(__file__))
 from ete3 import Tree
@@ -308,9 +311,7 @@ def to_label(id2new_id):
 
 
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
+
 
 def colorFader(c1,c2,mix=0): # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
     c1=np.array(mpl.colors.to_rgb(c1))

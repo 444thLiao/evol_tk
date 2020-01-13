@@ -35,10 +35,11 @@ indir = '/home-user/thliao/template_txt/'
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
-def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with):
+def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_annotate=None, ):
     tree2 = Tree(intree_ori,format=3)
     tree2.set_outgroup(tree2.get_common_ancestor(root_with))
-
+    if itol_annotate is None:
+        itol_annotate = dirname(output_dating_result_tree)
     mcmc_out_tree_text = open(mcmc_out_tree)
     for row in mcmc_out_tree_text:
         if row.strip().startswith('UTREE 1 ='):
@@ -47,15 +48,20 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, ro
             t = t.replace(' ', '')
             tree = Tree(t, format=1)
 
+    count = len(tree.get_leaf_names())+1
     for n in tree.traverse():
         if not n.is_leaf():
-            # dates = n.name
-            # n.name = 'I%s' % count
-            # n.add_features(ages=dates, )
+            dates = n.name
+            n.name = 'I%s' % count
+            n.add_features(ages=dates, )
             all_leafs = n.get_leaf_names()
             nin2 = tree2.get_common_ancestor(all_leafs)
-            n.name = nin2.name
-            # n.add_features(support=nin2.support)
+            # n.name = nin2.name
+            
+            support = nin2.name.split('_S')[-1]
+            if support.isnumeric():
+                n.add_features(support=int(support))
+            count+=1
     # tree.features.remove('support')
     text = tree.write(format=3)
     text = text.replace(')1:', '):')
@@ -79,7 +85,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, ro
 
     rows = []
     template_text = open(dataset_symbol_template).read()
-    for n in tree2.traverse():
+    for n in tree.traverse():
         if not n.is_leaf():
             size = '5'
             shape = '2'
