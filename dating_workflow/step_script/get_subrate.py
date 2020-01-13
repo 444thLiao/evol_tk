@@ -52,10 +52,10 @@ genome_id = '../dating_for_210g.list'
 in_treefile = abspath('./210g_point.newick')
 
         
-odir = './dating_for/phy_files/198g_subrate'
-aln_dir = './cog25_single/198g_aln/'
-genome_id = './dating_for_198g.list'
-in_treefile = abspath('./dating_for/phy_files/198g_subrate/198g_point.newick')
+odir = './dating_for/phy_files/184g_subrate'
+aln_dir = './cog25_single/184g_aln/'
+genome_id = './dating_for_184g.list'
+in_treefile = abspath('./dating_for/phy_files/184g_subrate/184g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
     
