@@ -4,6 +4,7 @@ import os
 from os.path import *
 from dating_workflow.step_script.dating_pro import modify,run,final_mcmctree
 from tqdm import tqdm
+from api_tools.for_tree.format_tree import add_cal_api
 # batch cal set
 ori_newick = './trees/final/198g_merged.newick'
 new_trees = []
@@ -30,7 +31,7 @@ for indir in glob(in_pattern):
     if isdir(indir):
         process_dirs.append(indir)
         
-process_dirs = ['./dating_for/187g']
+process_dirs = ['./dating_for/184g/184g_set1']
 cmds = []
 for tree in new_trees:
     set_name = basename(tree).split('_')[-1].replace('.newick','')
@@ -39,7 +40,7 @@ for tree in new_trees:
                  'treefile': tree,
         #          'ndata': ndata,
         #          'seqtype': seqtype,
-                'usedata': "2 ../in.BV 1",
+                'usedata': "2 in.BV 1",
                 'outfile': './04_mcmctree.out',
         #          'clock': clock,
         #          'BDparas': bd_paras,
@@ -58,10 +59,12 @@ for tree in new_trees:
             ori_ctl = join(d,'mcmc_for','03_mcmctree.ctl')
             if exists(ori_ctl):
                 text = modify(ori_ctl,**param)
-                os.makedirs(join(d,'mcmc_for',onew_name),exist_ok=True)
-                with open(join(d,'mcmc_for',onew_name,'04_mcmctree.ctl'),'w') as f1:
+                odir = join(dirname(d),onew_name)
+                os.makedirs(odir,exist_ok=True)
+                os.system(f"cp {join(d,'mcmc_for','in.BV')} {odir}/ ")
+                with open(join(odir,'04_mcmctree.ctl'),'w') as f1:
                     f1.write(text)
-                cmd = f"cd {join(d,'mcmc_for',onew_name,)} ; mcmctree ./04_mcmctree.ctl"
+                cmd = f"cd {join(odir)} ; mcmctree ./04_mcmctree.ctl"
                 cmds.append(cmd)
                 
 # remove previous

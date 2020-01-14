@@ -1,6 +1,6 @@
 
 from glob import glob
-import os
+import os,io
 from collections import defaultdict
 import pandas as pd
 from os.path import *
@@ -68,13 +68,31 @@ Nod_genes = [_ for v in subset_df.values for g in v for _ in str(g).split(',') i
 subset_df = info_df.loc[Nif_list,:]
 Nif_genes = [_ for v in subset_df.values for g in v for _ in str(g).split(',') if not pd.isna(g)]
 
-except_names = []
-for _ in OG_df.columns:
-    if not exists(join('./tmp_gbk', f'{_}.gbk')):
-        #print(_)
-        except_names.append(_)
+gene2ko = {}
+for _,row in info_df.iterrows():
+    for genome,gene in row.items():
+        if pd.isna(gene):
+            continue
+        for g in gene.split(','):
+            gene2ko[g] = _
 
-remap = {}
+
+## rename gbk (do once)
+import re
+from ete3 import Tree
+text = open('./brady_ortho354-345.txt').read()
+new_text = re.sub("\[[0-9]+\]",'',text)
+new_text = new_text.replace('OROOT','')
+t = Tree(new_text)
+right_names = t.get_leaf_names()
+
+except_names = []
+for rn in right_names:
+    if not exists(join('./tmp_gbk', f'{rn}.gbk')):
+        except_names.append(rn)
+
+
+remap = {}  # from right name to wrong name
 for _ in except_names:
     name = _.split('_')[-1]
     if len(glob(f'./tmp_gbk/*{name}.gbk'))!=1:
@@ -91,12 +109,26 @@ remap['Bradyrhizobium_sp_LVM_105'] = 'Bradyrhizobium_sp._LVM_105'
 remap['Bradyrhizobium_sp_NAS80_1'] = 'Bradyrhizobium_sp._NAS80.1'
 remap['Bradyrhizobium_sp_NAS96_2'] = 'Bradyrhizobium_sp._NAS96.2'
 remap['Bradyrhizobium_sp_ORS_278_ORS278'] = 'Bradyrhizobium_sp._ORS_278'
-remap['Bradyrhizobium_sp_ORS_285_ORS285'] = 'Bradyrhizobium_sp._ORS_285'
 remap['Bradyrhizobium_sp_ORS_375_ORS375'] = 'Bradyrhizobium_sp._ORS_375'
 remap['Bradyrhizobium_sp_cf659_CF659'] = 'Bradyrhizobium_sp._cf659'
 remap['Pseudolabrys_sp_GY_H'] = 'Pseudolabrys_sp._GY_H'
 remap['Rhodopseudomonas_thermotolerans_JA576_NBRC_108863_KCTC_15144'] = 'Rhodopseudomonas_thermotolerans_JA576'
 remap['Oligotropha_carboxidovorans_OM5'] = 'Oligotropha_carboxidovorans_OM5_ATCC_49405'
+remap['Bradyrhizobium_sp_ORS_285'] = "Bradyrhizobium_sp._ORS_285"
+
+# assert
+for rn in right_names:
+    if not exists(join('./tmp_gbk', f'{rn}.gbk')):
+        if rn not in remap:
+            print(rn)
+
+# fix names (soft line)
+for right,now_wrong_name in remap.items():
+    ori_name = join('./nif_neightbour100_genbank',f'{now_wrong_name}.fna')
+    new_name = join('./nif_neightbour100_genbank',f'{right}.fna')
+    if exists(ori_name):
+        os.system(f"mv {ori_name} {new_name}")
+
 
 genome2gene_info.pop('Oligotropha_carboxidovorans_OM5')
 
@@ -134,12 +166,37 @@ for genome,cset in nod_genome2contigs.items():
     cset2 = nif_genome2contigs.get(genome,set())
     if cset==cset2 and len(cset)==1:
         nod_nif_together_genomes.append(genome)
+        
+def process_locus_name_of_gbk2(row):
+    infos = row.split(' ')
+    infos = [_ for _ in infos if _]
+    if len(infos)<=2:
+        print(infos)
+    try:
+        length = infos[2]
+    except:
+        import pdb;pdb.set_trace()
+    name = 'LOCUS' + ' '*7 + infos[1].split('_length')[0] + f' {length} bp  ' + '  DNA  linear  20-Jan-2020'
+    return name+'\n'
+
+def read_gbk(gbk_file):
+    rows = open(gbk_file).readlines()
+    rows = [process_locus_name_of_gbk2(_)
+            if _.startswith('LOCUS') else _ 
+            for _ in rows]
+    rows = [process_locus_name_of_gbk2(_)
+        if _.startswith('LOCUS') else _ 
+        for _ in rows]
+    records = SeqIO.parse(io.StringIO(''.join(rows)),format='genbank')
+    records = list(records)
+    return records
+
                 
 # extract_nifDKH
 odir = './nif_neightbour100_genbank'
 os.makedirs(odir,exist_ok=1)
 neighbour = 50 * 1e3
-for genome in [k for k,v in nif_genome2num_contigs.items() if v==1]:
+for genome in tqdm([k for k,v in nif_genome2num_contigs.items() if v==1]):
     _nif_genes = [g for g in Nif_genes if remap.get(g.split('|')[0],g.split('|')[0]) == genome]
     f = f'./tmp_gbk/{genome}.gbk'
     if genome not in genome2gene_info:
@@ -152,19 +209,121 @@ for genome in [k for k,v in nif_genome2num_contigs.items() if v==1]:
         pos2 = g2info[gene]['end']
         contig = g2info[gene]['contig_name']
         pos_list+= [int(pos1),int(pos2)]
+    if not pos_list:
+        print(genome)
+        continue
     if (max(pos_list) -min(pos_list)) >= 2*neighbour:
         continue
     
     start = int(min(pos_list) - neighbour )
     start = 0 if start <0 else start
     end = int(max(pos_list) + neighbour)
-    if exists(f):
+    ofile = join(odir,f'./{genome}.gbk')
+    if exists(f) and not exists(ofile):
         genome_obj = [_ for _ in SeqIO.parse(f,format='genbank') if contig == _.id][0]
         new_genome = genome_obj[start:end]
-        with open(join(odir,f'./{genome}.gbk'),'w') as f1:
+        with open(ofile,'w') as f1:
             SeqIO.write([new_genome],f1,format='genbank')
     else:
         continue
+for gbk in tqdm(glob(join(odir,'*.gbk'))):
+    a = SeqIO.parse(gbk,format='genbank')
+    with open(gbk.replace('.gbk','.fna'),'w') as f1:
+            SeqIO.write(a,f1,format='fasta')
+            
+            
+# stepwise blast
+tree_file = './brady_ortho354-345.txt'
+text = open(tree_file).read()
+new_text = re.sub("\[[0-9]+\]",'',text)
+new_text = new_text.replace('OROOT','')
+t = Tree(new_text)
+right_names = t.get_leaf_names()
+
+collect_rn = []
+for rn in right_names:
+    if exists(f"./nif_neightbour100_genbank/{rn}.fna"):
+        collect_rn.append(f"./nif_neightbour100_genbank/{rn}.fna")
+
+new_odir = join(odir,'genome_order_stepwise_align')
+os.makedirs(new_odir,exist_ok=1)
+for idx in tqdm(range(len(collect_rn))):
+    next_idx = idx +1
+    if next_idx == len(collect_rn)-1:
+        break
+    fna1 = collect_rn[idx]
+    fna2 = collect_rn[idx+1]
+    name1 = basename(fna1).replace('.fna','')
+    name2 = basename(fna2).replace('.fna','')
+    ofile = join(new_odir,name1+'_to_'+name2+'.blastout')
+    if not exists(ofile):
+        os.system(f"blastn -query {fna1} -subject {fna2} -evalue 1e-3 -outfmt 6 -out {ofile}")
+# visulization
+cmd = "/home-user/thliao/software/artemis/act "
+for idx in list(range(len(collect_rn)))[:30]:
+    next_idx = idx +1
+    if next_idx == len(collect_rn)-1:
+        break
+    fna1 = collect_rn[idx]
+    fna2 = collect_rn[idx+1]
+    name1 = basename(fna1).replace('.fna','')
+    name2 = basename(fna2).replace('.fna','')
+    ofile = join(new_odir,name1+'_to_'+name2+'.blastout')
+    cmd += f" {fna1} {ofile} "
+cmd += f" {fna2} "
+with open('./test.sh','w') as f1:
+    f1.write(cmd)
+
+# visulization via AliTV
+text = ["""---
+alignment:
+  parameter:
+    - --format=maf
+    - --noytrim
+    - --ambiguous=iupac
+    - --gapped
+    - --strand=both
+  program: lastz
+tree:   ./genome_pruned.newick"""]
+text += ['genomes:']
+for fna in collect_rn:
+    name = basename(fna).replace('.fna','')
+    text.append(f"  - name: {name}")
+    text.append("    sequence_files:")
+    text.append(f"      - {fna}")
+with open('./genome_order_align.yml','w') as f1:
+    f1.write('\n'.join(text))
+    
+# generate features Table
+remap['Rhodopseudomonas_thermotolerans_JA576_'] = 'Rhodopseudomonas_thermotolerans_JA576'
+
+nod_rows = []
+nif_rows = []
+for fna in tqdm(collect_rn):
+    genome = basename(fna).replace('.fna','')
+    gbk = fna.replace('.fna','.gbk')
+    record = SeqIO.read(gbk,format='genbank')
+    c = record.id
+    all_locus =[_.qualifiers['locus_tag'][0] for _ in record.features if _.type == 'CDS']
+    _nod_genes = [g for g in Nod_genes 
+                  if g.split('|')[-1] in all_locus]
+    _nif_genes = [g for g in Nif_genes 
+                  if g.split('|')[-1] in all_locus]
+    if genome not in genome2gene_info:
+        genome = remap[genome]
+    g2info = genome2gene_info[genome]
+    for _genes,_region in zip([_nod_genes,
+                               _nif_genes],
+                              [nod_rows,
+                               nif_rows]):
+        for fullgene in _genes:
+            gene = fullgene.split('|')[-1]
+            pos1 = g2info[gene]['start']
+            pos2 = g2info[gene]['end']
+            strand = g2info[gene]['strand']
+            strand = '1' if strand == '+' else '-1'
+            contig = g2info[gene]['contig_name']
+            _region.append("\t".join(map(str,[contig,pos1,pos2,strand,gene2ko[fullgene]])))
 
 
 # extract_fna
