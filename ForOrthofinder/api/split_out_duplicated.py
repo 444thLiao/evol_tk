@@ -131,6 +131,7 @@ def get_all_CDS_from_gbk(gbk_file,tag='locus_tag'):
             contig_list.append(fea_id)
         order_contig_list.append(tuple(contig_list))
     order_contig_list = tuple(order_contig_list)
+    gene2pos = dict(gene2pos)
     return gene2pos, order_contig_list
 
 def get_neighbour(target_locus,
@@ -268,8 +269,8 @@ def main(infile, prokka_o,use_gbk=False):
         tqdm.write('iterating all gff for collecting positional information')
         for genome_file in tqdm(genomes_files):
             genome_name = basename(genome_file).rpartition('.')[0]
-            if genome2gene_info.get(genome_name,''):
-                continue
+            # if genome2gene_info.get(genome_name,''):
+            #     continue
             # use the file name instead of the directory name
             # prokka may remove some string from directory to construct the genome name
             if use_gbk:

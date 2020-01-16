@@ -49,6 +49,15 @@ Nod_list = [
  ]
 # annotated_tab = "/home-user/jjtao/Rhizobiales/kegg_hmmsearch/e10/merged_result/merged_hmm_info.tab"
 info_df = pd.read_csv("./nodnif_annotated_df.tsv",sep='\t',index_col=0)
+
+gene2ko = {}
+for _,row in info_df.iterrows():
+    for genome,gene in row.items():
+        if pd.isna(gene):
+            continue
+        for g in gene.split(','):
+            gene2ko[g] = _
+            
 # sub_df = info_df.loc[Nif_list+Nod_list,:]
 # sub_df.to_csv('./nodnif_annotated_df.tsv',sep='\t',index=1)
 
@@ -58,40 +67,40 @@ tmp_dir = './.tmp'
 if exists(join(tmp_dir,'genome2gene_info')):
     genome2gene_info = pickle.load(open(join(tmp_dir,'genome2gene_info'), 'rb'))
     genome2order_tuple = pickle.load(open(join(tmp_dir,'genome2order_tuple'), 'rb'))
+    genome2gene_info.pop('Oligotropha_carboxidovorans_OM5')
+def get_genes(KO_list):
+    subset_df = info_df.loc[KO_list,:]
+    genes = [_ for v in subset_df.values for g in v for _ in str(g).split(',') if not pd.isna(g)]
+    return genes
 
-# test nod
-subset_df = info_df.loc[Nod_list,:]
-Nod_genes = [_ for v in subset_df.values for g in v for _ in str(g).split(',') if not pd.isna(g)]
-
-
-# test nif
-subset_df = info_df.loc[Nif_list,:]
-Nif_genes = [_ for v in subset_df.values for g in v for _ in str(g).split(',') if not pd.isna(g)]
-
-gene2ko = {}
-for _,row in info_df.iterrows():
-    for genome,gene in row.items():
-        if pd.isna(gene):
-            continue
-        for g in gene.split(','):
-            gene2ko[g] = _
+# get name of genes with annotated KO
+Nod_genes = get_genes(Nod_list)
+Nif_genes = get_genes(Nif_list)
 
 
-## rename gbk (do once)
+## rename gbk (do only once)
 import re
 from ete3 import Tree
-text = open('./brady_ortho354-345.txt').read()
-new_text = re.sub("\[[0-9]+\]",'',text)
-new_text = new_text.replace('OROOT','')
-t = Tree(new_text)
-right_names = t.get_leaf_names()
+def refine_tree(tree_file,indir=None):
+    text = open(tree_file).read()
+    new_text = re.sub("\[[0-9]+\]",'',text)
+    new_text = new_text.replace('OROOT','')
+    t = Tree(new_text)
+    right_ordered_names = t.get_leaf_names()
+    if indir is not None and exists(indir):
+        right_ordered_names = [rn
+                               for rn in right_ordered_names
+                               if exists(join(indir,f"{rn}.fna"))]
+    return right_ordered_names
+    
+right_ordered_names = refine_tree("./genome_pruned.newick",
+                                  './nif_neightbour100_genbank')
 
 except_names = []
-for rn in right_names:
+for rn in right_ordered_names:
     if not exists(join('./tmp_gbk', f'{rn}.gbk')):
         except_names.append(rn)
-
-
+        
 remap = {}  # from right name to wrong name
 for _ in except_names:
     name = _.split('_')[-1]
@@ -115,30 +124,29 @@ remap['Pseudolabrys_sp_GY_H'] = 'Pseudolabrys_sp._GY_H'
 remap['Rhodopseudomonas_thermotolerans_JA576_NBRC_108863_KCTC_15144'] = 'Rhodopseudomonas_thermotolerans_JA576'
 remap['Oligotropha_carboxidovorans_OM5'] = 'Oligotropha_carboxidovorans_OM5_ATCC_49405'
 remap['Bradyrhizobium_sp_ORS_285'] = "Bradyrhizobium_sp._ORS_285"
+remap['Rhodopseudomonas_thermotolerans_JA576_'] = 'Rhodopseudomonas_thermotolerans_JA576'
+
 
 # assert
-for rn in right_names:
+for rn in right_ordered_names:
     if not exists(join('./tmp_gbk', f'{rn}.gbk')):
         if rn not in remap:
             print(rn)
 
-# fix names (soft line)
-for right,now_wrong_name in remap.items():
-    ori_name = join('./nif_neightbour100_genbank',f'{now_wrong_name}.fna')
-    new_name = join('./nif_neightbour100_genbank',f'{right}.fna')
-    if exists(ori_name):
-        os.system(f"mv {ori_name} {new_name}")
+# fix names 
+# for right,now_wrong_name in remap.items():
+#     ori_name = join('./nif_neightbour100_genbank',f'{now_wrong_name}.fna')
+#     new_name = join('./nif_neightbour100_genbank',f'{right}.fna')
+#     if exists(ori_name):
+#         os.system(f"mv {ori_name} {new_name}")
 
-
-genome2gene_info.pop('Oligotropha_carboxidovorans_OM5')
-
+remap2 = {}
 row = OG_df.iloc[0,:]
 for col,v in row.items():
     v = v.split('|')[0]
     if v != col:
-        remap[v] = col
-        
-OG_df.columns = [_ if _ not in remap else remap[_] for _ in OG_df.columns]
+        remap2[v] = col
+OG_df.columns = [_ if _ not in remap2 else remap2[_] for _ in OG_df.columns]
 
 def count_number_contig(OG_df,genes,genome2gene_info,return_num=False):
     genome2num_contigs = defaultdict(set)
@@ -233,6 +241,7 @@ for gbk in tqdm(glob(join(odir,'*.gbk'))):
             
             
 # stepwise blast
+tree_file = "./nif_tree_pruned.newick"
 tree_file = './brady_ortho354-345.txt'
 text = open(tree_file).read()
 new_text = re.sub("\[[0-9]+\]",'',text)
@@ -293,13 +302,57 @@ for fna in collect_rn:
     text.append(f"      - {fna}")
 with open('./genome_order_align.yml','w') as f1:
     f1.write('\n'.join(text))
-    
+
+# reformat the output fo AliTV
+import json
+json_obj = json.load(open('./genome_wide.json'))
+json_obj['conf']['graphicalParameters']['canvasHeight'] = 20000
+json_obj['conf']['graphicalParameters']['canvasWidth'] = 1000
+json_obj['conf']['graphicalParameters']['fade'] = 0.8
+json_obj['conf']['graphicalParameters']['karyoHeight'] = 30
+json_obj['conf']['graphicalParameters']['fade'] = 0.8
+## get name
+name2seq_num = {}
+for _seq,d in json_obj['data']['karyo']['chromosomes'].items():
+    genome_name = d['genome_id']
+    name2seq_num[genome_name] = _seq
+## get order and stepwise relationship
+tree_file = './nif_tree_pruned.newick'
+tree_file = './brady_ortho354-345.txt'
+text = open(tree_file).read()
+new_text = re.sub("\[[0-9]+\]",'',text)
+new_text = new_text.replace('OROOT','')
+t = Tree(new_text)
+right_names = t.get_leaf_names()
+collect_rn = []
+for rn in right_names:
+    if exists(f"./nif_neightbour100_genbank/{rn}.fna") and rn in name2seq_num:
+        collect_rn.append(rn)
+json_obj['filters']['karyo']['genome_order'] = collect_rn
+json_obj['filters']['karyo']['order'] = [name2seq_num[_]
+                                         for _ in collect_rn]
+
+# add features
+json_obj["conf"]['features']['supportedFeatures'] = {"Nod":{
+                    "color": "#ff006e",
+                    "form": "rect",
+                    "height": "30",
+                    "visible": True
+                },
+                                             "Nif":{
+                    "color": "#ffaf00",
+                    "form": "rect",
+                    "height": "30",
+                    "visible": True
+                }}
+
+
 # generate features Table
-remap['Rhodopseudomonas_thermotolerans_JA576_'] = 'Rhodopseudomonas_thermotolerans_JA576'
 
 nod_rows = []
 nif_rows = []
-for fna in tqdm(collect_rn):
+for genome_name in tqdm(collect_rn):
+    fna = f"./nif_neightbour100_genbank/{genome_name}.fna"
     genome = basename(fna).replace('.fna','')
     gbk = fna.replace('.fna','.gbk')
     record = SeqIO.read(gbk,format='genbank')
@@ -323,8 +376,29 @@ for fna in tqdm(collect_rn):
             strand = g2info[gene]['strand']
             strand = '1' if strand == '+' else '-1'
             contig = g2info[gene]['contig_name']
-            _region.append("\t".join(map(str,[contig,pos1,pos2,strand,gene2ko[fullgene]])))
+            _region.append("\t".join(map(str,[genome_name,pos1,pos2,strand,gene2ko[fullgene]])))
 
+nod_data = []            
+for row in nod_rows:
+    rows = row.split('\t')
+    nod_data.append({"end":int(rows[2]),
+                      "karyo":name2seq_num[rows[0]],
+                      "start":int(rows[1]),
+                      "name":"Nod"})
+json_obj['data']['features']['Nod'] = nod_data
+nif_data = []            
+for row in nif_rows:
+    rows = row.split('\t')
+    nif_data.append({"end":int(rows[2]),
+                      "karyo":name2seq_num[rows[0]],
+                      "start":int(rows[1]),
+                      "name":"Nif"})
+json_obj['data']['features']['Nif'] = nif_data
+
+obj2 = json.load(open('./genome_wide2.json'))
+json_obj['data']['tree'] = obj2['data']['tree']
+with open('./genome_wider_reset.json','w') as f1:
+    json.dump(json_obj,f1)
 
 # extract_fna
 g2nod_region = defaultdict(list)

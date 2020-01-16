@@ -24,14 +24,23 @@ for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
                 cal_set, 
                 format=3)
     new_trees.append(abspath(f'./dating_for/cal_tree/187g_{set_name}.newick'))
-
+    
+ori_newick = './trees/final/184g_merged.newick'
+for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
+    set_name = basename(cal_set).split('_')[-1].replace('.txt','')
+    add_cal_api(ori_newick, 
+                f'./dating_for/cal_tree/184g_{set_name}.newick', 
+                cal_set, 
+                format=3)
+    new_trees.append(abspath(f'./dating_for/cal_tree/184g_{set_name}.newick'))
+    
 in_pattern = './dating_for/187g'
 process_dirs = []
 for indir in glob(in_pattern):
     if isdir(indir):
         process_dirs.append(indir)
         
-process_dirs = ['./dating_for/184g/184g_set1']
+process_dirs = ['./dating_for/187g/187g_3cal_set1']
 cmds = []
 for tree in new_trees:
     set_name = basename(tree).split('_')[-1].replace('.newick','')
@@ -46,8 +55,8 @@ for tree in new_trees:
         #          'BDparas': bd_paras,
                 'rgene_gamma': '1 100 1',
         #          'sigma2_gamma': sigma2_gamma,
-                'burnin': 50000,
-                'sampfreq': 25,
+                'burnin': 40000,
+                'sampfreq': 20,
         #          'nsample': nsample,
         #          'alpha': 0.5
                 }
@@ -61,7 +70,7 @@ for tree in new_trees:
                 text = modify(ori_ctl,**param)
                 odir = join(dirname(d),onew_name)
                 os.makedirs(odir,exist_ok=True)
-                os.system(f"cp {join(d,'mcmc_for','in.BV')} {odir}/ ")
+                os.system(f"ln -s {abspath(join(d,'mcmc_for','in.BV'))} {odir}/ ")
                 with open(join(odir,'04_mcmctree.ctl'),'w') as f1:
                     f1.write(text)
                 cmd = f"cd {join(odir)} ; mcmctree ./04_mcmctree.ctl"
