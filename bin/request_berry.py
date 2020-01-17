@@ -43,8 +43,9 @@ def main(ssid, path, dry_run):
     total = data['total']
     start = 0
     done_count = 0
-    while done_count <= total:
-        for f_dict in data['datas']:
+    tqdm.write("retrieving all download info, please wait a moment...")
+    while done_count < total:
+        for f_dict in tqdm(data['datas']):
             filename = f_dict['filename']
             _p = dict(ssid=post_data['ssid'],
                       fid=post_data['fid'],
@@ -55,10 +56,9 @@ def main(ssid, path, dry_run):
                       start=start)
             url_r = "https://ss.berrygenomics.com/share.cgi?" + urllib.parse.urlencode(_p)
 
-            if exists(filename):
-                if int(f_dict['filesize']) == getsize(filename):
-                    done_count += 1
-                    continue
+            if exists(filename) and int(f_dict['filesize']) == getsize(filename):
+                done_count += 1
+                continue
             d.append((url_r, filename))
             done_count += 1
         start += 50
@@ -78,10 +78,10 @@ def main(ssid, path, dry_run):
 
 @click.command()
 @click.argument("ssid")
-@click.argument("dirname")
+@click.argument("path")
 @click.option("-d", "--dry_run", "dry_run", default=True, is_flag=True)
-def cli(ssid, dirname, dry_run):
-    main(ssid, dirname, dry_run)
+def cli(ssid, path, dry_run):
+    main(ssid, path, dry_run)
 
 
 if __name__ == "__main__":
@@ -89,4 +89,4 @@ if __name__ == "__main__":
 
 # url = "https://ss.berrygenomics.com/share.cgi?ssid=02D9JBk&fid=02D9JBk&path=%2F&filename=191101_X515_0555_AH2MVCCCX2&openfolder=forcedownload&ep="
 # download_file(url,'download_2019-11-13_15-00-51.zip')
-# python request_berry.py ssid filename --dry_run
+# python request_berry.py 01VCdO3 200109_X499_0522_AH3K2VCCX2 --dry-run
