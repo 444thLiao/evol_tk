@@ -45,7 +45,7 @@ def main(ssid, path, dry_run):
     done_count = 0
     tqdm.write("retrieving all download info, please wait a moment...")
     while done_count < total:
-        for f_dict in tqdm(data['datas']):
+        for f_dict in data['datas']:
             filename = f_dict['filename']
             _p = dict(ssid=post_data['ssid'],
                       fid=post_data['fid'],
@@ -79,7 +79,7 @@ def main(ssid, path, dry_run):
 @click.command()
 @click.argument("ssid")
 @click.argument("path")
-@click.option("-d", "--dry_run", "dry_run", default=True, is_flag=True)
+@click.option("-d", "--dry_run", "dry_run", default=False, is_flag=True)
 def cli(ssid, path, dry_run):
     main(ssid, path, dry_run)
 
