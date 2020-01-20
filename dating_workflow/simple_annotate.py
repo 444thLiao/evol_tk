@@ -131,3 +131,7 @@ text = to_binary_shape(gid2genes,
 
 with open('./itol_txt/27genes.txt', 'w') as f1:
     f1.write(text)
+
+# annotate completeness
+ids = open('./')
+color_gradient

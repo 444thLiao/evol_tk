@@ -59,7 +59,7 @@ def main(indir, odir, tax, use_fa,num_parellel, suffix='', force=False):
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-t', 'tax', default='domain Bacteria')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-@click.option('-use_fa', 'use_fa', help='use nucleotide sequence or not.default using annotated proteins?', default=False, required=False, is_flag=True)
+@click.option('-use_fa', 'use_fa', help='use nucleotide sequence or not. default using annotated proteins?', default=False, required=False, is_flag=True)
 def cli(indir, odir, tax, suffix, force, num_parellel,use_fa):
     main(indir=indir,
          odir=odir,
