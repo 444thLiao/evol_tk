@@ -14,9 +14,10 @@ import subprocess
 from glob import glob
 from os.path import *
 from subprocess import check_call
-
+import io,re
 import click
 from tqdm import tqdm
+from Bio import SeqIO
 
 # __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/dating_pro.py'
 # template file dir
@@ -83,17 +84,42 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl):
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
-    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl")
-
-
-def collecting_tmp(tmp_indir, odir):
+    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl > /dev/null")
+    
+def rename_tmp(ali_dir,ctl_file):
+    phy_f = ctl_file.replace('.ctl','.txt')
+    rows = open(phy_f).read().split('\n')
+    rows = [_ for _ in rows if _.startswith('GC')]
+    rows = ['>'+re.sub('\ {2,}','\n',row).replace(' ','') for row in rows]
+    now_f = list(SeqIO.parse(io.StringIO('\n'.join(rows)),format='fasta'))
+    non_empty_seqs = len([_ for _ in now_f if set(_.seq)!={'-'}])
+    match_n = []
+    for f in glob(join(ali_dir,'*.trimal')):
+        name = basename(f).replace('.trimal','')
+        tmp_f = list(SeqIO.parse(f,format='fasta'))
+        _non_empty_seqs = len([_ for _ in tmp_f if set(_.seq)!={'-'}])
+        if len(tmp_f[0].seq) == len(now_f[0].seq) and non_empty_seqs==_non_empty_seqs:
+            match_n.append(name)
+    if len(match_n)==1:
+        return match_n[0]
+    else:
+        raise Exception(f'multiple...or non,for {ctl_file},have {len(match_n)} file')
+    
+def collecting_tmp(tmp_indir, odir,ali_dir=None):
     if not exists(odir):
         os.makedirs(odir)
     ctls = glob(join(tmp_indir, 'tmp0*.ctl'))
     for ctl in ctls:
         name = basename(ctl).replace('.ctl', '')
-        os.makedirs(join(odir, f'{name}'), exist_ok=1)
-        os.system(f'mv {tmp_indir}/{name}.* {odir}/{name}/')
+        if ali_dir is not None:
+            # TODO: modify it into it original name/ gene name
+            # hard to find a one....
+            new_name = name
+        else:
+            new_name = name
+        
+        os.makedirs(join(odir, f'{new_name}'), exist_ok=1)
+        os.system(f'mv {tmp_indir}/{name}.* {odir}/{new_name}/')
 
 
 def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None):
@@ -212,7 +238,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
             ofile.replace('.ctl', '.log'))
 
 
-def main(in_phyfile, in_treefile, total_odir, run_tmp=True, run_prior_only=True, params_dict={}):
+def main(in_phyfile, in_treefile, total_odir, ali_dir=None,run_tmp=True, run_prior_only=True, params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
@@ -234,14 +260,16 @@ def main(in_phyfile, in_treefile, total_odir, run_tmp=True, run_prior_only=True,
                      tmp_odir,
                      ndata)
         collecting_tmp(tmp_odir,
-                       tmp_odir)
+                       tmp_odir,
+                       ali_dir=ali_dir)
 
         run_each_tmp(tmp_odir,
                      mcmc_for_dir,
                      extra_cmd=prior_cmd)
     elif isinstance(run_tmp,str):
         collecting_tmp(run_tmp,
-                tmp_odir)
+                tmp_odir,
+                ali_dir=ali_dir)
     final_mcmctree(inBV=join(mcmc_for_dir, 'in.BV'),
                    in_phyfile=in_phyfile,
                    in_treefile=in_treefile,
@@ -260,6 +288,7 @@ def process_path(path):
 @click.command()
 @click.option('-i', '--in_phy', 'in_phyfile')
 @click.option('-it', '--in_tree', 'in_treefile')
+@click.option('-id', '--in_ali_dir', 'in_ali_dir')
 @click.option('-o', 'odir')
 @click.option('-no_tmp', 'run_tmp', default=True)
 @click.option('-only_prior', 'only_prior', is_flag=True, default=False)
@@ -268,7 +297,7 @@ def process_path(path):
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
-def cli(in_phyfile, in_treefile, odir, run_tmp, only_prior, sampfreq,print_f,rgene_gamma,sigma2_gamma,clock):
+def cli(in_phyfile, in_treefile,in_ali_dir, odir, run_tmp, only_prior, sampfreq,print_f,rgene_gamma,sigma2_gamma,clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),
@@ -276,7 +305,8 @@ def cli(in_phyfile, in_treefile, odir, run_tmp, only_prior, sampfreq,print_f,rge
                    'rgene_gamma':rgene_gamma,
                    'sigma2_gamma':sigma2_gamma,
                    'clock':clock}
-    main(in_phyfile, in_treefile, total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
+    main(in_phyfile, in_treefile,ali_dir=in_ali_dir,
+          total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
 
 
 if __name__ == "__main__":

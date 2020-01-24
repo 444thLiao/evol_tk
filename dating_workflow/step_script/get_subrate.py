@@ -51,7 +51,11 @@ aln_dir = '../cog25_single/210g_aln/'
 genome_id = '../dating_for_210g.list'
 in_treefile = abspath('./210g_point.newick')
 
-        
+odir = './dating_for/phy_files/29cyano_subrate'
+aln_dir = './cog25_single/29cyano_aln'
+genome_id = '/home-user/thliao/data/cyano_basal/rawdata/assembly_ids.list'
+in_treefile = abspath('./trees/final/29cyano.newick')
+     
 odir = './dating_for/phy_files/184g_subrate'
 aln_dir = './cog25_single/184g_aln/'
 genome_id = './dating_for_184g.list'
