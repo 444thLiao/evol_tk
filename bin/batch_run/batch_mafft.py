@@ -29,7 +29,7 @@ def unit_run(in_file, o_file, mode):
                stderr=open('/dev/null', 'w'))
 
 
-def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=False, mode=default_mode,fix_refseq=False, **kwarg):
+def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=False, mode=default_mode,fix_refseq=False, removed_gene_list=None,**kwarg):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -49,6 +49,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
                        if _.id in gids]
             if not records:
                 records = SeqIO.parse(f, format='fasta')
+
                 if not fix_refseq:
                     records = [_
                            for _ in records
@@ -62,6 +63,9 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
             if not records or len(records) == 1:
                 print(f'failed records,for {f}, pass it')
                 continue
+            if removed_gene_list:
+                records = [_ for _ in records
+                           if _.id not in removed_gene_list]
             with open(n_f, 'w') as f1:
                 SeqIO.write(records, f1, format='fasta-2line')
             new_file_list.append(n_f)
@@ -94,13 +98,15 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
 @click.option('-m', 'mode_mafft', default='ginsi')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
-def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft,fix_refseq):
+@click.option('-rm_l', 'removed_gene_list', help='list of removed gene?')
+def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft,removed_gene_list,fix_refseq):
     if genome_list is None:
         gids = None
     else:
         gids = open(genome_list).read().split('\n')
         gids = set([_ for _ in gids if _])
-    main(indir, odir, num_parellel, suffix, new_suffix, gids=gids, force=force, mode=mode_mafft,fix_refseq=fix_refseq)
+    removed_gene_list = open(removed_gene_list).read().split('\n')
+    main(indir, odir, num_parellel, suffix, new_suffix, gids=gids, force=force, mode=mode_mafft,removed_gene_list=removed_gene_list,fix_refseq=fix_refseq)
 
 
 if __name__ == "__main__":
