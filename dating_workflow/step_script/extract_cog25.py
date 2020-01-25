@@ -111,7 +111,11 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
         g_dict = genome2cdd[genome_name]
         gfile = f'{pdir}/{genome_name}.faa'
         new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
+        if suffix == 'faa':
+            # important bugs!!!!! fixed
+            new_gfile = gfile
+        else:
+            new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
 
         if exists(new_gfile):
             _cache = {record.id: record
@@ -199,7 +203,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True,evalue=evalue)
     write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
-    write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
+    #write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
