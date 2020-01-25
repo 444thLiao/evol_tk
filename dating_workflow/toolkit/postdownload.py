@@ -32,10 +32,11 @@ def get_faa_from_prokka_r(infile, odir, sample_name, return_cmd=False):
     return f'{oprefix}.faa'
 
 
-def cli(indir, odir=None):
+def cli(indir, odir=None,reformatted_name=False):
     if odir is None:
         odir = './genome_protein_files'
-    all_dir = [_ for _ in glob(join(indir, '**', 'GC*'), recursive=True)
+    all_dir = [_
+               for _ in glob(join(indir, '**', 'GC*'), recursive=True)
                if isdir(_)]
 
     for p_dir in tqdm(all_dir):
@@ -55,18 +56,22 @@ def cli(indir, odir=None):
         else:
             # print(p_file,ofile)
             pass
-    # format protein id 
-    name_map = {}
-    for p in tqdm(glob(join(odir,'*.faa'))):
-        name = basename(p).replace('.faa','')
-        locus_prefix = convert_genome_ID(name)
-        records = []
-        for idx,record in enumerate(SeqIO.parse(p,format='fasta')):
-            new_name = locus_prefix + '_{:0>5}'.format(idx+1)
-            name_map[record.id ] = new_name
-            record.id = new_name
-            records.append(record)
-        SeqIO.write(records,open(p,'w'),format='fasta-2line')
+
+    # format protein id
+    if reformatted_name:
+        name_map = {}
+        for p in tqdm(glob(join(odir,'*.faa'))):
+            name = basename(p).replace('.faa','')
+            locus_prefix = convert_genome_ID(name)
+            records = []
+            for idx,record in enumerate(SeqIO.parse(p,format='fasta')):
+                new_name = locus_prefix + '_{:0>5}'.format(idx+1)
+                name_map[record.id] = new_name
+                record.id = new_name
+                records.append(record)
+            SeqIO.write(records,
+                        open(p,'w'),
+                        format='fasta-2line')
         
 if __name__ == "__main__":
     if len(sys.argv) >= 2:

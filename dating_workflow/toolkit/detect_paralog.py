@@ -51,7 +51,7 @@ with open("./cog25_single/84g_aln/potential_paralog.list",'w') as f1:
 
 
 gname2diff_genome = {}
-now_fa_dir = './cog25_single/183g_aln/tmp'
+now_fa_dir = './cog25_single/82g_aln/tmp'
 for seq in glob('./cog25_single/168g_aln/tmp/*.faa'):
     records = list(SeqIO.parse(seq,format='fasta'))
     name = basename(seq).replace('.faa','')
