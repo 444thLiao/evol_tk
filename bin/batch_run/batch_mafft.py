@@ -63,7 +63,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
             if not records or len(records) == 1:
                 print(f'failed records,for {f}, pass it')
                 continue
-            if removed_gene_list:
+            if removed_gene_list is not None:
                 records = [_ for _ in records
                            if _.id not in removed_gene_list]
             with open(n_f, 'w') as f1:
@@ -105,7 +105,8 @@ def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_
     else:
         gids = open(genome_list).read().split('\n')
         gids = set([_ for _ in gids if _])
-    removed_gene_list = open(removed_gene_list).read().split('\n')
+    if removed_gene_list is not None:
+        removed_gene_list = open(removed_gene_list).read().split('\n')
     main(indir, odir, num_parellel, suffix, new_suffix, gids=gids, force=force, mode=mode_mafft,removed_gene_list=removed_gene_list,fix_refseq=fix_refseq)
 
 
