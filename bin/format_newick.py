@@ -11,10 +11,11 @@ from os.path import dirname
 sys.path.insert(0, dirname(__file__))
 import click
 # required format for binary python
-from api_tools.for_tree.format_tree import renamed_tree,root_tree_with,add_cal_api,Tree,read_tree,sort_tree,earse_name,draw_cal_itol
+from api_tools.for_tree.format_tree import renamed_tree, root_tree_with, add_cal_api, Tree, read_tree, sort_tree, earse_name, draw_cal_itol
 import os
 from os.path import exists
 from dating_workflow.step_script import process_path
+
 '''
 ete(v3.0) toolkits format table 
 
@@ -115,7 +116,7 @@ def reroot(in_newick, out_newick, tree_format, root_name):
 @click.option('-o', 'out_newick', default=None)
 @click.option('-f', 'tree_format', default=0)
 @click.option('-f_to', 'new_format', default=0)
-def rename(in_newick, out_newick, tree_format,new_format):
+def rename(in_newick, out_newick, tree_format, new_format):
     out_newick = process_IO(in_newick, out_newick)
     t = renamed_tree(in_newick, format=tree_format)
     t.write(outfile=out_newick, format=new_format)
@@ -129,65 +130,67 @@ def rename(in_newick, out_newick, tree_format,new_format):
 def add_cal(in_newick, calibration_txt, out_newick, tree_format):
     out_newick = process_IO(in_newick, out_newick)
     add_cal_api(in_newick,
-                   out_newick=out_newick,
-                   calibration_txt=calibration_txt,
-                   format=tree_format)
+                out_newick=out_newick,
+                calibration_txt=calibration_txt,
+                format=tree_format)
 
 
 @cli.command()
 @click.option('-c', 'calibration_txt')
 @click.option('-o', 'odir', default='./')
-def itol_cal(calibration_txt,odir):
+def itol_cal(calibration_txt, odir):
     if not exists(odir):
         os.makedirs(odir)
-    draw_cal_itol(calibration_txt,odir)
-      
+    draw_cal_itol(calibration_txt, odir)
+
+
 @cli.command()
 @click.option('-i', 'in_newick')
 @click.option('-i2', 'in_newick2')
 @click.option('-o', 'out_newick')
 @click.option('-f', 'tree_format', default=0)
 @click.option('-f_to', 'new_format', default=0)
-def cat(in_newick, in_newick2, out_newick, tree_format,new_format):
+def cat(in_newick, in_newick2, out_newick, tree_format, new_format):
     t = Tree()
     t1 = read_tree(in_newick, format=tree_format)
     t2 = read_tree(in_newick2, format=tree_format)
     t.add_child(t1)
     t.add_child(t2)
     text = t.write(format=new_format)
-    with open(out_newick,'w') as f1:
-        f1.write(text.replace('NoName',''))
+    with open(out_newick, 'w') as f1:
+        f1.write(text.replace('NoName', ''))
+
 
 @cli.command()
 @click.argument('infiles', nargs=-1)
 @click.option('-o', 'out_newick')
 @click.option('-f', 'tree_format', default=0)
 @click.option('-f_to', 'new_format', default=0)
-def mcat(infiles, out_newick, tree_format,new_format):
+def mcat(infiles, out_newick, tree_format, new_format):
     """
     format_newick.py mcat a b c d -o ./test.newick
     """
     final_t = Tree()
     tree_boxs = [final_t]
     total_len = len(infiles)
-    for _,f in enumerate(infiles):
+    for _, f in enumerate(infiles):
         try:
-            t = read_tree(f,format=tree_format)
+            t = read_tree(f, format=tree_format)
         except IOError:
             t = Tree(f'{f};')
         tree_boxs[-1].add_child(t)
-        if _+2 != total_len:
+        if _ + 2 != total_len:
             # left more than one
             _t = Tree()
-            if _ +1 == total_len:
+            if _ + 1 == total_len:
                 # last one
                 continue
             tree_boxs[-1].add_child(_t)
             tree_boxs.append(_t)
     text = final_t.write(format=new_format)
-    with open(out_newick,'w') as f1:
-        f1.write(text.replace('NoName',''))
-        
+    with open(out_newick, 'w') as f1:
+        f1.write(text.replace('NoName', ''))
+
 
 @cli.command()
 @click.option('-i', 'in_newick')
@@ -198,8 +201,9 @@ def reformat(in_newick, out_newick, tree_format, new_format):
     out_newick = process_IO(in_newick, out_newick)
     t1 = read_tree(in_newick, format=tree_format)
     text = t1.write(outfile=out_newick, format=new_format)
-    with open(out_newick,'w') as f1:
-        f1.write(text.replace('NoName',''))
+    with open(out_newick, 'w') as f1:
+        f1.write(text.replace('NoName', ''))
+
 
 if __name__ == "__main__":
     cli()

@@ -16,9 +16,9 @@ import click
 import pandas as pd
 from tqdm import tqdm
 
-from bin.ncbi_convert import edl, access_intermedia, parse_id
-from bin.ncbi_convert.pid2GI import pid2GI
-from bin.ncbi_convert.pid2tax import GI2tax
+from bin.ncbi_convertor import edl, access_intermedia, parse_id
+from bin.ncbi_convertor.pid2GI import pid2GI
+from bin.ncbi_convertor.pid2tax import GI2tax
 
 
 def get_protein_pos_assembly_INFO(pid2info_dict, suffix='pid2genome_info'):

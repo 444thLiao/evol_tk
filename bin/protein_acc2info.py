@@ -14,9 +14,9 @@ from Bio import Entrez, SeqIO
 from ete3 import NCBITaxa
 from tqdm import tqdm
 
-from bin.ncbi_convert import edl, parse_id, taxons
-from bin.ncbi_convert.pid2GI import pid2GI
-from bin.ncbi_convert.pid2tax import GI2tax
+from bin.ncbi_convertor import edl, parse_id, taxons
+from bin.ncbi_convertor.pid2GI import pid2GI
+from bin.ncbi_convertor.pid2tax import GI2tax
 from global_search.classification_script import _classificated
 from global_search.thirty_party.metadata_parser import *
 

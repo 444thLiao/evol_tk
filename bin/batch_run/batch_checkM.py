@@ -19,7 +19,7 @@ def run(args):
     unit_run(*args)
 
 
-def unit_run(infile, indir, tax, odir,extra_option):
+def unit_run(infile, indir, tax, odir, extra_option):
     check_call(command_template.format(infile=infile,
                                        indir=indir,
                                        tax=tax,
@@ -29,7 +29,7 @@ def unit_run(infile, indir, tax, odir,extra_option):
                stdout=open('/dev/null', 'w'))
 
 
-def main(indir, odir, tax, use_fa,num_parellel, suffix='', force=False):
+def main(indir, odir, tax, use_fa, num_parellel, suffix='', force=False):
     suffix = suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
@@ -47,7 +47,7 @@ def main(indir, odir, tax, use_fa,num_parellel, suffix='', force=False):
                            indir,
                            tax,
                            new_odir,
-                           '' if use_fa else '-g' ))
+                           '' if use_fa else '-g'))
     with mp.Pool(processes=num_parellel) as tp:
         r = list(tqdm(tp.imap(run, params), total=len(params)))
 
@@ -60,7 +60,7 @@ def main(indir, odir, tax, use_fa,num_parellel, suffix='', force=False):
 @click.option('-t', 'tax', default='domain Bacteria')
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-use_fa', 'use_fa', help='use nucleotide sequence or not. default using annotated proteins?', default=False, required=False, is_flag=True)
-def cli(indir, odir, tax, suffix, force, num_parellel,use_fa):
+def cli(indir, odir, tax, suffix, force, num_parellel, use_fa):
     main(indir=indir,
          odir=odir,
          tax=tax,

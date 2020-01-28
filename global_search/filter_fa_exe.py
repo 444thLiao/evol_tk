@@ -5,7 +5,7 @@ import os
 import numpy as np
 from subprocess import check_call
 import sys
-from bin.ncbi_convert import edl
+from bin.ncbi_convertor import edl
 import io
 import pandas as pd
 from Bio import SeqIO

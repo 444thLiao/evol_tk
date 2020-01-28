@@ -25,7 +25,7 @@ Within the kit(`$EVO/api_tools`), there also have some scripts.
 > The difference between `$EVO/bin` and `$EVO/api_tools` is the **usability**. Within `$EVO/bin`, it must a script easily to be used. But for `$EVO/api_tools`, normally it just some defined function which can only be used for pythoner. Of course, it have some exceptions due to the bad design at early period.
 
 * iTOL formatting function (`itol_func.py` and `itol_template` which stodge modified template file download from [help page of iTOL](https://itol.embl.de/help.cgi))
-* processing metadata from NCBI. Classifing the genomes into different habitats. (`metadata_for`)
+* processing metadata from NCBI. Classifying the genomes into different habitats. (`metadata_for`)
 * functions for formatting newick (`for_tree`)
 
 

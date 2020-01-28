@@ -54,23 +54,6 @@ def remove_identical_seqs(filename, seed=None):
         SeqIO.write(new_records, f1, format='fasta-2line')
 
 
-# def convert_genome_ID(genome_ID):
-#     # for GCA_900078535.2
-#     # it will return
-#     return genome_ID.split('_')[-1].replace('.', 'v')
-
-
-# def convert_genome_ID_rev(genome_ID):
-#     # for 900078535v2
-#     # it will return
-#     if not genome_ID.startswith('GCA'):
-#         if '_' in genome_ID:
-#             genome_ID = genome_ID.split('_')[0]
-#         return 'GCA_' + genome_ID.replace('v', '.')
-#     else:
-#         return genome_ID
-
-
 def generate_partition_file(outfile, record_pos_info):
     with open(outfile, 'w') as f1:
         for name, start, end, _ in record_pos_info:
@@ -112,15 +95,16 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
-@click.option("-s", "suffix", default='aln')
+@click.option("-s", "suffix", default='aln',help="suffix for input files")
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-@click.option("-genel", "gene_list", default=None, help="")
-@click.option("-rm_I", "remove_identical", is_flag=True, default=False)
-@click.option("-no_graph", "graph", is_flag=True, default=True)
-@click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
+@click.option("-genel", "gene_list", default=None, 
+              help="list of gene need to be retained")
+@click.option("-rm_I", "remove_identical", is_flag=True, default=False,help='remove identical sequence for some software like Fasttree. default is not removed')
+@click.option("-no_graph", "graph", is_flag=True, default=True,help='generating a graph introducing the number of genes among all genomes. default is generating graph')
+@click.option("-no_fill", "fill_gaps", is_flag=True, default=True,help="fill with gaps for genomes doesn't contains this gene. default is filling ")
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-@click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
+@click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
 def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln',fix_refseq=False):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')

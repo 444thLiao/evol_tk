@@ -10,7 +10,7 @@ import click
 from Bio import Entrez
 from tqdm import tqdm
 
-from bin.ncbi_convert import edl, access_intermedia, parse_id
+from bin.ncbi_convertor import edl, access_intermedia, parse_id
 
 
 def pid2GI(id_list, redo=False):

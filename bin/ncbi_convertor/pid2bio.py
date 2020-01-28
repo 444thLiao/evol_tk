@@ -12,9 +12,9 @@ import pandas as pd
 from Bio import Entrez
 from tqdm import tqdm
 
-from bin.ncbi_convert import edl, parse_id
-from bin.ncbi_convert.pid2GI import pid2GI
-from bin.ncbi_convert.pid2genome import pid2genome_assembly
+from bin.ncbi_convertor import edl, parse_id
+from bin.ncbi_convertor.pid2GI import pid2GI
+from bin.ncbi_convertor.pid2genome import pid2genome_assembly
 from global_search.thirty_party.metadata_parser import parse_bioproject_xml, parse_biosample_xml, parse_assembly_xml
 
 

@@ -13,8 +13,8 @@ from Bio import Entrez
 from ete3 import NCBITaxa
 from tqdm import tqdm
 
-from bin.ncbi_convert import edl, access_intermedia, parse_id, taxons
-from bin.ncbi_convert.pid2GI import pid2GI
+from bin.ncbi_convertor import edl, access_intermedia, parse_id, taxons
+from bin.ncbi_convertor.pid2GI import pid2GI
 
 ncbi = NCBITaxa()
 
@@ -109,7 +109,7 @@ def main(infile, ofile, force=False, redo=False):
 @click.option('-redo', 'redo', help='use cache or not? default is use the cache.', default=False, required=False, is_flag=True)
 @click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ', default='protein',
               required=False)
-def cli(infile, ofile, force, redo,start_at):
+def cli(infile, ofile, force, redo, start_at):
     main(infile, ofile, force, redo)
 
 
