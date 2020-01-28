@@ -55,7 +55,8 @@ def run(args):
                    stdout=open(log, 'w'))
 
     except subprocess.CalledProcessError as e:
-        print('error', e.output)
+        pass
+        #print('error', e.output)
     if log != '/dev/null':
         t = open(log, 'r', newline='\n').read().replace('\r', '\n')
         with open(log, 'w') as f1:
@@ -195,7 +196,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl ",
+    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2> /dev/null",
          ofile.replace('.ctl', '.log')))
 
 

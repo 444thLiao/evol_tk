@@ -1,4 +1,5 @@
 """
+obsoleted script !!!!!!!!!!!!!!!!!!!! raw one
 This script is mainly for retrieve infomation enough for following analysis
 receiveing a list of proteins which could
 """

@@ -47,19 +47,19 @@ def run(args):
             f1.write(t)
 
 odir = './'
-aln_dir = '../cog25_single/210g_aln/'
-genome_id = '../dating_for_210g.list'
-in_treefile = abspath('./210g_point.newick')
+aln_dir = '../cog25_single/187g_aln/'
+genome_id = '../dating_for_187g.list'
+in_treefile = abspath('./dating_for/phy_files/82g_subrate/187g_point.newick')
 
 odir = './dating_for/phy_files/29cyano_subrate'
 aln_dir = './cog25_single/29cyano_aln'
 genome_id = '/home-user/thliao/data/cyano_basal/rawdata/assembly_ids.list'
 in_treefile = abspath('./trees/final/29cyano.newick')
      
-odir = './dating_for/phy_files/184g_subrate'
-aln_dir = './cog25_single/184g_aln/'
-genome_id = './dating_for_184g.list'
-in_treefile = abspath('./dating_for/phy_files/184g_subrate/184g_point.newick')
+odir = './dating_for/phy_files/82g_subrate'
+aln_dir = './cog25_single/82g_aln/'
+genome_id = './dating_for_82g.list'
+in_treefile = abspath('./dating_for/phy_files/82g_subrate/82g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
     
@@ -93,6 +93,7 @@ for f in glob(join(aln_dir,'*.trimal')):
     cmds.append(f"cd {dirname(ctl_f)}; {paml_bin} {basename(ctl_f)} ")
 
 import multiprocessing as mp
+import numpy as np
 with mp.Pool(processes=30) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))
                 
@@ -107,6 +108,7 @@ for outfile in glob(join(odir,'*.out')):
     rate = rows[idx+1].strip()
     rate = float(rate.split('+-')[0].strip())
     g2rate[gene_name] = rate/3.5/10
-
+m=np.mean(list(g2rate.values()))
+s=np.std(list(g2rate.values()))
 import scipy.stats as stats 
 fit_alpha, fit_loc, fit_beta=stats.gamma.fit(list(g2rate.values()))

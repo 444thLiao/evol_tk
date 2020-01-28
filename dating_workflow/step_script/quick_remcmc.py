@@ -31,45 +31,30 @@ for s, row in a.iterrows():
     with open(f'./cal_{s}.txt', 'w') as f1:
         f1.write('\n'.join(rows))
 
-redo = False
+redo = True
 # batch cal set
-ori_newick = './trees/final/198g_merged.newick'
+
+num_g = 77
 new_trees = []
-for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
-    set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
-    if redo:
-        add_cal_api(ori_newick,
-                    f'./dating_for/cal_tree/198g_{set_name}.newick',
+
+for num_g in [77,82,187]:
+    ori_newick = f'./trees/final/{num_g}g_merged.newick'
+    for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
+        set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
+        if redo:
+            add_cal_api(ori_newick,
+                    f'./dating_for/cal_tree/{num_g}g_{set_name}.newick',
                     cal_set,
                     format=3)
-    new_trees.append(abspath(f'./dating_for/cal_tree/198g_{set_name}.newick'))
+        new_trees.append(abspath(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'))
 
-ori_newick = './trees/final/187g_merged.newick'
-for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
-    set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
-    if redo:
-        add_cal_api(ori_newick,
-                f'./dating_for/cal_tree/187g_{set_name}.newick',
-                cal_set,
-                format=3)
-    new_trees.append(abspath(f'./dating_for/cal_tree/187g_{set_name}.newick'))
 
-ori_newick = './trees/final/184g_merged.newick'
-for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
-    set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
-    if redo:
-        add_cal_api(ori_newick,
-                f'./dating_for/cal_tree/184g_{set_name}.newick',
-                cal_set,
-                format=3)
-    new_trees.append(abspath(f'./dating_for/cal_tree/184g_{set_name}.newick'))
-
-odir = './dating_for/modify_rg'
+odir = './dating_for/clock3'
 cmds = []
 for tree in new_trees:
     set_name = basename(tree).split('_')[-1].replace('.newick', '')
     prefix = basename(tree).split('_')[0]
-    prefile = f'./dating_for/{prefix}/{prefix}_3cal_set1/mcmc_for/03_mcmctree.ctl'
+    prefile = f'./dating_for/{prefix}/{prefix}_set1/mcmc_for/03_mcmctree.ctl'
     param = {
         # 'seqfile': seqfile_b,
         'treefile': abspath(tree),
@@ -77,12 +62,12 @@ for tree in new_trees:
         #          'seqtype': seqtype,
         'usedata': "2 in.BV 1",
         'outfile': './04_mcmctree.out',
-        #          'clock': clock,
+                 'clock': '3',
         #          'BDparas': bd_paras,
-        'rgene_gamma': '13 1246.5 1',
+        'rgene_gamma': '1 100 1',
         #          'sigma2_gamma': sigma2_gamma,
-        'burnin': 2000,
-        'sampfreq': 10,
+        'burnin': 10000,
+        'sampfreq': 30,
         'nsample': 20000,
         #          'alpha': 0.5
     }
@@ -95,10 +80,10 @@ for tree in new_trees:
             final_odir = join(odir, onew_name)
             os.makedirs(final_odir, exist_ok=True)
             d = dirname(prefile)
-            os.system(f"ln -s {abspath(join(d, 'in.BV'))} {final_odir}/ ")
+            os.system(f"ln -sf {abspath(join(d, 'in.BV'))} {final_odir}/ ")
             with open(join(final_odir, '04_mcmctree.ctl'), 'w') as f1:
                 f1.write(text)
-            cmd = f"cd {join(final_odir)} ; mcmctree ./04_mcmctree.ctl"
+            cmd = f"cd {join(final_odir)} ; mcmctree ./04_mcmctree.ctl > ./run.log "
             cmds.append(cmd)
 
 # remove previous

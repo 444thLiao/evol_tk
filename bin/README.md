@@ -5,7 +5,7 @@ This is a series of scripts used to retrieve metadata of given IDs like protein 
 
 For retrieving metadata from bioproject and biosample of NCBI, you could use below command
 
-`python3 ncbi_convert/pid2bio.py -i assembly_ids.list -o metadata.csv -f -redo`
+`python3 ncbi_convertor/pid2bio.py -i assembly_ids.list -o metadata.csv -f -redo`
 
 Except for the normally and regular parameters like `-i` `-o`. There are some special parameteters.
 

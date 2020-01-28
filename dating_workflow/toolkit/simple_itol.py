@@ -10,6 +10,9 @@ ncbi = NCBITaxa()
 
 if len(sys.argv) != 3:
     raise Exception()
+
+
+
 genome_list = sys.argv[1]
 metadata = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
 

@@ -10,7 +10,7 @@ def cov_name(name):
 
 all_c_ids = open('/home-user/thliao/data/cyano_basal/rawdata/assembly_ids.list').read().split('\n')
 all_c_ids = [_ for _ in all_c_ids if _]
-indir = './test_paralog_cog25/168g_fasttree/'
+indir = './test_paralog_cog25/82g_fasttree/'
 
 
 f2genome2gene = defaultdict(dict)
