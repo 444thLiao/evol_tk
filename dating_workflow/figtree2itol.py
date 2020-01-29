@@ -127,7 +127,7 @@ def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, roo
     if itol_annotate is None:
         itol_annotate = dirname(output_dating_result_tree)
     itol_annotate = process_path(itol_annotate)
-    if ',' in root_with:
+    if ',' in str(root_with):
         root_with = [_.strip() for _ in root_with.split(',')]
     elif root_with is None:
         pass
