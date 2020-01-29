@@ -243,7 +243,8 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
     # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
-    tree = Tree(in_tree, format=3)
+    from api_tools.itol_func import read_tree 
+    tree = read_tree(in_tree, format=3)
     id2support = {}
     for n in tree.traverse():
         if (not n.is_leaf()) and n.name:

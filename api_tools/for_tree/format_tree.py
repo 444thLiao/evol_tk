@@ -8,7 +8,7 @@ if not exists(indir):
     
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
-def read_tree(in_tree, format):
+def read_tree(in_tree, format=None):
     if isinstance(in_tree, str):
         t = Tree(open(in_tree).read(), format=format)
     elif isinstance(in_tree, Tree):
