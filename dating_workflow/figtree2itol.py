@@ -77,7 +77,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
     for n in tree.traverse():
         if not n.is_leaf():
             name = n.name if not n.is_root() else 'OROOT'
-            raw_text.append("\t".join([n.name,
+            raw_text.append("\t".join([name,
                                        n.ages,
                                        '1',
                                        '#FF0000',
@@ -89,12 +89,37 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
     with open(join(itol_annotate, 'dating_tree_ages.txt'), 'w') as f1:
         f1.write(template + '\n' + '\n'.join(raw_text))
 
-    
-    text = to_node_symbol(tree)
-    with open(join(itol_annotate, 'dating_tree_bootstrap.txt'), 'w') as f1:
-        f1.write(text)
+    rows = []
+    template_text = open(dataset_symbol_template).read()
+    for n in tree.traverse():
+        if not n.is_leaf():
+            size = '5'
+            shape = '2'
+            filled = '1'
+            s_v = n.support
+            childrens = n.get_leaf_names()
+            nid = tree.get_common_ancestor(childrens)
 
-    
+            if int(s_v) >= 95:
+                color = '#000000'
+            elif int(s_v) >= 85 and int(s_v) < 95:
+                color = '#777777'
+            elif int(s_v) >= 65 and int(s_v) < 85:
+                color = '#eeeeee'
+            else:
+                color = '#FFFFFF'
+
+            if color:
+                row = '\t'.join([nid.name, shape, size, color, filled, '1', ''])
+                rows.append(row)
+
+        annotate_text = '\n'.join(rows)
+        template_text = template_text.format(dataset_label='bootstrap',
+                                             legend_text='',
+                                             maximum_size=10)
+    with open(join(itol_annotate, 'dating_tree_bootstrap.txt'), 'w') as f1:
+        f1.write(template_text + annotate_text)
+
 
 @click.command()
 @click.option('-i', 'intree_ori')
