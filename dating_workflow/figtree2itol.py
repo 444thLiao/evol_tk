@@ -9,8 +9,8 @@ import click
 from ete3 import Tree
 
 from dating_workflow.step_script import process_path
-
-
+from api_tools.itol_func import to_node_symbol
+from api_tools.for_tree.format_tree import sort_tree
 #   Tree with NHX style metadata:
 
 #    (A:0.1,(B:0.2,(C:0.2,D:0.3):0.4[&&NHX:conf=0.01:name=NODE1]):0.5);
@@ -64,14 +64,19 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
                 n.add_features(support=int(support))
             count+=1
     # tree.features.remove('support')
+    
+    tree = sort_tree(tree)
     text = tree.write(format=3)
     text = text.replace(')1:', '):')
+    
     with open(output_dating_result_tree, 'w') as f1:
         f1.write(text)
-
+     
+    
     raw_text = []
     for n in tree.traverse():
         if not n.is_leaf():
+            name = n.name if not n.is_root() else 'OROOT'
             raw_text.append("\t".join([n.name,
                                        n.ages,
                                        '1',
@@ -84,37 +89,12 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
     with open(join(itol_annotate, 'dating_tree_ages.txt'), 'w') as f1:
         f1.write(template + '\n' + '\n'.join(raw_text))
 
-    rows = []
-    template_text = open(dataset_symbol_template).read()
-    for n in tree.traverse():
-        if not n.is_leaf():
-            size = '5'
-            shape = '2'
-            filled = '1'
-            s_v = n.support
-            childrens = n.get_leaf_names()
-            nid = tree.get_common_ancestor(childrens)
-
-            if int(s_v) >= 95:
-                color = '#000000'
-            elif int(s_v) >= 85 and int(s_v) < 95:
-                color = '#777777'
-            elif int(s_v) >= 65 and int(s_v) < 85:
-                color = '#eeeeee'
-            else:
-                color = '#FFFFFF'
-
-            if color:
-                row = '\t'.join([nid.name, shape, size, color, filled, '0', ''])
-                rows.append(row)
-
-        annotate_text = '\n'.join(rows)
-        template_text = template_text.format(dataset_label='bootstrap',
-                                             legend_text='',
-                                             maximum_size=10)
+    
+    text = to_node_symbol(tree)
     with open(join(itol_annotate, 'dating_tree_bootstrap.txt'), 'w') as f1:
-        f1.write(template_text + annotate_text)
+        f1.write(text)
 
+    
 
 @click.command()
 @click.option('-i', 'intree_ori')
