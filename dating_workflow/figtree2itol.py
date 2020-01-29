@@ -37,7 +37,8 @@ dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_annotate=None, ):
     tree2 = Tree(intree_ori,format=3)
-    tree2.set_outgroup(tree2.get_common_ancestor(root_with))
+    if root_with is not None:
+        tree2.set_outgroup(tree2.get_common_ancestor(root_with))
     if itol_annotate is None:
         itol_annotate = dirname(output_dating_result_tree)
     mcmc_out_tree_text = open(mcmc_out_tree)
@@ -128,6 +129,8 @@ def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, roo
     itol_annotate = process_path(itol_annotate)
     if ',' in root_with:
         root_with = [_.strip() for _ in root_with.split(',')]
+    elif root_with is None:
+        pass
     else:
         root_with = [root_with.strip()]
 
