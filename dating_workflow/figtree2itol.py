@@ -133,7 +133,7 @@ def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, roo
 
     if not os.path.exists(dirname(output_dating_result_tree)):
         os.makedirs(output_dating_result_tree)
-    main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with)
+    main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate=itol_annotate, root_with=root_with)
 
 
 # intree_ori = ''
