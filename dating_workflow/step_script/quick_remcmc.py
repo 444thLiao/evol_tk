@@ -10,7 +10,7 @@ from tqdm import tqdm
 from api_tools.for_tree.format_tree import add_cal_api
 from dating_workflow.step_script.dating_pro import modify, run
 
-a = pd.read_excel('calibrations_sets.xlsx', index_col=0)
+a = pd.read_excel('./dating_for/calibrations_set/calibrations_sets.xlsx', index_col=0)
 mapping_dict = {
     'Node 1': 'GCA_000011385.1|GCA_002746535.1',
     'Node 2': 'GCA_000011385.1|GCA_000013205.1',
@@ -28,25 +28,23 @@ for s, row in a.iterrows():
     for node, t in row.items():
         if not pd.isna(t):
             rows.append(f"{mapping_dict[node]}\t{str(t)}\t{name_dict[node]}")
-    with open(f'./cal_{s}.txt', 'w') as f1:
+    with open(f'./dating_for/calibrations_set/cal_{s}.txt', 'w') as f1:
         f1.write('\n'.join(rows))
 
-redo = True
+redo = False
 # batch cal set
-
-num_g = 77
 new_trees = []
 
 for num_g in [77,82,187]:
     ori_newick = f'./trees/final/{num_g}g_merged.newick'
     for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
         set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
-        if redo:
+        if redo or not exists(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'):
             add_cal_api(ori_newick,
                     f'./dating_for/cal_tree/{num_g}g_{set_name}.newick',
                     cal_set,
                     format=3)
-        new_trees.append(abspath(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'))
+            new_trees.append(abspath(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'))
 
 
 odir = './dating_for/clock3'
@@ -84,7 +82,9 @@ for tree in new_trees:
             with open(join(final_odir, '04_mcmctree.ctl'), 'w') as f1:
                 f1.write(text)
             cmd = f"cd {join(final_odir)} ; mcmctree ./04_mcmctree.ctl > ./run.log "
-            cmds.append(cmd)
+
+            if not exists(join(final_odir, 'FigTree.tre')):
+                cmds.append(cmd)
 
 # remove previous
 for d in cmds:
@@ -104,3 +104,10 @@ for d in cmds:
 
 with mp.Pool(processes=len(cmds)) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))
+
+
+for f in glob('./dating_for/clock3/*_run1/FigTree.tre'):
+    num_g = f.split('/')[-2].split('_')[1]
+    name = '_'.join(f.split('/')[-2].split('_')[1:3])
+    cmd = f"python3 ~/script/evolution_relative/dating_workflow/figtree2itol.py -i ./trees/final/{num_g}_merged.newick -i2 {f} -o ./dating_for/result_tree/{name}/{name}_dating.newick"
+    os.system(cmd)

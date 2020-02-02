@@ -59,3 +59,15 @@ with open('./itol_txt/taxons_names.txt', 'w') as f1:
 text = to_label({k: k for k in gid2name})
 with open('./itol_txt/reset_names.txt', 'w') as f1:
     f1.write(text)
+
+## 25 genes
+from dating_workflow.step_script.extract_cog25 import parse_annotation
+in_annotations = './cog25_annotate'
+genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=1e-20)
+gid2genes = {k: [_k for _k, _v in v.items() if _v] for k, v in genome2cdd.items()}
+all_genes = set([_ for vl in gid2genes.values() for _ in vl])
+text = to_binary_shape(gid2genes,
+                       {g: {'color': '#007acc'} for g in all_genes})
+
+with open('./itol_txt/cog25genes.txt', 'w') as f1:
+    f1.write(text)

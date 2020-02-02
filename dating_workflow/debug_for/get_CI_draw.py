@@ -15,7 +15,7 @@ ofile = './evaluate.png'
 
 def get_vals(infile):
     f = open(infile).read().split('\n')
-    head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+    head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
     if head not in f:
         return None
     idx = f.index(head)

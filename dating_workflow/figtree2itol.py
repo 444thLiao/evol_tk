@@ -3,14 +3,16 @@ tmp file for nitrification project
 """
 import os
 import re
+from glob import glob
 from os.path import *
 
 import click
 from ete3 import Tree
 
-from dating_workflow.step_script import process_path
-from api_tools.itol_func import to_node_symbol
 from api_tools.for_tree.format_tree import sort_tree
+from dating_workflow.step_script import process_path
+
+
 #   Tree with NHX style metadata:
 
 #    (A:0.1,(B:0.2,(C:0.2,D:0.3):0.4[&&NHX:conf=0.01:name=NODE1]):0.5);
@@ -31,12 +33,30 @@ def sub_for(m):
     return t
 
 
+def get_node_name(f):
+    matched_row = ''
+    match = False
+    for row in open(f):
+        row = row.strip('\n').strip()
+        if match and not row:
+            break
+        if row.startswith('Species tree for FigTree.  Branch lengths = posterior mean times; 95% CIs = labels'):
+            match = True
+            continue
+        if match:
+            matched_row = row
+    t = Tree(matched_row.replace(' ', ''), format=8)
+    for l in t.get_leaves():
+        l.name = l.name.partition('_')[-1]
+    return t
+
+
 indir = '/home-user/thliao/template_txt/'
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
-def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_annotate=None, ):
-    tree2 = Tree(intree_ori,format=3)
+def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None, ):
+    tree2 = Tree(intree_ori, format=3)
     if root_with is not None:
         tree2.set_outgroup(tree2.get_common_ancestor(root_with))
     if itol_annotate is None:
@@ -48,31 +68,37 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
             t = re.sub('\[&95%HPD=.*?\]', sub_for, t)
             t = t.replace(' ', '')
             tree = Tree(t, format=1)
-
-    count = len(tree.get_leaf_names())+1
+    if glob(join(dirname(mcmc_out_tree), '*.out')):
+        outfile = glob(join(dirname(mcmc_out_tree), '*.out'))[0]
+        rename_tree = get_node_name(outfile)
+    else:
+        rename_tree = None
+    count = len(tree.get_leaf_names()) + 1
     for n in tree.traverse():
         if not n.is_leaf():
             dates = n.name
-            n.name = 'I%s' % count
+            if rename_tree is None:
+                n.name = 'I%s' % count
+            else:
+                n.name = 't_n%s' % rename_tree.get_common_ancestor(n.get_leaf_names()).name
             n.add_features(ages=dates, )
             all_leafs = n.get_leaf_names()
             nin2 = tree2.get_common_ancestor(all_leafs)
             # n.name = nin2.name
-            
+
             support = nin2.name.split('_S')[-1]
             if support.isnumeric():
                 n.add_features(support=int(support))
-            count+=1
+            count += 1
     # tree.features.remove('support')
-    
+
     tree = sort_tree(tree)
     text = tree.write(format=3)
     text = text.replace(')1:', '):')
-    
+
     with open(output_dating_result_tree, 'w') as f1:
         f1.write(text)
-     
-    
+
     raw_text = []
     for n in tree.traverse():
         if not n.is_leaf():
@@ -83,8 +109,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree,root_with, itol_an
                                        '#FF0000',
                                        'bold',
                                        '1',
-                                       '0'
-                                       ]))
+                                       '0']))
     template = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
     with open(join(itol_annotate, 'dating_tree_ages.txt'), 'w') as f1:
         f1.write(template + '\n' + '\n'.join(raw_text))

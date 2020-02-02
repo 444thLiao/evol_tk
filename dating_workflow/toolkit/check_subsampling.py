@@ -37,7 +37,8 @@ tree = './trees/final/198g_merged.newick'
 t = Tree(tree,format=3)
 all_ids = t.get_leaf_names()
 
-id2gene = {genome: {k:1 if v else 0 for k,v in _v.items() } for genome,_v in gid2genes.items() }
+id2gene = {genome: {k:1 if v else 0 for k,v in _v.items() } 
+           for genome,_v in gid2genes.items() }
 info_df = pd.DataFrame.from_dict(id2gene,orient='index')
 info_df = info_df.reindex(all_ids)
 info_df.to_excel('./itol_txt/25genes.xlsx',index=1)
@@ -49,4 +50,13 @@ info_df.to_excel('./itol_txt/25genes.xlsx',index=1)
 #                        {'1': {'color': '#007acc'}})
 # with open('./itol_txt/tmp.txt', 'w') as f1:
 #     f1.write(text)
-
+ids = open('./dating_for_190g.list').read().split('\n')
+text = to_binary_shape({k:['remained'] for k in ids})
+with open('./itol_txt/test_remained.txt','w') as f1:
+   f1.write(text)
+   
+id2gene = {genome: {k:1 if v else 0 for k,v in _v.items() } 
+           for genome,_v in gid2genes.items() if genome in ids}
+info_df = pd.DataFrame.from_dict(id2gene,orient='index')
+info_df = info_df.reindex([_ for _ in all_ids if _ in ids])
+info_df.to_excel('./itol_txt/25genes.xlsx',index=1)
