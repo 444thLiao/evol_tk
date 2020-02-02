@@ -88,7 +88,7 @@ def main(mcmc_out_tree, out_table ):
     if not exists(dirname(process_path(out_table))):
         os.makedirs(dirname(process_path(out_table)))
     with open(out_table,'w') as f1:
-        f1.write('\n'.join(out_table))
+        f1.write('\n'.join(rows))
 
 
 if __name__ == "__main__":
