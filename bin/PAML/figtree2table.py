@@ -93,7 +93,8 @@ def main(mcmc_out_tree, out_table ):
 
 if __name__ == "__main__":
     params = sys.argv
-    if not len(params) == 4:
+    if not len(params) == 3:
         raise IOError("need to input path of FigTree.tre")
 
-    main(process_path(params[-1]))
+    main(process_path(params[1]),
+         process_path(params[2]),)
