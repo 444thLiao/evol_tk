@@ -186,7 +186,8 @@ def stats_cog(genome2genes, gene_ids):
 @click.option("-evalue", 'evalue', default=1e-50, help="evalue for filtering out false-positive proteins. default is 1e-50 ")
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
+@click.option("-ot", 'output_type', default='prot',help="prot(protein) or nucl(nucleotide)")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,output_type):
     if genome_list is None:
         gids = []
     else:
@@ -201,7 +202,12 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
 
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
-    write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
+    if output_type.lower() in ['prot','protein']:
+        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
+    elif output_type.lower() in ['nucl','nucleotide']:
+        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
+    else:
+        raise IOError('wrong input of output_type')
     # write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}

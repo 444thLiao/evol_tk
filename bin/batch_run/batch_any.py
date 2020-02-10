@@ -6,7 +6,6 @@ import multiprocessing as mp
 import os
 from glob import glob
 from os.path import *
-# sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 from subprocess import check_call
 
 import click
@@ -54,12 +53,12 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
 
 @click.command(
     help="This script accept input directory(-i) which contains files with suffix(-s) and output directory(-o) which will stodge result with its name and new suffix (-ns). It could auto parellel your command into (-np) times. ")
-@click.option('-i', 'indir')
-@click.option('-o', 'odir')
-@click.option('-s', 'suffix', default='')
-@click.option('-ns', 'new_suffix', default='')
-@click.option('-np', 'num_parellel', default=10)
-@click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
+@click.option('-i', 'indir', help="input directory for iterations. ")
+@click.option('-o', 'odir', help="ouput directory for stodge the output files")
+@click.option('-s', 'suffix', default='', help="suffix of input files needed to be iterated within the indir,default is empty")
+@click.option('-ns', 'new_suffix', default='', help="new suffix of output files, default is empty")
+@click.option('-np', 'num_parellel', default=10, help="num of processes could be parellel.. default is 10")
+@click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
 @click.option('-t', 'test', help='test?', default=False, required=False, is_flag=True)
 @click.option('-cmd', "cmd",
               help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")

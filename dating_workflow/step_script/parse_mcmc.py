@@ -2,12 +2,7 @@ import pandas as pd
 from ete3 import Tree
 from glob import glob
 from os.path import *
-
-
-
-def parse_mcmc(infile):
-    t = pd.read_csv(infile,sep='\t',index_col=0)
-    return t.mean()
+from tqdm import tqdm
 
 def get_CI(f):
     f = open(f).read().split('\n')
@@ -28,7 +23,7 @@ def get_CI(f):
     mean_collect = []
     CI_collect = []
     for row in remained_txt:
-        if row.startswith('t_n'):
+        if row.startswith('t_n') or row.startswith('lnL'):
             vals = row.split(' ')
             vals = [_ for _ in vals if _ and _ not in '(),']
             posterior_mean, equal_tailed_95p_down, equal_tailed_95p_up = map(format_v, vals[1:4])
@@ -64,43 +59,64 @@ tmp_df = pd.DataFrame()
 collect_ = {}
 unfinished_c = {}
 ns = ['GCA_001828545.1','GCA_004282745.1']
-indir = './dating_for/clock3'
-for each_dir in glob(join(indir,'repeat_82g*')):
+indir = './dating_for/83g/clock2_diff_cal/'
+interate_dir = list(glob(join(indir,'*'))) #+ ['./dating_for/83g/clock2_rgene/',
+                                           #   './dating_for/83g/clock2_sigma2/']
+# name = 't_n139'
+name = ''
+for each_dir in tqdm(interate_dir):
+    outfile = glob(join(each_dir, '*.out'))[0]
+    mcmc = join(each_dir, 'mcmc.txt')
+    log = join(each_dir, 'run.log')
     if exists(join(each_dir,'FigTree.tre')):
-        outfile = glob(join(each_dir,'*.out'))[0]
-        mcmc = join(each_dir,'mcmc.txt')
-        log = join(each_dir,'run.log')
-        t = get_node_name(outfile)
-        name = 't_n%s' % t.get_common_ancestor(ns).name
+        if not name:
+            t = get_node_name(outfile)
+            name = 't_n%s' % t.get_common_ancestor(ns).name
         df = pd.read_csv(mcmc,sep='\t',index_col=0)
         set_name = basename(dirname(outfile)).partition('_')[-1]
+        if not set_name:
+            set_name = basename(dirname(outfile))
         collect_[set_name]= df.loc[:,name]
         df = get_CI(log)
-        tmp_df.loc[0,set_name] = '%s (%s) '% (df.loc[name,'Posterior mean time (100 Ma)'],df.loc[name,'CIs'])
-    elif exists(join(each_dir,'mcmc.txt')):
-        mcmc = join(each_dir,'mcmc.txt')
-        name = 't_n217' 
-        df = pd.read_csv(mcmc,sep='\t',index_col=0)
-        set_name = basename(dirname(mcmc)).partition('_')[-1]
-        unfinished_c[set_name]= df.loc[:,name]
+        tmp_df.loc[set_name,'Anammox group'] = '%s (%s) '% (df.loc[name,'Posterior mean time (100 Ma)'],
+                                                            df.loc[name,'CIs'])
+        tmp_df.loc[set_name,'ROOT'] = '%s (%s) '% (df.loc["t_n84",'Posterior mean time (100 Ma)'],
+                                                   df.loc["t_n84",'CIs'])
+        tmp_df.loc[set_name,'lnL'] = '%s (%s) '% (df.loc["lnL",'Posterior mean time (100 Ma)'],
+                                                   df.loc["lnL",'CIs'])
+    # if exists(mcmc):
+    #     df = pd.read_csv(mcmc,sep='\t',index_col=0)
+    #     set_name = basename(dirname(mcmc)).partition('_')[-1]
+        # unfinished_c[set_name]= df.loc[:,name]
+tmp_df.loc[:,'num_set'] = [int(_.split('_')[1].replace('set',''))
+                           if 'run' in _ else 0
+                        for _ in tmp_df.index]
+tmp_df = tmp_df.sort_values('num_set')
+tmp_df.index = [_.replace('83g','83g_clock2')
+                for _ in tmp_df.index]
+#tmp_df.columns = ["divergence time/100Mya (CI)"]
+tmp_df.to_excel('./dating_for/83g/83g_clock2_diff_cal.xlsx')
 
-tmp_df = tmp_df.T
-tmp_df = tmp_df.reindex([_ for _ in tmp_df.index if 'run1' in _])
-tmp_df.index = [_.split('_')[1] for _ in tmp_df.index]
-tmp_df = tmp_df.reindex(sorted(tmp_df.index,key=lambda x: int(x.split('set')[-1])))
-tmp_df.columns = ["divergence time/100Mya (CI)"]
-tmp_df.to_excel('./test.xlsx')
+
+
+
+
+
 
 tmp = []
 for k,v in collect_.items():
     _df = pd.DataFrame(v.values)
     _df.columns = ['time']
-    _df.loc[:,'set'] = k.rpartition('_')[0]
-    tmp.append(_df)
+    _df.loc[:,'name'] = k
+    if 'run1' in k or 'run' not in k:
+        tmp.append(_df)
 df = pd.concat(tmp,axis=0)
-df.loc[:,'num_set'] = [int(_.split('_set')[-1]) for _ in df.loc[:,'set']]
-df.loc[:,'set'] = [_.split('_')[-1].capitalize() for _ in df.loc[:,'set']]
+df.loc[:,'num_set'] = [int(_.split('_set')[-1].split('_')[0])
+                       if 'run' in _ else 0
+                       for _ in df.loc[:,'name']]
+df.loc[:,'set'] = [_.replace('83g_','').replace('_run1','').replace('clock2_','') for _ in df.loc[:,'name']]
 df = df.sort_values('num_set')
+
 import plotly.express as px
 fig = px.violin(df,x='set',y='time', box=True,points=False)
 fig.layout.yaxis.title.text = 'Divergence time(100Mya)'
@@ -108,4 +124,4 @@ fig.layout.xaxis.title.text = 'Sets of calibration information'
 fig.layout.yaxis.title.font.size = 30
 fig.layout.xaxis.title.font.size = 30
 fig.layout.xaxis.tickfont.size = 20
-fig.write_html('./82g.html',include_plotlyjs='cdn')
+fig.write_html('./dating_for/83g/83g_clock2_diff_cal.html',include_plotlyjs='cdn')

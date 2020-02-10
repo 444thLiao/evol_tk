@@ -35,7 +35,7 @@ redo = False
 # batch cal set
 new_trees = []
 
-for num_g in [77,82,187]:
+for num_g in [77,83,187]:
     ori_newick = f'./trees/final/{num_g}g_merged.newick'
     for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
         set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
@@ -59,7 +59,7 @@ for tree in new_trees:
         #          'ndata': ndata,
         #          'seqtype': seqtype,
         'usedata': "2 in.BV 1",
-        'outfile': './04_mcmctree.out',
+        'outfile': './03_mcmctree.out',
                  'clock': '3',
         #          'BDparas': bd_paras,
         'rgene_gamma': '1 100 1',
@@ -68,6 +68,7 @@ for tree in new_trees:
         'sampfreq': 30,
         'nsample': 20000,
         #          'alpha': 0.5
+        'print':1
     }
 
     # modify these ctl

@@ -94,8 +94,7 @@ def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=defau
 @click.option('-s', 'suffix', help='suffix for files', default='faa')
 @click.option('-np', 'num_parellel', default=10)
 @click.option("-gl", "genome_list", default=None,
-              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
-                   "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
+              help="It could be None. If you provided, you could use it to subset the files by indicate names.")
 @click.option('-db', 'db', default=default_db)
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 def cli(indir, odir, num_parellel, suffix, genome_list, force, db):

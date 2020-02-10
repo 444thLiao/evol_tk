@@ -267,6 +267,7 @@ for idx in tqdm(range(len(collect_rn))):
     ofile = join(new_odir,name1+'_to_'+name2+'.blastout')
     if not exists(ofile):
         os.system(f"blastn -query {fna1} -subject {fna2} -evalue 1e-3 -outfmt 6 -out {ofile}")
+
 # visulization
 cmd = "/home-user/thliao/software/artemis/act "
 for idx in list(range(len(collect_rn)))[:30]:

@@ -29,12 +29,9 @@ def process_path(path):
 def sub_for(m):
     t = m.string[m.start(0):m.end(0)]
     t = t.replace(',', '-')
-    # t = t.replace('.','v')
     t = t.replace(' ', '')
     t = t.replace('[&95%HPD={', "")
     t = t.replace('}]', "")
-    # t = t.replace(',','_')
-    # print(t.string)
     return t
 
 def get_node_name(f):

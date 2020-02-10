@@ -67,7 +67,7 @@ result_df = pd.DataFrame.from_dict(gene2n2v, orient='index')
 result_df.columns = list(map(change_name,result_df.columns))
 result_df.to_csv('./parsed_result.tab',sep='\t',index=1,index_label='K number')
 
-from bin.transform.classify_kos import *
+from bin.other_convertor.classify_kos import *
 # calculating the number of genes transformed
 group_dict = {"anammox":"GCA_003551305.1|GCA_001828565.1,GCA_000987375.1"
               }

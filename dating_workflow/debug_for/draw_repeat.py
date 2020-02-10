@@ -2,6 +2,8 @@ import pandas as pd
 from glob import glob
 import plotly.express as px
 import plotly.graph_objects as go
+from os.path import *
+import os
 
 def get_CI(f):
     f = open(f).read().split('\n')
@@ -75,18 +77,23 @@ def draw_r(time1,time2):
     fig.layout.xaxis.title.text = 'Posterior mean time (Gya) − Run1'
     fig.layout.yaxis.title.text = 'Posterior mean time (Gya) − Run2'
     return fig
-from os.path import *
-import os
-odir = './dating_for/result_draw'
-if not exists(odir):
-    os.makedirs(odir)
-a = glob("./dating_for/clock3/*_run1/run.log")
-for f1 in a:
-    if '187' not in f1:
-        name = f1.split('_')[2]
-        set_name = f1.split('_')[3]
-        f2 = f1.replace('_run1','_run2')
-        df1,df2 = get_CI(f1),get_CI(f2)
-        time1,time2 = df1.iloc[:,-1],df2.iloc[:,-1]
-        fig = draw_r(time1,time2)
-        fig.write_image(join(odir,f'repeat_{name}_{set_name}.png'))
+
+
+def main(pattern,odir):
+    if not exists(odir):
+        os.makedirs(odir)
+    a = glob(pattern)
+    for f1 in a:
+        if '187' not in f1:
+            name = f1.split('_')[2]
+            set_name = f1.split('_')[3]
+            f2 = f1.replace('_run1','_run2')
+            df1,df2 = get_CI(f1),get_CI(f2)
+            time1,time2 = df1.iloc[:,-1],df2.iloc[:,-1]
+            fig = draw_r(time1,time2)
+            fig.write_image(join(odir,f'repeat_{name}_{set_name}.png'))
+
+if __name__ == '__main__':
+    odir = './dating_for/result_draw'
+    pattern = "./dating_for/clock3/*_run1/run.log"
+    main(pattern,odir)
