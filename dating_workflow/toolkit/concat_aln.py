@@ -9,7 +9,7 @@ import plotly.graph_objs as go
 from Bio import AlignIO, SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import process_path,convert_genome_ID,convert_genome_ID_rev
+from dating_workflow.step_script import process_path, convert_genome_ID, convert_genome_ID_rev
 
 
 def generate_stats_graph(stats, total, ofile):
@@ -60,7 +60,16 @@ def generate_partition_file(outfile, record_pos_info):
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False):
+def set_partition(f1, name, seq, partition_method):
+    if partition_method == 'genes':
+        f1.write(f"{name}        {str(seq)}\n")
+    elif partition_method == '1,2':
+        seq = seq[::3] + seq[1::3]
+        f1.write(f"{name}        {str(seq)}\n")
+    return str(seq), name
+
+
+def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False, partition_method='genes'):
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
             if fill_gaps:
@@ -75,7 +84,11 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
             # total_num = len(aln_record)
             num_seq = len(aln_record)
             length_this_aln = aln_record.get_alignment_length()
-            f1.write(f'{total_num}        {length_this_aln}\n')
+            if partition_method == 'genes':
+                f1.write(f'{total_num}        {length_this_aln}\n')
+            elif partition_method == '1,2':
+                length_this_aln -= length_this_aln // 3
+                f1.write(f'{total_num}        {length_this_aln}\n')
             used_ids = []
             added_seq = []
             for _ in range(num_seq):
@@ -84,9 +97,12 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
                     continue
                 if formatted_gid in genome_ids:
                     # before _ , should be the converted genome id
-                    f1.write(f"{convert_genome_ID_rev(formatted_gid)}        {str(aln_record[_, :].seq)}\n")
-                    added_seq.append(str(aln_record[_, :].seq))
-                    used_ids.append(formatted_gid)
+                    _seq, _id = set_partition(f1,
+                                              name=convert_genome_ID_rev(formatted_gid),
+                                              seq=aln_record[_, :].seq,
+                                              partition_method=partition_method)
+                    added_seq.append(str(_seq))
+                    used_ids.append(_id)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
                     f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
@@ -95,17 +111,19 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
 @click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
-@click.option("-s", "suffix", default='aln',help="suffix for input files")
+@click.option("-s", "suffix", default='aln', help="suffix for input files")
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-@click.option("-genel", "gene_list", default=None, 
+@click.option("-genel", "gene_list", default=None,
               help="list of gene need to be retained")
-@click.option("-rm_I", "remove_identical", is_flag=True, default=False,help='remove identical sequence for some software like Fasttree. default is not removed')
-@click.option("-no_graph", "graph", is_flag=True, default=True,help='generating a graph introducing the number of genes among all genomes. default is generating graph')
-@click.option("-no_fill", "fill_gaps", is_flag=True, default=True,help="fill with gaps for genomes doesn't contains this gene. default is filling ")
+@click.option("-rm_I", "remove_identical", is_flag=True, default=False, help='remove identical sequence for some software like Fasttree. default is not removed')
+@click.option("-no_graph", "graph", is_flag=True, default=True, help='generating a graph introducing the number of genes among all genomes. default is generating graph')
+@click.option("-no_fill", "fill_gaps", is_flag=True, default=True, help="fill with gaps for genomes doesn't contains this gene. default is filling ")
 @click.option("-seed", "seed", help='random seed when removing the identical sequences')
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
+@click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... please be carefully if you input trimal result or aln result. ', default='genes')
 @click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
-def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln',fix_refseq=False):
+def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln', fix_refseq=False,
+         partition_method='genes'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
@@ -175,7 +193,7 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
 
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
-            f1.write(f'>{convert_genome_ID_rev(gid,prefix=prefix)}\n')
+            f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:
@@ -185,7 +203,8 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
     if concat_type.lower() in ['both', 'phy']:
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
-                          remove_identical=remove_identical)
+                          remove_identical=remove_identical,
+                          partition_method=partition_method)
     if graph:
         generate_stats_graph(g2num_miss, total=len(gids), ofile=ograph)
 

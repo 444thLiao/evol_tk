@@ -99,8 +99,10 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
     pdir = dirname(expanduser(raw_proteins))
     if get_type == 'nuc':
         suffix = 'ffn'
+        final_suffix = 'ffn'
     elif get_type == 'prot':
         suffix = 'faa'
+        final_suffix = 'faa'
     else:
         raise Exception
     if not exists(outdir):
@@ -153,7 +155,7 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
          if record.id not in [_.id
                               for _ in unique_cdd_records]]
 
-        with open(join(outdir, f"{each_gene.replace('CDD:', '')}.faa"), 'w') as f1:
+        with open(join(outdir, f"{each_gene.replace('CDD:', '')}.{final_suffix}"), 'w') as f1:
             SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
 
 
