@@ -102,7 +102,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
                                               seq=aln_record[_, :].seq,
                                               partition_method=partition_method)
                     added_seq.append(str(_seq))
-                    used_ids.append(_id)
+                    used_ids.append(formatted_gid)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
                     f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")

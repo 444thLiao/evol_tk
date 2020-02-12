@@ -106,7 +106,10 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
                                           if l.name in names])
         LCA_node.name = time
     final_tree = t.write(format=8, format_root_node=True).replace('NoName', '')
-
+    for v in calibration_dict.values():
+        if '(' in v:
+            final_tree = final_tree.replace(v.replace('(','_').replace(')','_').replace(',','_'),
+                                            "'%s'" % v)
     text = f'{len(t.get_leaves())}\n' + final_tree
     with open(out_newick, 'w') as f1:
         f1.write(text)
