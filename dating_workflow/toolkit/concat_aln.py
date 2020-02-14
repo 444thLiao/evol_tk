@@ -211,8 +211,10 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        record_pos_info = [(name.split('_')[0], start, end, aln_record)
+        record_pos_info = [(convert_genome_ID_rev(name.split('_')[0]), start, end, aln_record)
                            for name, start, end, aln_record in record_pos_info]
+        gids = [convert_genome_ID_rev(_)
+                for _ in gids]
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
