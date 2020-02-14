@@ -8,7 +8,8 @@ from os.path import *
 import click
 from Bio import AlignIO
 
-from dating_workflow.toolkit.concat_aln import generate_phy_file,convert_genome_ID
+from dating_workflow.toolkit.concat_aln import generate_phy_file,convert_genome_ID_rev
+
 
 @click.command()
 @click.option('-i', 'infile', help='aln file')
@@ -17,8 +18,8 @@ from dating_workflow.toolkit.concat_aln import generate_phy_file,convert_genome_
               help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
-@click.option("-no_id_convert", "no_id_convert", is_flag=True, default=True)
-def cli(infile, outfile, genome_list,remove_identical,fill_gaps,no_id_convert):
+@click.option("-name_convert", "name_convert", is_flag=True, default=True)
+def cli(infile, outfile, genome_list,remove_identical,fill_gaps,name_convert):
     if not '/' in infile:
         infile = f'./{infile}'
     if '*' in infile:
@@ -32,8 +33,8 @@ def cli(infile, outfile, genome_list,remove_identical,fill_gaps,no_id_convert):
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
         gids = f1.read().split('\n')
-        if no_id_convert:
-            gids = [convert_genome_ID(_) for _ in gids if _]
+        if name_convert:
+            gids = [convert_genome_ID_rev(_) for _ in gids if _]
         gids = set(gids)
     for infile in infiles:
         if len(infiles) != 1:

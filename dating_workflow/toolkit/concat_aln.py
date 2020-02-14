@@ -70,6 +70,16 @@ def set_partition(f1, name, seq, partition_method):
 
 
 def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False, partition_method='genes'):
+    """
+
+    :param outfile:
+    :param record_pos_info:
+    :param genome_ids: should be the same format id as the record_pos_info, the transforming process should not occur here.
+    :param fill_gaps:
+    :param remove_identical:
+    :param partition_method:
+    :return:
+    """
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
             if fill_gaps:
@@ -92,20 +102,20 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
             used_ids = []
             added_seq = []
             for _ in range(num_seq):
-                formatted_gid = aln_record[_, :].id.split('_')[0]
+                id = aln_record[_, :].id
                 if str(aln_record[_, :].seq) in set(added_seq) and remove_identical:
                     continue
-                if formatted_gid in genome_ids:
+                if id in genome_ids:
                     # before _ , should be the converted genome id
                     _seq, _id = set_partition(f1,
-                                              name=convert_genome_ID_rev(formatted_gid),
+                                              name=id,
                                               seq=aln_record[_, :].seq,
                                               partition_method=partition_method)
                     added_seq.append(str(_seq))
-                    used_ids.append(formatted_gid)
+                    used_ids.append(id)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
-                    f1.write(f"{convert_genome_ID_rev(remained_id)}\n{'-' * length_this_aln}\n")
+                    f1.write(f"{remained_id}\n{'-' * length_this_aln}\n")
 
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
@@ -201,6 +211,8 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
+        record_pos_info = [(name.split('_')[0], start, end, aln_record)
+                           for name, start, end, aln_record in record_pos_info]
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
