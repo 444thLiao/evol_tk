@@ -69,7 +69,7 @@ def set_partition(f1, name, seq, partition_method):
     return str(seq), name
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False, partition_method='genes'):
+def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False, partition_method='genes',name_convertor=None):
     """
 
     :param outfile:
@@ -102,21 +102,22 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
             used_ids = []
             added_seq = []
             for _ in range(num_seq):
-                id = aln_record[_, :].id
+                fid = aln_record[_, :].id
+                if name_convertor is not None:
+                    fid = name_convertor(fid)
                 if str(aln_record[_, :].seq) in set(added_seq) and remove_identical:
                     continue
-                if id in genome_ids:
+                if fid in genome_ids:
                     # before _ , should be the converted genome id
                     _seq, _id = set_partition(f1,
-                                              name=id,
+                                              name=fid,
                                               seq=aln_record[_, :].seq,
                                               partition_method=partition_method)
                     added_seq.append(str(_seq))
-                    used_ids.append(id)
+                    used_ids.append(fid)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
                     f1.write(f"{remained_id}\n{'-' * length_this_aln}\n")
-
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")
@@ -211,14 +212,15 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        record_pos_info = [(convert_genome_ID_rev(name.split('_')[0]), start, end, aln_record)
-                           for name, start, end, aln_record in record_pos_info]
+
         gids = [convert_genome_ID_rev(_)
                 for _ in gids]
+
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
-                          partition_method=partition_method)
+                          partition_method=partition_method,
+                          name_convertor=lambda x: convert_genome_ID_rev(x))
     if graph:
         generate_stats_graph(g2num_miss, total=len(gids), ofile=ograph)
 
