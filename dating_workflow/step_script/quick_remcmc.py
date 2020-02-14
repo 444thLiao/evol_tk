@@ -47,6 +47,21 @@ for num_g in [77,83,187]:
             new_trees.append(abspath(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'))
 
 
+new_trees = []
+
+num_g = 84
+ori_newick = f'./dating_for/test_add_cal_inside/84g_merged.newick'
+for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
+    set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
+    if redo or not exists(f'./dating_for/test_add_cal_inside/cal_tree/{num_g}g_{set_name}.newick'):
+        add_cal_api(ori_newick,
+                f'./dating_for/test_add_cal_inside/cal_tree/{num_g}g_{set_name}.newick',
+                cal_set,
+                format=3)
+        new_trees.append(abspath(f'./dating_for/test_add_cal_inside/cal_tree/{num_g}g_{set_name}.newick'))
+
+
+
 odir = './dating_for/clock3'
 cmds = []
 for tree in new_trees:

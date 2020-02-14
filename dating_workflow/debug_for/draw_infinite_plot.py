@@ -116,11 +116,13 @@ def get_plot(pattern, odir):
         tmp_df2.loc[name, set_name] = coef
 
     tmp_df = tmp_df.reindex(columns=sorted(tmp_df.columns, key=lambda x: int(x.replace('set', ''))))
-    tmp_df.to_excel(join(odir, 'infinite_site_r2.xlsx'))
+    # tmp_df.to_excel(join(odir, 'infinite_site_r2.xlsx'))
 
     tmp_df2 = tmp_df2.reindex(columns=sorted(tmp_df2.columns, key=lambda x: int(x.replace('set', ''))))
-    tmp_df2.to_excel(join(odir, 'infinite_site_coef.xlsx'))
-
+    # tmp_df2.to_excel(join(odir, 'infinite_site_coef.xlsx'))
+    new_df = pd.concat([tmp_df.T,tmp_df2.T],axis=1)
+    new_df.columns = ['r-square','coefficients']
+    new_df.to_excel(join(odir, 'infinite_site.xlsx'))
 
 if __name__ == '__main__':
     odir = './dating_for/83g/clock2_infinite_plot'

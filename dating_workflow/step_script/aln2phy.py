@@ -17,7 +17,8 @@ from dating_workflow.toolkit.concat_aln import generate_phy_file,convert_genome_
               help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False)
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True)
-def cli(infile, outfile, genome_list,remove_identical,fill_gaps):
+@click.option("-no_id_convert", "no_id_convert", is_flag=True, default=True)
+def cli(infile, outfile, genome_list,remove_identical,fill_gaps,no_id_convert):
     if not '/' in infile:
         infile = f'./{infile}'
     if '*' in infile:
@@ -31,7 +32,8 @@ def cli(infile, outfile, genome_list,remove_identical,fill_gaps):
         genome_list = join(indir, 'selected_genomes.txt')
     with open(genome_list, 'r') as f1:
         gids = f1.read().split('\n')
-        gids = [convert_genome_ID(_) for _ in gids if _]
+        if no_id_convert:
+            gids = [convert_genome_ID(_) for _ in gids if _]
         gids = set(gids)
     for infile in infiles:
         if len(infiles) != 1:
