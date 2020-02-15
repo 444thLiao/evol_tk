@@ -8,16 +8,18 @@ For now, it is designed for protein alignment only.
 For better understanding the usage of this script, see usage_dating.md
 """
 
+import io
 import multiprocessing as mp
 import os
+import re
 import subprocess
 from glob import glob
 from os.path import *
 from subprocess import check_call
-import io,re
+
 import click
-from tqdm import tqdm
 from Bio import SeqIO
+from tqdm import tqdm
 
 # __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/dating_pro.py'
 # template file dir
@@ -56,7 +58,7 @@ def run(args):
 
     except subprocess.CalledProcessError as e:
         pass
-        #print('error', e.output)
+        # print('error', e.output)
     if log != '/dev/null':
         t = open(log, 'r', newline='\n').read().replace('\r', '\n')
         with open(log, 'w') as f1:
@@ -73,7 +75,7 @@ def get_num_phy_file(in_phyfile):
     return ndata
 
 
-def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl):
+def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, use_nucl=False):
     # template_ctl_01 = './01_mcmctree.ctl'
     if not exists(odir):
         os.makedirs(odir)
@@ -82,31 +84,35 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl):
               'seqfile': in_phyfile,
               'treefile': in_treefile,
               'outfile': './01_out'}
+    if use_nucl:
+        params['seqtype'] = '0'
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
-    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl > /dev/null")
-    
-def rename_tmp(ali_dir,ctl_file):
-    phy_f = ctl_file.replace('.ctl','.txt')
+    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl 2> /dev/null")
+
+
+def rename_tmp(ali_dir, ctl_file):
+    phy_f = ctl_file.replace('.ctl', '.txt')
     rows = open(phy_f).read().split('\n')
     rows = [_ for _ in rows if _.startswith('GC')]
-    rows = ['>'+re.sub('\ {2,}','\n',row).replace(' ','') for row in rows]
-    now_f = list(SeqIO.parse(io.StringIO('\n'.join(rows)),format='fasta'))
-    non_empty_seqs = len([_ for _ in now_f if set(_.seq)!={'-'}])
+    rows = ['>' + re.sub('\ {2,}', '\n', row).replace(' ', '') for row in rows]
+    now_f = list(SeqIO.parse(io.StringIO('\n'.join(rows)), format='fasta'))
+    non_empty_seqs = len([_ for _ in now_f if set(_.seq) != {'-'}])
     match_n = []
-    for f in glob(join(ali_dir,'*.trimal')):
-        name = basename(f).replace('.trimal','')
-        tmp_f = list(SeqIO.parse(f,format='fasta'))
-        _non_empty_seqs = len([_ for _ in tmp_f if set(_.seq)!={'-'}])
-        if len(tmp_f[0].seq) == len(now_f[0].seq) and non_empty_seqs==_non_empty_seqs:
+    for f in glob(join(ali_dir, '*.trimal')):
+        name = basename(f).replace('.trimal', '')
+        tmp_f = list(SeqIO.parse(f, format='fasta'))
+        _non_empty_seqs = len([_ for _ in tmp_f if set(_.seq) != {'-'}])
+        if len(tmp_f[0].seq) == len(now_f[0].seq) and non_empty_seqs == _non_empty_seqs:
             match_n.append(name)
-    if len(match_n)==1:
+    if len(match_n) == 1:
         return match_n[0]
     else:
         raise Exception(f'multiple...or non,for {ctl_file},have {len(match_n)} file')
-    
-def collecting_tmp(tmp_indir, odir,ali_dir=None):
+
+
+def collecting_tmp(tmp_indir, odir, ali_dir=None):
     if not exists(odir):
         os.makedirs(odir)
     ctls = glob(join(tmp_indir, 'tmp0*.ctl'))
@@ -118,29 +124,36 @@ def collecting_tmp(tmp_indir, odir,ali_dir=None):
             new_name = name
         else:
             new_name = name
-        
+
         os.makedirs(join(odir, f'{new_name}'), exist_ok=1)
         os.system(f'mv {tmp_indir}/{name}.* {odir}/{new_name}/')
 
 
-def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None):
+def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nucl=False):
     if not exists(odir):
         os.makedirs(odir)
     params = []
     ctls = glob(join(tmp_indir, '*', 'tmp0*.ctl'))
     ctls = [_ for _ in ctls if 'modify' not in _]  # remove modify
     for ctl in ctls:
+        _params = {'model': 2,
+                   'aaRatefile': abspath(aaRatefile),
+                   'fix_alpha': 0,
+                   'alpha': 0.5,
+                   'ncatG': 4}
+        if use_nucl:
+            _params.remove('aaRatefile')
         new_text = modify(ctl,
-                          **{'model': 2,
-                             'aaRatefile': abspath(aaRatefile),
-                             'fix_alpha': 0,
-                             'alpha': 0.5,
-                             'ncatG': 4})
+                          **_params)
         new_file = ctl.replace('.ctl', '.modify.ctl')
         with open(new_file, 'w') as f1:
             f1.write(new_text)
+        if use_nucl:
+            bin_ml = f"{paml_bin}/baseml"
+        else:
+            bin_ml = f"{paml_bin}/codeml"
         params.append((
-            f"cd {dirname(new_file)}; {paml_bin}/codeml {basename(new_file)}", 
+            f"cd {dirname(new_file)}; {bin_ml} {basename(new_file)}",
             new_file.replace('.modify.ctl', '.log')))
 
     if extra_cmd is not None:
@@ -158,7 +171,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None):
         f1.write(text)
 
 
-def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}):
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -171,7 +184,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     seqfile_b = in_phyfile
     treefile_b = in_treefile
     outfile = './03_mcmctree.out'
-    seqtype = 2
+    seqtype = 0 if use_nucl else 2
     clock = 2
     param = {'seqfile': seqfile_b,
              'treefile': treefile_b,
@@ -200,7 +213,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
          ofile.replace('.ctl', '.log')))
 
 
-def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}):
+def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False):
     if not exists(odir):
         os.makedirs(odir)
     bd_paras = '1 1 0.1'
@@ -212,7 +225,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
     seqfile_b = in_phyfile
     treefile_b = in_treefile
     outfile = './nodata_mcmctree.out'
-    seqtype = 2
+    seqtype = 0 if use_nucl else 2
     clock = 2
     param = {'seqfile': seqfile_b,
              'treefile': treefile_b,
@@ -239,7 +252,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
             ofile.replace('.ctl', '.log'))
 
 
-def main(in_phyfile, in_treefile, total_odir, ali_dir=None,run_tmp=True, run_prior_only=True, params_dict={}):
+def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_tmp=True, run_prior_only=True, params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
@@ -251,15 +264,16 @@ def main(in_phyfile, in_treefile, total_odir, ali_dir=None,run_tmp=True, run_pri
                                  in_treefile=in_treefile,
                                  odir=nodata_dir,
                                  ndata=ndata,
-                                 params_dict=params_dict)
+                                 params_dict=params_dict,
+                                 use_nucl=use_nucl)
     if run_prior_only:
         run(prior_cmd)
         return
-    if run_tmp and not isinstance(run_tmp,str):
+    if run_tmp and not isinstance(run_tmp, str):
         generate_tmp(in_phyfile,
                      in_treefile,
                      tmp_odir,
-                     ndata)
+                     ndata, use_nucl=use_nucl)
         collecting_tmp(tmp_odir,
                        tmp_odir,
                        ali_dir=ali_dir)
@@ -267,16 +281,17 @@ def main(in_phyfile, in_treefile, total_odir, ali_dir=None,run_tmp=True, run_pri
         run_each_tmp(tmp_odir,
                      mcmc_for_dir,
                      extra_cmd=prior_cmd)
-    elif isinstance(run_tmp,str):
+    elif isinstance(run_tmp, str):
         collecting_tmp(run_tmp,
-                tmp_odir,
-                ali_dir=ali_dir)
+                       tmp_odir,
+                       ali_dir=ali_dir)
     final_mcmctree(inBV=join(mcmc_for_dir, 'in.BV'),
                    in_phyfile=in_phyfile,
                    in_treefile=in_treefile,
                    odir=mcmc_for_dir,
                    ndata=ndata,
-                   params_dict=params_dict)
+                   params_dict=params_dict,
+                   use_nucl=use_nucl)
 
 
 def process_path(path):
@@ -291,6 +306,7 @@ def process_path(path):
 @click.option('-it', '--in_tree', 'in_treefile')
 @click.option('-id', '--in_ali_dir', 'in_ali_dir')
 @click.option('-o', 'odir')
+@click.option('-nucl', 'use_nucl', is_flag=True, default=False)
 @click.option('-no_tmp', 'run_tmp', default=True)
 @click.option('-only_prior', 'only_prior', is_flag=True, default=False)
 @click.option('-sf', 'sampfreq', default='2')
@@ -298,16 +314,18 @@ def process_path(path):
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
-def cli(in_phyfile, in_treefile,in_ali_dir, odir, run_tmp, only_prior, sampfreq,print_f,rgene_gamma,sigma2_gamma,clock):
+def cli(in_phyfile, in_treefile, in_ali_dir, odir, use_nucl, run_tmp, only_prior, sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),
-                   'print':str(print_f),
-                   'rgene_gamma':rgene_gamma,
-                   'sigma2_gamma':sigma2_gamma,
-                   'clock':clock}
-    main(in_phyfile, in_treefile,ali_dir=in_ali_dir,
-          total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
+                   'print': str(print_f),
+                   'rgene_gamma': rgene_gamma,
+                   'sigma2_gamma': sigma2_gamma,
+                   'clock': clock}
+    main(in_phyfile, in_treefile,
+         use_nucl=use_nucl,
+         ali_dir=in_ali_dir,
+         total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
 
 
 if __name__ == "__main__":
