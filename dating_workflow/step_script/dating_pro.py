@@ -280,7 +280,8 @@ def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_
 
         run_each_tmp(tmp_odir,
                      mcmc_for_dir,
-                     extra_cmd=prior_cmd)
+                     extra_cmd=prior_cmd,
+                     use_nucl=use_nucl)
     elif isinstance(run_tmp, str):
         collecting_tmp(run_tmp,
                        tmp_odir,

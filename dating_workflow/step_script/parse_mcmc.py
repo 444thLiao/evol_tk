@@ -3,6 +3,20 @@ from ete3 import Tree
 from glob import glob
 from os.path import *
 from tqdm import tqdm
+import numpy as np
+def cal_ESS(df):
+
+    N = int(df.shape[0] * 0.1)
+    df = df.iloc[N:, :]
+    N = df.shape[0]
+
+    def f(t1):
+        def cal(x,k):
+            return np.corrcoef(x[k:],x[:-k])[0][1]
+        V = np.array([cal(t1.values,k) for k in range(1,N-1)])
+        ess = N / (1+sum(V))
+        return ess
+    ess_array = df.apply(f,axis=0)
 
 def get_CI(f):
     f = open(f).read().split('\n')
