@@ -142,7 +142,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
                    'alpha': 0.5,
                    'ncatG': 4}
         if use_nucl:
-            _params.remove('aaRatefile')
+            _params.pop('aaRatefile')
         new_text = modify(ctl,
                           **_params)
         new_file = ctl.replace('.ctl', '.modify.ctl')
