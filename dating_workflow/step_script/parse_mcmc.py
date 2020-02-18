@@ -94,8 +94,8 @@ for each_dir in tqdm(interate_dir):
         df = get_CI(log)
         tmp_df.loc[set_name,'Anammox group'] = '%s (%s) '% (df.loc[name,'Posterior mean time (100 Ma)'],
                                                             df.loc[name,'CIs'])
-        tmp_df.loc[set_name,'ROOT'] = '%s (%s) '% (df.loc["t_n84",'Posterior mean time (100 Ma)'],
-                                                   df.loc["t_n84",'CIs'])
+        tmp_df.loc[set_name,'ROOT'] = '%s (%s) '% (df.ix[0,'Posterior mean time (100 Ma)'],
+                                                   df.ix[0,'CIs'])
         tmp_df.loc[set_name,'lnL'] = '%s (%s) '% (df.loc["lnL",'Posterior mean time (100 Ma)'],
                                                    df.loc["lnL",'CIs'])
     # if exists(mcmc):
@@ -109,7 +109,7 @@ tmp_df = tmp_df.sort_values('num_set')
 tmp_df.index = [_.replace('83g','83g_clock2')
                 for _ in tmp_df.index]
 #tmp_df.columns = ["divergence time/100Mya (CI)"]
-tmp_df.to_excel('./dating_for/83g/83g_clock2_diff_cal.xlsx')
+tmp_df.to_excel('./dating_for/83g/83g_clock2_diff_cal.xlsx',index_label='Calibration set')
 
 
 

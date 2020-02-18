@@ -128,8 +128,11 @@ def get_plot(pattern, odir):
     tmp_df2 = tmp_df2.reindex(columns=sorted(tmp_df2.columns, key=lambda x: int(x.replace('set', ''))))
     # tmp_df2.to_excel(join(odir, 'infinite_site_coef.xlsx'))
     new_df = pd.concat([tmp_df.T,tmp_df2.T],axis=1)
-    new_df.columns = ['r-square','coefficients']
-    new_df.to_excel(join(odir, 'infinite_site.xlsx'))
+    new_df.columns = ['r-square','slope']
+    new_df.to_excel(join(odir, 'infinite_site.xlsx'),
+                    index_label='Calibration sets')
+    return new_df
+
 
 
 def separate_fit(df,odir,id_sets):
@@ -139,15 +142,17 @@ def separate_fit(df,odir,id_sets):
     total_df = total_df.fillna('set')
     fig, r_squre_v, coef = draw_r(total_df,group='color')
 
-    _df_sets = [df.loc[_,:]
+    _df_sets = [df.loc[_,:].copy()
                 for _ in id_sets]
 
     results = [draw_r(_df)
                for _df in _df_sets]
 
-    count = 2
-    for _f,_coef,_r2 in results:
-        fig.data[count] = _coef * fig.data[1].x
+
+    for idx,(_f,_coef,_r2) in enumerate(results):
+        _data = [_ for _ in fig.data if str(idx+1) in _['legendgroup'] and 'OLS trendline' in _['hovertemplate']][0]
+        _data.y = _f.data[-1].y
+        _data.x = _f.data[-1].x
 
     df.loc[:, 'Posterior mean time (100 Ma)'] = df.loc[:, 'Posterior mean time (100 Ma)'] / 10
     df.loc[:, 'CI_width'] = df.loc[:, 'CI_width'].astype(float) / 10
@@ -160,7 +165,7 @@ def separate_fit(df,odir,id_sets):
     coef = round(coef, 4)
     r2 = abs(round(r2, 4))
     # it will generate negative r2, althought it is right ,it may make someone confused
-    fig.data[1].y = coef * fig.data[1].x
+    fig.data[2].y = coef * fig.data[2].x
 
     r_squre_text = ["y = %s * x, R<sup>2</sup> = %s" % (coef, r2)]
 

@@ -8,7 +8,8 @@ from tqdm import tqdm
 
 from dating_workflow.step_script.dating_pro import modify, run
 
-new_trees = glob('./dating_for/cal_tree/83g_set*.newick')
+new_trees = sorted(glob('./dating_for/cal_tree/83g_set*.newick'),
+                   key=lambda x:int(x.split('set')[-1].replace('.newick','')))
 odir = './dating_for/83g/batch_prior'
 cmds = []
 for tree in new_trees:
