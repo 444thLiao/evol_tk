@@ -62,12 +62,12 @@ for tree in new_trees:
         #          'seqtype': seqtype,
         'usedata': "2 in.BV 1",
         'outfile': './03_mcmctree.out',
-                 'clock': '3',
+                 'clock': '2',
         #          'BDparas': bd_paras,
         'rgene_gamma': '1 100 1',
         #          'sigma2_gamma': sigma2_gamma,
         'burnin': 10000,
-        'sampfreq': 30,
+        'sampfreq': 20,
         'nsample': 20000,
         #          'alpha': 0.5
         'print':1

@@ -11,7 +11,6 @@ def get_CI(f):
     f = open(f).read().split('\n')
     head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
     if head not in f:
-        print('no head')
         return None
     idx = f.index(head)
     remained_txt = f[idx + 1:]
@@ -27,7 +26,7 @@ def get_CI(f):
     mean_collect = []
     CI_collect = []
     for row in remained_txt:
-        if row.startswith('t_n'):
+        if row.startswith('t_n') or row.startswith('lnL'):
             vals = row.split(' ')
             vals = [_ for _ in vals if _ and _ not in '(),']
             posterior_mean, equal_tailed_95p_down, equal_tailed_95p_up = map(format_v, vals[1:4])
@@ -64,6 +63,7 @@ def fit_line(x, y):
 
 def draw_r(df,group=None):
     df = df.copy()
+    df = df.reindex([_ for _ in df.index if _.startswith('t_n')])
     df.loc[:, 'Posterior mean time (100 Ma)'] = df.loc[:, 'Posterior mean time (100 Ma)'] / 10
     df.loc[:, 'CI_width'] = df.loc[:, 'CI_width'].astype(float) / 10
     if group is None:
@@ -111,7 +111,7 @@ def get_plot(pattern, odir):
     tmp_df2 = pd.DataFrame()
     tmp_df = pd.DataFrame()
     a = glob(pattern)
-    for f1 in a:
+    for f1 in tqdm(a):
         name = f1.split('_')[-3]
         set_name = f1.split('_')[-2]
         df1 = get_CI(f1)
