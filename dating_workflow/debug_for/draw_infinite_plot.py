@@ -5,7 +5,7 @@ from os.path import *
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
+from tqdm import tqdm
 
 def get_CI(f):
     f = open(f).read().split('\n')
