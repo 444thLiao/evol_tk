@@ -38,7 +38,7 @@ def download_file(url, local_filename):
     # return local_filename
 
 
-def main(ssid, path, odir, dry_run):
+def main(ssid, odir, dry_run):
     odir = process_path(odir)
     if not exists(odir):
         os.makedirs(odir)
@@ -94,11 +94,10 @@ def main(ssid, path, odir, dry_run):
 
 @click.command()
 @click.argument("ssid")
-@click.argument("path")
 @click.argument("odir", default='./')
 @click.option("-d", "--dry_run", "dry_run", default=False, is_flag=True)
-def cli(ssid, path, odir, dry_run):
-    main(ssid, path, odir, dry_run)
+def cli(ssid, odir, dry_run):
+    main(ssid, odir, dry_run)
 
 
 if __name__ == "__main__":
