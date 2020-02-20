@@ -16,6 +16,13 @@ mapping_dict = {
     'Node 2': 'GCA_000011385.1|GCA_000013205.1',
     'Node 3': 'GCA_000196515.1|GCA_001548455.1',
     'Node 4': 'GCA_000317575.1|GCA_000317025.1', }
+#for 75g
+mapping_dict = {
+    'Node 1': 'GCA_000011385.1|GCA_002746535.1',
+    'Node 2': 'GCA_000011385.1|GCA_000011345.1',
+    'Node 3': 'GCA_000734895.2|GCA_000316625.1',
+    'Node 4': 'GCA_001942475.1|GCA_000332055.1', }
+
 name_dict = {
     'Node 1': 'root',
     'Node 2': 'gleobacteria',

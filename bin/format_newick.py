@@ -200,7 +200,7 @@ def mcat(infiles, out_newick, tree_format, new_format):
 def reformat(in_newick, out_newick, tree_format, new_format):
     out_newick = process_IO(in_newick, out_newick)
     t1 = read_tree(in_newick, format=tree_format)
-    text = t1.write(outfile=out_newick, format=new_format)
+    text = t1.write(out_newick, format=new_format)
     with open(out_newick, 'w') as f1:
         f1.write(text.replace('NoName', ''))
 

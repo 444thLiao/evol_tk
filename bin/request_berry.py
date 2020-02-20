@@ -3,6 +3,7 @@ This script is mainly for download genome from berry genomes company.
 """
 import io
 import json
+import os
 import urllib
 import warnings
 from os.path import *
@@ -10,6 +11,16 @@ from os.path import *
 import click
 import requests
 from tqdm import tqdm
+
+
+def process_path(path):
+    if not '/' in path:
+        path = './' + path
+    if path.startswith('~'):
+        path = expanduser(path)
+    if path.startswith('.'):
+        path = abspath(path)
+    return path
 
 
 def download_file(url, local_filename):
@@ -27,17 +38,22 @@ def download_file(url, local_filename):
     # return local_filename
 
 
-def main(ssid, path, dry_run):
+def main(ssid, path, odir, dry_run):
+    odir = process_path(odir)
+    if not exists(odir):
+        os.makedirs(odir)
     warnings.filterwarnings('ignore')
     post_data = {'func': 'get_list',
                  'ssid': ssid,
                  'fid': ssid,
-                 'path': f'/{path}',
+                 # 'path': f'/{path}',
                  'sort': 'natural',
-                 'dir': 'ASC'}
+                 'dir': 'ASC',
+                 'ep':''}
     r = requests.post('https://ss.berrygenomics.com/share.cgi',
                       post_data,
                       verify=False)
+
     d = []
     data = json.load(io.StringIO(r.text))
     total = data['total']
@@ -49,7 +65,7 @@ def main(ssid, path, dry_run):
             filename = f_dict['filename']
             _p = dict(ssid=post_data['ssid'],
                       fid=post_data['fid'],
-                      path=post_data['path'],
+                      # path=path,
                       filename=filename,
                       openfolder='forcedownload',
                       ep='',
@@ -71,7 +87,7 @@ def main(ssid, path, dry_run):
     for url_r, filename in tqdm(d):
         if dry_run:
             continue
-        download_file(url_r, filename)
+        download_file(url_r, join(odir, filename))
         tqdm.write('downloading %s' % filename)
     tqdm.write("finishing all......")
 
@@ -79,9 +95,10 @@ def main(ssid, path, dry_run):
 @click.command()
 @click.argument("ssid")
 @click.argument("path")
+@click.argument("odir", default='./')
 @click.option("-d", "--dry_run", "dry_run", default=False, is_flag=True)
-def cli(ssid, path, dry_run):
-    main(ssid, path, dry_run)
+def cli(ssid, path, odir, dry_run):
+    main(ssid, path, odir, dry_run)
 
 
 if __name__ == "__main__":

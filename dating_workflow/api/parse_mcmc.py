@@ -28,6 +28,11 @@ def cal_ESS(df):
 
 
 def get_CI(f):
+    """
+
+    :param f: log file?
+    :return:
+    """
     f = open(f).read().split('\n')
     head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
     if head not in f:
@@ -94,6 +99,8 @@ def main(indir, ns, groupname, odir):
             outfile = outfile[0]
         mcmc = join(each_dir, 'mcmc.txt')
         log = join(each_dir, 'run.log')
+        if not exists(log):
+            log = glob(join(each_dir, '*.log'))[0]
         if exists(join(each_dir, 'FigTree.tre')):
             if not name:
                 t = get_node_name(outfile)

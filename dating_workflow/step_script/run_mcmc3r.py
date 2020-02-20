@@ -39,6 +39,7 @@ def get_v(rout):
 
 collect_df = pd.DataFrame(columns=['calibration set', 'model', 'Log marginal (s. d)', 'BF'])
 target_ = ['set24', 'set13','set14',]
+count =0
 for t in target_:
     cmd = f"""R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
     AR = os.popen(cmd).read()
@@ -48,5 +49,6 @@ for t in target_:
     IR_logml, IR_se = get_v(IR)
     c = np.array([AR_logml, IR_logml])
     BF = np.exp(c - np.max(c))
-    collect_df.loc[0, :] = [t, 'AR', f'{AR_logml} ({AR_se})', BF[0]]
-    collect_df.loc[1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
+    collect_df.loc[count, :] = [t, 'AR', f'{AR_logml} ({AR_se})', BF[0]]
+    collect_df.loc[count+1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
+    count +=2
