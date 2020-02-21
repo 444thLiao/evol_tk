@@ -63,12 +63,12 @@ def main(ssid, odir, dry_run):
     while done_count < total:
         for f_dict in data['datas']:
             filename = f_dict['filename']
-            if filename == '002':
+            if filename == '002' or filename == 'QCFILE':
                 done_count += 1
                 continue
             _p = dict(ssid=post_data['ssid'],
                       fid=post_data['fid'],
-                      # path=path,
+                      path=data['foldername'],
                       filename=filename,
                       openfolder='forcedownload',
                       ep='',
