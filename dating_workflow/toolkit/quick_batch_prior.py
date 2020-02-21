@@ -28,10 +28,10 @@ for tree in new_trees:
         'rgene_gamma': '1 100 1',
         #          'sigma2_gamma': sigma2_gamma,
         'burnin': 2000,
-        'sampfreq': 20,
+        'sampfreq': 10,
         'nsample': 20000,
         #          'alpha': 0.5
-        # 'print':1
+        'print':1
     }
 
     # modify these ctl

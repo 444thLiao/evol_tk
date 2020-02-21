@@ -7,23 +7,24 @@ from tqdm import tqdm
 
 from dating_workflow.step_script.dating_pro import run
 
-target_ = ['set24', 'set13']
-target_dir = './AR_set14'
+target_ = ['set24', 'set13','set1','set14']
+target_dir = './AR_set1'
 
 for t in target_:
     # os.makedirs(f'AR_{t}',exist_ok=True)
     # os.makedirs(f'IR_{t}', exist_ok=True)
-    # os.system(f'cp {target_dir}/04_mcmctree.ctl {target_dir}/in.BV ./AR_{t}')
-    # os.system(f'cp {target_dir}/04_mcmctree.ctl {target_dir}/in.BV ./IR_{t}')
-    cmd = f"""R -e "setwd('AR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
+    os.system(f'cp {target_dir}/03_mcmctree.ctl {target_dir}/in.BV ./AR_{t}')
+    os.system(f'cp {target_dir}/03_mcmctree.ctl {target_dir}/in.BV ./IR_{t}')
+    cmd = f"""R -e "setwd('AR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
     os.system(cmd)
-    cmd = f"""R -e "setwd('IR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
+    cmd = f"""R -e "setwd('IR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
     os.system(cmd)
 
 cmds = []
 for t in target_:
     for _ in range(1, 9):
         cmds.append(f"cd AR_{t}/{_}/ ; mcmctree 04_mcmctree.ctl > run.log ")
+        cmds.append(f"cd IR_{t}/{_}/ ; mcmctree 04_mcmctree.ctl > run.log ")
 
 with mp.Pool(processes=len(cmds)) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))

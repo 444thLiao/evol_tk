@@ -79,25 +79,27 @@ for idx1, s in tqdm(enumerate(shared_set)):
         # xmax = np.max([_ for _d in _fig.data for _ in _d.x])
         ymax = np.max([_ for _d in _fig.data for _ in _d.y])
 
-        if idx2 != 4:
-            CI = posterior_CIs[s].loc[n, 'CIs']
-            CI = '%s - %s' % tuple(map(lambda x: round(float(x), 2),
-                                       CI.split(' - ')))
-            prior_set = a.loc[s.split('_')[-1], :].values[idx2]
 
-            fig.append_trace(go.Scatter(x=[xmax_dict[n]+5],
-                                        y=[ymax],
-                                        text=f"{CI} <Br> ({prior_set})" if str(prior_set) != 'nan' else f"{CI}",
-                                        mode='text',
-                                        textposition="bottom left"
-                                        ),
-                             row=idx1 + 1, col=idx2 + 1)
+        CI = posterior_CIs[s].loc[n, 'CIs']
+        CI = '%s - %s' % tuple(map(lambda x: round(float(x), 2),
+                                   CI.split(' - ')))
+        if idx2 != 4:
+            prior_set = a.loc[s.split('_')[-1], :].values[idx2]
+        else:
+            prior_set = 'nan'
+        fig.append_trace(go.Scatter(x=[xmax_dict[n]+5],
+                                    y=[ymax],
+                                    text=f"{CI} <Br> ({prior_set})" if str(prior_set) != 'nan' else f"{CI}",
+                                    mode='text',
+                                    textposition="bottom left"
+                                    ),
+                         row=idx1 + 1, col=idx2 + 1)
 for idx, v in enumerate(shared_set):
     fig.get_subplot(idx + 1, 1).yaxis.title.text = v.split('_')[-1]
 
 fig.layout.showlegend = False
 fig.layout.height = 2000
-fig.write_html('./test.html', include_plotlyjs='cdn')
+fig.write_html('./dating_for/83g/clock2_diff_cal/compare2prior.html', include_plotlyjs='cdn')
 
 #
 # def main(odir,interested_columns,shared_set):
