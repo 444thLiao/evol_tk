@@ -11,10 +11,11 @@ from tqdm import tqdm
 # __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/get_subrate.py'
 template_dir = abspath(join(dirname(dirname(__file__)), 'ctl_template'))
 codeml_ctl = join(template_dir, 'codeml.ctl')
+baseml_ctl = join(template_dir, 'baseml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
 
 paml_bin = "/home-user/software/paml/v4.9/paml4.9e/bin/codeml"
-
+paml_bin_base = "/home-user/software/paml/v4.9/paml4.9e/bin/baseml"
 
 def modify(file, **kwargs):
     text = open(file).read()

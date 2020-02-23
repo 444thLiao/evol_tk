@@ -4,27 +4,35 @@ import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from os.path import exists
+from dating_workflow.step_script.dating_pro import run,modify
 
-from dating_workflow.step_script.dating_pro import run
+target_ = ['set24', 'set13','set1','set14','set25']
 
-target_ = ['set24', 'set13','set1','set14']
 target_dir = './AR_set1'
 
 for t in target_:
-    # os.makedirs(f'AR_{t}',exist_ok=True)
-    # os.makedirs(f'IR_{t}', exist_ok=True)
-    os.system(f'cp {target_dir}/03_mcmctree.ctl {target_dir}/in.BV ./AR_{t}')
-    os.system(f'cp {target_dir}/03_mcmctree.ctl {target_dir}/in.BV ./IR_{t}')
-    cmd = f"""R -e "setwd('AR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
-    os.system(cmd)
+    for model in ['IR','AR']:
+        if not exists(f"./{model}_{t}"):
+            os.makedirs(f"./{model}_{t}")
+        os.system(f'cp {target_dir}/03_mcmctree.ctl ./{model}_{t}/')
+        param = {'treefile': "/share/home-user/thliao/data/plancto/dating_for/cal_tree/83g_set1.newick".replace('set1',t),
+                 'clock':2 if model == 'IR' else 3}
+        text = modify(f'./{model}_{t}/03_mcmctree.ctl',
+                      **param)
+        with open(f'./{model}_{t}/03_mcmctree.ctl','w') as f1:
+            f1.write(text)
+        cmd = f"""R -e "setwd('{model}_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
+        os.system(cmd)
     cmd = f"""R -e "setwd('IR_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
     os.system(cmd)
 
+_ctl = "03_mcmctree.ctl"
 cmds = []
 for t in target_:
     for _ in range(1, 9):
-        cmds.append(f"cd AR_{t}/{_}/ ; mcmctree 04_mcmctree.ctl > run.log ")
-        cmds.append(f"cd IR_{t}/{_}/ ; mcmctree 04_mcmctree.ctl > run.log ")
+        for model in ['IR', 'AR']:
+            cmds.append(f"cd {model}_{t}/{_}/ ; mcmctree {_ctl} > run.log ")
 
 with mp.Pool(processes=len(cmds)) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))
@@ -39,7 +47,6 @@ def get_v(rout):
 
 
 collect_df = pd.DataFrame(columns=['calibration set', 'model', 'Log marginal (s. d)', 'BF'])
-target_ = ['set24', 'set13','set14',]
 count =0
 for t in target_:
     cmd = f"""R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
