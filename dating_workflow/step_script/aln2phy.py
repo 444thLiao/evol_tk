@@ -44,7 +44,8 @@ def cli(infile, outfile, genome_list,remove_identical,fill_gaps,name_convert):
                           [(0, 0, 0, aln_record)], 
                           gids,
                           fill_gaps=fill_gaps, 
-                          remove_identical=remove_identical)
+                          remove_identical=remove_identical,
+                          name_convertor=lambda x:convert_genome_ID_rev(str(x).split('_')[0]))
 
 
 if __name__ == "__main__":

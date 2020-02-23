@@ -15,7 +15,7 @@ baseml_ctl = join(template_dir, 'baseml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
 
 paml_bin = "/home-user/software/paml/v4.9/paml4.9e/bin/codeml"
-paml_bin_base = "/home-user/software/paml/v4.9/paml4.9e/bin/baseml"
+paml_bin_base = "/share/home-user/thliao/software/paml4.9e/bin/baseml"
 
 def modify(file, **kwargs):
     text = open(file).read()
@@ -66,6 +66,40 @@ genome_id = './dating_for_83g.list'
 in_treefile = abspath('./dating_for/phy_files/83g_subrate/83g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
+
+odir = './dating_for/phy_files/83g_nuc_rate'
+aln_dir = './83g_nuc_aln/'
+genome_id = './dating_for_83g.list'
+in_treefile = abspath('./dating_for/phy_files/83g_nuc_rate/83g_point.newick')
+if not exists(odir):
+    os.makedirs(odir)
+
+
+cmds = []
+for f in glob(join(aln_dir, '*.trimal')):
+    ofile = join(odir, basename(f).replace('.trimal', '.phy'))
+    # if not exists(ofile):
+    run(f'python3 ~/scripts/evolution_relative/dating_workflow/step_script/aln2phy.py -i {f} -o {ofile} -gl {genome_id} -name_convert')
+    if not exists(odir):
+        os.makedirs(odir)
+
+    seqfile_b = abspath(ofile)
+    treefile_b = in_treefile
+    outfile = f"./{basename(f).replace('.trimal', '.phy')}.out"
+    param = {'seqfile': seqfile_b,
+             'treefile': treefile_b,
+             #'seqtype': seqtype,
+             'outfile': outfile,
+             #'clock': clock,
+             #'aaRatefile': aaRatefile
+             }
+    text = modify(baseml_ctl, **param)
+    ctl_f = join(odir, basename(f).replace('.trimal', '_baseml.ctl'))
+    with open(ctl_f, 'w') as f1:
+        f1.write(text)
+
+    cmds.append(f"cd {dirname(ctl_f)}; {paml_bin} {basename(ctl_f)} ")
+
 
 cmds = []
 for f in glob(join(aln_dir, '*.trimal')):

@@ -74,7 +74,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 
     :param outfile:
     :param record_pos_info:
-    :param genome_ids: should be the same format id as the record_pos_info, the transforming process should not occur here.
+    :param genome_ids: should be the same format id as the record_pos_info, the transforming process should not occur there.
     :param fill_gaps:
     :param remove_identical:
     :param partition_method:
