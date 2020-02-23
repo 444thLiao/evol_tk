@@ -66,20 +66,25 @@ genome_id = './dating_for_83g.list'
 in_treefile = abspath('./dating_for/phy_files/83g_subrate/83g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
-
+# for SZ cluster
 odir = './dating_for/phy_files/83g_nuc_rate'
 aln_dir = './83g_nuc_aln/'
 genome_id = './dating_for_83g.list'
 in_treefile = abspath('./dating_for/phy_files/83g_nuc_rate/83g_point.newick')
 if not exists(odir):
     os.makedirs(odir)
-
+odir = './dating_for/phy_files/29g_nuc_rate'
+aln_dir = './29g_nuc_aln/'
+genome_id = '/share/home-user/thliao/data/cyano_basal/rawdata/assembly_ids.list'
+in_treefile = abspath('./dating_for/phy_files/29g_nuc_rate/29cyano.newick')
+if not exists(odir):
+    os.makedirs(odir)
 
 cmds = []
 for f in glob(join(aln_dir, '*.trimal')):
     ofile = join(odir, basename(f).replace('.trimal', '.phy'))
     # if not exists(ofile):
-    run(f'python3 ~/scripts/evolution_relative/dating_workflow/step_script/aln2phy.py -i {f} -o {ofile} -gl {genome_id} -name_convert')
+    run(f'python3 ~/script/evolution_relative/dating_workflow/step_script/aln2phy.py -i {f} -o {ofile} -gl {genome_id}')
     if not exists(odir):
         os.makedirs(odir)
 
@@ -98,7 +103,7 @@ for f in glob(join(aln_dir, '*.trimal')):
     with open(ctl_f, 'w') as f1:
         f1.write(text)
 
-    cmds.append(f"cd {dirname(ctl_f)}; {paml_bin} {basename(ctl_f)} ")
+    cmds.append(f"cd {dirname(ctl_f)}; {paml_bin_base} {basename(ctl_f)} ")
 
 
 cmds = []

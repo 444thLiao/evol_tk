@@ -134,11 +134,6 @@ def main(indir, ns, groupname, odir):
     writer.save()
 
 
-ns = ['GCA_001828545.1', 'GCA_004282745.1']
-indir = './dating_for/83g/clock2_diff_cal/'
-main(indir=indir, ns=ns, groupname='Anammox group', odir=indir)
-
-
 @click.command()
 @click.option("-i", 'indir', help='dir have multiple calibration set')
 @click.option("-ns", 'targe_group', default=None)
@@ -149,3 +144,7 @@ def cli(indir):
 
 if __name__ == '__main__':
     cli()
+
+    ns = ['GCA_001828545.1', 'GCA_004282745.1']
+    indir = './dating_for/83g/clock2_diff_cal/'
+    main(indir=indir, ns=ns, groupname='Anammox group', odir=indir)
