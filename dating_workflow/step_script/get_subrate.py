@@ -4,7 +4,7 @@ import subprocess
 from glob import glob
 from os.path import *
 from subprocess import check_call
-
+import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
@@ -56,7 +56,7 @@ genome_id = '../dating_for_187g.list'
 in_treefile = abspath('./dating_for/phy_files/82g_subrate/187g_point.newick')
 
 odir = './dating_for/phy_files/29cyano_subrate'
-aln_dir = './cog25_single/29cyano_aln'
+aln_dir = './cog25_single/29gcyano_aln'
 genome_id = '/home-user/thliao/data/cyano_basal/rawdata/assembly_ids.list'
 in_treefile = abspath('./trees/final/29cyano.newick')
 
@@ -152,3 +152,13 @@ s = np.std(list(g2rate.values()))
 import scipy.stats as stats
 
 fit_alpha, fit_loc, fit_beta = stats.gamma.fit(list(g2rate.values()))
+
+
+import plotly.graph_objs as go
+import plotly.express as px
+df1 = pd.DataFrame().from_dict({'rate':g2rate})
+
+df = pd.concat([df1,df2],axis=0)
+df.loc[:,'x'] = ['gene%s' % _ for _ in df.index.astype(str)]
+fig = px.bar(df,x='x',y='rate',color='part',barmode='group')
+fig.write_html("./compare_rate_nucl_prot.html", include_plotlyjs='cdn')

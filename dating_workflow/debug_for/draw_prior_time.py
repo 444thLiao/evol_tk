@@ -7,7 +7,7 @@ import plotly.figure_factory as ff
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
-
+from collections import defaultdict
 from dating_workflow.api.parse_mcmc import get_CI
 
 prior_df = []
@@ -26,6 +26,8 @@ f = glob(expanduser('~/data/plancto/dating_for/83g/clock2_diff_cal/*run1/mcmc.tx
 for mcmc in tqdm(f):
     if exists(join(dirname(mcmc), 'FigTree.tre')):
         name = basename(dirname(mcmc)).replace('_run1', '').replace('repeat_', '')
+        if name not in shared_set:
+            continue
         _df = pd.read_csv(mcmc, sep='\t', index_col=0)
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
         posterior_df.append((name, _df))
@@ -51,14 +53,19 @@ interested_columns = ['t_n84',
                       't_n104',
                       "t_n99",
                       't_n139']
-from collections import defaultdict
+# interested_columns = ["t_n76",
+#                       "t_n77",
+#                       "t_n84",
+#                       "t_n93",
+#                       "t_n123"]
+
 
 xmax_dict = defaultdict(int)
 for s in shared_set:
     for n in interested_columns:
         m1 = posterior_df[s].loc[:, n].max()
         m2 = prior_df[s].loc[:, n].max()
-        m = np.max([m1,m2])
+        m = np.max([m1, m2])
         if xmax_dict[n] <= m:
             xmax_dict[n] = m
 
@@ -79,7 +86,6 @@ for idx1, s in tqdm(enumerate(shared_set)):
         # xmax = np.max([_ for _d in _fig.data for _ in _d.x])
         ymax = np.max([_ for _d in _fig.data for _ in _d.y])
 
-
         CI = posterior_CIs[s].loc[n, 'CIs']
         CI = '%s - %s' % tuple(map(lambda x: round(float(x), 2),
                                    CI.split(' - ')))
@@ -87,7 +93,7 @@ for idx1, s in tqdm(enumerate(shared_set)):
             prior_set = a.loc[s.split('_')[-1], :].values[idx2]
         else:
             prior_set = 'nan'
-        fig.append_trace(go.Scatter(x=[xmax_dict[n]+5],
+        fig.append_trace(go.Scatter(x=[xmax_dict[n] + 5],
                                     y=[ymax],
                                     text=f"{CI} <Br> ({prior_set})" if str(prior_set) != 'nan' else f"{CI}",
                                     mode='text',

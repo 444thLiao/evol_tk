@@ -1,26 +1,27 @@
 import multiprocessing as mp
 import os
+from os.path import exists
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from os.path import exists
-from dating_workflow.step_script.dating_pro import run,modify
 
-target_ = ['set24', 'set13','set1','set14','set25']
+from dating_workflow.step_script.dating_pro import run, modify
+
+target_ = ['set24', 'set13', 'set1', 'set14', 'set25']
 
 target_dir = './AR_set1'
 
 for t in target_:
-    for model in ['IR','AR']:
+    for model in ['IR', 'AR']:
         if not exists(f"./{model}_{t}"):
             os.makedirs(f"./{model}_{t}")
         os.system(f'cp {target_dir}/03_mcmctree.ctl ./{model}_{t}/')
-        param = {'treefile': "/share/home-user/thliao/data/plancto/dating_for/cal_tree/83g_set1.newick".replace('set1',t),
-                 'clock':2 if model == 'IR' else 3}
+        param = {'treefile': "/share/home-user/thliao/data/plancto/dating_for/cal_tree/83g_set1.newick".replace('set1', t),
+                 'clock': 2 if model == 'IR' else 3}
         text = modify(f'./{model}_{t}/03_mcmctree.ctl',
                       **param)
-        with open(f'./{model}_{t}/03_mcmctree.ctl','w') as f1:
+        with open(f'./{model}_{t}/03_mcmctree.ctl', 'w') as f1:
             f1.write(text)
         cmd = f"""R -e "setwd('{model}_{t}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='03_mcmctree.ctl', betaf='beta.txt')" """
         os.system(cmd)
@@ -47,7 +48,7 @@ def get_v(rout):
 
 
 collect_df = pd.DataFrame(columns=['calibration set', 'model', 'Log marginal (s. d)', 'BF'])
-count =0
+count = 0
 for t in target_:
     cmd = f"""R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
     AR = os.popen(cmd).read()
@@ -58,5 +59,5 @@ for t in target_:
     c = np.array([AR_logml, IR_logml])
     BF = np.exp(c - np.max(c))
     collect_df.loc[count, :] = [t, 'AR', f'{AR_logml} ({AR_se})', BF[0]]
-    collect_df.loc[count+1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
-    count +=2
+    collect_df.loc[count + 1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
+    count += 2

@@ -13,7 +13,9 @@ import multiprocessing as mp
 import os
 import re
 import subprocess
+import sys
 from glob import glob
+from os import popen
 from os.path import *
 from subprocess import check_call
 
@@ -28,7 +30,17 @@ mcmc_ctl = join(template_dir, 'mcmctree.ctl')
 codeml_ctl = join(template_dir, 'codeml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
 
-paml_bin = "/home-user/thliao/software/paml4.9j/bin"
+
+def env_exe(name):
+    bin_dir = dirname(sys.executable)
+    f = join(bin_dir, name)
+    if exists(f):
+        return f
+    f = popen(f'which {name} 2>1').read().strip('\n')
+    return f
+
+
+paml_bin = dirname(env_exe("mcmctree"))  # "/home-user/thliao/software/paml4.9j/bin"
 
 
 def modify(file, **kwargs):
