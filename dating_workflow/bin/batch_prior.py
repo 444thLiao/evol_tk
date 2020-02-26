@@ -17,9 +17,11 @@ from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_n
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
+@click.option('-np', 'num_parellel', default=10)
 def cli(in_phyfile, in_treefile,
         odir,
         use_nucl,
+num_parellel,
         sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
     in_phyfile = process_path(in_phyfile)
     ndata = get_num_phy_file(in_phyfile)
@@ -46,8 +48,10 @@ def cli(in_phyfile, in_treefile,
                                use_nucl=use_nucl,
                                params_dict=params_dict)
         cmds.append(cmd)
-    with mp.Pool(processes=30) as tp:
+    with mp.Pool(processes=num_parellel) as tp:
         _ = list(tqdm((tp.imap(run, cmds)), total=len(cmds)))
 
 if __name__ == '__main__':
     cli()
+
+    # python3 ~/script/evolution_relative/dating_workflow/bin/batch_prior.py -i ./dating_for/phy_files/83g_nuc_concat.phy -it './dating_for/cal_tree/83g_set*.newick' -o ./dating_for/83g/batch_prior_nucl -nucl -sf 20 -p 1 -rg '1 30 1' -c 2
