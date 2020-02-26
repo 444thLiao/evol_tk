@@ -58,7 +58,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
 @click.option('-s', 'suffix', default='', help="suffix of input files needed to be iterated within the indir,default is empty")
 @click.option('-ns', 'new_suffix', default='', help="new suffix of output files, default is empty")
 @click.option('-np', 'num_parellel', default=10, help="num of processes could be parellel.. default is 10")
-@click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
+@click.option('-f', 'force', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
 @click.option('-t', 'test', help='test?', default=False, required=False, is_flag=True)
 @click.option('-cmd', "cmd",
               help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")

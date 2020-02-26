@@ -11,7 +11,7 @@ from collections import defaultdict
 from dating_workflow.bin.parse_mcmc import get_CI
 
 prior_df = []
-prior_list = glob(expanduser('~/data/plancto/dating_for/83g/batch_prior/*/sub_mcmc.txt'))
+prior_list = glob(expanduser('~/data/plancto/dating_for/83g/batch_prior/*/mcmc.txt'))
 for mcmc in tqdm(prior_list):
     name = basename(dirname(mcmc)).replace('_prior', '')
     _df = pd.read_csv(mcmc, sep='\t', index_col=0)
@@ -22,12 +22,10 @@ prior_df = dict(prior_df)
 
 posterior_CIs = {}
 posterior_df = []
-f = glob(expanduser('~/data/plancto/dating_for/83g/clock2_diff_cal/*run1/mcmc.txt'))
+f = glob(expanduser('~/data/plancto/dating_for/83g/nucl/clock2_diff_cal/*run1/mcmc.txt'))
 for mcmc in tqdm(f):
     if exists(join(dirname(mcmc), 'FigTree.tre')):
         name = basename(dirname(mcmc)).replace('_run1', '').replace('repeat_', '')
-        if name not in shared_set:
-            continue
         _df = pd.read_csv(mcmc, sep='\t', index_col=0)
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
         posterior_df.append((name, _df))
@@ -105,7 +103,7 @@ for idx, v in enumerate(shared_set):
 
 fig.layout.showlegend = False
 fig.layout.height = 2000
-fig.write_html('./dating_for/83g/clock2_diff_cal/compare2prior.html', include_plotlyjs='cdn')
+fig.write_html('./dating_for/83g/nucl/clock2_diff_cal/compare2prior.html', include_plotlyjs='cdn')
 
 #
 # def main(odir,interested_columns,shared_set):
