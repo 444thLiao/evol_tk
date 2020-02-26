@@ -125,5 +125,5 @@ def main(infile, OG, output_dir, single, topnumber, genomes_list,contain_all_g):
 if __name__ == '__main__':
     main()
     # get single copy of OG which cover at least 200 genomes and output to the current directory
-    # python3 ~/script_api/ForOrthofinder/api/getSeqofOG.py -i /home-user/thliao/project/cyanophage/within_cyanophage/ortho_test/data/Results_Aug09/WorkingDirectory/Orthogroups_3.csv -t 200  -o .
-    # python3 ~/script_api/ForOrthofinder/api/getSeqofOG.py -i 更换成你需要的/Results_Aug09/WorkingDirectory/Orthogroups_3.csv -o 输出目录 -i2 你要指定的基因组的名称的一个list的文件
+    # python3 ~/script_api/ForOrthofinder/bin/getSeqofOG.py -i /home-user/thliao/project/cyanophage/within_cyanophage/ortho_test/data/Results_Aug09/WorkingDirectory/Orthogroups_3.csv -t 200  -o .
+    # python3 ~/script_api/ForOrthofinder/bin/getSeqofOG.py -i 更换成你需要的/Results_Aug09/WorkingDirectory/Orthogroups_3.csv -o 输出目录 -i2 你要指定的基因组的名称的一个list的文件

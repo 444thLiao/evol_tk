@@ -54,7 +54,7 @@ def extract_cog(in_fas,odir,sname_dict):
             
             
 if __name__ == "__main__":
-    # todo: modify it into general/api version
+    # todo: modify it into general/bin version
     
     total_dict = {}
     for infile in glob('./genome_protein_files_more/cogRbp_anno/*.cogrbp'):

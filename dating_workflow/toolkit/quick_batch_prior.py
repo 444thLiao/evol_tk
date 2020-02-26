@@ -6,7 +6,7 @@ from os.path import *
 # generate cal set
 from tqdm import tqdm
 
-from dating_workflow.step_script.dating_pro import modify, run
+from dating_workflow.bin.dating_pro import modify, run
 
 new_trees = sorted(glob('./dating_for/cal_tree/83g_set*.newick'),
                    key=lambda x:int(x.split('set')[-1].replace('.newick','')))

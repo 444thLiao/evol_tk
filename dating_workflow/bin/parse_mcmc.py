@@ -9,6 +9,8 @@ from tqdm import tqdm
 
 from dating_workflow.debug_for.draw_infinite_plot import get_plot
 import warnings
+import plotly.express as px
+
 warnings.filterwarnings('ignore')
 
 def cal_ESS(df):
@@ -84,9 +86,31 @@ def get_node_name(f):
         l.name = l.name.partition('_')[-1]
     return t
 
-def targegroup_compare_violin():
+def targegroup_compare_violin(collect_,odir):
     # todo
-    pass
+    # not finish
+    tmp = []
+    for k, v in collect_.items():
+        _df = pd.DataFrame(v.values)
+        _df.columns = ['time']
+        _df.loc[:, 'name'] = k
+        if 'run1' in k or 'run' not in k:
+            tmp.append(_df)
+    df = pd.concat(tmp, axis=0)
+    df.loc[:, 'num_set'] = [int(_.split('_set')[-1].split('_')[0])
+                            if 'run' in _ else 0
+                            for _ in df.loc[:, 'name']]
+    df.loc[:, 'set'] = [_.replace('83g_', '').replace('_run1', '').replace('clock2_', '') for _ in df.loc[:, 'name']]
+    df = df.sort_values('num_set')
+
+
+    fig = px.violin(df, x='set', y='time', box=True, points=False)
+    fig.layout.yaxis.title.text = 'Divergence time(100Mya)'
+    fig.layout.xaxis.title.text = 'Sets of calibration information'
+    fig.layout.yaxis.title.font.size = 30
+    fig.layout.xaxis.title.font.size = 30
+    fig.layout.xaxis.tickfont.size = 20
+    fig.write_html('./dating_for/83g/83g_clock2_diff_cal.html', include_plotlyjs='cdn')
 
 def main(indir, ns, groupname, odir):
     tmp_df = pd.DataFrame()
@@ -130,6 +154,7 @@ def main(indir, ns, groupname, odir):
     odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
     df = get_plot(pattern, odir)
+    # draw infinite sites plot
 
     writer = pd.ExcelWriter(join(odir, 'mcmc.xlsx'), engine='xlsxwriter')
     tmp_df.to_excel(writer, index_label='Calibration sets', sheet_name='Posterior time')
@@ -139,15 +164,21 @@ def main(indir, ns, groupname, odir):
 
 @click.command()
 @click.option("-i", 'indir', help='dir have multiple calibration set')
-@click.option("-ns", 'targe_group', default=None)
-@click.option('-o', 'odir')
-def cli(indir):
-    pass
+@click.option("-ns", 'targe_group', default=None,
+              help='use , to separate each')
+@click.option("-name", 'groupname', default='')
+@click.option('-o', 'odir',default=None)
+def cli(indir,targe_group,groupname,odir,):
+    targe_group = [_.strip() for _ in targe_group.split(',')]
+    if odir is not None:
+        odir = indir
+    main(indir=indir, ns=targe_group, groupname=groupname, odir=odir)
 
 
 if __name__ == '__main__':
     cli()
+    # python3 ~/script/evolution_relative/dating_workflow/bin/parse_mcmc.py -i ./dating_for/83g/clock2_diff_cal/ -ns 'GCA_001828545.1,GCA_004282745.1' -name 'Anammox group'
 
-    ns = ['GCA_001828545.1', 'GCA_004282745.1']
-    indir = './dating_for/83g/clock2_diff_cal/'
-    main(indir=indir, ns=ns, groupname='Anammox group', odir=indir)
+    # ns = ['GCA_001828545.1', 'GCA_004282745.1']
+    # indir = './dating_for/83g/clock2_diff_cal/'
+    # main(indir=indir, ns=ns, groupname='Anammox group', odir=indir)

@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from api_tools.for_tree.format_tree import add_cal_api
-from dating_workflow.step_script.dating_pro import modify, run
+from dating_workflow.bin.dating_pro import modify, run
 
 a = pd.read_excel('./dating_for/calibrations_set/calibrations_sets.xlsx', index_col=0)
 mapping_dict = {

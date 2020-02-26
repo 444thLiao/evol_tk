@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
 from collections import defaultdict
-from dating_workflow.api.parse_mcmc import get_CI
+from dating_workflow.bin.parse_mcmc import get_CI
 
 prior_df = []
 prior_list = glob(expanduser('~/data/plancto/dating_for/83g/batch_prior/*/sub_mcmc.txt'))

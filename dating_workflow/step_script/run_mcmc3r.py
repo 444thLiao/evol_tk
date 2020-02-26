@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from dating_workflow.step_script.dating_pro import run, modify
+from dating_workflow.bin.dating_pro import run, modify
 
-target_ = ['set24', 'set13', 'set1', 'set14', 'set25']
-
+# target_ = ['set24', 'set13', 'set1', 'set14', 'set25']
+target_ = ['set33', 'set34', 'set35', 'set36', 'set37']
 target_dir = './AR_set1'
 
 for t in target_:

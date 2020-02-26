@@ -36,7 +36,7 @@ def env_exe(name):
     f = join(bin_dir, name)
     if exists(f):
         return f
-    f = popen(f'which {name} 2>1').read().strip('\n')
+    f = popen(f'which {name} 2>').read().strip('\n')
     return f
 
 
@@ -65,7 +65,7 @@ def run(args):
     try:
         # subprocess.check_output(cmd, shell=1)
         check_call(cmd,
-                   shell=1,
+                   shell=True,
                    stdout=open(log, 'w'))
 
     except subprocess.CalledProcessError as e:
@@ -310,7 +310,10 @@ def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_
 def process_path(path):
     if not '/' in path:
         path = './' + path
-    path = abspath(expanduser(path))
+    if path.startswith('~'):
+        path = expanduser(path)
+    if path.startswith('.'):
+        path = abspath(path)
     return path
 
 
@@ -318,6 +321,7 @@ def process_path(path):
 @click.option('-i', '--in_phy', 'in_phyfile')
 @click.option('-it', '--in_tree', 'in_treefile')
 @click.option('-id', '--in_ali_dir', 'in_ali_dir')
+@click.option('-inBV',  'inBV',default=None)
 @click.option('-o', 'odir')
 @click.option('-nucl', 'use_nucl', is_flag=True, default=False)
 @click.option('-no_tmp', 'run_tmp', default=True)
@@ -327,7 +331,7 @@ def process_path(path):
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
-def cli(in_phyfile, in_treefile, in_ali_dir, odir, use_nucl, run_tmp, only_prior, sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
+def cli(in_phyfile, in_treefile, in_ali_dir,inBV, odir, use_nucl, run_tmp, only_prior, sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),

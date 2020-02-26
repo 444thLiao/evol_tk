@@ -1,0 +1,53 @@
+import os
+from glob import glob
+from os.path import *
+
+import click
+
+from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_num_phy_file,run,tqdm,mp
+
+
+@click.command()
+@click.option('-i', '--in_phy', 'in_phyfile')
+@click.option('-it', '--in_tree', 'in_treefile')
+@click.option('-o', 'odir')
+@click.option('-nucl', 'use_nucl', is_flag=True, default=False)
+@click.option('-sf', 'sampfreq', default='2')
+@click.option('-p', 'print_f', default='2')
+@click.option('-rg', 'rgene_gamma', default='1 35 1')
+@click.option('-sg', 'sigma2_gamma', default='1 10 1')
+@click.option('-c', 'clock', default='2')
+def cli(in_phyfile, in_treefile,
+        odir,
+        use_nucl,
+        sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
+    in_phyfile = process_path(in_phyfile)
+    ndata = get_num_phy_file(in_phyfile)
+    params_dict = {'sampfreq': str(sampfreq),
+                   'print': str(print_f),
+                   'rgene_gamma': rgene_gamma,
+                   'sigma2_gamma': sigma2_gamma,
+                   'clock': clock}
+
+    if '*' in in_treefile:
+        trees = [process_path(_) for _ in glob(in_treefile)]
+    else:
+        trees = [process_path(in_treefile)]
+    cmds = []
+    for tree in trees:
+        name = basename(tree).rpartition('.')[0]
+        new_odir = join(odir, name)
+        if not exists(new_odir):
+            os.makedirs(new_odir)
+        cmd = run_nodata_prior(in_phyfile=in_phyfile,
+                               in_treefile=tree,
+                               odir=new_odir,
+                               ndata=ndata,
+                               use_nucl=use_nucl,
+                               params_dict=params_dict)
+        cmds.append(cmd)
+    with mp.Pool(processes=30) as tp:
+        _ = list(tqdm((tp.imap(run, cmds)), total=len(cmds)))
+
+if __name__ == '__main__':
+    cli()
