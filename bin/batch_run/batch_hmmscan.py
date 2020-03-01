@@ -13,7 +13,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 
 default_db = '/home-db/pub/protein_db/TIGRFAM/14.0_release/TIGRFAM.HMM'
-command_template = '/home-user/thliao/anaconda3/bin/hmmscan --tblout {o_file} --acc --noali --notextw --cpu 20 {db} {in_file} 2> /dev/null '
+command_template = '/home-user/thliao/anaconda3/bin/hmmscan --tblout {o_file} --acc --noali --notextw --cpu 20 {db} {in_file} > /dev/null 2>&1'
 
 
 def run(args):

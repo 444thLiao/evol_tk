@@ -36,7 +36,7 @@ def env_exe(name):
     f = join(bin_dir, name)
     if exists(f):
         return f
-    f = popen(f'which {name} 2>').read().strip('\n')
+    f = popen(f'which {name} 2>&1 ').read().strip('\n')
     return f
 
 
@@ -101,7 +101,7 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, us
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
-    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl 2> /dev/null")
+    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl > /dev/null 2>&1")
 
 
 def rename_tmp(ali_dir, ctl_file):
@@ -221,7 +221,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2> /dev/null",
+    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl > /dev/null 2>&1",
          ofile.replace('.ctl', '.log')))
 
 
