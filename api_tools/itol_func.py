@@ -1,7 +1,7 @@
 import sys
 from os.path import join, exists, dirname
+
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, dirname(__file__))
@@ -17,7 +17,6 @@ dataset_binary_template = join(indir, 'dataset_binary_template.txt')
 label_template = join(indir, 'labels_template.txt')
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 matrix_like_template = join(indir, "dataset_external_shapes_template.txt")
-labels_template = join(indir, "labels_template.txt")
 dataset_text_template = join(indir, "dataset_text_template.txt")
 dataset_gradient_template = join(indir, "dataset_gradient_template.txt")
 dataset_piechart_template = join(indir, "dataset_piechart_template.txt")
@@ -39,7 +38,7 @@ LEGEND_LABELS{sep}{legend_labels}"""
     return legend_text
 
 
-def deduced_legend2(info2style, infos,same_colors = False, sep='\t'):
+def deduced_legend2(info2style, infos, same_colors=False, sep='\t'):
     # for info2style instead of info2color
     import plotly.express as px
     colors_theme = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
@@ -47,13 +46,13 @@ def deduced_legend2(info2style, infos,same_colors = False, sep='\t'):
     labels = []
     colors = []
     for idx, info in enumerate(infos):
-        
+
         shapes.append(info2style[info].get('shape', '1'))
         labels.append(info2style[info].get('info', info))
         if not same_colors:
-            colors.append(info2style[info].get('color', colors_theme[idx] ))
+            colors.append(info2style[info].get('color', colors_theme[idx]))
         else:
-            colors.append(info2style[info].get('color', same_colors ))
+            colors.append(info2style[info].get('color', same_colors))
     legend_text = ['FIELD_SHAPES' + sep + sep.join(shapes),
                    'FIELD_LABELS' + sep + sep.join(labels),
                    'FIELD_COLORS' + sep + sep.join(colors), ]
@@ -78,7 +77,7 @@ def annotate_outgroup(ID2infos, info2style, ):
     return template_text + annotate_text
 
 
-def to_binary_shape(ID2info, info2style=None,same_color=False, info_name='dataset', manual_v=[], omitted_other=False):
+def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
@@ -97,7 +96,7 @@ def to_binary_shape(ID2info, info2style=None,same_color=False, info_name='datase
         annotate_text.append(row)
     annotate_text = '\n'.join(annotate_text)
 
-    legend_text = deduced_legend2(info2style, all_v, sep='\t',same_colors=same_color)
+    legend_text = deduced_legend2(info2style, all_v, sep='\t', same_colors=same_color)
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
     return template_text + '\n' + annotate_text
@@ -243,7 +242,7 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
     # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
-    from api_tools.for_tree.format_tree import read_tree 
+    from api_tools.for_tree.format_tree import read_tree
     tree = read_tree(in_tree, format=3)
     id2support = {}
     for n in tree.traverse():
@@ -302,7 +301,7 @@ def to_matrix_shape(ID2categorical_v, dataset_label, color='#000000'):
 
 
 def to_label(id2new_id):
-    template_text = open(labels_template).read()
+    template_text = open(label_template).read()
     full_text = template_text[::]
     for id, new_id in id2new_id.items():
         id = str(id)
@@ -311,44 +310,40 @@ def to_label(id2new_id):
     return full_text
 
 
+def colorFader(c1, c2, mix=0):  # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
+    c1 = np.array(mpl.colors.to_rgb(c1))
+    c2 = np.array(mpl.colors.to_rgb(c2))
+    return mpl.colors.to_hex((1 - mix) * c1 + mix * c2)
 
-
-
-def colorFader(c1,c2,mix=0): # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
-    c1=np.array(mpl.colors.to_rgb(c1))
-    c2=np.array(mpl.colors.to_rgb(c2))
-    return mpl.colors.to_hex((1-mix)*c1 + mix*c2)
 
 # generate_gradient_legend(100,50,0,'#ff0000','#FFFFFF','#0000ff')
-def generate_gradient_legend(max_val,mid_val,min_val,
-                             max_c,mid_c,min_c,
+def generate_gradient_legend(max_val, mid_val, min_val,
+                             max_c, mid_c, min_c,
                              num_interval=7):
-    
     legened_v2color = {}
-    if num_interval %2 ==1:
-        remained_i = (num_interval-1)//2
-        legened_v2color[round(mid_val,2)] = mid_c
+    if num_interval % 2 == 1:
+        remained_i = (num_interval - 1) // 2
+        legened_v2color[round(mid_val, 2)] = mid_c
     else:
-        remained_i = num_interval//2
-        
-    total_v = max_val-mid_val
-    inter_v = int(total_v/remained_i)
-    for _p in range(1,remained_i):
-        des_v = _p*inter_v + mid_val
-        per = _p*inter_v/total_v
-        new_color = colorFader(mid_c,max_c,per)
-        legened_v2color[round(des_v,2)] = new_color
-    legened_v2color[round(max_val,2)] = max_c
-    
-    
-    total_v = mid_val-min_val
-    inter_v = int(total_v/remained_i)
-    for _p in range(1,remained_i):
-        des_v = _p*inter_v + min_val
-        per = _p*inter_v/total_v
-        new_color = colorFader(min_c,mid_c,per)
-        legened_v2color[round(des_v,2)] = new_color
-    legened_v2color[round(min_val,2)] = min_c
+        remained_i = num_interval // 2
+
+    total_v = max_val - mid_val
+    inter_v = int(total_v / remained_i)
+    for _p in range(1, remained_i):
+        des_v = _p * inter_v + mid_val
+        per = _p * inter_v / total_v
+        new_color = colorFader(mid_c, max_c, per)
+        legened_v2color[round(des_v, 2)] = new_color
+    legened_v2color[round(max_val, 2)] = max_c
+
+    total_v = mid_val - min_val
+    inter_v = int(total_v / remained_i)
+    for _p in range(1, remained_i):
+        des_v = _p * inter_v + min_val
+        per = _p * inter_v / total_v
+        new_color = colorFader(min_c, mid_c, per)
+        legened_v2color[round(des_v, 2)] = new_color
+    legened_v2color[round(min_val, 2)] = min_c
     return legened_v2color
 
 
@@ -357,7 +352,6 @@ def color_gradient(id2val,
                    max_val=None,
                    min_val=None,
                    mid_val=50):
-    
     default_max = '#ff0000'
     default_min = '#0000ff'
     default_mid = '#FFFFFF'
@@ -369,13 +363,13 @@ def color_gradient(id2val,
     max_val = max(all_vals) if max_val is None else max_val
     min_val = min(all_vals) if min_val is None else min_val
 
-    l2colors = generate_gradient_legend(max_val,mid_val,min_val,
-                             default_max,default_mid,default_min,
-                             num_interval=7)
+    l2colors = generate_gradient_legend(max_val, mid_val, min_val,
+                                        default_max, default_mid, default_min,
+                                        num_interval=7)
     sep = '\t'
     legend_text = f"""
 LEGEND_TITLE	{dataset_label}
-LEGEND_SHAPES	{sep.join(['1']*7)}
+LEGEND_SHAPES	{sep.join(['1'] * 7)}
 LEGEND_COLORS	{sep.join([_[1] for _ in list(sorted(l2colors.items()))])}
 LEGEND_LABELS	{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()))]))}"""
 

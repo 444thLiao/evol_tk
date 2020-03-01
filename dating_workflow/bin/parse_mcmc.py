@@ -110,7 +110,7 @@ def targegroup_compare_violin(collect_,odir):
     fig.layout.yaxis.title.font.size = 30
     fig.layout.xaxis.title.font.size = 30
     fig.layout.xaxis.tickfont.size = 20
-    fig.write_html('./dating_for/83g/83g_clock2_diff_cal.html', include_plotlyjs='cdn')
+    fig.write_html('./dating_for/83g/nucl/set14_derivative.html', include_plotlyjs='cdn')
 
 def main(indir, ns, groupname, odir):
     tmp_df = pd.DataFrame()
@@ -170,7 +170,7 @@ def main(indir, ns, groupname, odir):
 @click.option('-o', 'odir',default=None)
 def cli(indir,targe_group,groupname,odir,):
     targe_group = [_.strip() for _ in targe_group.split(',')]
-    if odir is not None:
+    if odir is None:
         odir = indir
     main(indir=indir, ns=targe_group, groupname=groupname, odir=odir)
 

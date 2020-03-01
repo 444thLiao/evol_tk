@@ -48,13 +48,15 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, 
 
 @click.command()
 @click.option('-i', 'indir')
-@click.option('-o', 'odir')
+@click.option('-o', 'odir',default=None)
 @click.option('-s', 'suffix', default='aln')
 @click.option('-ns', 'new_suffix', default='trimal')
 @click.option('-np', 'num_parellel', default=10)
 @click.option('-ro', 'resoverlap', default=0.55)
 @click.option('-so', 'seqoverlap', default=60)
 def cli(indir, odir, num_parellel, suffix, new_suffix, resoverlap, seqoverlap):
+    if odir is None:
+        odir = indir
     main(indir, odir, num_parellel, suffix, new_suffix, resoverlap, seqoverlap)
 
 

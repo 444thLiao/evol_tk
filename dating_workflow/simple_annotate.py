@@ -4,20 +4,20 @@ import sys
 from ete3 import NCBITaxa, Tree
 
 from api_tools.itol_func import *
-
+from dating_workflow.step_script import convert_genome_ID_rev,convert_genome_ID
 ncbi = NCBITaxa()
 
-
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return
-    return genome_ID.split('_')[-1].replace('.', 'v')
-
-
-def convert_genome_ID_rev(genome_ID):
-    # for 900078535v2
-    # it will return
-    return genome_ID.replace('v', '.')
+#
+# def convert_genome_ID(genome_ID):
+#     # for GCA_900078535.2
+#     # it will return
+#     return genome_ID.split('_')[-1].replace('.', 'v')
+#
+#
+# def convert_genome_ID_rev(genome_ID):
+#     # for 900078535v2
+#     # it will return
+#     return genome_ID.replace('v', '.')
 
 
 if len(sys.argv) != 3:
