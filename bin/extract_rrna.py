@@ -72,7 +72,9 @@ def process_path(path):
 @click.option('-i', 'indir', help='directory which is prokka_o. or some special soft link stodge dir')
 @click.option('-o', 'odir', help='normal, it will generate 16S and 23S files separately. ')
 @click.option('-ps', 'preset', help='', default='prokka')
-def main(indir, odir, preset):
+@click.option("-top", 'get_single', help="get one of multiple rrna")
+@click.option("-only_mul", 'get_only_multiple', help="get one of multiple rrna")
+def main(indir, odir, preset, get_single, get_only_multiple):
     indir = process_path(indir)
     odir = process_path(odir)
     if not exists(odir):
@@ -92,12 +94,30 @@ def main(indir, odir, preset):
                      if basename(dirname(_)) in all_ids]
     name2rrna = extract_16s(gbk_files)
     get_stats(name2rrna)
-    records_16S = [_
-                   for rrna_16S, rrna_23S in name2rrna.values()
-                   for _ in rrna_16S]
-    records_23S = [_
-                   for rrna_16S, rrna_23S in name2rrna.values()
-                   for _ in rrna_23S]
+
+    if get_single:
+        print("get single rrna seq from genomes with multiple instead all of them.")
+        records_16S = [rrna_16S[0]
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       if len(rrna_16S) >= 1]
+        records_23S = [rrna_23S[0]
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       if len(rrna_23S) >= 1]
+    elif get_only_multiple:
+        records_16S = [_
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       for _ in rrna_16S if len(rrna_16S) > 1]
+        records_23S = [_
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       for _ in rrna_23S if len(rrna_23S) > 1]
+    else:
+        records_16S = [_
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       for _ in rrna_16S]
+        records_23S = [_
+                       for rrna_16S, rrna_23S in name2rrna.values()
+                       for _ in rrna_23S]
+
     with open(join(odir, '16S.fasta'), 'w') as f1:
         SeqIO.write(records_16S, f1, format='fasta-2line')
     with open(join(odir, '23S.fasta'), 'w') as f1:
