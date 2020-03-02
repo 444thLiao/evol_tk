@@ -18,7 +18,6 @@ from bin.ncbi_convertor.pid2GI import pid2GI
 
 ncbi = NCBITaxa()
 
-
 def GI2tax(id2gi, redo=False):
     suffix = 'pid2tax'
     id_list = list(id2gi)

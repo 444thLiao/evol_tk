@@ -17,7 +17,7 @@ mapping_dict = {
     'Node 3': 'GCA_000196515.1|GCA_001548455.1',
     'Node 4': 'GCA_000317575.1|GCA_000317025.1', }
 
-#for 75g
+# for 75g
 mapping_dict = {
     'Node 1': 'GCA_000011385.1|GCA_001753675.2',
     'Node 2': 'GCA_000011385.1|GCA_000011345.1',
@@ -43,19 +43,16 @@ redo = False
 # batch cal set
 new_trees = []
 
-for num_g in [77,83,187]:
+for num_g in [77, 83, 187]:
     ori_newick = f'./trees/final/{num_g}g_merged.newick'
     for cal_set in glob('./dating_for/calibrations_set/cal_set*.txt'):
         set_name = basename(cal_set).split('_')[-1].replace('.txt', '')
         if redo or not exists(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'):
             add_cal_api(ori_newick,
-                    f'./dating_for/cal_tree/{num_g}g_{set_name}.newick',
-                    cal_set,
-                    format=3)
+                        f'./dating_for/cal_tree/{num_g}g_{set_name}.newick',
+                        cal_set,
+                        format=3)
             new_trees.append(abspath(f'./dating_for/cal_tree/{num_g}g_{set_name}.newick'))
-
-
-
 
 odir = './dating_for/clock3'
 cmds = []
@@ -70,7 +67,7 @@ for tree in new_trees:
         #          'seqtype': seqtype,
         'usedata': "2 in.BV 1",
         'outfile': './03_mcmctree.out',
-                 'clock': '2',
+        'clock': '2',
         #          'BDparas': bd_paras,
         'rgene_gamma': '1 100 1',
         #          'sigma2_gamma': sigma2_gamma,
@@ -78,7 +75,7 @@ for tree in new_trees:
         'sampfreq': 20,
         'nsample': 20000,
         #          'alpha': 0.5
-        'print':1
+        'print': 1
     }
 
     # modify these ctl
@@ -100,22 +97,20 @@ for tree in new_trees:
 # remove previous
 for d in cmds:
     d = d.split(' ')[1]
-    ori_f = join(d,'mcmc.txt')
+    ori_f = join(d, 'mcmc.txt')
     if exists(ori_f):
         os.system(f'rm -rf {ori_f}')
-    ori_f = join(d,'FigTree.tre')
+    ori_f = join(d, 'FigTree.tre')
     if exists(ori_f):
         os.system(f'rm -rf {ori_f}')
-    ori_f = join(d,'SeedUsed')
+    ori_f = join(d, 'SeedUsed')
     if exists(ori_f):
         os.system(f'rm -rf {ori_f}')
     ori_f = join(d, '*.out')
     os.system(f'rm -rf {ori_f}')
 
-
 with mp.Pool(processes=len(cmds)) as tp:
     r = list(tqdm(tp.imap(run, cmds), total=len(cmds)))
-
 
 for f in glob('./dating_for/clock3/*_run1/FigTree.tre'):
     num_g = f.split('/')[-2].split('_')[1]

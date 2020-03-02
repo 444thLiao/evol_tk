@@ -32,12 +32,18 @@ aaRatefile = join(template_dir, 'lg.dat')
 
 
 def env_exe(name):
-    bin_dir = dirname(sys.executable)
-    f = join(bin_dir, name)
-    if exists(f):
-        return f
-    f = popen(f'which {name} 2>&1 ').read().strip('\n')
-    return f
+    p = os.environ.get('PATH')
+    p = p.split(':')
+    for _p in p:
+        if exists(join(_p,name)):
+            return _p
+    #
+    # bin_dir = dirname(sys.executable)
+    # f = join(bin_dir, name)
+    # if exists(f):
+    #     return f
+    # f = popen(f'which {name} 2>&1 ').read().strip('\n')
+    # return f
 
 
 paml_bin = dirname(env_exe("mcmctree"))  # "/home-user/thliao/software/paml4.9j/bin"
