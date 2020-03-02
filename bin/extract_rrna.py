@@ -72,8 +72,8 @@ def process_path(path):
 @click.option('-i', 'indir', help='directory which is prokka_o. or some special soft link stodge dir')
 @click.option('-o', 'odir', help='normal, it will generate 16S and 23S files separately. ')
 @click.option('-ps', 'preset', help='', default='prokka')
-@click.option("-top", 'get_single', help="get one of multiple rrna")
-@click.option("-only_mul", 'get_only_multiple', help="get one of multiple rrna")
+@click.option("-top", 'get_single', help="get one of multiple rrna", is_flag=True, default=False)
+@click.option("-only_mul", 'get_only_multiple', help="get one of multiple rrna", is_flag=True, default=False)
 def main(indir, odir, preset, get_single, get_only_multiple):
     indir = process_path(indir)
     odir = process_path(odir)
