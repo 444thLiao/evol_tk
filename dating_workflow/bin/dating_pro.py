@@ -36,7 +36,7 @@ def env_exe(name):
     p = p.split(':')
     for _p in p:
         if exists(join(_p,name)):
-            return _p
+            return join(_p,name)
     #
     # bin_dir = dirname(sys.executable)
     # f = join(bin_dir, name)
