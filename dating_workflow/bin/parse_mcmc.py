@@ -179,6 +179,11 @@ if __name__ == '__main__':
     cli()
     # python3 ~/script/evolution_relative/dating_workflow/bin/parse_mcmc.py -i ./dating_for/83g/clock2_diff_cal/ -ns 'GCA_001828545.1,GCA_004282745.1' -name 'Anammox group'
 
-    # ns = ['GCA_001828545.1', 'GCA_004282745.1']
+    # ns = ['GCA_001828545.1', 'GCA_004282745.1'] # anammox
     # indir = './dating_for/83g/clock2_diff_cal/'
     # main(indir=indir, ns=ns, groupname='Anammox group', odir=indir)
+
+    # ns = ['GCA_004421105.1', 'GCA_900119085.1'] # AOB
+    # indir = './dating/160g/nucl/clock2_diff_cal/'
+    # main(indir=indir, ns=ns, groupname='AOB group', odir=indir)
+    #

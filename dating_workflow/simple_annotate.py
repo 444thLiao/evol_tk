@@ -1,10 +1,11 @@
 import os
-import sys
 
-from ete3 import NCBITaxa, Tree
-
+import pandas as pd
+from ete3 import NCBITaxa
+from tqdm import tqdm
 from api_tools.itol_func import *
-from dating_workflow.step_script import convert_genome_ID_rev,convert_genome_ID
+from dating_workflow.step_script import convert_genome_ID_rev
+
 ncbi = NCBITaxa()
 
 #
@@ -24,17 +25,18 @@ if len(sys.argv) != 3:
     raise Exception()
 tree = sys.argv[1]
 metadata = sys.argv[2]
+# metadata =
 gids = Tree(tree).get_leaf_names()
 
 # leafid2gids = {_:convert_genome_ID_rev(_)
 #                for _ in leafids}
 
 # gids = set(leafid2gids.values())
-
+gids = set(gids)
 gid2taxons_str = {}
 gid2name = {}
 gid2taxid = {}
-for row in open(metadata):
+for row in tqdm(open(metadata)):
     if not row.startswith("assembly_accession"):
         row = row.split('\t')
         if row[0] in gids:
@@ -133,5 +135,22 @@ with open('./itol_txt/27genes.txt', 'w') as f1:
     f1.write(text)
 
 # annotate completeness
-ids = open('./')
-color_gradient
+
+ids = open('./used_genomes_over20p_bac120.list').read().split('\n')
+ids = [_ for _ in ids if _]
+completeness_df = pd.read_csv('./checkM_result_phylum/merged_result.csv', sep='\t', index_col=0)
+sub_df = completeness_df.reindex(ids)
+sub_df = sub_df.loc[~sub_df.isna().all(1)]
+id2val = dict(zip(ids, sub_df.loc[:, 'Completeness']))
+text = color_gradient(id2val,
+                      max_val=max(sub_df.loc[:, 'Completeness']),
+                      min_val=min(sub_df.loc[:, 'Completeness']),
+                      mid_val=50)
+with open('./itol_txt/over20p_completeness.txt','w') as f1:
+    f1.write(text)
+text = get_text_anno(id2val,extra_replace={"#HEIGHT_FACTOR,1":"HEIGHT_FACTOR\t1.5",
+                                           "#HORIZONTAL_GRID,1":"HORIZONTAL_GRID\t0",
+                                           "#VERTICAL_GRID,1":"VERTICAL_GRID\t0",
+                                           })
+with open('./itol_txt/over20p_completeness_text.txt','w') as f1:
+    f1.write(text)

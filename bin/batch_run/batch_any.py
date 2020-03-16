@@ -28,6 +28,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
     if suffix:
         suffix = '.' + suffix
     file_list = glob(join(indir, f'*{suffix}'))
+    file_list = [realpath(abspath(_)) for _ in file_list]
     if not file_list:
         exit(f"empty files, please check your suffix ({indir}/{suffix}) ")
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))

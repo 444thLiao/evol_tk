@@ -47,8 +47,11 @@ def get_md_infos(mds):
     else:
         mds = set(mds)
     md2info = {}
+
     for md in tqdm(mds):
-        text = kegg.get(md)
+        text = 404
+        while type(text) == int:
+            text = kegg.get(md)
         text = text.split('\n')
         name = [_.split('  ')[-1] for _ in text if _.startswith('NAME')][-1]
         all_kos = [_.split('  ')[-1] for _ in text if _.startswith('DEFINITION')][-1]

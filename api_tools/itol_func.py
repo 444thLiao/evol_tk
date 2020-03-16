@@ -77,10 +77,12 @@ def annotate_outgroup(ID2infos, info2style, ):
     return template_text + annotate_text
 
 
-def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False):
+def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False,
+                    extra_replace={}):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
+    # if turn omitted_other on, it will not draw the circle
 
     template_text = open(dataset_binary_template).read()
     if not manual_v:
@@ -99,6 +101,9 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
     legend_text = deduced_legend2(info2style, all_v, sep='\t', same_colors=same_color)
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
+    if extra_replace:
+        for k,v in extra_replace.items():
+            template_text = template_text.replace(k,v)
     return template_text + '\n' + annotate_text
 
 
@@ -274,6 +279,19 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
                                          maximum_size=size)
     return template_text + annotate_text
 
+def get_text_anno(id2val,extra_replace):
+    template_text = open(matrix_like_template).read()
+    template_text = template_text.format(dataset_label="numerical text",
+                                         field_color="rgba(0,255,0,0)",
+                                         field_labels='\t'.join(['text']))
+    annotate_text = []
+    for id,v in id2val.items():
+        annotate_text.append(f"{id}\t{str(round(v,2))}")
+    if extra_replace:
+        for k,v in extra_replace.items():
+            template_text = template_text.replace(k,v)
+    # template_text = template_text.replace("#HEIGHT_FACTOR,1","HEIGHT_FACTOR\t1.5")
+    return template_text + '\n'.join(annotate_text)
 
 def to_matrix_shape(ID2categorical_v, dataset_label, color='#000000'):
     template_text = open(matrix_like_template).read()
