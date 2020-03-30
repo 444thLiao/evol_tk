@@ -2,8 +2,7 @@
 For summarizing results output by batch_interproscan (no script, run it by batch_any)
 like 
 
-python3 ~/bin/batch_run/batch_any.py -i ~/data/plancto/rawdata/genome_protein_files -s faa -o ./interpro_scan -ns '_r' -np 10 -cmd "mkdir {ofile};~/software/interprosca
-n-5.38-76.0/interproscan.sh -i {infile} -d {ofile} -cpu 10 -iprlookup -appl TIGRFAM,CDD,Hamap,Pfam "
+python3 ~/bin/batch_run/batch_any.py -i ~/data/plancto/rawdata/genome_protein_files -s faa -o ./interpro_scan -ns '_r' -np 10 -cmd "mkdir {ofile};~/software/interproscan-5.38-76.0/interproscan.sh -i {infile} -d {ofile} -cpu 10 -iprlookup -appl TIGRFAM,CDD,Hamap,Pfam "
 
 """
 import os

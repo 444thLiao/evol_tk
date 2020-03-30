@@ -6,7 +6,7 @@ from collections import defaultdict
 from glob import glob
 from os.path import join, exists
 import sys
-sys.path.insert(0,'/'.join(__file__.split('/')[:-4]))
+# sys.path.insert(0,'/'.join(__file__.split('/')[:-4]))
 import click
 import pandas as pd
 from tqdm import tqdm

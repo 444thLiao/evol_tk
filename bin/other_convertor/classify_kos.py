@@ -60,6 +60,35 @@ def get_md_infos(mds):
                        'all ko': all_kos}
     return md2info
 
+def ko2pathway(kos,max_try=50):
+    if type(kos) == str:
+        kos = [kos]
+
+    ko2p = {}
+
+    for ko in tqdm(kos):
+        pathway_collect = []
+        c = False
+        text = 404
+        _count = 0
+        while type(text) == int:
+            text = kegg.get(ko)
+            _count +=1
+            if _count>=max_try:
+                break
+        if type(text)==int:
+            continue
+        for row in text.split('\n'):
+            if row.startswith("PATHWAY"):
+                c = True
+            if row.startswith("MODULE") or row.startswith("BRITE") or row.startswith("DISEASE"):
+                c = False
+            if c:
+                pathway_collect.append(row.split('PATHWAY')[-1].strip())
+        pathway_collect = {_.split(' ')[0].strip():_.partition(' ')[-1].strip() for _ in pathway_collect}
+        ko2p[ko] = pathway_collect
+    return ko2p
+
 
 def get_ko_infos(kos):
     if isinstance(kos, str):

@@ -1,19 +1,20 @@
-import pandas as pd
-import gffutils
-from os.path import join, dirname, basename, exists, abspath, expanduser
+import io
+import multiprocessing as mp
 import os
+import pickle
 from collections import defaultdict, Counter
-from tqdm import tqdm
+from glob import glob
+from os.path import join, dirname, basename, exists, abspath
+
+import click
+import gffutils
+import pandas as pd
+from Bio import SeqIO
 from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import NearestNeighbors
-import click
-import pickle
-from glob import glob
-from Bio import SeqIO
-import multiprocessing as mp
-import io,re
+from tqdm import tqdm
 
-tmp_dir = expanduser('~/.tmp')
+tmp_dir = join(os.environ.get('HOME'),'.tmp')
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1].split(' ')[0]
     locus = locus.strip()
@@ -122,7 +123,6 @@ def get_all_CDS_from_gbk(gbk_file,tag='locus_tag'):
             else:
                 fea_id = fea.qualifiers['locus_tag'][0]
             gene2pos[fea_id]['contig_name'] = contig_name
-            
             gene2pos[fea_id]['strand'] = '+' if fea.strand==1 else '-'
             gene2pos[fea_id]['start'] = int(fea.location.start)
             gene2pos[fea_id]['end'] = int(fea.location.end)
@@ -235,6 +235,7 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
 
 
 def get_locus2group(df):
+    # specific here
     locus2group = {}
     for group, row in df.iterrows():
         for locus in [locus for _ in row.values
