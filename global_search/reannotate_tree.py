@@ -1,6 +1,4 @@
 import pandas as pd
-import sys
-from os.path import exists, join
 from tqdm import tqdm
 from api_tools.itol_func import *
 from glob import glob
@@ -227,7 +225,10 @@ if len(sys.argv) >= 2:
             if tid == 'unknown':
                 id2tax[aid] = 'unknown'
                 continue
-            lineage = ncbi.get_lineage(tid)
+            try:
+                lineage = ncbi.get_lineage(tid)
+            except:
+                continue
             rank = ncbi.get_rank(lineage)
             rank = {v: k for k, v in rank.items()}
             names = ncbi.get_taxid_translator(lineage)
@@ -247,6 +248,7 @@ if len(sys.argv) >= 2:
                           'Alphaproteobacteria': '#8c613c',
                           'Actinobacteria': '#11FF11',
                           'Planctomycetes': '#ff44bb',
+                          "Nitrospinae": "#B2828D",
                           ###'ENV': '#B54B4A',
                           'CPR': '#74A45B',
                           'Verrucomicrobia':'#2e91e5'

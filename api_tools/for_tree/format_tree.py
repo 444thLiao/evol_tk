@@ -94,18 +94,26 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
 def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     t = read_tree(in_tree_file, format=format)
     calibration_dict = {}
+    # iterate all rows of input calibration txt
+    # stodge the information into calibration_dict
     for row in open(calibration_txt):
         if row and not row.startswith('#'):
             LCA, time, _remained = row.split('\t')
             calibration_dict[LCA] = time
+    # clean all internal names of input tree
     t = earse_name(t)
+    # iterate each calibration in calibration_dict
     for LCA, time in calibration_dict.items():
         names = LCA.split('|')
+        # get the common ancestor
         LCA_node = t.get_common_ancestor([l
                                           for l in t.get_leaves()
                                           if l.name in names])
+        # rename the common ancestor with give name
         LCA_node.name = time
+    # write out the tree
     final_tree = t.write(format=8, format_root_node=True).replace('NoName', '')
+    # format the time information into suitable format
     for v in calibration_dict.values():
         if '(' in v:
             final_tree = final_tree.replace(v.replace('(','_').replace(')','_').replace(',','_'),

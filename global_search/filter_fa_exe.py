@@ -141,7 +141,8 @@ def compared(infile):
     print(f'ori mean: {ori_mean}')
     print(f'ori std: {ori_std}')
     
-tds = ['nr_retrieve_amoB','nr_retrieve_amoC','with_genome_amoA','nr_retrieve_hao','nr_retrieve_nxrA']
+tds = ['nr_retrieve_amoB','nr_retrieve_amoC','with_genome_amoA','nr_retrieve_hao','nr_retrieve_nxrA',
+       "nr_retrieve_nxrB"]
 for target_dir in tds:
     g = target_dir.split('_')[-1]
     # if g == 'amoB':
@@ -164,7 +165,10 @@ for target_dir in tds:
     elif g == 'nirK':
         pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
         fa = f'{target_dir}/used.faa'
-        
+    elif g == 'nxrB':
+        pro2full_tab = f'{target_dir}/info_dir/pro2full_info.tab'
+        fa = f'{target_dir}/filtered_by_kegg.faa'
+
     full_df = pd.read_csv(pro2full_tab,sep='\t',index_col=0)
     
     records = list(SeqIO.parse(fa,format='fasta'))

@@ -112,12 +112,10 @@ def targegroup_compare_violin(collect_,odir):
     fig.layout.xaxis.tickfont.size = 20
     fig.write_html('./dating_for/83g/nucl/set14_derivative.html', include_plotlyjs='cdn')
 
-def main(indir, ns, groupname, odir):
+def main(indir, name2group, odir):
     tmp_df = pd.DataFrame()
-    collect_ = {}
-
+    # collect_ = {}
     processed_dir = list(glob(join(indir, '*run1')))
-    name = ''
     for each_dir in tqdm(processed_dir):
         outfile = glob(join(each_dir, '*.out'))
         if not outfile:
@@ -129,22 +127,23 @@ def main(indir, ns, groupname, odir):
         if not exists(log):
             log = glob(join(each_dir, '*.log'))[0]
         if exists(join(each_dir, 'FigTree.tre')):
-            if not name:
-                t = get_node_name(outfile)
-                name = 't_n%s' % t.get_common_ancestor(ns).name
+            t = get_node_name(outfile)
+
             df = pd.read_csv(mcmc, sep='\t', index_col=0)
             set_name = basename(dirname(outfile)).partition('_')[-1]
             if not set_name:
                 set_name = basename(dirname(outfile))
-            collect_[set_name] = df.loc[:, name]
+            # collect_[set_name] = df.loc[:, name]
             df = get_CI(log)
-            tmp_df.loc[set_name, groupname] = '%s (%s) ' % (df.loc[name, 'Posterior mean time (100 Ma)'],
-                                                            df.loc[name, 'CIs'])
+
             tmp_df.loc[set_name, 'ROOT'] = '%s (%s) ' % (df.loc[:, 'Posterior mean time (100 Ma)'].values[0],
                                                          df.loc[:, 'CIs'].values[0])
             tmp_df.loc[set_name, 'lnL'] = '%s (%s) ' % (df.loc["lnL", 'Posterior mean time (100 Ma)'],
                                                         df.loc["lnL", 'CIs'])
-
+            for gname,group in name2group.items():
+                raw_name = 't_n%s' % t.get_common_ancestor(group).name
+                tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
+                                                                df.loc[raw_name, 'CIs'])
     tmp_df.loc[:, 'num_set'] = [int(_.split('_')[1].replace('set', ''))
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]
@@ -169,10 +168,14 @@ def main(indir, ns, groupname, odir):
 @click.option("-name", 'groupname', default='')
 @click.option('-o', 'odir',default=None)
 def cli(indir,targe_group,groupname,odir,):
-    targe_group = [_.strip() for _ in targe_group.split(',')]
+    name2group = dict(zip(groupname.split(';'),
+                     [_.strip() for _ in targe_group.split(';')]))
+    name2group = {k:[_.strip() for _ in v.split(',')]
+                  for k,v in name2group.items()}
+    # targe_group = [_.strip() for _ in targe_group.split(',')]
     if odir is None:
         odir = indir
-    main(indir=indir, ns=targe_group, groupname=groupname, odir=odir)
+    main(indir=indir, name2group=name2group,odir=odir)
 
 
 if __name__ == '__main__':

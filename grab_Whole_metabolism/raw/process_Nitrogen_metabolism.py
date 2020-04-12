@@ -339,8 +339,6 @@ with pd.ExcelWriter('./MAG_N-relative_genes_summary.xlsx') as writer:
         summary_df.to_excel(writer, sheet_name=level, index_label=level + ' (in total)')
 ############################################################
 # summary
-#
-
 # GET a module based df
 # from collections import Counter
 #

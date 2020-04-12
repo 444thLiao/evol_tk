@@ -60,3 +60,19 @@ def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
             gid2locus[gene_id].append((locus_tag, evalue))
     gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
+
+
+
+def _parse_hmmscan(ofile):
+    gid2locus2ko = defaultdict(list)
+    for row in open(ofile):
+        if row.startswith('#'):
+            continue
+        r = row.split(' ')
+        r = [_ for _ in r if _]
+        gene_id = r[0]
+        ko = r[2]
+        evalue = float(r[4])
+        gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
+            (gene_id, ko, evalue))
+    return gid2locus2ko
