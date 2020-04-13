@@ -166,6 +166,7 @@ def main(indir, name2group, odir):
 @click.option("-ns", 'targe_group', default=None,
               help='use , to separate each')
 @click.option("-name", 'groupname', default='')
+@click.option("-disable_plot",default='',)
 @click.option('-o', 'odir',default=None)
 def cli(indir,targe_group,groupname,odir,):
     name2group = dict(zip(groupname.split(';'),

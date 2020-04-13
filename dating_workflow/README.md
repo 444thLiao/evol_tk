@@ -7,7 +7,7 @@
 
 
 ## 2. postdownload (annotate the genomes or extract proteins sequences)
-`python3 /home-user/thliao/script/evolution_relative/global_search/workflow/postdownload.py ./genbank ./genome_protein_files`
+`python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/postdownload.py ./genbank ./genome_protein_files`
 
 
 ## 3.1 Run Orthofinder For building a genome/species tree
