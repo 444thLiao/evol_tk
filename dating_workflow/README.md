@@ -16,8 +16,10 @@
 
 ## 3.2 bac120 for building tree
 
-`/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extract_bac120.py`
+`python3 /home-user/thliao/script/evolution_relative/dating_workflow/step_script/extract_bac120.py -in_p './genome_protein_files' -in_a ./bac120_annotate -o ./bac120_extract/seq_e50 -evalue 1e-50`
 
+## checkM
+`python3 ~/script/evolution_relative/bin/batch_run/batch_checkM.py -i ./genome_protein_files -o ./checkM_result_bacteria -s faa -t phylum Planctomycetes`
 
 ## 4. extract conserved protein to following dating
 

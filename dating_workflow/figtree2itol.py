@@ -51,7 +51,7 @@ def get_node_name(f):
     return t
 
 
-indir = '/home-user/thliao/template_txt/'
+indir = join(dirname(dirname(__file__)),'api_tools','itol_template')
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 

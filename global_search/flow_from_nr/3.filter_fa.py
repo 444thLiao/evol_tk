@@ -26,6 +26,10 @@ gene_info = {'kegg': {'nxrA': 'K00370',
                         'amoA': 'TIGR03080',
                         'amoB': 'TIGR03079',
                         'amoC': 'TIGR03078'}}
+def filter_fa_by_kegg(infa,ofile,gene_name):
+    # new way added at 20200413
+    pass
+
 
 
 def filter_fa_by_db(infa, ofile, gene_name):

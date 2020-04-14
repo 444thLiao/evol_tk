@@ -1,3 +1,8 @@
+"""
+Construct a table with presence or absence from a list of fasta file ...
+
+
+"""
 import pandas as pd
 import click
 from dating_workflow.step_script import convert_genome_ID_rev,convert_genome_ID

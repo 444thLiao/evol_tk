@@ -5,6 +5,7 @@ from ete3 import NCBITaxa
 from tqdm import tqdm
 from api_tools.itol_func import *
 from dating_workflow.step_script import convert_genome_ID_rev
+import plotly.express as px
 
 ncbi = NCBITaxa()
 
@@ -70,6 +71,8 @@ text = to_label({k: k for k in gid2name})
 with open('./itol_txt/reset_names.txt', 'w') as f1:
     f1.write(text)
 
+
+# taxonomy annotation
 color_scheme = {'type': {'NOB': '#e41a1c', 'comammox': '#edc31d',
                          'AOB': '#bad5b9', 'AOA': '#358f0f'},
                 'phylum/class': {'Thaumarchaeota': '#358f0f',
@@ -80,6 +83,7 @@ color_scheme = {'type': {'NOB': '#e41a1c', 'comammox': '#edc31d',
                                  'Alphaproteobacteria': '#8c613c',
                                  'Actinobacteria': '#11FF11',
                                  'Planctomycetes': '#FF66bb',
+                                 "Nitrospinae": "#4285f4"
                                  }}
 
 
@@ -99,7 +103,7 @@ def get_colors_general(ID2infos, now_info2style={}):
 
 
 id2info = gid2taxon
-id2info, info2color = get_colors_general(id2info)
+id2info, info2color = get_colors_general({k:v for k,v in id2info.items() if v in color_scheme["phylum/class"]})
 text = to_color_strip(id2info, info2color, info_name='phylum')
 
 with open('./itol_txt/phylum_annotate.txt', 'w') as f1:

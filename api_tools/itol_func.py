@@ -108,6 +108,10 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
 
 
 def to_color_strip(ID2info, info2color, info_name='dataset'):
+
+    # id2info, could be {ID: name}
+    # info2color: could be {name: color,}
+
     template_text = open(color_strip_template).read()
     id2col = {id: info2color[info] for id, info in ID2info.items()}
     annotate_text = '\n'.join(['%s,%s\n' % (id, col)
@@ -122,6 +126,8 @@ def to_color_strip(ID2info, info2color, info_name='dataset'):
 
 def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
     # clade for
+    # id2info, could be {ID: name}
+    # info2color: could be {name: color,}
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
@@ -143,6 +149,8 @@ def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
 
 def to_color_branch(ID2info, info2color, dataset_name='color branch', no_legend=False):
     # clade for
+    # id2info, could be {ID: name}
+    # info2color: could be {name: color,}
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
     each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
@@ -294,6 +302,8 @@ def get_text_anno(id2val,extra_replace):
     return template_text + '\n'.join(annotate_text)
 
 def to_matrix_shape(ID2categorical_v, dataset_label, color='#000000'):
+    # id2info, could be {ID: name}
+
     template_text = open(matrix_like_template).read()
     all_v = set(map(str, ID2categorical_v.values()))
     all_v = list(sorted(all_v))
