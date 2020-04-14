@@ -110,7 +110,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
                                        'bold',
                                        '1',
                                        '0']))
-    template = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
+    template = open(join(indir,'dataset_text_template.txt')).read()
     with open(join(itol_annotate, 'dating_tree_ages.txt'), 'w') as f1:
         f1.write(template + '\n' + '\n'.join(raw_text))
 
