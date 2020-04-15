@@ -150,12 +150,19 @@ def itol_cal(calibration_txt, odir):
 @click.option('-o', 'out_newick')
 @click.option('-f', 'tree_format', default=0)
 @click.option('-f_to', 'new_format', default=0)
-def cat(in_newick, in_newick2, out_newick, tree_format, new_format):
-    t = Tree()
-    t1 = read_tree(in_newick, format=tree_format)
-    t2 = read_tree(in_newick2, format=tree_format)
-    t.add_child(t1)
-    t.add_child(t2)
+@click.option('-r', 'replace', default=None, help='the leaf should be placed at i2(latter one) instead of i')
+def cat(in_newick, in_newick2, out_newick, tree_format, new_format,replace):
+    if replace is None:
+        t = Tree()
+        t1 = read_tree(in_newick, format=tree_format)
+        t2 = read_tree(in_newick2, format=tree_format)
+        t.add_child(t1)
+        t.add_child(t2)
+    else:
+        t = read_tree(in_newick2, format=tree_format)
+        t1 = read_tree(in_newick, format=tree_format)
+        t.remove_child(replace)
+        t.add_child(t1)
     text = t.write(format=new_format)
     with open(out_newick, 'w') as f1:
         f1.write(text.replace('NoName', ''))
@@ -203,6 +210,9 @@ def reformat(in_newick, out_newick, tree_format, new_format):
     text = t1.write(out_newick, format=new_format)
     with open(out_newick, 'w') as f1:
         f1.write(text.replace('NoName', ''))
+
+
+
 
 
 if __name__ == "__main__":

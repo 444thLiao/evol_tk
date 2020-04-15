@@ -11,6 +11,7 @@ from api_tools.itol_func import *
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
 from tqdm import tqdm
 import sys
+from ete3 import NCBITaxa
 ncbi = NCBITaxa()
 kofam_scan = '/home-user/thliao/software/kofamscan/exec_annotation'
 tree_exe = 'iqtree'
