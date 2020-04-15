@@ -161,7 +161,7 @@ def cat(in_newick, in_newick2, out_newick, tree_format, new_format,replace):
     else:
         t = read_tree(in_newick2, format=tree_format)
         t1 = read_tree(in_newick, format=tree_format)
-        t.remove_child(replace)
+        t.remove_child([_ for _ in t.children if _.name == replace][0])
         t.add_child(t1)
     text = t.write(format=new_format)
     with open(out_newick, 'w') as f1:
