@@ -11,7 +11,7 @@ indir = '/home-user/thliao/template_txt/'
 if not exists(indir):
     indir = join(dirname(__file__), 'itol_template')
 
-color_style_template = join(indir, 'color_styles_template.txt')
+color_style_template = join(indir, 'colors_styles_template.txt')
 color_strip_template = join(indir, 'dataset_color_strip_template.txt')
 dataset_styles_template = join(indir, 'dataset_styles_template.txt')
 dataset_binary_template = join(indir, 'dataset_binary_template.txt')
@@ -461,5 +461,3 @@ def pie_chart(id2cat2val,
                                          )
     final_text = template_text + '\n' + '\n'.join(annotate_text)
     return final_text
-
-def to_color_range():
