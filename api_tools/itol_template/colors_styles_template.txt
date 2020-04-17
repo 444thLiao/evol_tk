@@ -7,9 +7,9 @@ TREE_COLORS
 #=================================================================#
 #select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file (except in the SEPARATOR line, which uses space).
 
-#SEPARATOR TAB
+SEPARATOR TAB
 #SEPARATOR SPACE
-SEPARATOR COMMA
+#SEPARATOR COMMA
 
 #First 3 fields define the node, type and color
 #Possible types are:
@@ -25,7 +25,7 @@ SEPARATOR COMMA
 #The following additional fields are optional:
 #for 'label', field 4 defines the font style ('normal',''bold', 'italic' or 'bold-italic') and field 5 defines the numeric scale factor for the font size (eg. with value 2, font size for that label will be 2x the standard size)
 #for 'clade' and 'branch', field 4 defines the branch style ('normal' or 'dashed') and field 5 defines the branch width scale factor (eg. with value 0.5, branch width for that clade will be 0.5 the standard width)
-
+{dataset_label}
 #Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
 #=================================================================#
 #       Actual data follows after the "DATA" keyword              #
@@ -58,3 +58,5 @@ DATA
 
 #leaf label for node 9606 will have a semi-transparent red background
 #9606 label_background rgba(255,0,0,0.5)
+
+{legend_text}

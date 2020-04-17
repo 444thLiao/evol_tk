@@ -11,6 +11,7 @@ indir = '/home-user/thliao/template_txt/'
 if not exists(indir):
     indir = join(dirname(__file__), 'itol_template')
 
+color_style_template = join(indir, 'color_styles_template.txt')
 color_strip_template = join(indir, 'dataset_color_strip_template.txt')
 dataset_styles_template = join(indir, 'dataset_styles_template.txt')
 dataset_binary_template = join(indir, 'dataset_binary_template.txt')
@@ -153,7 +154,7 @@ def to_color_branch(ID2info, info2color, dataset_name='color branch', no_legend=
     # info2color: could be {name: color,}
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
-    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}'
     if no_legend:
         legend_text = ''
     else:
@@ -177,6 +178,26 @@ def to_color_branch(ID2info, info2color, dataset_name='color branch', no_legend=
                                   STYLE='bold',
                                   BACKGROUND_COLOR='')
              for ID, color in id2col.items()]
+    return template_text + '\n'.join(rows)
+
+def to_color_range(ID2info, info2color, dataset_name='color branch', no_legend=True):
+    # add color range
+    # id2info, could be {ID: name}
+    # info2color: could be {name: color,}
+    template_text = open(color_style_template).read()
+    id2col = {ID: info2color[info] for ID, info in ID2info.items()}
+    each_template = '{ID}\trange\t{COLOR}\t{name}'
+    if no_legend:
+        legend_text = ''
+    else:
+        legend_text = deduced_legend(info2color, dataset_name, sep='\t')
+
+    template_text = template_text.format(dataset_label=dataset_name,
+                                         legend_text=legend_text)
+    rows = [each_template.format(ID=ID,
+                                 COLOR=color,
+                                 name=ID2info[ID])
+            for ID, color in id2col.items()]
     return template_text + '\n'.join(rows)
 
 
@@ -440,3 +461,5 @@ def pie_chart(id2cat2val,
                                          )
     final_text = template_text + '\n' + '\n'.join(annotate_text)
     return final_text
+
+def to_color_range():
