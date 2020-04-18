@@ -285,6 +285,7 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
             id2support[n.name] = support_v
 
     # ID,symbol,size,color,fill,position,label
+
     rows = []
     for id, s_v in id2support.items():
         size = '7'
@@ -305,7 +306,7 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
     annotate_text = '\n'.join(rows)
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text='',
-                                         maximum_size=size)
+                                         maximum_size='50')
     return template_text + annotate_text
 
 def get_text_anno(id2val,extra_replace):

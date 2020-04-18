@@ -12,7 +12,6 @@ from ete3 import Tree
 from api_tools.for_tree.format_tree import sort_tree
 from dating_workflow.step_script import process_path
 
-
 #   Tree with NHX style metadata:
 
 #    (A:0.1,(B:0.2,(C:0.2,D:0.3):0.4[&&NHX:conf=0.01:name=NODE1]):0.5);

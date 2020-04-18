@@ -104,7 +104,7 @@ def draw_r(df,group=None):
     return fig, r_squre_v, coef
 
 
-def get_plot(pattern, odir):
+def get_plot(pattern, odir,no_plot=False):
     if not exists(odir):
         os.makedirs(odir)
 
@@ -118,7 +118,10 @@ def get_plot(pattern, odir):
         if df1 is None:
             continue
         fig, r_squre_v, coef = draw_r(df1)
-        fig.write_image(join(odir, f'repeat_{name}_{set_name}.png'))
+        if no_plot:
+            pass
+        else:
+            fig.write_image(join(odir, f'repeat_{name}_{set_name}.png'))
         tmp_df.loc[name, set_name] = r_squre_v
         tmp_df2.loc[name, set_name] = coef
 

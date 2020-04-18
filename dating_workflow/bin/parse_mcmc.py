@@ -112,7 +112,7 @@ def targegroup_compare_violin(collect_,odir):
     fig.layout.xaxis.tickfont.size = 20
     fig.write_html('./dating_for/83g/nucl/set14_derivative.html', include_plotlyjs='cdn')
 
-def main(indir, name2group, odir):
+def main(indir, name2group, odir,no_plot=False):
     tmp_df = pd.DataFrame()
     # collect_ = {}
     processed_dir = list(glob(join(indir, '*run1')))
@@ -129,7 +129,7 @@ def main(indir, name2group, odir):
         if exists(join(each_dir, 'FigTree.tre')):
             t = get_node_name(outfile)
 
-            df = pd.read_csv(mcmc, sep='\t', index_col=0)
+            # df = pd.read_csv(mcmc, sep='\t', index_col=0)
             set_name = basename(dirname(outfile)).partition('_')[-1]
             if not set_name:
                 set_name = basename(dirname(outfile))
@@ -152,7 +152,7 @@ def main(indir, name2group, odir):
 
     odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
-    df = get_plot(pattern, odir)
+    df = get_plot(pattern, odir,no_plot=no_plot)
     # draw infinite sites plot
 
     writer = pd.ExcelWriter(join(odir, 'mcmc.xlsx'), engine='xlsxwriter')
@@ -166,7 +166,7 @@ def main(indir, name2group, odir):
 @click.option("-ns", 'targe_group', default=None,
               help='use , to separate each')
 @click.option("-name", 'groupname', default='')
-@click.option("-disable_plot",'no_plot',default='',)
+@click.option("-disable_plot",'no_plot',default=False, required=False, is_flag=True)
 @click.option('-o', 'odir',default=None)
 def cli(indir,targe_group,groupname,odir,no_plot):
     name2group = dict(zip(groupname.split(';'),
@@ -176,7 +176,7 @@ def cli(indir,targe_group,groupname,odir,no_plot):
     # targe_group = [_.strip() for _ in targe_group.split(',')]
     if odir is None:
         odir = indir
-    main(indir=indir, name2group=name2group,odir=odir)
+    main(indir=indir, name2group=name2group,odir=odir,no_plot=no_plot)
 
 
 if __name__ == '__main__':
