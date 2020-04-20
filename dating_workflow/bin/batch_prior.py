@@ -4,7 +4,7 @@ from os.path import *
 
 import click
 
-from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_num_phy_file,run,tqdm,mp
+from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_num_phy_file, run, tqdm, mp
 
 
 @click.command()
@@ -21,7 +21,7 @@ from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_n
 def cli(in_phyfile, in_treefile,
         odir,
         use_nucl,
-num_parellel,
+        num_parellel,
         sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
     in_phyfile = process_path(in_phyfile)
     ndata = get_num_phy_file(in_phyfile)
@@ -50,6 +50,7 @@ num_parellel,
         cmds.append(cmd)
     with mp.Pool(processes=num_parellel) as tp:
         _ = list(tqdm((tp.imap(run, cmds)), total=len(cmds)))
+
 
 if __name__ == '__main__':
     cli()

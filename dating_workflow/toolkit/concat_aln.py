@@ -117,7 +117,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
                     used_ids.append(fid)
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
-                    f1.write(f"{remained_id}\n{'-' * length_this_aln}\n")
+                    f1.write(f"{remained_id}        {'-' * length_this_aln}\n")
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
 @click.option("-i", "indir", help="The input directory which contains all separate aln files")

@@ -1,17 +1,18 @@
+import warnings
 from glob import glob
 from os.path import *
 
 import click
 import numpy as np
 import pandas as pd
+import plotly.express as px
 from ete3 import Tree
 from tqdm import tqdm
 
 from dating_workflow.debug_for.draw_infinite_plot import get_plot
-import warnings
-import plotly.express as px
 
 warnings.filterwarnings('ignore')
+
 
 def cal_ESS(df):
     N = int(df.shape[0] * 0.1)
@@ -86,7 +87,8 @@ def get_node_name(f):
         l.name = l.name.partition('_')[-1]
     return t
 
-def targegroup_compare_violin(collect_,odir):
+
+def targegroup_compare_violin(collect_, odir):
     # todo
     # not finish
     tmp = []
@@ -103,7 +105,6 @@ def targegroup_compare_violin(collect_,odir):
     df.loc[:, 'set'] = [_.replace('83g_', '').replace('_run1', '').replace('clock2_', '') for _ in df.loc[:, 'name']]
     df = df.sort_values('num_set')
 
-
     fig = px.violin(df, x='set', y='time', box=True, points=False)
     fig.layout.yaxis.title.text = 'Divergence time(100Mya)'
     fig.layout.xaxis.title.text = 'Sets of calibration information'
@@ -112,7 +113,8 @@ def targegroup_compare_violin(collect_,odir):
     fig.layout.xaxis.tickfont.size = 20
     fig.write_html('./dating_for/83g/nucl/set14_derivative.html', include_plotlyjs='cdn')
 
-def main(indir, name2group, odir,no_plot=False):
+
+def main(indir, name2group, odir, no_plot=False):
     tmp_df = pd.DataFrame()
     # collect_ = {}
     processed_dir = list(glob(join(indir, '*run1')))
@@ -122,7 +124,7 @@ def main(indir, name2group, odir,no_plot=False):
             continue
         else:
             outfile = outfile[0]
-        mcmc = join(each_dir, 'mcmc.txt')
+        # mcmc = join(each_dir, 'mcmc.txt')
         log = join(each_dir, 'run.log')
         if not exists(log):
             log = glob(join(each_dir, '*.log'))[0]
@@ -140,10 +142,10 @@ def main(indir, name2group, odir,no_plot=False):
                                                          df.loc[:, 'CIs'].values[0])
             tmp_df.loc[set_name, 'lnL'] = '%s (%s) ' % (df.loc["lnL", 'Posterior mean time (100 Ma)'],
                                                         df.loc["lnL", 'CIs'])
-            for gname,group in name2group.items():
+            for gname, group in name2group.items():
                 raw_name = 't_n%s' % t.get_common_ancestor(group).name
                 tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
-                                                                df.loc[raw_name, 'CIs'])
+                                                            df.loc[raw_name, 'CIs'])
     tmp_df.loc[:, 'num_set'] = [int(_.split('_')[1].replace('set', ''))
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]
@@ -152,7 +154,7 @@ def main(indir, name2group, odir,no_plot=False):
 
     odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
-    df = get_plot(pattern, odir,no_plot=no_plot)
+    df = get_plot(pattern, odir, no_plot=no_plot)
     # draw infinite sites plot
 
     writer = pd.ExcelWriter(join(odir, 'mcmc.xlsx'), engine='xlsxwriter')
@@ -163,20 +165,20 @@ def main(indir, name2group, odir,no_plot=False):
 
 @click.command()
 @click.option("-i", 'indir', help='dir have multiple calibration set')
-@click.option("-ns", 'targe_group', default=None,
+@click.option("-ns", 'target_group', default=None,
               help='use , to separate each')
 @click.option("-name", 'groupname', default='')
-@click.option("-disable_plot",'no_plot',default=False, required=False, is_flag=True)
-@click.option('-o', 'odir',default=None)
-def cli(indir,targe_group,groupname,odir,no_plot):
+@click.option("-disable_plot", 'no_plot', default=False, required=False, is_flag=True)
+@click.option('-o', 'odir', default=None)
+def cli(indir, target_group, groupname, odir, no_plot):
     name2group = dict(zip(groupname.split(';'),
-                     [_.strip() for _ in targe_group.split(';')]))
-    name2group = {k:[_.strip() for _ in v.split(',')]
-                  for k,v in name2group.items()}
+                          [_.strip() for _ in target_group.split(';')]))
+    name2group = {k: [_.strip() for _ in v.split(',')]
+                  for k, v in name2group.items()}
     # targe_group = [_.strip() for _ in targe_group.split(',')]
     if odir is None:
         odir = indir
-    main(indir=indir, name2group=name2group,odir=odir,no_plot=no_plot)
+    main(indir=indir, name2group=name2group, odir=odir, no_plot=no_plot)
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from tqdm import tqdm
 
+
 def get_CI(f):
     f = open(f).read().split('\n')
     head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
@@ -61,16 +62,16 @@ def fit_line(x, y):
     return reg.coef_[0][0], reg.score(x, y)
 
 
-def draw_r(df,group=None):
+def draw_r(df, group=None):
     df = df.copy()
     df = df.reindex([_ for _ in df.index if _.startswith('t_n')])
     df.loc[:, 'Posterior mean time (100 Ma)'] = df.loc[:, 'Posterior mean time (100 Ma)'] / 10
     df.loc[:, 'CI_width'] = df.loc[:, 'CI_width'].astype(float) / 10
     if group is None:
         fig = px.scatter(df,
-                     x='Posterior mean time (100 Ma)',
-                     y='CI_width',
-                     trendline="ols")
+                         x='Posterior mean time (100 Ma)',
+                         y='CI_width',
+                         trendline="ols")
     else:
         fig = px.scatter(df,
                          x='Posterior mean time (100 Ma)',
@@ -104,7 +105,7 @@ def draw_r(df,group=None):
     return fig, r_squre_v, coef
 
 
-def get_plot(pattern, odir,no_plot=False):
+def get_plot(pattern, odir, no_plot=False):
     if not exists(odir):
         os.makedirs(odir)
 
@@ -130,30 +131,28 @@ def get_plot(pattern, odir,no_plot=False):
 
     tmp_df2 = tmp_df2.reindex(columns=sorted(tmp_df2.columns, key=lambda x: int(x.replace('set', ''))))
     # tmp_df2.to_excel(join(odir, 'infinite_site_coef.xlsx'))
-    new_df = pd.concat([tmp_df.T,tmp_df2.T],axis=1)
-    new_df.columns = ['r-square','slope']
+    new_df = pd.concat([tmp_df.T, tmp_df2.T], axis=1)
+    new_df.columns = ['r-square', 'slope']
     new_df.to_excel(join(odir, 'infinite_site.xlsx'),
                     index_label='Calibration sets')
     return new_df
 
 
-
-def separate_fit(df,odir,id_sets):
+def separate_fit(df, odir, id_sets):
     total_df = df.copy()
-    for idx,_ in enumerate(id_sets):
-        total_df.loc[_,'color'] = [f'set{idx+1}']
+    for idx, _ in enumerate(id_sets):
+        total_df.loc[_, 'color'] = [f'set{idx + 1}']
     total_df = total_df.fillna('set')
-    fig, r_squre_v, coef = draw_r(total_df,group='color')
+    fig, r_squre_v, coef = draw_r(total_df, group='color')
 
-    _df_sets = [df.loc[_,:].copy()
+    _df_sets = [df.loc[_, :].copy()
                 for _ in id_sets]
 
     results = [draw_r(_df)
                for _df in _df_sets]
 
-
-    for idx,(_f,_coef,_r2) in enumerate(results):
-        _data = [_ for _ in fig.data if str(idx+1) in _['legendgroup'] and 'OLS trendline' in _['hovertemplate']][0]
+    for idx, (_f, _coef, _r2) in enumerate(results):
+        _data = [_ for _ in fig.data if str(idx + 1) in _['legendgroup'] and 'OLS trendline' in _['hovertemplate']][0]
         _data.y = _f.data[-1].y
         _data.x = _f.data[-1].x
 
@@ -189,16 +188,17 @@ def separate_fit(df,odir,id_sets):
     r_squre_v = r2
     return fig, r_squre_v, coef
 
+
 if __name__ == '__main__':
     odir = './dating_for/83g/clock2_infinite_plot'
     pattern = "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
     get_plot(pattern, odir)
 
     plancto_set = [f't_n{num}'
-                   for num in range(139,166)]
+                   for num in range(139, 166)]
     cyano_set = [f't_n{num}'
-                   for num in range(85,139)]
-    id_sets = [plancto_set,cyano_set]
+                 for num in range(85, 139)]
+    id_sets = [plancto_set, cyano_set]
     odir = './dating_for/83g/clock2_infinite_plot'
     pattern = "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
     get_plot(pattern, odir)
