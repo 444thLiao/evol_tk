@@ -120,6 +120,7 @@ def get_plot(pattern, odir, no_plot=False):
             continue
         fig, r_squre_v, coef = draw_r(df1)
         if no_plot:
+
             pass
         else:
             fig.write_image(join(odir, f'repeat_{name}_{set_name}.png'))

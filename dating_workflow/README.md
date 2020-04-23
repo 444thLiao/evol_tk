@@ -1,5 +1,8 @@
 
 # workflow For dating
+## 0. get all taxid from a give phylum
+
+`python3 ~/script/evolution_relative/bin/get_aid_from_tid.py -t 200795 -n Chloroflexi -o ~/test/    `
 
 ## 1. Download data
 

@@ -48,7 +48,7 @@ def get_aid_from_tid(all_taxas):
 @click.option("-t", "taxons", default="914")
 @click.option("-n", "names", default="Nitrosomonas")
 @click.option("-o", 'odir', default='./')
-def cli(taxons, names, odir):
+def cli(input,taxons, names, odir):
     odir = process_path(odir)
     if not exists(odir):
         os.makedirs(odir)
