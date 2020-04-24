@@ -4,7 +4,7 @@ For summarizing results output by batch_hmm(some script for annotating genes.)
 import os
 from collections import defaultdict
 from glob import glob
-from os.path import join, exists
+from os.path import join, exists,isdir,isfile
 import sys
 # sys.path.insert(0,'/'.join(__file__.split('/')[:-4]))
 import click
@@ -14,10 +14,16 @@ from tqdm import tqdm
 from dating_workflow.step_script import convert_genome_ID_rev, process_path
 
 
-def retrieve_info(indir, suffix):
+def retrieve_info(indir, suffix='.tab'):
+    # deal with --tblout instead of --domtblout
     suffix = suffix.strip('.')
     gid2locus2ko = defaultdict(list)
-    files_list = glob(join(indir, f'*.{suffix}'))
+    if isdir(indir):
+        files_list = glob(join(indir, f'*.{suffix}'))
+    elif isfile(indir):
+        files_list = [indir]
+    else:
+        raise Exception()
     if not files_list:
         exit(f"no files could be found with input {join(indir, f'*.{suffix}')},please check the parameters. ")
     tqdm.write("reading all annotated result")

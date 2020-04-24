@@ -227,7 +227,6 @@ def to_color_Clade(ID2info, info2color, tree,
                 return True
             else:
                 return False
-        return False
 
     new_tree_obj = Tree(tree_obj.write(is_leaf_fn=collapsed_leaf))
     new_leaves_names = [_.name for _ in new_tree_obj.get_leaves()]

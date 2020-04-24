@@ -43,8 +43,8 @@ def _parse_blastp(ofile,match_ids=[],top_hit = False):
     return gid2locus
 
 def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
+    # deal with --tblout
     gid2locus = defaultdict(list)
-
     for row in open(ofile, 'r'):
         if row.startswith('#'):
             continue
@@ -61,6 +61,25 @@ def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
     gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
+
+def _parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):
+    # deal with --tblout
+    gid2locus = defaultdict(list)
+    for row in open(ofile, 'r'):
+        if row.startswith('#'):
+            continue
+        r = row.split(' ')
+        r = [_ for _ in r if _]
+
+        gene_id = r[1]
+        locus_tag = r[2]
+        evalue = float(r[4])
+        if filter_evalue and evalue <= filter_evalue:
+            gid2locus[gene_id].append((locus_tag, evalue))
+        else:
+            gid2locus[gene_id].append((locus_tag, evalue))
+    gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
+    return gid2locus
 
 
 def _parse_hmmscan(ofile):

@@ -27,7 +27,7 @@ Like taxid of phylum Cyanobacteria is **1117**, Of course you could use some sma
 
 
 ## 2. postdownload (annotate the genomes or extract proteins sequences)
-`python3 $EOV/dating_workflow/postdownload.py ./genbank ./genome_protein_files`
+`python3 $EOV/dating_workflow/toolkit/postdownload.py ./genbank ./genome_protein_files`
 
 If you want to strictly follow above commands, you could also pass nothing to this script.
 
