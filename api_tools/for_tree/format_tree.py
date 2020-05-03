@@ -1,12 +1,14 @@
-from os.path import join,dirname,exists
+from os.path import join, dirname, exists
 
 from ete3 import Tree
 
 indir = '/home-user/thliao/template_txt/'
 if not exists(indir):
     indir = join(dirname(__file__), 'itol_template')
-    
+
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
+dataset_text_template = join(indir, 'dataset_text_template.txt')
+
 
 def read_tree(in_tree, format=None):
     if isinstance(in_tree, str):
@@ -48,18 +50,17 @@ def root_tree_with(in_tree_file, gene_names=[], format=0):
 
 
 def sort_tree(in_tree_file, ascending=True, format=0):
-    # from bottom to top
-    # sort_by_num of nodes
+    # the order of the number of descendent leaves from bottom to top
+    # sort each internal node by the number of leafs descendent of it
     # ascending is True, mean branch have less leafs place bottom.
     t = read_tree(in_tree_file, format=format)
     for n in t.traverse():
-        # childrens = n.children
-        # if len(childrens)==2:
-        # d1,d2 = [len(_.get_leaves()) for _ in n.children]
         sort_by_ascending = list(sorted(n.children,
-                                        key=lambda x: len(x.get_leaves()),
-                                        ))
+                                        key=lambda x: len(x.get_leaves()), ))
+        # default is ascending according to description of builtin function `sorted`
+
         if ascending:
+            # due to from bottom to top instead of reverse... so it need to reverse by [::-1]
             n.children = sort_by_ascending[::-1]
         else:
             n.children = sort_by_ascending
@@ -67,9 +68,16 @@ def sort_tree(in_tree_file, ascending=True, format=0):
 
 
 def renamed_tree(in_tree_file, outfile=None, format=0):
+    """
+    rename internal nodes by bootstrap values and the index of it.
+
+    :param in_tree_file:
+    :param outfile:
+    :param format:
+    :return:
+    """
     count = 0
     t = read_tree(in_tree_file, format=format)
-    # t = sort_tree(in_tree_file,ascending=ascending,format=format)
     for n in t.traverse():
         if not n.name:
             if not str(int(n.support)) or str(int(n.support)) == '1.0':
@@ -77,14 +85,14 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
             else:
                 n.name = 'I%s_S%s' % (count, str(int(n.support)))
             count += 1
-        elif isinstance(n.name,str) and n.name.startswith('I'):
+        elif isinstance(n.name, str) and n.name.startswith('I'):
             S_ori = n.name.split('_')[-1]
             S_ori = S_ori.strip('S')
             if not S_ori.isnumeric():
-                #print(S_ori)
+                # print(S_ori)
                 S_ori = '100'
             n.name = f'I{count}_S{S_ori}'
-            count +=1
+            count += 1
     if outfile is None:
         return t
     t.write(outfile=outfile, format=3)
@@ -92,6 +100,15 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
 
 
 def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
+    """
+    Implement a function to add calibration into tree in MCMCTree format.
+
+    :param in_tree_file:
+    :param out_newick:
+    :param calibration_txt:
+    :param format:
+    :return:
+    """
     t = read_tree(in_tree_file, format=format)
     calibration_dict = {}
     # iterate all rows of input calibration txt
@@ -116,14 +133,23 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     # format the time information into suitable format
     for v in calibration_dict.values():
         if '(' in v:
-            final_tree = final_tree.replace(v.replace('(','_').replace(')','_').replace(',','_'),
+            final_tree = final_tree.replace(v.replace('(', '_').replace(')', '_').replace(',', '_'),
                                             "'%s'" % v)
     text = f'{len(t.get_leaves())}\n' + final_tree
     with open(out_newick, 'w') as f1:
         f1.write(text)
     return text
 
-def draw_cal_itol(calibration_txt,odir):
+
+def draw_cal_itol(calibration_txt, odir):
+    """
+    abbr: draw calibration nodes and text in itol required format
+
+    Output files is force named 'dating_tree_calibration.txt' and 'dating_tree_calibration_str.txt'
+    :param calibration_txt:
+    :param odir:
+    :return:
+    """
     itol_odir = odir
     size = '12'
     shape = '2'
@@ -143,12 +169,12 @@ def draw_cal_itol(calibration_txt,odir):
     template_text = open(dataset_symbol_template).read()
     annotate_text = '\n'.join(rows)
     template_text = template_text.format(dataset_label='calibration',
-                                            legend_text='',
-                                            maximum_size=size)
+                                         legend_text='',
+                                         maximum_size=size)
     with open(join(itol_odir, 'dating_tree_calibration.txt'), 'w') as f1:
         f1.write(template_text + '\n' + annotate_text)
 
-    template_text = open('/home-user/thliao/template_txt/dataset_text_template.txt').read()
+    template_text = open(dataset_text_template).read()
     annotate_text = '\n'.join(rows_str)
     with open(join(itol_odir, 'dating_tree_calibration_str.txt'), 'w') as f1:
         f1.write(template_text + '\n' + annotate_text)

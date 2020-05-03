@@ -10,7 +10,6 @@ from os.path import dirname
 
 sys.path.insert(0, dirname(__file__))
 import click
-# required format for binary python
 from api_tools.for_tree.format_tree import renamed_tree, root_tree_with, add_cal_api, Tree, read_tree, sort_tree, earse_name, draw_cal_itol
 import os
 from os.path import exists
@@ -151,7 +150,7 @@ def itol_cal(calibration_txt, odir):
 @click.option('-f', 'tree_format', default=0)
 @click.option('-f_to', 'new_format', default=0)
 @click.option('-r', 'replace', default=None, help='the leaf should be placed at i2(latter one) instead of i')
-def cat(in_newick, in_newick2, out_newick, tree_format, new_format,replace):
+def cat(in_newick, in_newick2, out_newick, tree_format, new_format, replace):
     if replace is None:
         t = Tree()
         t1 = read_tree(in_newick, format=tree_format)
@@ -210,9 +209,6 @@ def reformat(in_newick, out_newick, tree_format, new_format):
     text = t1.write(out_newick, format=new_format)
     with open(out_newick, 'w') as f1:
         f1.write(text.replace('NoName', ''))
-
-
-
 
 
 if __name__ == "__main__":

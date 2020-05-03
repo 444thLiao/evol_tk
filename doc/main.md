@@ -6,7 +6,7 @@ Up to now, there are several parts for evolutional analysis.
 
 Be aware of the following descriptions, the `$EVO` mean the base directory of this repository.
 
-You could declare the environmental variable with a command like this `export EVO='~/script/script_evolution' `
+You could declare the environmental variable with a command like this `export EVO='$HOME/script/script_evolution' `
 
 ## 1. Toolkit
 **The first and the most diversified bunches of scripts.**

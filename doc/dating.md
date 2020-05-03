@@ -1,6 +1,8 @@
 # dating analysis with written scripts
+The doc is introducing a pipelines from downloaded genomes to molecular dating analysis with embedded scripts.
 
-In beginning, declare a env variable for usage.
+
+In beginning, declare a **env variable** for usage.
 
 > `export EOV=/home-user/thliao/script/evolution_relative`
 
