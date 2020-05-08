@@ -1,9 +1,8 @@
-# batch run script
+# batch run scripts
 
 Normally, it just accept some basically parameters and run some usual commands.
 
-It is mainly for reduce the effort to adjust and re-write some commands.
-
+These scripts are mainly for reducing the effort to adjust and re-write some commands.
 
 For example, using `batch_any.py` for batch `prokka` command as follow:
 
