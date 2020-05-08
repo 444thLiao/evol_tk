@@ -18,8 +18,13 @@ def run(cmd):
     check_call(cmd,
                shell=True)
 
+def quiet_run(cmd):
+    check_call(cmd,
+               shell=True,
+               stdout='/dev/null',
+               stderr='/dev/null')
 
-def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False,get_name=False):
+def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False,get_name=False,quiet=False):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     odir = abspath(odir)
@@ -43,7 +48,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
                          basename(infile))
         if not exists(ofile) or force:
             if get_name:
-                name = basename(infile).replace(f'.{suffix}','')
+                name = basename(infile).replace(f'{suffix}','')
                 filled_cmd = cmd.format(infile=infile,
                                         ofile=ofile,
                                         name=name)
@@ -54,8 +59,12 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
     if test:
         print(params)
         return
-    with mp.Pool(processes=num_parellel) as tp:
-        r = list(tqdm(tp.imap(run, params), total=len(params)))
+    if quiet:
+        with mp.Pool(processes=num_parellel) as tp:
+            r = list(tqdm(tp.imap(quiet_run, params), total=len(params)))
+    else:
+        with mp.Pool(processes=num_parellel) as tp:
+            r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
 @click.command(
@@ -66,11 +75,12 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
 @click.option('-ns', 'new_suffix', default='', help="new suffix of output files, default is empty")
 @click.option('-np', 'num_parellel', default=10, help="num of processes could be parellel.. default is 10")
 @click.option('-f', 'force', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
+@click.option('-quiet', 'quiet', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
 @click.option('-t', 'test', help='test?', default=False, required=False, is_flag=True)
 @click.option('-get_name',"get_name",default=False, required=False, is_flag=True,help="get the basename of the input file as a new format string to the command. Use {name} in the command to use it. ")
 @click.option('-cmd', "cmd",
               help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore and it will auto added by the script. The suffix should be assigned at parameter `ns` or `s`. Default both are empty. If you want to add more flexible parameters, it should modify this script directly. Beside that, the `get_name` parameter could help you to extract the basename of the input file and pass it to the `cmd`. ")
-def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd,get_name):
+def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd,get_name,quiet):
     main(indir=indir,
          odir=odir,
          num_parellel=num_parellel,
@@ -79,7 +89,8 @@ def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd,get_name
          force=force,
          cmd=cmd,
          test=test,
-         get_name=get_name)
+         get_name=get_name,
+         quiet=quiet)
 
 
 if __name__ == "__main__":
