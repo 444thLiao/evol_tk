@@ -19,7 +19,7 @@ def run(cmd):
                shell=True)
 
 
-def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False):
+def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False,get_name=False):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     odir = abspath(odir)
@@ -42,7 +42,13 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
             ofile = join(odir,
                          basename(infile))
         if not exists(ofile) or force:
-            filled_cmd = cmd.format(infile=infile,
+            if get_name:
+                name = basename(infile).replace(f'.{suffix}','')
+                filled_cmd = cmd.format(infile=infile,
+                                        ofile=ofile,
+                                        name=name)
+            else:
+                filled_cmd = cmd.format(infile=infile,
                                     ofile=ofile)
             params.append(filled_cmd)
     if test:
@@ -61,9 +67,10 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
 @click.option('-np', 'num_parellel', default=10, help="num of processes could be parellel.. default is 10")
 @click.option('-f', 'force', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
 @click.option('-t', 'test', help='test?', default=False, required=False, is_flag=True)
+@click.option('-get_name',"get_name",default=False, required=False, is_flag=True,help="get the basename of the input file as a new format string to the command. Use {name} in the command to use it. ")
 @click.option('-cmd', "cmd",
-              help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore. The suffix should be assigned at parameter `ns` or `s`. now default is empty. If you want to add more flexible parameters, it should modify this script directly. ")
-def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd):
+              help="it shoulw accept a command with {} as indicator of string format. e.g. mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}, the suffix of original file and new file could be ignore and it will auto added by the script. The suffix should be assigned at parameter `ns` or `s`. Default both are empty. If you want to add more flexible parameters, it should modify this script directly. Beside that, the `get_name` parameter could help you to extract the basename of the input file and pass it to the `cmd`. ")
+def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd,get_name):
     main(indir=indir,
          odir=odir,
          num_parellel=num_parellel,
@@ -71,7 +78,8 @@ def cli(indir, odir, suffix, new_suffix, force, test, num_parellel, cmd):
          new_suffix=new_suffix,
          force=force,
          cmd=cmd,
-         test=test)
+         test=test,
+         get_name=get_name)
 
 
 if __name__ == "__main__":

@@ -47,7 +47,6 @@ def deduced_legend2(info2style, infos, same_colors=False, sep='\t'):
     labels = []
     colors = []
     for idx, info in enumerate(infos):
-
         shapes.append(info2style[info].get('shape', '1'))
         labels.append(info2style[info].get('info', info))
         if not same_colors:

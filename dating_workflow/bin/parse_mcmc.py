@@ -71,6 +71,7 @@ def get_CI(f):
 
 
 def get_node_name(f):
+    # f should be the *.out file
     matched_row = ''
     match = False
     for row in open(f):
