@@ -21,8 +21,8 @@ def run(cmd):
 def quiet_run(cmd):
     check_call(cmd,
                shell=True,
-               stdout='/dev/null',
-               stderr='/dev/null')
+               stdout=open('/dev/null','w'),
+               stderr=open('/dev/null','w'))
 
 def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=command_template, test=False,get_name=False,quiet=False):
     suffix = suffix.strip('.')
