@@ -39,8 +39,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
     for infile in tqdm(file_list):
-        if new_suffix and suffix:
-
+        if new_suffix is not None and suffix is not None:
             if new_suffix == '':
                 new_suffix = ''
             else:
@@ -59,7 +58,7 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
                                         name=name)
             else:
                 filled_cmd = cmd.format(infile=infile,
-                                    ofile=ofile)
+                                        ofile=ofile)
             params.append(filled_cmd)
     if test:
         print(params)
@@ -76,8 +75,8 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
     help="This script accept input directory(-i) which contains files with suffix(-s) and output directory(-o) which will stodge result with its name and new suffix (-ns). It could auto parellel your command into (-np) times. ")
 @click.option('-i', 'indir', help="input directory for iterations. ")
 @click.option('-o', 'odir', help="ouput directory for stodge the output files")
-@click.option('-s', 'suffix', default='', help="suffix of input files needed to be iterated within the indir,default is empty")
-@click.option('-ns', 'new_suffix', default='', help="new suffix of output files, default is empty")
+@click.option('-s', 'suffix', default=None, help="suffix of input files needed to be iterated within the indir,default is empty")
+@click.option('-ns', 'new_suffix', default=None, help="new suffix of output files, default is empty")
 @click.option('-np', 'num_parellel', default=10, help="num of processes could be parellel.. default is 10")
 @click.option('-f', 'force', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
 @click.option('-quiet', 'quiet', default=False, required=False, is_flag=True, help="overwrite the output files or not.")
