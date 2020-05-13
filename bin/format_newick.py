@@ -163,8 +163,10 @@ def cat(in_newick, in_newick2, out_newick, tree_format, new_format, replace):
         t.remove_child([_ for _ in t.children if _.name == replace][0])
         t.add_child(t1)
     text = t.write(format=new_format)
+
+
     with open(out_newick, 'w') as f1:
-        f1.write(text.replace('NoName', ''))
+        f1.write(text.replace('NoName', '').replace("):0",")I0_S100:0"))
 
 
 @cli.command()

@@ -8,31 +8,11 @@ from dating_workflow.step_script import convert_genome_ID_rev
 import plotly.express as px
 
 ncbi = NCBITaxa()
+metadata = "/home-user/thliao/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
 
-#
-# def convert_genome_ID(genome_ID):
-#     # for GCA_900078535.2
-#     # it will return
-#     return genome_ID.split('_')[-1].replace('.', 'v')
-#
-#
-# def convert_genome_ID_rev(genome_ID):
-#     # for 900078535v2
-#     # it will return
-#     return genome_ID.replace('v', '.')
-
-
-if len(sys.argv) != 3:
-    raise Exception()
-tree = sys.argv[1]
-metadata = sys.argv[2]
-# metadata =
-gids = Tree(tree).get_leaf_names()
-
-# leafid2gids = {_:convert_genome_ID_rev(_)
-#                for _ in leafids}
-
-# gids = set(leafid2gids.values())
+gids = [_
+        for _ in open('./all_1471.txt').read().split('\n')
+        if _.startswith('GCA')]
 gids = set(gids)
 gid2taxons_str = {}
 gid2name = {}
@@ -54,23 +34,10 @@ for g, tid in gid2taxid.items():
     gid2taxon[g] = r2n.get('phylum', '')
     if r2n.get('phylum', '') == 'Proteobacteria' and r2n.get('class', ''):
         gid2taxon[g] = r2n['class']
+    elif r2n.get('phylum', '') == "candidate division NC10":
+        gid2taxon[g] = "NC10"
     gid2taxons_str[g] = ';'.join([names[_] for _ in lineage[2:]])
 gid2taxon = {k: v for k, v in gid2taxon.items() if v}
-
-text = to_label(gid2name)
-os.makedirs('./itol_txt', exist_ok=1)
-with open('./itol_txt/names.txt', 'w') as f1:
-    f1.write(text)
-
-text = to_label(gid2taxons_str)
-os.makedirs('./itol_txt', exist_ok=1)
-with open('./itol_txt/taxons_names.txt', 'w') as f1:
-    f1.write(text)
-
-text = to_label({k: k for k in gid2name})
-with open('./itol_txt/reset_names.txt', 'w') as f1:
-    f1.write(text)
-
 
 # taxonomy annotation
 color_scheme = {'type': {'NOB': '#e41a1c', 'comammox': '#edc31d',
@@ -83,7 +50,11 @@ color_scheme = {'type': {'NOB': '#e41a1c', 'comammox': '#edc31d',
                                  'Alphaproteobacteria': '#8c613c',
                                  'Actinobacteria': '#11FF11',
                                  'Planctomycetes': '#FF66bb',
-                                 "Nitrospinae": "#4285f4"
+                                 "Nitrospinae": "#4285f4",
+                                 "Verrucomicrobia": "#E57373",
+                                 "CPR": "#74a45b",
+                                 "NC10": "#7986CB",
+                                 "Armatimonadetes": "#C86437",
                                  }}
 
 
@@ -102,11 +73,32 @@ def get_colors_general(ID2infos, now_info2style={}):
     return ID2infos, info2style
 
 
-id2info = gid2taxon
-id2info, info2color = get_colors_general({k:v for k,v in id2info.items() if v in color_scheme["phylum/class"]})
-text = to_color_strip(id2info, info2color, info_name='phylum')
+odir = './itol_txt'
+id2info, info2color = get_colors_general({k: v
+                                          for k, v in gid2taxon.items()
+                                          if v in color_scheme["phylum/class"]})
+id2info = {k: v
+               for k, v in id2info.items()
+               if v in color_scheme['phylum/class']}
+sub_info = {k: v
+            for k, v in color_scheme["phylum/class"].items()
+            if k in id2info.values()}
+text = to_color_strip(id2info, sub_info, info_name='phylum')
+with open(join(odir, 'phylum_annotate.txt'), 'w') as f1:
+    f1.write(text)
 
-with open('./itol_txt/phylum_annotate.txt', 'w') as f1:
+text = to_label(gid2name)
+os.makedirs('./itol_txt', exist_ok=1)
+with open('./itol_txt/names.txt', 'w') as f1:
+    f1.write(text)
+
+text = to_label(gid2taxons_str)
+os.makedirs('./itol_txt', exist_ok=1)
+with open('./itol_txt/taxons_names.txt', 'w') as f1:
+    f1.write(text)
+
+text = to_label({k: k for k in gid2name})
+with open('./itol_txt/reset_names.txt', 'w') as f1:
     f1.write(text)
 
 id2info = gid2taxon
@@ -158,3 +150,4 @@ text = get_text_anno(id2val,extra_replace={"#HEIGHT_FACTOR,1":"HEIGHT_FACTOR\t1.
                                            })
 with open('./itol_txt/over20p_completeness_text.txt','w') as f1:
     f1.write(text)
+
