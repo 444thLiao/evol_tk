@@ -43,7 +43,8 @@ def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False, cmd=c
             if new_suffix == '':
                 new_suffix = ''
             else:
-                new_suffix = f'.{new_suffix}'
+                new_suffix = f".{new_suffix.strip('.')}"
+                suffix = f".{suffix.strip('.')}"
             ofile = join(odir,
                          basename(infile).replace(suffix,
                                                   new_suffix))
