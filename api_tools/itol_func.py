@@ -83,7 +83,7 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
     # if turn omitted_other on, it will not draw the circle
-
+    #
     template_text = open(dataset_binary_template).read()
     if not manual_v:
         all_v = list(sorted(set([_ for v in ID2info.values() for _ in v if _])))

@@ -97,7 +97,7 @@ def get_ko_infos(kos):
         kos = set(kos)
     kegg_info_tab = f"{target_dir}/ko_info.tab"
     ko2info_dict = {row.split('\t')[0].split(':')[-1]: row.strip('\n').split('\t')[1]
-                    for row in open(kegg_info_tab)
+                    for row in tqdm(open(kegg_info_tab))
                     if row.split('\t')[0].split(':')[-1] in kos}
     return ko2info_dict
 
@@ -116,7 +116,7 @@ def get_br_info(br, kos=None):
         iter_br = list(br)
 
     infos = []
-    for br in iter_br:
+    for br in tqdm(iter_br):
         if not br.startswith('br'):
             new_br = f"br:{br}"
         else:
@@ -132,10 +132,10 @@ def get_br_info(br, kos=None):
         elif isinstance(kos, dict):
             iter_ko = kos[br]
 
-        for ko in iter_ko:
+        for ko in tqdm(iter_ko):
             hier_dict = {'top': br_name, 'top_br': br}
             level_index = string.ascii_letters[26:]  # ABCDEF...
-            for row in hier_infos[1:]:
+            for row in tqdm(hier_infos[1:]):
                 if not row:
                     continue
                 if row[0] in level_index:

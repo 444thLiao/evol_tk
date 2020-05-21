@@ -3,7 +3,7 @@
 This script is mainly wrriten for debugging the mcmctree problems.
 Of course it could run mainly mcmctree from input tree, alignment, aaRatemodel.
 
-For now, it is designed for protein alignment only. 
+For now, it is designed for both protein and nucleotide.
 
 For better understanding the usage of this script, see usage_dating.md
 """

@@ -204,6 +204,10 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
 
     with open(outfile, 'w') as f1:
         for gid, seq in gid2record.items():
+            if set(str(seq)) == {'-'}:
+                print(f"{gid} contains only gaps or missing data ")
+                continue
+
             f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix)}\n')
             f1.write(f'{seq}\n')
 
