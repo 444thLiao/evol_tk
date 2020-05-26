@@ -10,7 +10,7 @@ cmd_template = f"diamond blastp -q {query_fa} -d -o query_result/nr_retrieve_all
 # params explanations
 #  choose 1e-20 evalue to filter out false positive
 # k choose 0 to get all aligned results instead of default 25
-# max-hsps 1 for just remained the highest one for each query sequence
+# max-hsps 1 for just remained the highest one for each subject sequence
 # output format 6 for formatting the out result
 
 

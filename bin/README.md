@@ -21,7 +21,7 @@ Such as,
 `pid2tax.py` with proteins ids, it will retrieve taxonomy ID of its relative organism.
 `pid2genome.py` with proteins ids, it will retrieve genome assembly id and it could countinue pass it to `pid2bio.py`
 `pid2basic.py` with proteins ids, it will do all three above scripts staff and combined them into one tab.
-`pid2all.py`, beside the basic informations, it will do the `pid2bio.py` staffs.
+`pid2all.py`, beside the basic information, it will do the `pid2bio.py` staffs.
 
 
 

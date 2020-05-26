@@ -51,8 +51,8 @@ def main(infile, odir, force=False, redo=False):
     basic_df.to_csv(join(odir, ofile), sep='\t', index=1)
     ofile = 'pro2full_info.tab'
     df3 = pd.read_csv(join(odir, 'pro2Bioinfo.tab'), sep='\t', index_col=0)
-    df3.index = [_.split('_')[1] for _ in df3.index]
-    basic_df_aID = [_.split('_')[1] for _ in basic_df.assembly_ID]
+    df3.index = [_.replace("GCA_","_").replace("GCF_","_") for _ in df3.index]
+    basic_df_aID = [_.replace("GCA_","_").replace("GCF_","_") for _ in basic_df.assembly_ID]
     df3 = df3.reindex(basic_df_aID)
     df3.index = basic_df.index
     full_df = pd.concat([df3, basic_df], axis=1)
