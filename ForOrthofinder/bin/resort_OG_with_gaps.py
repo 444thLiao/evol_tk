@@ -1,11 +1,13 @@
+import os
 import pickle
 from os.path import *
-import os
+
 import click
 import pandas as pd
 from tqdm import tqdm
 
-tmp_dir = join(os.environ.get('HOME'),'.tmp')
+tmp_dir = join(os.environ.get('HOME'), '.tmp')
+
 
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1].split(' ')[0]
@@ -21,7 +23,6 @@ def order_a_column(Acolumn, ordered_locus):
     locus2OG = {v: k for k, v in Acolumn.items()}
 
     sorted_column = sorted(Acolumn, key=lambda x: ordered_locus[preprocess_locus_name(x)])
-
     sorted_series = pd.Series(sorted_column,
                               index=[locus2OG[locus] for locus in sorted_column])
     return sorted_series
@@ -68,7 +69,7 @@ def get_next_locus_idx(genome_ordered_col, used_locus, ordered_locus):
         return next_locus_idx
 
 
-def main(infile, backbone_column_idx=0):
+def main(infile, backbone_column_idx=0, subset_columns=None):
     OG_df = pd.read_csv(infile, sep='\t', index_col=0, low_memory=False)
     sub_idx = OG_df.index[OG_df.applymap(lambda x: ',' in str(x)).any(1)]
     # tmp
@@ -102,8 +103,9 @@ def main(infile, backbone_column_idx=0):
         used_genome = backbone_column_idx
     gap_OGs = OG_df.index[backbone_column_ori.isna()]
     gap_OG_df = OG_df.loc[gap_OGs, :]
+    gap_OG_df = gap_OG_df.loc[~gap_OG_df.isna().all(1), :]
     genome2order_tuple = pickle.load(open(join(tmp_dir, 'genome2order_tuple'), 'rb'))
-    ordered_locus = genome2order_tuple[used_genome]
+    ordered_locus = genome2order_tuple[used_genome][0]
     # ordered_locus = [_ for v in ordered_locus for _ in v]  
     # This is mainly for expanding locus located at multiple contigs into a linear ordered list
     ordered_locus = {preprocess_locus_name(locus): _
@@ -112,14 +114,15 @@ def main(infile, backbone_column_idx=0):
     order_OG_without_gap = list(backbone_c.index)
     order_OG_df = OG_df.reindex(backbone_c.index)
     # only backbone, without inserted genes
-    tqdm.write("%s OG need to be reinserted into an ordered table" % len(gap_OGs))
+    tqdm.write("%s OG need to be reinserted into an ordered table" % gap_OG_df.shape[0])
 
     for gap_OG, row in tqdm(gap_OG_df.iterrows(),
                             total=gap_OG_df.shape[0]):
         used_genome, used_locus = [(genome, locus)
                                    for genome, locus in row.items()
                                    if not pd.isna(locus)][0]
-        ordered_locus = genome2order_tuple[used_genome]
+
+        ordered_locus = genome2order_tuple[used_genome][0]
         # ordered_locus = [v for v in ordered_locus]
         ordered_locus = {preprocess_locus_name(locus): _ for _, locus in enumerate(ordered_locus)}
         # iterative to get the first not nan one to order whole row.
@@ -129,6 +132,15 @@ def main(infile, backbone_column_idx=0):
         # find the next locus(need to justify the order of this index, not arbitrary +1), and take the index as the insert index.
         order_OG_without_gap.insert(insert_idx, gap_OG)
     final_OG_df = pd.concat([order_OG_df, gap_OG_df]).reindex(order_OG_without_gap)
+
+    if subset_columns is not None:
+        subset_columns = open(subset_columns).read().split('\n')
+        diff_c = final_OG_df.columns.differences(subset_columns)
+        if len(diff_c) != 0:
+            raise IOError(f"{len(diff_c)} names provided in subset_columns isn't detected at your table.")
+        same_c = [_ for _ in subset_columns if _ in final_OG_df.columns]
+        final_OG_df = final_OG_df.loc[:, same_c]
+        final_OG_df = final_OG_df.loc[~final_OG_df.isna().all(1), :]
     return final_OG_df
 
 
@@ -136,9 +148,9 @@ def main(infile, backbone_column_idx=0):
 @click.option("-i", "infile", help="input file. The file must be file after splitting duplicated OG.")
 @click.option("-o", "ofile", help='output file')
 @click.option("-bc", "backbone_column", help='which columns you want to taken as backbone. default is the first one', default=0)
-@click.option("-sub", "subset_columns", help= "subset list of genomes in the header of the table")
-def cli(infile, ofile, backbone_column,subset_columns):
-    final_OG_df = main(infile, backbone_column)
+@click.option("-sub", "subset_columns", help="subset list of genomes in the header of the table")
+def cli(infile, ofile, backbone_column, subset_columns):
+    final_OG_df = main(infile, backbone_column, subset_columns)
     final_OG_df.to_csv(ofile, sep='\t', index=1)
 
 
