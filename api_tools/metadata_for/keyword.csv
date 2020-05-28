@@ -33,7 +33,7 @@ treatment plant	non-marine	aquatic
 digester	non-marine	others	
 spring	non-marine	aquatic	
 geothermal	non-marine	others	
--associated	non-marine	others	host-associated
+-associated	""	others	host-associated
 Human Microbiome Project	non-marine	others	host-associated
 mouse	non-marine	others	host-associated
 mice	non-marine	others	host-associated

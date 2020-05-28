@@ -5,9 +5,9 @@
 ## Part description
 ### api
 
-This directory is the major part which contains these script for processing Orthofinder output.
+This directory is the major part which contains script for processing Orthofinder output.
 
-Below I will simple introduce these scripts
+Simple introduction of these scripts:
 
 1. getSeqofOG.py
 

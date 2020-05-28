@@ -26,9 +26,9 @@ def access_intermedia(obj, suffix='', redo=False):
     """
     It is mainly stodge intermediate result from previous results
     or provide a way to access it.
-    Normally it should archieve into current directory with md5 hashed file name.
+    Normally it should archive into current directory with md5 hashed file name.
     
-    obj is necessary, normally it is a list of IDs/dictionary which also needed to genereate md5 hashed file name.
+    obj is necessary, normally it is a list of IDs/dictionary which also needed to generate md5 hashed file name.
     ofile is optional depend on what you want
     """
     nameofid = list(set(obj))
@@ -82,7 +82,7 @@ def parse_id(infile, columns=0):
 
 def unpack_gb(prot_t):
     """
-    For standarizing unpack process from genbank
+    For standardizing unpack process from genbank formatted file
     """
     if not prot_t:
         return {}

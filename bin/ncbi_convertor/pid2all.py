@@ -27,7 +27,7 @@ def main(infile, odir, force=False, redo=False):
     if redo:
         ext_cmd += ' -redo '
 
-    cmd = 'python3 {script} -i {infile} -o {ofile} '
+    cmd = """python3 {script} -i "{infile}" -o "{ofile}" """
     tqdm.write("executing each convetor one by one")
     with open(join(odir, 'ncbi_convertor.log'), 'w') as logf:
         script = join(current_dir, 'pid2tax.py')

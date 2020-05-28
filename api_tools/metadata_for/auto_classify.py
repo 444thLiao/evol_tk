@@ -1,12 +1,12 @@
 import pandas as pd
 from tqdm import tqdm
 from os.path import join,expanduser
-from api_tools.itol_func import *
+# from api_tools.itol_func import *
 
 fpath = expanduser("~/script/evolution_relative/api_tools/metadata_for/keyword.csv")
 
 
-kw_df =  pd.read_csv(fpath,sep='\t',index_col=0)
+kw_df = pd.read_csv(fpath,sep='\t',index_col=0)
 kw_dict = kw_df.to_dict(orient='index')
 
 def _classificated(ori_df):

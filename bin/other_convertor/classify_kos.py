@@ -147,5 +147,6 @@ def get_br_info(br, kos=None):
                     _cache = pd.DataFrame.from_dict({ko: hier_dict}, orient='index')
                     infos.append(_cache)
                     # infos[ko] = hier_dict
-                    break
+                    # break
+                    # if break, only the first hierarchy would be retrieved
     return infos
