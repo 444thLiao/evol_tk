@@ -33,7 +33,7 @@ Simple introduction of these scripts:
         
 2. resort_OG_with_gaps.py & split_out_duplicated.py
 
-> split out duplicated.py: 
+> split out duplication within single Orthologs  
 > 
 > `-i`: Normally, the `Orthogroups.csv` with locus name
 > 

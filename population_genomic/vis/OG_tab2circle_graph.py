@@ -10,8 +10,12 @@ def coord2polar(x, total, final_degree=360):
     return theta
 
 
-def parse_OG_tab(infile, final_degree=350):
+def parse_OG_tab(infile, subset_samples=None,final_degree=350):
     OG_df = pd.read_csv(infile, sep='\t', index_col=0)
+    if subset_samples is not None:
+        subset_samples = open(subset_samples).read().split('\n')
+        OG_df = OG_df.loc[:,subset_samples]
+        OG_df = OG_df.loc[~OG_df.isna().all(1),:]
     num_rows = OG_df.shape[0]
     plot_data = defaultdict(list)
     width = final_degree / num_rows
@@ -68,7 +72,8 @@ def draw_barplot(plot_data):
 @click.option("-o", "output_file")
 @click.option("-s", "subset_samples")
 def cli(input_OG, output_file, subset_samples):
-    pass
+
+    plot_data = parse_OG_tab(input_OG)
 
 
 if __name__ == '__main__':

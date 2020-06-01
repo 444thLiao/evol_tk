@@ -6,7 +6,7 @@ import click
 import pandas as pd
 from tqdm import tqdm
 
-tmp_dir = join(os.environ.get('HOME'), '.tmp')
+tmp_dir = join(os.environ.get('PWD'), '.tmp')
 
 
 def preprocess_locus_name(locus):
@@ -105,8 +105,8 @@ def main(infile, backbone_column_idx=0, subset_columns=None):
     gap_OG_df = OG_df.loc[gap_OGs, :]
     gap_OG_df = gap_OG_df.loc[~gap_OG_df.isna().all(1), :]
     genome2order_tuple = pickle.load(open(join(tmp_dir, 'genome2order_tuple'), 'rb'))
-    ordered_locus = genome2order_tuple[used_genome][0]
-    # ordered_locus = [_ for v in ordered_locus for _ in v]  
+    ordered_locus = genome2order_tuple[used_genome]
+    ordered_locus = [_ for v in ordered_locus for _ in v]
     # This is mainly for expanding locus located at multiple contigs into a linear ordered list
     ordered_locus = {preprocess_locus_name(locus): _
                      for _, locus in enumerate(ordered_locus)}
@@ -122,8 +122,8 @@ def main(infile, backbone_column_idx=0, subset_columns=None):
                                    for genome, locus in row.items()
                                    if not pd.isna(locus)][0]
 
-        ordered_locus = genome2order_tuple[used_genome][0]
-        # ordered_locus = [v for v in ordered_locus]
+        ordered_locus = genome2order_tuple[used_genome]
+        ordered_locus = [v for v in ordered_locus]
         ordered_locus = {preprocess_locus_name(locus): _ for _, locus in enumerate(ordered_locus)}
         # iterative to get the first not nan one to order whole row.
         genome_ordered_col = list(OG_df.reindex(order_OG_without_gap).loc[:, used_genome])

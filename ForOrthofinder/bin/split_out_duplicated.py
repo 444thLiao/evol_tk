@@ -4,7 +4,7 @@ import os
 import pickle
 from collections import defaultdict, Counter
 from glob import glob
-from os.path import join, dirname, basename, exists, abspath,expanduser
+from os.path import join, dirname, basename, exists, abspath, expanduser
 
 import click
 import gffutils
@@ -14,7 +14,8 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 
-tmp_dir = join(os.environ.get('HOME'), '.tmp')
+tmp_dir = join(os.environ.get('PWD'), '.tmp')
+
 
 def process_path(path):
     if not '/' in path:
@@ -24,6 +25,7 @@ def process_path(path):
     if path.startswith('.'):
         path = abspath(path)
     return path
+
 
 def preprocess_locus_name(locus):
     locus = str(locus).split('|')[-1].split(' ')[0]
@@ -173,35 +175,33 @@ def get_neighbour(target_locus,
     return left_n, right_n
 
 
-def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
+def split_out(row, genome2order_tuple, locus2group, remained_bar=True, num_neighbour=5):
     # core function for splitting the group apart
     # convert neighbours of each target_locus into a counter matrix
     collect_df = []
     locus2genome = {}
-    for genome, locus in row.items():
-        if locus == 'nan' or pd.isna(locus):
+    # retrieve neighbour genes and convert in into a OG2number_of_presence table
+    for genome, locus_raw in row.items():
+        if locus_raw == 'nan' or pd.isna(locus_raw):
             continue
-        for locus in locus.split(','):
+        for locus in locus_raw.split(','):
+            locus = locus.strip()
             target_locus = preprocess_locus_name(locus)
             _order_tuple = genome2order_tuple[genome]
             locus2genome[target_locus] = genome
             left_n, right_n = get_neighbour(target_locus,
                                             _order_tuple,
                                             locus2group,
-                                            num_neighbour=5)
+                                            num_neighbour=num_neighbour)
             if (not left_n and not right_n):
-                # None is beacuse it could not find this locus at gff
+                # None is because it could not find this locus at gff
                 # empty is because no neighbour besides it
                 _df = pd.DataFrame(index=[target_locus])
             else:
                 _df = pd.DataFrame.from_dict({target_locus: Counter(left_n + right_n)}, orient='index')
             collect_df.append(_df)
-    # make the concat slower actually. leave it as a failed tried???
-    # final_columns = set([c for df in collect_df
-    #                      for c in df.columns])
-    # collect_df = [df.reindex(columns=final_columns)
-    #               for df in collect_df]
     this_df = pd.concat(collect_df, axis=0, sort=True)
+    # index are the target locus, columns are OG, values represent the number of OG present at the neighbours of target locus
     # calculated the euclidean distance and use nearestNeighbors to get the nearestNeighbors
     # for each locus
     eu_dist = pd.DataFrame(squareform(pdist(this_df.fillna(0))),
@@ -213,6 +213,7 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
     order_neighbors = pd.np.apply_along_axis(lambda x: this_df.index[x], 0, order_neighbors)
     target_l2neighbours = dict(zip(this_df.index,
                                    order_neighbors))
+    # from target locus to their neighbors ordered with descending distances.
     # get the name instead of index.
     remained_genomes = set([locus2genome[_]
                             for _ in target_l2neighbours.keys()])
@@ -234,7 +235,6 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True):
             # in theory, _cache won't empty?
             group2infos[group_num][other_g] = "%s|%s" % (locus2genome[_cache[0]],
                                                          _cache[0]) if remained_bar else _cache[0]
-            # print(_cache[0]) # debug for
             target_l2neighbours.pop(_cache[0])
             remained_genomes = set([locus2genome[_]
                                     for _ in target_l2neighbours.keys()])
@@ -261,26 +261,22 @@ def get_locus2group(df):
 
 
 def run(args):
-    group_id, OG_df, genome2order_tuple, locus2group, remained_bar = args
-    row = OG_df.loc[group_id, :]
-    new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar)
+    group_id, row, genome2order_tuple, locus2group, remained_bar, num_neighbour = args
+    new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar, num_neighbour=num_neighbour)
     new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
     new_df.index = [group_id + '_%s' % _
                     for _ in new_df.index]
-    # modify_df = modify_df.drop(group_id)
-    # modify_df = modify_df.append(new_df, sort=True)
     return group_id, new_df
 
 
-def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20):
-    if not exists(abspath(prokka_o)):
-        raise Exception("wrong prokka output directory")
-    OG_df = pd.read_csv(infile, sep='\t', index_col=0)
-    # get all index which contains duplicated genes
-    SUFFIX = 'gff'
-    if use_gbk:
-        SUFFIX = 'gbk'
+def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_neighbour=5):
     if not use_pattern:
+        if not exists(abspath(prokka_o)):
+            raise Exception("wrong prokka output directory")
+    OG_df = pd.read_csv(infile, sep='\t', index_col=0, low_memory=False)
+    # get all index which contains duplicated genes
+    SUFFIX = 'gbk' if use_gbk else 'gff'
+    if use_pattern:
         genomes_files = list(glob(prokka_o))
         if len(genomes_files) == 0:
             raise IOError(f"the pattern `{prokka_o}` doesn't exists. Please check it again")
@@ -333,7 +329,8 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20):
 
     params = []
     for group_id in tqdm(sub_idx):
-        params.append((group_id, OG_df, genome2order_tuple, locus2group, remained_bar))
+        row = OG_df.loc[group_id, :]
+        params.append((group_id, row, genome2order_tuple, locus2group, remained_bar, num_neighbour))
     tqdm.write('running with multiprocessing ')
     with mp.Pool(processes=threads) as tp:
         r = list(tqdm(tp.imap(run, params), total=len(params)))
@@ -357,12 +354,13 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20):
 @click.option("-i", "infile", help='input file. normally is the concated orthfinder output')
 @click.option("-o", "ofile", help='output file')
 @click.option("-p", "prokka_dir", help='path of prokka output')
-@click.option("-gbk", "use_gbk", help='normally it use gff')
+@click.option("-gbk", "use_gbk", is_flag=True, default=False, help='normally it use gff')
 @click.option('-t', "threads", help="number of threads used [20]", default=20)
-@click.option("-use_pattern", "use_pattern",
+@click.option("-use_pattern", "use_pattern", is_flag=True, default=False,
               help="If you don't have a direct directory contained prokka output. You could pass a pattern e.g './*/*.gbk' to `-p` to retrieve genomic information. ")
-def cli(infile, prokka_dir, ofile, use_gbk, use_pattern, threads):
-    modify_df = main(infile, prokka_dir, use_gbk, use_pattern, threads)
+@click.option('-nn', "num_neighbour", default=5, help="number of neighbour genes to consider during splitting duplications. Larger values would slower the program [5]")
+def cli(infile, prokka_dir, ofile, use_gbk, use_pattern, threads, num_neighbour):
+    modify_df = main(infile, prokka_dir, use_gbk, use_pattern, threads, num_neighbour)
     ofile = process_path(ofile)
     if not dirname(ofile):
         os.makedirs(dirname(ofile))

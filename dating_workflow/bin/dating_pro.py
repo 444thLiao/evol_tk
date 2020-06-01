@@ -101,9 +101,12 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, us
     params = {'ndata': ndata,
               'seqfile': in_phyfile,
               'treefile': in_treefile,
+
               'outfile': './01_out'}
     if use_nucl:
         params['seqtype'] = '0'
+    else:
+        params['seqtype'] = '2'
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
