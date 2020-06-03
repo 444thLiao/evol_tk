@@ -135,7 +135,7 @@ def main(infile, ofile, start_at='protein', force=False, redo=False):
         if isinstance(x, str) else x)
         full_df = full_df.drop(['GI', 'relative biosample'], axis=1)
     else:
-        raise Exception('too complicated to deal with it')
+        raise Exception('too much genomes to process')
 
     if exists(ofile) and not force:
         tqdm.write("detect existing " + ofile +

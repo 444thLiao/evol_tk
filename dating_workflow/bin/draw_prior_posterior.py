@@ -14,28 +14,25 @@ from dating_workflow.figtree2itol import get_node_name
 prior_set = '~/data/AOB/dating/160g/batch_prior_nucl/*/mcmc.txt'
 posterior_set = '~/data/AOB/dating/160g/nucl/clock2_diff_cal/*run1/mcmc.txt'
 
-prior_df = []
-prior_list = glob(expanduser(prior_set))
-for mcmc in tqdm(prior_list):
-    name = basename(dirname(mcmc)).replace('_prior', '').split('_')[-1]
-    _df = pd.read_csv(mcmc, sep='\t', index_col=0)
-    _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
-    prior_df.append((name, _df))
-# prior_df = list(sorted(prior_df,key=lambda x: int(x[0].split('set')[-1])))
-prior_df = dict(prior_df)
 
-posterior_CIs = {}
-posterior_df = []
-f = glob(expanduser(posterior_set))
-for mcmc in tqdm(f):
-    if exists(join(dirname(mcmc), 'FigTree.tre')):
-        name = basename(dirname(mcmc)).replace('_run1', '').replace('repeat_', '').split('_')[-1]
+def read_multi_mcmc(f_pattern,
+                    rename_f= lambda x: basename(dirname(x)).replace('_prior', '').split('_')[-1]):
+    df_list = []
+    CIs_dict = {}
+    mcmc_list = glob(expanduser(f_pattern))
+    for mcmc in tqdm(mcmc_list):
+        name = rename_f(mcmc)
         _df = pd.read_csv(mcmc, sep='\t', index_col=0)
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
-        posterior_df.append((name, _df))
-        posterior_CIs[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
-# posterior_df = list(sorted(posterior_df,key=lambda x: int(x[0].split('set')[-1])))
-posterior_df = dict(posterior_df)
+        df_list.append((name, _df))
+    # prior_df = list(sorted(prior_df,key=lambda x: int(x[0].split('set')[-1])))
+        CIs_dict[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
+    # posterior_CIs[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
+    df_dict = dict(df_list)
+    return df_dict,CIs_dict
+prior_df,prior_CIs = read_multi_mcmc(prior_set)
+posterior_df,posterior_CIs = read_multi_mcmc(posterior_set,
+                           rename_f=lambda x: basename(dirname(x)).replace('_run1', '').replace('repeat_', '').split('_')[-1])
 
 shared_set = set(prior_df).intersection(posterior_df)
 shared_set = list(sorted(shared_set, key=lambda x: int(x.split('set')[-1])))

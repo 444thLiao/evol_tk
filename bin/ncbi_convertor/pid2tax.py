@@ -72,19 +72,25 @@ def GI2tax(id2gi, redo=False):
     return pid2info_dict
 
 
-def main(infile, ofile, force=False, redo=False):
+def main(infile, ofile, start_at='protein',force=False, redo=False):
     order_id_list, id2annotate = parse_id(infile)
     id2gi = {}
-    if isinstance(id2annotate[order_id_list[0]], dict):
-        # it is a dict, so it contains other information or implemented GI. it may be passed over.
-        if 'GI' in id2annotate[order_id_list[0]]:
-            print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
-            if not force:
-                id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
-        # todo: re-implemented original information into `ofile` from `infile`
+    if start_at == 'protein':
+        if isinstance(id2annotate[order_id_list[0]], dict):
+            # it is a dict, so it contains other information or implemented GI. it may be passed over.
+            if 'GI' in id2annotate[order_id_list[0]]:
+                print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
+                if not force:
+                    id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
+            # todo: re-implemented original information into `ofile` from `infile`
+        else:
+            # no header, just a list of IDs
+            pass
+    elif start_at == 'genome':
+        exit("Use genome2tax instead")
     else:
-        # no header, just a list of IDs
-        pass
+        raise SyntaxError('wrong input of start_at')
+
     if not id2gi:
         id2gi = pid2GI(order_id_list, redo=redo)
 
@@ -109,7 +115,10 @@ def main(infile, ofile, force=False, redo=False):
 @click.option('-s', 'start_at', help='start from `protein` or `genome` ID.  etc, protein id maybe like `CBH97221.1`. genome ID should like `GCF_900176205.1` ', default='protein',
               required=False)
 def cli(infile, ofile, force, redo, start_at):
-    main(infile, ofile, force, redo)
+    start_at = start_at.strip().lower()
+    if start_at not in ['genome', 'protein']:
+        raise IOError('Unexpected params of start_at. giving `%s`?? ' % start_at)
+    main(infile, ofile,start_at, force, redo)
 
 
 if __name__ == "__main__":
