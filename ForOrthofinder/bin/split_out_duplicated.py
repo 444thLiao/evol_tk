@@ -5,9 +5,10 @@ import pickle
 from collections import defaultdict, Counter
 from glob import glob
 from os.path import join, dirname, basename, exists, abspath, expanduser
-import numpy as np
+
 import click
 import gffutils
+import numpy as np
 import pandas as pd
 from Bio import SeqIO
 from scipy.spatial.distance import pdist, squareform
@@ -28,7 +29,10 @@ def process_path(path):
 
 
 def preprocess_locus_name(locus):
-    locus = str(locus).split('|')[-1].split(' ')[0]
+    if '|' in locus:
+        locus = str(locus).split('|')[-1].split(' ')[0]
+    else:
+        locus = str(locus).split(' ')[0]
     locus = locus.strip()
     return locus
 
@@ -59,6 +63,8 @@ def get_all_gene_pos(genome_file, CDS_names=None, id_spec='ID'):
     if not exists(genome_file):
         tqdm.write('wrong file path[%s]... pass it' % genome_file)
         return None, None
+    if genome_file.endswith('gbk'):
+        print("warning, it might use gff to parse gbk file. please pass `-gbk`  ")
     db = read_gff(genome_file, id_spec)
     if CDS_names is None:
         all_CDS = [_.id for _ in db.all_features()]
@@ -175,16 +181,17 @@ def get_neighbour(target_locus,
     return left_n, right_n
 
 
-def split_out(row, locus2group, remained_bar=True, num_neighbour=5):
+def split_out(row, genome2order_tuple,
+              locus2group, remained_bar=True, num_neighbour=5):
     # core function for splitting the group apart
     # convert neighbours of each target_locus into a counter matrix
     # todo: improve the efficiency
     collect_df = []
     locus2genome = {}
     # retrieve neighbour genes and convert in into a OG2number_of_presence table
-    row = {genome:locus_raw
+    row = {genome: locus_raw
            for genome, locus_raw in row.items()
-           if not (locus_raw == 'nan' or pd.isna(locus_raw)) }
+           if not (locus_raw == 'nan' or pd.isna(locus_raw))}
     for genome, locus_raw in row.items():
         for locus in locus_raw.split(','):
             locus = locus.strip()
@@ -209,10 +216,15 @@ def split_out(row, locus2group, remained_bar=True, num_neighbour=5):
     eu_dist = pd.DataFrame(squareform(pdist(this_df.fillna(0))),
                            index=this_df.index,
                            columns=this_df.index)
-    model = NearestNeighbors(metric='precomputed', n_neighbors=this_df.shape[0] - 1)
+    model = NearestNeighbors(metric='precomputed',
+                             n_neighbors=this_df.shape[0] - 1,
+                             n_jobs=-1
+                             )
     model.fit(eu_dist.values)
     order_neighbors = model.kneighbors(return_distance=False)
-    order_neighbors = np.apply_along_axis(lambda x: this_df.index[x], 0, order_neighbors)
+    order_neighbors = np.apply_along_axis(lambda x: this_df.index[x],
+                                          0,
+                                          order_neighbors)
     target_l2neighbours = dict(zip(this_df.index,
                                    order_neighbors))
     # from target locus to their neighbors ordered with descending distances.
@@ -234,7 +246,7 @@ def split_out(row, locus2group, remained_bar=True, num_neighbour=5):
                       for other_locus in target_neighbours
                       if other_locus in target_l2neighbours and locus2genome[other_locus] == other_g
                       ]
-            # in theory, _cache won't empty?
+            # in theory, _cache won't empty? so I directly use _cache[0] here...
             group2infos[group_num][other_g] = "%s|%s" % (locus2genome[_cache[0]],
                                                          _cache[0]) if remained_bar else _cache[0]
             target_l2neighbours.pop(_cache[0])
@@ -263,8 +275,9 @@ def get_locus2group(df):
 
 
 def run(args):
-    group_id, row, locus2group, remained_bar, num_neighbour = args
+    group_id, genome2order_tuple, row, locus2group, remained_bar, num_neighbour = args
     new_group2info = split_out(row,
+                               genome2order_tuple,
                                locus2group,
                                remained_bar=remained_bar,
                                num_neighbour=num_neighbour)
@@ -320,8 +333,6 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
         os.makedirs(tmp_dir, exist_ok=True)
         pickle.dump(genome2gene_info, open(join(tmp_dir, 'genome2gene_info'), 'wb'))
         pickle.dump(genome2order_tuple, open(join(tmp_dir, 'genome2order_tuple'), 'wb'))
-    global genome2order_tuple
-    global genome2gene_info
 
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
@@ -337,16 +348,34 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
     modify_df = OG_df.copy()
     tqdm.write('collecting all required info, start to split duplicated OG. More duplications would make it slower.')
 
+    # due to the large memory usage of `genoem2order_tuple` and `locus2group`
+    # Use manager of multiprocessing to share the large data among all processes
+    manager = mp.Manager()
+    _d = manager.dict()
+    _d2 = manager.dict()
+    for k, v in genome2order_tuple.items():
+        _d[k] = v
+    for k, v in locus2group.items():
+        _d2[k] = v
     params = []
-    for group_id in tqdm(sub_idx):
+    for group_id in sub_idx:
         row = OG_df.loc[group_id, :]
-        params.append((group_id, row, locus2group, remained_bar, num_neighbour))
+        params.append((group_id,
+                       _d,
+                       row,
+                       _d2,
+                       remained_bar,
+                       num_neighbour,
+                       ))
+
     tqdm.write('running with multiprocessing ')
     with mp.Pool(processes=threads) as tp:
-        r = list(tqdm(tp.imap(run, params), total=len(params)))
+        r = list(tqdm(tp.imap_unordered(run, params),
+                      total=len(params)))
+    manager.shutdown()
 
     modify_df = modify_df.drop([_[0] for _ in r])
-    tqdm.write('mergeing all return results, it may take a while')
+    tqdm.write('merge all return results, it may take a while')
     added_df = pd.concat([_[1] for _ in r], axis=0, sort=True)
     added_df = added_df.reindex(columns=modify_df.columns)
     _df = pd.concat([modify_df, added_df], axis=1, sort=True)

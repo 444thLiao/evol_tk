@@ -3,6 +3,7 @@ import pickle
 from os.path import *
 
 import click
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -10,7 +11,10 @@ tmp_dir = join(os.environ.get('PWD'), '.tmp')
 
 
 def preprocess_locus_name(locus):
-    locus = str(locus).split('|')[-1].split(' ')[0]
+    if '|' in locus:
+        locus = str(locus).split('|')[-1].split(' ')[0]
+    else:
+        locus = str(locus).split(' ')[0]
     locus = locus.strip()
     return locus
 
@@ -30,7 +34,7 @@ def order_a_column(Acolumn, ordered_locus):
 
 def get_next_locus_idx(genome_ordered_col, used_locus, ordered_locus):
     reorder_col = sorted(genome_ordered_col + [used_locus],
-                         key=lambda x: ordered_locus[preprocess_locus_name(x)] if not pd.isna(x) else pd.np.inf)
+                         key=lambda x: ordered_locus[preprocess_locus_name(x)] if not pd.isna(x) else np.inf)
     # this is a ascending list
     # add this locus into these OG, and reorder it.
     # maybe reverse alignment, so it should compare the next and up idx.
@@ -123,12 +127,18 @@ def main(infile, backbone_column_idx=0, subset_columns=None):
                                    if not pd.isna(locus)][0]
 
         ordered_locus = genome2order_tuple[used_genome]
-        ordered_locus = [v for v in ordered_locus]
-        ordered_locus = {preprocess_locus_name(locus): _ for _, locus in enumerate(ordered_locus)}
+        # it return nested list
+        # each list is sets of genes within a contig
+        # it need to flatten this concated list
+        ordered_locus = [_ for v in ordered_locus for _ in v]
+        ordered_locus = {preprocess_locus_name(locus): _
+                         for _, locus in enumerate(ordered_locus)}
         # iterative to get the first not nan one to order whole row.
         genome_ordered_col = list(OG_df.reindex(order_OG_without_gap).loc[:, used_genome])
         # order this genome among all order_OG_without_gap OGs. (may nan, but for backbone is all full and order.)
-        insert_idx = get_next_locus_idx(genome_ordered_col, used_locus, ordered_locus)
+        insert_idx = get_next_locus_idx(genome_ordered_col,
+                                        used_locus,
+                                        ordered_locus)
         # find the next locus(need to justify the order of this index, not arbitrary +1), and take the index as the insert index.
         order_OG_without_gap.insert(insert_idx, gap_OG)
     final_OG_df = pd.concat([order_OG_df, gap_OG_df]).reindex(order_OG_without_gap)
