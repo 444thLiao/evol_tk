@@ -5,7 +5,7 @@ import pickle
 from collections import defaultdict, Counter
 from glob import glob
 from os.path import join, dirname, basename, exists, abspath, expanduser
-
+import numpy as np
 import click
 import gffutils
 import pandas as pd
@@ -175,15 +175,17 @@ def get_neighbour(target_locus,
     return left_n, right_n
 
 
-def split_out(row, genome2order_tuple, locus2group, remained_bar=True, num_neighbour=5):
+def split_out(row, locus2group, remained_bar=True, num_neighbour=5):
     # core function for splitting the group apart
     # convert neighbours of each target_locus into a counter matrix
+    # todo: improve the efficiency
     collect_df = []
     locus2genome = {}
     # retrieve neighbour genes and convert in into a OG2number_of_presence table
+    row = {genome:locus_raw
+           for genome, locus_raw in row.items()
+           if not (locus_raw == 'nan' or pd.isna(locus_raw)) }
     for genome, locus_raw in row.items():
-        if locus_raw == 'nan' or pd.isna(locus_raw):
-            continue
         for locus in locus_raw.split(','):
             locus = locus.strip()
             target_locus = preprocess_locus_name(locus)
@@ -210,7 +212,7 @@ def split_out(row, genome2order_tuple, locus2group, remained_bar=True, num_neigh
     model = NearestNeighbors(metric='precomputed', n_neighbors=this_df.shape[0] - 1)
     model.fit(eu_dist.values)
     order_neighbors = model.kneighbors(return_distance=False)
-    order_neighbors = pd.np.apply_along_axis(lambda x: this_df.index[x], 0, order_neighbors)
+    order_neighbors = np.apply_along_axis(lambda x: this_df.index[x], 0, order_neighbors)
     target_l2neighbours = dict(zip(this_df.index,
                                    order_neighbors))
     # from target locus to their neighbors ordered with descending distances.
@@ -261,8 +263,11 @@ def get_locus2group(df):
 
 
 def run(args):
-    group_id, row, genome2order_tuple, locus2group, remained_bar, num_neighbour = args
-    new_group2info = split_out(row, genome2order_tuple, locus2group, remained_bar=remained_bar, num_neighbour=num_neighbour)
+    group_id, row, locus2group, remained_bar, num_neighbour = args
+    new_group2info = split_out(row,
+                               locus2group,
+                               remained_bar=remained_bar,
+                               num_neighbour=num_neighbour)
     new_df = pd.DataFrame.from_dict(new_group2info, orient='index')
     new_df.index = [group_id + '_%s' % _
                     for _ in new_df.index]
@@ -290,7 +295,7 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
                          if exists(join(prokka_o, f'{_}.{SUFFIX}'))]
     # use glob and wildcard to capture all real gff files
     if exists(join(tmp_dir, 'genome2gene_info')):
-        tqdm.write('detect previous intermediated file, used it to process')
+        tqdm.write('detect previous intermediated file, used it to in following analysis')
         genome2gene_info = pickle.load(open(join(tmp_dir, 'genome2gene_info'), 'rb'))
         genome2order_tuple = pickle.load(open(join(tmp_dir, 'genome2order_tuple'), 'rb'))
     else:
@@ -311,13 +316,18 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
             if _gene_info is not None:
                 genome2gene_info[genome_name] = _gene_info
                 genome2order_tuple[genome_name] = _order_tuple
-        # storge temp data
+        # stodge temp data
         os.makedirs(tmp_dir, exist_ok=True)
         pickle.dump(genome2gene_info, open(join(tmp_dir, 'genome2gene_info'), 'wb'))
         pickle.dump(genome2order_tuple, open(join(tmp_dir, 'genome2order_tuple'), 'wb'))
+    global genome2order_tuple
+    global genome2gene_info
+
     OG_df = OG_df.loc[:, list(genome2gene_info.keys())]
     OG_df = OG_df.loc[~OG_df.isna().all(1), :]
+    # remove the columns which doesn't have provided genomic files.
     if OG_df.applymap(lambda x: '|' in str(x)).any().any():
+        # special indicators for personal preference
         remained_bar = True
     else:
         remained_bar = False
@@ -330,7 +340,7 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
     params = []
     for group_id in tqdm(sub_idx):
         row = OG_df.loc[group_id, :]
-        params.append((group_id, row, genome2order_tuple, locus2group, remained_bar, num_neighbour))
+        params.append((group_id, row, locus2group, remained_bar, num_neighbour))
     tqdm.write('running with multiprocessing ')
     with mp.Pool(processes=threads) as tp:
         r = list(tqdm(tp.imap(run, params), total=len(params)))

@@ -48,10 +48,13 @@ GCA_005192855     Proteobacteria  Epsilonproteobacteria  Campylobacterales  Camp
         value=[],
     )
     for idx, col in tqdm(enumerate(df.columns)):
+
         if idx != 0:
             pre_col = df.columns[idx - 1]
-            uniq_vals = [(_1, _2) for _1, _2 in df.loc[:, [pre_col, col]].drop_duplicates().values
+            uniq_vals = [(_1, _2)
+                         for _1, _2 in df.loc[:, [pre_col, col]].drop_duplicates().values
                          if _2]
+            # here I filter out the no defined names in this level
         else:
             _uv = df[col].unique()
             uniq_vals = zip([''] * len(_uv), _uv)
