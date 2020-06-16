@@ -6,8 +6,9 @@ import numpy as np
 
 sys.path.insert(0, dirname(__file__))
 from ete3 import Tree
-
-indir = '/home-user/thliao/template_txt/'
+import os
+home = os.getenv("HOME")
+indir = f'{home}/template_txt/'
 if not exists(indir):
     indir = join(dirname(__file__), 'itol_template')
 
@@ -21,7 +22,8 @@ matrix_like_template = join(indir, "dataset_external_shapes_template.txt")
 dataset_text_template = join(indir, "dataset_text_template.txt")
 dataset_gradient_template = join(indir, "dataset_gradient_template.txt")
 dataset_piechart_template = join(indir, "dataset_piechart_template.txt")
-
+dataset_simplebar_template = join(indir, "dataset_simplebar_template.txt")
+collapse_template = join(indir,"collapse.txt")
 
 def deduced_legend(info2color, info_name='dataset', sep=','):
     # for implemented a legend with dictinonary named info2color.
@@ -77,6 +79,19 @@ def annotate_outgroup(ID2infos, info2style, ):
     return template_text + annotate_text
 
 
+def to_simple_bar(id2val):
+    # id2value, could be {ID: number /string like number}
+
+    template_text = open(dataset_simplebar_template).read() + '\n'
+
+    c = []
+    for gid, val in id2val.items():
+        val = str(val)
+        c.append(f"{gid},{val}")
+
+    return template_text + '\n'.join(c)
+
+
 def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False,
                     extra_replace={}):
     # id2info, could be {ID:list/set}
@@ -102,13 +117,12 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
     template_text = template_text.format(legend_text=legend_text,
                                          dataset_label=info_name)
     if extra_replace:
-        for k,v in extra_replace.items():
-            template_text = template_text.replace(k,v)
+        for k, v in extra_replace.items():
+            template_text = template_text.replace(k, v)
     return template_text + '\n' + annotate_text
 
 
 def to_color_strip(ID2info, info2color, info_name='dataset'):
-
     # id2info, could be {ID: name}
     # info2color: could be {name: color,}
 
@@ -178,6 +192,7 @@ def to_color_branch(ID2info, info2color, dataset_name='color branch', no_legend=
                                   BACKGROUND_COLOR='')
              for ID, color in id2col.items()]
     return template_text + '\n'.join(rows)
+
 
 def to_color_range(ID2info, info2color, dataset_name='color branch', no_legend=True):
     # add color range
@@ -307,19 +322,21 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
                                          maximum_size='50')
     return template_text + annotate_text
 
-def get_text_anno(id2val,extra_replace):
+
+def get_text_anno(id2val, extra_replace):
     template_text = open(matrix_like_template).read()
     template_text = template_text.format(dataset_label="numerical text",
                                          field_color="rgba(0,255,0,0)",
                                          field_labels='\t'.join(['text']))
     annotate_text = []
-    for id,v in id2val.items():
-        annotate_text.append(f"{id}\t{str(round(v,2))}")
+    for id, v in id2val.items():
+        annotate_text.append(f"{id}\t{str(round(v, 2))}")
     if extra_replace:
-        for k,v in extra_replace.items():
-            template_text = template_text.replace(k,v)
+        for k, v in extra_replace.items():
+            template_text = template_text.replace(k, v)
     # template_text = template_text.replace("#HEIGHT_FACTOR,1","HEIGHT_FACTOR\t1.5")
     return template_text + '\n'.join(annotate_text)
+
 
 def to_matrix_shape(ID2categorical_v, dataset_label, color='#000000'):
     # id2info, could be {ID: name}
@@ -436,6 +453,13 @@ def pie_chart(id2cat2val,
               cat2style,
               dataset_label='habitat prob',
               ):
+    """
+
+    :param id2cat2val:
+    :param cat2style:
+    :param dataset_label:
+    :return:
+    """
     template_text = open(dataset_piechart_template).read()
     annotate_text = []
     all_cat = [_k for k, v in id2cat2val.items() for _k in v]

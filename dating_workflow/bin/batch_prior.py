@@ -18,11 +18,12 @@ from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_n
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
 @click.option('-np', 'num_parellel', default=10)
+@click.option('-f', 'force', is_flag=True, default=False)
 def cli(in_phyfile, in_treefile,
         odir,
         use_nucl,
         num_parellel,
-        sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
+        sampfreq, print_f, rgene_gamma, sigma2_gamma, clock,force):
     in_phyfile = process_path(in_phyfile)
     ndata = get_num_phy_file(in_phyfile)
     params_dict = {'sampfreq': str(sampfreq),
@@ -47,7 +48,8 @@ def cli(in_phyfile, in_treefile,
                                ndata=ndata,
                                use_nucl=use_nucl,
                                params_dict=params_dict)
-        cmds.append(cmd)
+        if (not exists(join(new_odir,'FigTree.tre'))) or force:
+            cmds.append(cmd)
     with mp.Pool(processes=num_parellel) as tp:
         _ = list(tqdm((tp.imap(run, cmds)), total=len(cmds)))
 

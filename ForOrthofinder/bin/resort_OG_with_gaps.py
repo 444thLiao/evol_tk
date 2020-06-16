@@ -1,3 +1,17 @@
+"""
+The steps for resorting the OG_df
+1. each value within the table must be a single locus instead of comma separated multiple locus
+2. extract the rows which doesn't have locus on the backbone
+3. reinsert extracted row from step2 into the raw_df(after removing step2 rows) based on
+    a. use the leftmost locus/genome as standard to move whole row
+    b. find the nearest locus (include up and down / left and right)
+    c. considerate the position of current locus and its neighbours
+    d. deal with flipped situation or normal order situation
+    e. return the locus it need to insert. (it might insert the up or down, it depends)
+    f. insert, the inserted list would gradually growth
+
+"""
+
 import os
 import pickle
 from os.path import *
@@ -37,7 +51,7 @@ def get_next_locus_idx(genome_ordered_col, used_locus, ordered_locus):
                          key=lambda x: ordered_locus[preprocess_locus_name(x)] if not pd.isna(x) else np.inf)
     # this is a ascending list
     # add this locus into these OG, and reorder it.
-    # maybe reverse alignment, so it should compare the next and up idx.
+    # maybe reverse alignment (flipped), so it should compare the next and up idx.
     used_locus_idx = reorder_col.index(used_locus)
     if used_locus_idx == len(reorder_col) - 1:
         # the last one, no next, it mean it is the largest one
@@ -58,10 +72,12 @@ def get_next_locus_idx(genome_ordered_col, used_locus, ordered_locus):
         up_locus = reorder_col[used_locus_idx - 1]
         up_locus_idx = genome_ordered_col.index(up_locus)
 
-    if (next_locus_idx == -1 and next_locus_idx == 0) or (up_locus_idx == -1 and next_locus_idx == len(genome_ordered_col)):
+    if (next_locus_idx == -1 and next_locus_idx == 0) or \
+            (up_locus_idx == -1 and next_locus_idx == len(genome_ordered_col)):
         # insert into the end
         return len(genome_ordered_col)
-    elif (next_locus_idx == -1 and next_locus_idx == len(genome_ordered_col)) or (up_locus_idx == -1 and next_locus_idx == 0):
+    elif (next_locus_idx == -1 and next_locus_idx == len(genome_ordered_col)) or \
+            (up_locus_idx == -1 and next_locus_idx == 0):
         # insert into the front
         return 0
 
