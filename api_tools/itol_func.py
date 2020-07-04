@@ -114,7 +114,10 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
     annotate_text = '\n'.join(annotate_text)
 
     legend_text = deduced_legend2(info2style, all_v, sep='\t', same_colors=same_color)
-    template_text = template_text.format(legend_text=legend_text,
+    
+    real_legend_text = f"LEGEND_TITLE\t{info_name}\n" + legend_text.replace('FIELD','LEGEND')
+    
+    template_text = template_text.format(legend_text=legend_text +'\n' + real_legend_text,
                                          dataset_label=info_name)
     if extra_replace:
         for k, v in extra_replace.items():
@@ -285,7 +288,7 @@ def to_color_Clade(ID2info, info2color, tree,
     return template_text + '\n'.join(rows)
 
 
-def to_node_symbol(in_tree, dataset_name='bootstrap'):
+def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='50'):
     # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
@@ -319,7 +322,7 @@ def to_node_symbol(in_tree, dataset_name='bootstrap'):
     annotate_text = '\n'.join(rows)
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text='',
-                                         maximum_size='50')
+                                         maximum_size=maxsize)
     return template_text + annotate_text
 
 

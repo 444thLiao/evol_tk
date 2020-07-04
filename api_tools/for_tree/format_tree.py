@@ -95,8 +95,8 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
             count += 1
     if outfile is None:
         return t
-    t.write(outfile=outfile, format=3)
-    return t
+
+    return t.write(outfile=outfile, format=3)
 
 
 def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):

@@ -11,8 +11,8 @@ Except for the normally and regular parameters like `-i` `-o`. There are some sp
 
 like
 > `-s`, You could retrieve metadata directly from protein id by passing it.
-> `-f` force to overwrite
-> `-redo` This script will use some cache for quick re-analysis. You could pass it to avoid some bugs.
+> `-f` force to overwrite output
+> `-redo` This script will use some cache for quick re-analysis. You could **pass it to avoid some bugs**.
 
 The above one is the major one.
 Besides that, It has some extra toolkits for extract some other info from NCBI.

@@ -74,7 +74,7 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command(help="simply remove all internal names of the tree")
 @click.option('-i', 'in_newick')
 @click.option('-o', 'out_newick', default=None)
 @click.option('-f', 'tree_format', default=0)
@@ -84,7 +84,7 @@ def erase(in_newick, out_newick, tree_format):
     t.write(outfile=out_newick, format=tree_format)
 
 
-@cli.command()
+@cli.command(help="sort the tree. default nodes with less leaves placed bottom. ")
 @click.option('-i', 'in_newick')
 @click.option('-o', 'out_newick', default=None)
 @click.option('-f', 'tree_format', default=0)
@@ -95,7 +95,7 @@ def sort(in_newick, out_newick, tree_format, descend):
     t.write(outfile=out_newick, format=tree_format)
 
 
-@cli.command()
+@cli.command(help="")
 @click.option('-i', 'in_newick')
 @click.option('-o', 'out_newick', default=None)
 @click.option('-f', 'tree_format', default=0)
@@ -114,11 +114,12 @@ def reroot(in_newick, out_newick, tree_format, root_name):
 @click.option('-i', 'in_newick')
 @click.option('-o', 'out_newick', default=None)
 @click.option('-f', 'tree_format', default=0)
-@click.option('-f_to', 'new_format', default=0)
-def rename(in_newick, out_newick, tree_format, new_format):
+def rename(in_newick, out_newick, tree_format):
     out_newick = process_IO(in_newick, out_newick)
     t = renamed_tree(in_newick, format=tree_format)
-    t.write(outfile=out_newick, format=new_format)
+    with open(out_newick,'w') as f1:
+        f1.write(t)
+    # t.write(outfile=out_newick, format=new_format)
 
 
 @cli.command()

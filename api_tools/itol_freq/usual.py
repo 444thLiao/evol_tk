@@ -8,7 +8,8 @@ from dating_workflow.step_script import convert_genome_ID_rev
 import plotly.express as px
 
 ncbi = NCBITaxa()
-metadata = "/home-user/thliao/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
+home = os.getenv("HOME")
+metadata = f"{home}/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
 
 gids = [_
         for _ in open('./all_1471.txt').read().split('\n')
@@ -132,7 +133,7 @@ with open('./itol_txt/27genes.txt', 'w') as f1:
 
 # annotate completeness
 
-ids = open('./used_genomes_over20p_bac120.list').read().split('\n')
+ids = open('./id_list/used_genomes_over20p_bac120.list').read().split('\n')
 ids = [_ for _ in ids if _]
 completeness_df = pd.read_csv('./checkM_result_phylum/merged_result.csv', sep='\t', index_col=0)
 sub_df = completeness_df.reindex(ids)
@@ -149,5 +150,13 @@ text = get_text_anno(id2val,extra_replace={"#HEIGHT_FACTOR,1":"HEIGHT_FACTOR\t1.
                                            "#VERTICAL_GRID,1":"VERTICAL_GRID\t0",
                                            })
 with open('./itol_txt/over20p_completeness_text.txt','w') as f1:
+    f1.write(text)
+
+
+# bootstrap
+intree = ''
+tree = Tree(intree,format=3)
+text = to_node_symbol(tree)
+with open('./itol_txt/bp_rrna.txt','w') as f1:
     f1.write(text)
 

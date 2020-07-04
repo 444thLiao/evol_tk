@@ -8,17 +8,18 @@ from dating_workflow.bin.dating_pro import run_nodata_prior, process_path, get_n
 
 
 @click.command()
-@click.option('-i', '--in_phy', 'in_phyfile')
-@click.option('-it', '--in_tree', 'in_treefile')
-@click.option('-o', 'odir')
-@click.option('-nucl', 'use_nucl', is_flag=True, default=False)
+@click.option('-i', '--in_phy', 'in_phyfile',help="single alignment file with phylo format")
+@click.option('-it', '--in_tree', 'in_treefile',help="single tree file with newick format with calibration information")
+@click.option('-o', 'odir',help="output directory")
+@click.option('-nucl', 'use_nucl', is_flag=True, default=False,help="If you use nucleotide sequence, you should pass is. But if you pass it when you use amino acids, if will raise silent errors.")
 @click.option('-sf', 'sampfreq', default='2')
 @click.option('-p', 'print_f', default='2')
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
 @click.option('-c', 'clock', default='2')
-@click.option('-np', 'num_parellel', default=10)
-@click.option('-f', 'force', is_flag=True, default=False)
+@click.option('-np', 'num_parellel', default=10, help="Number of processes you want to parallel")
+@click.option('-f', 'force', is_flag=True, default=False,
+              help="Overwrite previous results or not.")
 def cli(in_phyfile, in_treefile,
         odir,
         use_nucl,

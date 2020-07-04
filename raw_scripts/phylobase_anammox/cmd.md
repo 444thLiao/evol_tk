@@ -16,3 +16,9 @@ mkdir run2; pb -d ../dating_for/phy_files/83g_concat.phy -T ./tree.newick -cal c
 
 # run prior only
 mkdir prior_only; pb -d ../dating_for/phy_files/83g_concat.phy -T ./tree.newick -cal cal_set14.txt -lg -ugam -sb 0.05 -bd -prior -ncat 1 -dgam 1 prior_only/test &
+
+
+# output results accordingly
+# formal out
+readdiv -x 10000 run1/test & ; readdiv -x 10000 run2/test & ; readdiv -x 10000 prior_only/test &
+# python read
