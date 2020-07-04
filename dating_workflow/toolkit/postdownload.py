@@ -35,20 +35,28 @@ def get_faa_from_prokka_r(infile, odir, sample_name, prokka_p, return_cmd=False)
     return f'{oprefix}.faa'
 
 
-def cli(indir, odir=None, reformatted_name=False, force=False, prokka_p=" `which prokka`"):
+def cli(indir, odir=None, tmp_dir=None,
+        reformatted_name=True,
+        force=False,
+        prokka_p=" `which prokka`"):
+    # process the directory
     if odir is None:
         odir = './genome_protein_files'
-    all_dir = [_
-               for _ in glob(join(indir, '**', 'GC*'), recursive=True)
-               if isdir(_)]
-    tmp_dir = './tmp'
+    if tmp_dir is None:
+        tmp_dir = join(odir, 'tmp')
+        # tmp_dir = join(odir, 'tmp')
     if not exists(tmp_dir):
         os.makedirs(tmp_dir, exist_ok=True)
 
+    all_dir = [_
+               for _ in glob(join(indir, '**', 'GC*'),
+                             recursive=True)
+               if isdir(_)]
     for p_dir in tqdm(all_dir):
         p_files = glob(join(p_dir, '*.faa.gz'))
         ofile = join(odir, basename(p_dir)) + '.faa'
         if exists(ofile) and not force:
+            # if the output faa exists and not force, pass  it
             continue
         if not p_files:
             fna_file = glob(join(p_dir, '*.fna.gz'))[0]
@@ -88,12 +96,20 @@ def cli(indir, odir=None, reformatted_name=False, force=False, prokka_p=" `which
                         format='fasta-2line')
 
 
-@click.command()
-@click.option("-i", "indir", default="./genbank", )
-@click.option("-o", "odir", default="./genome_protein_files")
-@click.option("-id", "id_file", default='./assembly_ids.list')
-@click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-def main(indir, odir, id_file, force):
+@click.command(help="""
+It mainly for preprocess downloaded genomes using prokka or its original proteins files.
+It includes
+1. check the missing ID
+2. perform prokka and rename the ID
+3. generate metadata.csv
+""")
+@click.option("-i", "indir", help="input directory [./genbank]", default="./genbank", )
+@click.option("-o", "odir", help="input directory [./genome_protein_files]", default="./genome_protein_files")
+@click.option("-tmp", "tmp_dir", help='For saving time and space, you could assign tmp_dir [./tmp]',
+              default=None)
+@click.option("-id", "id_file", help="input directory [./assembly_ids.list]", default='./assembly_ids.list')
+@click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
+def main(indir, odir, tmp_dir, id_file, force):
     if not exists(indir):
         raise IOError("input dir doesn't exist")
     if not exists(odir):
@@ -111,7 +127,6 @@ def main(indir, odir, id_file, force):
     all_ids = [_ for _ in all_ids if _]
     all_ids = set(all_ids)
     # from id list
-
     metadatas = open(base_tab).read().split('\n')
     rows = [_
             for _ in tqdm(metadatas)
@@ -127,10 +142,9 @@ def main(indir, odir, id_file, force):
     if set(all_ids) != set(all_g_ids):
         print('inconsistent id, missing ids: ' + '\n'.join(all_ids.difference(all_g_ids)))
 
-    cli(indir, odir, force)
+    cli(indir, odir, tmp_dir=tmp_dir, force=force)
 
 
 if __name__ == "__main__":
     main()
     # python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/postdownload.py -i ./genbank -o ./genome_protein_files
-

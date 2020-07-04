@@ -23,6 +23,9 @@ Such as,
 `pid2basic.py` with proteins ids, it will do all three above scripts staff and combined them into one tab.
 `pid2all.py`, beside the basic information, it will do the `pid2bio.py` staffs.
 
+### download genomes
+
+Normally, you need to download genomes via ftp of NCBI
 
 
 ### Tree for
