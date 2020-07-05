@@ -27,7 +27,9 @@ def get_faa_from_prokka_r(infile, odir, sample_name, prokka_p, return_cmd=False)
     locustag = convert_genome_ID(sample_name)
     oprefix = f"{odir}/{sample_name}/{sample_name}"
     if exists(f'{oprefix}.faa'):
+        # To existing prokka output, it would not rerun it.
         return f'{oprefix}.faa'
+
     cmd = f'{prokka_p} {infile} --outdir {odir}/{sample_name} --force --prefix {sample_name} --locustag {locustag} --cpus 0 '
     if return_cmd:
         return cmd
@@ -132,10 +134,7 @@ def main(indir, odir, tmp_dir, id_file, force):
             for _ in tqdm(metadatas)
             if _.split('\t')[0] in all_g_ids]
 
-    if exists('./metadata.csv'):
-        f1 = open('./metadata.csv', 'a')
-    else:
-        f1 = open('./metadata.csv', 'w')
+    f1 = open(join(odir,'metadata.csv'),'w')
     f1.write(metadatas[1].strip('# ') + '\n')
     f1.write('\n'.join(rows))
     f1.close()

@@ -11,10 +11,11 @@ from tqdm import tqdm
 
 from dating_workflow.step_script import _parse_hmmscan
 
-pfam_db = '/home-user/thliao/data/protein_db/bac120/Pfam.v32.sub6.hmm'
-tigfam_db = '/home-user/thliao/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
+HOME = os.getenv("HOME")
+pfam_db = f'{HOME}/data/protein_db/bac120/Pfam.v32.sub6.hmm'
+tigfam_db = f'{HOME}/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
 
-__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extrat_bac120.py'
+__file__ = f'{HOME}/script/evolution_relative/dating_workflow/step_script/extrat_bac120.py'
 bac120_list = join(dirname(__file__), 'bac120.tsv')
 id_list = [row.split('\t')[0] for row in open(bac120_list) if row]
 id_list = id_list[1:]  # remove first row
@@ -36,14 +37,15 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
     params = []
     if not exists(odir):
         os.makedirs(odir)
+    hmmscan = '`which hmmscan`'
     for pfile in protein_files:
         gname = basename(pfile).replace('.faa', '')
         if db_id == 'pfam':
             ofile = f'{odir}/PFAM/{gname}.out'
-            cmd = f"/usr/local/bin/hmmscan --tblout {ofile} --acc --noali --notextw --cpu 40 {pfam_db} {pfile}"
+            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu 40 {pfam_db} {pfile}"
         elif db_id == 'tigrfam':
             ofile = f'{odir}/TIGRFAM/{gname}.out'
-            cmd = f"/usr/local/bin/hmmscan --tblout {ofile} --acc --noali --notextw --cpu 40 {tigfam_db} {pfile}"
+            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu 40 {tigfam_db} {pfile}"
         # else:
         #     ofile = f'{odir}/{db_id}/{gname}.out'
         #     assert exists(f"{tigfam_db_dir}/{db_id}.HMM")
@@ -184,7 +186,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
         gids = list(set([_ for _ in gids if _]))
     in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
     protein_files = glob(in_proteins)
-    gids = []
+    # gids = []
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")

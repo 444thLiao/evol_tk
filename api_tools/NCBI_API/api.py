@@ -2,6 +2,8 @@
 Implement a python usable library for API provided by NCBI recently
 source url : https://api.ncbi.nlm.nih.gov/datasets/v1alpha/
 
+Up to date, it doesn't show any special features need  to be used. Thus, it will be putted aside.
+
 Updated by Tianhua liao
 at 20200703
 """

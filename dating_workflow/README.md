@@ -1,5 +1,10 @@
 
-# workflow For dating
+# workflow For dating (updated pipelines at 20200704)
+
+# get taxid and download them with 'bin/ngd.py'  ??? it seems like I re-built a wheel.
+
+python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi
+
 ## 0. get all taxid from a give phylum
 
 `python3 ~/script/evolution_relative/bin/get_aid_from_tid.py -t 200795 -n Chloroflexi -o ~/test/    `
@@ -19,7 +24,7 @@
 
 ## 3.2 bac120 for building tree
 
-`python3 /home-user/thliao/script/evolution_relative/dating_workflow/step_script/extract_bac120.py -in_p './genome_protein_files' -in_a ./bac120_annotate -o ./bac120_extract/seq_e50 -evalue 1e-50`
+`python3 ~/script/evolution_relative/dating_workflow/step_script/extract_bac120.py -in_p './genome_protein_files' -in_a ./bac120_annotate -o ./bac120_extract/seq_e50 -evalue 1e-50`
 
 ## checkM
 `python3 ~/script/evolution_relative/bin/batch_run/batch_checkM.py -i ./genome_protein_files -o ./checkM_result_bacteria -s faa -t phylum Planctomycetes`

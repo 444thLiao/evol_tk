@@ -14,7 +14,8 @@ from tqdm import tqdm
 
 from dating_workflow.step_script import _parse_blastp
 
-resource_dir = "/home-user/thliao/data/protein_db/dating_resource"
+HOME = os.getenv("HOME")
+resource_dir = f"{HOME}/data/protein_db/dating_resource"
 cog_db = f"{resource_dir}/cog25_rps/sing"
 cdd_tbl = f"{resource_dir}/cog/cddid_all.tbl"
 list27_genes = f"{resource_dir}/single.cog.list"
@@ -49,7 +50,7 @@ def annotate_cog(protein_file_list, cog_out_dir):
         gname = basename(f).replace('.faa', '')
         # for cdd
         ofile = f'{cog_out_dir}/{gname}.out'
-        cmd = f"/home-user/software/blast/latest/bin/rpsblast -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-3  -out {ofile}"
+        cmd = f"`which rpsblast` -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-3  -out {ofile}"
         if not os.path.exists(ofile):
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))

@@ -12,7 +12,7 @@ from subprocess import check_call
 import click
 from tqdm import tqdm
 
-command_template = 'checkm taxonomy_wf -t 10 {extra_option} -x {infile} {tax} {indir} {odir}'
+command_template = '`which checkm` taxonomy_wf -t 10 {extra_option} -x {infile} {tax} {indir} {odir}'
 
 
 def run(args):
