@@ -42,7 +42,7 @@ def from_name2ids(phylum_name):
                 collect_info.append(row)
                 collect_ids.append(rows[0])
     return collect_ids, collect_info
-
+# cids,cinfo = from_name2ids("Verrucomicrobia")
 
 def main(name, odir, formats):
     # name = "Nitrospirae;"

@@ -3,7 +3,7 @@
 
 # get taxid and download them with 'bin/ngd.py'  ??? it seems like I re-built a wheel.
 
-python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi
+python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi -F fasta,genbank -o ./
 
 ## 0. get all taxid from a give phylum
 
@@ -11,7 +11,7 @@ python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi
 
 ## 1. Download data
 
-`ncbi-genome-download -s genbank -F fasta,genbank -A assembly_ids.list -p 20 -N bacteria`
+`ncbi-genome-download -s genbank -F fasta,genbank -A assembly_ids.list -p 20 bacteria`
 
 
 ## 2. postdownload (annotate the genomes or extract proteins sequences)
@@ -54,7 +54,7 @@ python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi
 
 
 ## 6. extract conserved proteins
-`python3 /home-user/thliao/script/evolution_relative/dating_workflow/extract_cog.py 'raw_genome_proteins/*.faa' ./target_genes ./cog25_multiple`
+`python3 ~/script/evolution_relative/dating_workflow/step_script/extract_cog25.py -in_p './rawdata' -in_a ./cog25_annotate -o ./cog25_single/seq_e20 -evalue 1e-20
 > first is the faa files from prokka 
 > second is the annotated output from rpsblast
 > third is the extracted faa file from cog25.  
