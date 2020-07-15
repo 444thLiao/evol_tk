@@ -11,12 +11,10 @@ python ~/script/evolution_relative/bin/ngd.py -n Chloroflexi -F fasta,genbank -o
 
 ## 1. Download data
 
-`ncbi-genome-download -s genbank -F fasta,genbank -A assembly_ids.list -p 20 bacteria`
-
+`ncbi-genome-download -s genbank -F fasta,genbank -A assembly_ids.list -p 20 -N bacteria`
 
 ## 2. postdownload (annotate the genomes or extract proteins sequences)
-`python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/postdownload.py ./genbank ./genome_protein_files`
-
+`python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/postdownload.py -i ./genbank -o ./ -tmp ./tmp -id ./all_aids.list`
 
 ## 3.1 Run Orthofinder For building a genome/species tree
 

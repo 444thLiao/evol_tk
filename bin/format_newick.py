@@ -118,7 +118,7 @@ def rename(in_newick, out_newick, tree_format):
     out_newick = process_IO(in_newick, out_newick)
     t = renamed_tree(in_newick, format=tree_format)
     with open(out_newick,'w') as f1:
-        f1.write(t)
+        f1.write(t.write(format=3))
     # t.write(outfile=out_newick, format=new_format)
 
 

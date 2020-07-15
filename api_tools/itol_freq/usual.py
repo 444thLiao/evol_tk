@@ -12,7 +12,7 @@ home = os.getenv("HOME")
 metadata = f"{home}/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
 
 gids = [_
-        for _ in open('./all_1471.txt').read().split('\n')
+        for _ in open('./rawdata/ids.list').read().split('\n')
         if _.startswith('GCA')]
 gids = set(gids)
 gid2taxons_str = {}
@@ -75,6 +75,7 @@ def get_colors_general(ID2infos, now_info2style={}):
 
 
 odir = './itol_txt'
+os.makedirs('./itol_txt', exist_ok=True)
 id2info, info2color = get_colors_general({k: v
                                           for k, v in gid2taxon.items()
                                           if v in color_scheme["phylum/class"]})
@@ -89,12 +90,11 @@ with open(join(odir, 'phylum_annotate.txt'), 'w') as f1:
     f1.write(text)
 
 text = to_label(gid2name)
-os.makedirs('./itol_txt', exist_ok=1)
 with open('./itol_txt/names.txt', 'w') as f1:
     f1.write(text)
 
 text = to_label(gid2taxons_str)
-os.makedirs('./itol_txt', exist_ok=1)
+
 with open('./itol_txt/taxons_names.txt', 'w') as f1:
     f1.write(text)
 

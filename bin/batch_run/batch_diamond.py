@@ -90,14 +90,14 @@ def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=defau
 
 
 @click.command()
-@click.option('-i', 'indir')
-@click.option('-o', 'odir')
+@click.option('-i', 'indir', help="input directory for iterations. ")
+@click.option('-o', 'odir', help="ouput directory for stodge the output files")
 @click.option('-s', 'suffix', help='suffix for files', default='faa')
 @click.option('-np', 'num_parellel', default=10)
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
-@click.option('-db', 'db', default=default_db)
+@click.option('-db', 'db', default=default_db,help="database you used. default is kegg database [%s] . Maybe you should replace it with your own database. " % default_db)
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 def cli(indir, odir, num_parellel, suffix, genome_list, force, db):
     if genome_list is None:

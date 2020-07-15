@@ -46,7 +46,7 @@ def GI2tax(id2gi, redo=False):
     for result in tqdm(results + _results):
         aid = result['AccessionVersion']
         _aid = [_ for _ in id2gi if _ in aid]
-        # sometime, pid maybe a part of some intace one.
+        # sometime, pid maybe a part of some intact one.
         if not _aid:
             continue
         else:
