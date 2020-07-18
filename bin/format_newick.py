@@ -110,6 +110,17 @@ def reroot(in_newick, out_newick, tree_format, root_name):
     t.write(outfile=out_newick, format=tree_format)
 
 
+@cli.command(help="mid point root the given tree")
+@click.option('-i', 'in_newick')
+@click.option('-o', 'out_newick', default=None)
+@click.option('-f', 'tree_format', default=0)
+def mproot(in_newick, out_newick, tree_format):
+    out_newick = process_IO(in_newick, out_newick)
+    t = Tree(in_newick,tree_format)
+    mp_n = t.get_midpoint_outgroup()
+    t.set_outgroup(mp_n)
+    t.write(outfile=out_newick, format=tree_format)
+
 @cli.command()
 @click.option('-i', 'in_newick')
 @click.option('-o', 'out_newick', default=None)
