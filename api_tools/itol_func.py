@@ -93,7 +93,7 @@ def to_simple_bar(id2val):
 
 
 def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False,
-                    extra_replace={}):
+                    extra_replace={},no_legend= False):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
@@ -116,7 +116,8 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
     legend_text = deduced_legend2(info2style, all_v, sep='\t', same_colors=same_color)
     
     real_legend_text = f"LEGEND_TITLE\t{info_name}\n" + legend_text.replace('FIELD','LEGEND')
-    
+    if no_legend:
+        real_legend_text = ''
     template_text = template_text.format(legend_text=legend_text +'\n' + real_legend_text,
                                          dataset_label=info_name)
     if extra_replace:
@@ -288,7 +289,7 @@ def to_color_Clade(ID2info, info2color, tree,
     return template_text + '\n'.join(rows)
 
 
-def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='50'):
+def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='15'):
     # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
@@ -297,7 +298,10 @@ def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='50'):
     id2support = {}
     for n in tree.traverse():
         if (not n.is_leaf()) and n.name:
-            support_v = int(n.name.split('_S')[-1])
+            try:
+                support_v = int(n.name.split('_S')[-1])
+            except:
+                support_v = 100
             id2support[n.name] = support_v
 
     # ID,symbol,size,color,fill,position,label
