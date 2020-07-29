@@ -109,7 +109,7 @@ It includes
 @click.option("-o", "odir", help="input directory [./genome_protein_files]", default="./genome_protein_files")
 @click.option("-tmp", "tmp_dir", help='For saving time and space, you could assign tmp_dir [./tmp]',
               default=None)
-@click.option("-id", "id_file", help="input directory [./assembly_ids.list]", default='./assembly_ids.list')
+@click.option("-id", "id_file", help="input directory. Default is retrieving dir startswith GC. ", default=None)
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 def main(indir, odir, tmp_dir, id_file, force):
     if not exists(indir):
@@ -125,9 +125,12 @@ def main(indir, odir, tmp_dir, id_file, force):
     all_g_ids = set([basename(_)
                      for _ in glob(join(indir, 'bacteria', '*'))])
     # from downloaded dir
-    all_ids = open(id_file).read().split('\n')
-    all_ids = [_ for _ in all_ids if _]
-    all_ids = set(all_ids)
+    if id_file is None:
+        all_ids = all_g_ids
+    else:
+        all_ids = open(id_file).read().split('\n')
+        all_ids = [_ for _ in all_ids if _]
+        all_ids = set(all_ids)
     # from id list
     metadatas = open(base_tab).read().split('\n')
     rows = [_

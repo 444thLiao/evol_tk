@@ -19,8 +19,6 @@ if not exists(all_seq):
                 SeqIO.write(record, f1, format='fasta-2line')
                 f1.flush()
 
-
-# 
 def get_seq_by_annotation(in_file, ofile, keyword):
     all_seq = './all_seqs.faa'
     if isinstance(keyword, str):

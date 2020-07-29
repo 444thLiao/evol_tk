@@ -22,7 +22,8 @@ def from_name2ids(phylum_name):
     for _ in phylum_names:
         if not tid.get(_):
             print(f" '{_}'' not found. please check the name")
-    tids = [tid.get(_, [None])[0] for _ in phylum_names
+    tids = [tid.get(_, [None])[0]
+            for _ in phylum_names
             if tid.get(_)]
 
     descend_ids = []
@@ -30,7 +31,7 @@ def from_name2ids(phylum_name):
         _descend_ids = ncbi.get_descendant_taxa(tid,
                                                 intermediate_nodes=True)
         descend_ids += _descend_ids
-    print(f"in total, {len(descend_ids)} were found. ")
+    print(f"in total, {len(descend_ids)} taxids were found. ")
 
     metadata = expanduser("~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt")
     collect_ids = []
@@ -44,7 +45,7 @@ def from_name2ids(phylum_name):
     return collect_ids, collect_info
 # cids,cinfo = from_name2ids("Verrucomicrobia")
 
-def main(name, odir, formats):
+def main(name, odir, formats, ids_list):
     # name = "Nitrospirae;"
     # formats = 'fasta,protein-fasta'
     # odir = '/share/home-user/thliao/data/NCBI_genbank'

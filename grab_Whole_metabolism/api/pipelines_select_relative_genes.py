@@ -1,13 +1,13 @@
 import multiprocessing as mp
 import os
-from collections import Counter
+from collections import defaultdict
 from os.path import dirname, abspath, exists, join
 from subprocess import check_call
-from collections import defaultdict
+
 import pandas as pd
 from Bio import SeqIO
 from tqdm import tqdm
-from bioservices import KEGG
+
 
 # prepare the input faa
 # 1. download genome data/ protein faa
@@ -70,32 +70,32 @@ def main(locus2info, sample2locus, target_fa, oseq):
     # perform first blastp
     outformat = 'qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore'
     run_cmd(f"diamond blastp -q {target_fa} -o {o1_tab} -d {dbname} -p 0 -b 5 -c 2 --outfmt {outformat}")
-    
+
     subset_names = {'amoA': 'K10944',
-           'amoB': 'K10945',
-           'amoC': 'K10946',
-           'hao': 'K10535',
-           'nxrA': 'K00370',
-           'nxrB': 'K00371'}
+                    'amoB': 'K10945',
+                    'amoC': 'K10946',
+                    'hao': 'K10535',
+                    'nxrA': 'K00370',
+                    'nxrB': 'K00371'}
     # reannotate from gene info file, especially the KO and its name
     pre_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
 
     subject_info_df = pd.read_excel(manually_info)
     subject_info_df = subject_info_df.drop_duplicates('AA accession')
     subject_info_df = subject_info_df.set_index('AA accession')
-    subject_info_df2 = pd.read_csv(locus2info,sep='\t')
-    subject_info_df2 = subject_info_df2.rename(columns={'AA seq':'AA sequence(seq)',
-                                    'Orthology(single)':'ko',
-                                    'KO name':'gene name'})
+    subject_info_df2 = pd.read_csv(locus2info, sep='\t')
+    subject_info_df2 = subject_info_df2.rename(columns={'AA seq': 'AA sequence(seq)',
+                                                        'Orthology(single)': 'ko',
+                                                        'KO name': 'gene name'})
     subject_info_df2 = subject_info_df2.drop_duplicates('locus_name')
     subject_info_df2 = subject_info_df2.set_index('locus_name')
-    subject_info_df = pd.concat([subject_info_df,subject_info_df2],axis=0)
+    subject_info_df = pd.concat([subject_info_df, subject_info_df2], axis=0)
     order_df = subject_info_df.reindex(pre_df.loc[:, 1])
     pre_df.loc[:, 'cover ratio'] = pre_df.loc[:, 3].values / order_df.loc[:, 'AA sequence(seq)'].str.len().values
     pre_df.loc[:, 'KO'] = order_df.loc[:, 'ko'].values
     pre_df.loc[:, 'KO name'] = order_df.loc[:, 'gene name'].values
-    
-    sub_pre_df = pre_df.loc[pre_df.loc[:,'KO name'].isin(subset_names),:]
+
+    sub_pre_df = pre_df.loc[pre_df.loc[:, 'KO name'].isin(subset_names), :]
     pre_df = sub_pre_df.copy()
     # subject_info_df = subject_info_df.set_index('locus_name')
     # query_df = query_df.drop_duplicates('locus_name')
@@ -125,7 +125,7 @@ def main(locus2info, sample2locus, target_fa, oseq):
     #             counted_locus.append(tuple(sorted([locus, after_locus]) + [n]))
     #             # print(locus,after_locus,n)
 
-    #tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
+    # tmp_df = pd.read_csv(f'{o1_tab}', sep='\t', header=None)
     records = SeqIO.parse(f'{target_fa}', format='fasta')
     used_gids = set(sub_pre_df.iloc[:, 0])
     collcect_records = []

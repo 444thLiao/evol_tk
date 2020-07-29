@@ -92,12 +92,17 @@ def to_simple_bar(id2val):
     return template_text + '\n'.join(c)
 
 
-def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='dataset', manual_v=[], omitted_other=False,
+def to_binary_shape(ID2info, 
+                    info2style=None, 
+                    same_color=False,
+                     info_name='dataset', 
+                     manual_v=[], 
+                     unfilled_other=False,
                     extra_replace={},no_legend= False):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
-    # if turn omitted_other on, it will not draw the circle
+    # if turn unfilled_other on, it will not draw the unfilled markers
     #
     template_text = open(dataset_binary_template).read()
     if not manual_v:
@@ -106,10 +111,12 @@ def to_binary_shape(ID2info, info2style=None, same_color=False, info_name='datas
         all_v = manual_v
     if info2style is None:
         info2style = {k: {} for k in all_v}
-    others_label = '-1' if omitted_other else '0'
+    others_label = '-1' if unfilled_other else '0'
     annotate_text = []
     for ID, vset in ID2info.items():
-        row = '\t'.join([ID] + ['1' if _ in vset else others_label for _ in all_v])
+        row = '\t'.join([ID] + ['1' 
+                                if _ in vset else others_label 
+                                for _ in all_v])
         annotate_text.append(row)
     annotate_text = '\n'.join(annotate_text)
 
