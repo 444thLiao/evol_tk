@@ -98,6 +98,8 @@ def parse_assembly_xml(xml_text):
         info_get_ = ['Genbank',
                      'SpeciesName',
                      'Isolate',
+                     "ExclFromRefSeq",
+                     "Coverage",
                      'Infraspecie',
                      'SpeciesTaxid',
                      'AssemblyStatus',

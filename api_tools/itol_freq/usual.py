@@ -32,7 +32,7 @@ for g, tid in gid2taxid.items():
     ranks = ncbi.get_rank(lineage)
     names = ncbi.get_taxid_translator(lineage)
     r2n = {ranks[_id]: names[_id] for _id in lineage}
-    gid2taxon[g] = r2n.get('phylum', '')
+    gid2taxon[g] = r2n.get(request_taxon, '')
     if r2n.get('phylum', '') == 'Proteobacteria' and r2n.get('class', ''):
         gid2taxon[g] = r2n['class']
     elif r2n.get('phylum', '') == "candidate division NC10":

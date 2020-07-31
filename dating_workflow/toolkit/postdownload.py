@@ -23,7 +23,11 @@ def run_cmd(cmd):
                stdout=open('/dev/null', 'w'))
 
 
-def get_faa_from_prokka_r(infile, odir, sample_name, prokka_p, return_cmd=False):
+def get_faa_from_prokka_r(infile,
+                          odir,
+                          sample_name,
+                          prokka_p,
+                          return_cmd=False):
     locustag = convert_genome_ID(sample_name)
     oprefix = f"{odir}/{sample_name}/{sample_name}"
     if exists(f'{oprefix}.faa'):
@@ -40,6 +44,7 @@ def get_faa_from_prokka_r(infile, odir, sample_name, prokka_p, return_cmd=False)
 def cli(indir, odir=None, tmp_dir=None,
         reformatted_name=True,
         force=False,
+        force_prokka=False,
         prokka_p=" `which prokka`"):
     # process the directory
     if odir is None:
@@ -60,7 +65,7 @@ def cli(indir, odir=None, tmp_dir=None,
         if exists(ofile) and not force:
             # if the output faa exists and not force, pass  it
             continue
-        if not p_files:
+        if not p_files and force_prokka:
             fna_file = glob(join(p_dir, '*.fna.gz'))[0]
             new_fna = fna_file.replace('.gz', '')
             if not exists(new_fna):
