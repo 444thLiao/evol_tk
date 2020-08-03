@@ -133,12 +133,11 @@ with open('./itol_txt/27genes.txt', 'w') as f1:
 
 # annotate completeness
 
-ids = open('./id_list/used_genomes_over20p_bac120.list').read().split('\n')
-ids = [_ for _ in ids if _]
-completeness_df = pd.read_csv('./checkM_result_phylum/merged_result.csv', sep='\t', index_col=0)
-sub_df = completeness_df.reindex(ids)
+sub_ids = [_ for _ in open('./over20p_genomes.list').read().split('\n') if _]
+completeness_df = pd.read_csv('./checkM_result_phylum/merged_checkM.tab', sep='\t', index_col=0)
+sub_df = completeness_df.reindex(sub_ids)
 sub_df = sub_df.loc[~sub_df.isna().all(1)]
-id2val = dict(zip(ids, sub_df.loc[:, 'Completeness']))
+id2val = dict(zip(sub_ids, sub_df.loc[:, 'Completeness']))
 text = color_gradient(id2val,
                       max_val=max(sub_df.loc[:, 'Completeness']),
                       min_val=min(sub_df.loc[:, 'Completeness']),

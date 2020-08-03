@@ -139,7 +139,7 @@ def to_color_strip(ID2info, info2color, info_name='dataset'):
 
     template_text = open(color_strip_template).read()
     id2col = {id: info2color[info] for id, info in ID2info.items()}
-    annotate_text = '\n'.join(['%s,%s\n' % (id, col)
+    annotate_text = '\n'.join(['%s,%s,%s\n' % (id, col,ID2info[id])
                                for id, col in id2col.items()])
     legend_text = deduced_legend(info2color, info_name)
     info_name = info_name.replace('/', '_')

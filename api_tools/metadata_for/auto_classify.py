@@ -15,7 +15,8 @@ def _classificated(ori_df):
     kws1='habitat_set1(auto)'
     kws2='habitat_set2(auto)'
     kws3='habitat_set3(auto)'
-    
+    subset_columns = [_ for _ in ori_df.columns if _ not in {kw1,kw3,kws1,kws2,kws3}]
+    ori_df = ori_df.loc[:,subset_columns]
     for _,row in tqdm(ori_df.iterrows(),total=ori_df.shape[0]):
         row_text = ' ; '.join(map(str,row.values)).lower()
         _cache3 = set()
@@ -37,7 +38,8 @@ def _classificated(ori_df):
             ori_df.loc[_,kw1] = 'MAGs'
         if 'single cell' in row_text:
             ori_df.loc[_,kw1] = 'SAGs'
-        if 'Whole genome' in row_text or 'type strain' in row_text:
+        if 'whole genome' in row_text or 'type strain' in row_text or 'whole-genome' in row_text or 'isolate' in row_text:
             ori_df.loc[_,kw1] = 'isolate'
+        ori_df.loc[:,kw1].fillna('unidentified',inplace=True)
     return ori_df
 
