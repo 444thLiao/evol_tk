@@ -59,13 +59,14 @@ def cli(indir, odir=None, tmp_dir=None,
                for _ in glob(join(indir, '**', 'GC*'),
                              recursive=True)
                if isdir(_)]
+
     for p_dir in tqdm(all_dir):
         p_files = glob(join(p_dir, '*.faa.gz'))
         ofile = join(odir, basename(p_dir)) + '.faa'
         if exists(ofile) and not force:
             # if the output faa exists and not force, pass  it
             continue
-        if not p_files and force_prokka:
+        if not p_files:
             fna_file = glob(join(p_dir, '*.fna.gz'))[0]
             new_fna = fna_file.replace('.gz', '')
             if not exists(new_fna):
@@ -76,6 +77,9 @@ def cli(indir, odir=None, tmp_dir=None,
                                              prokka_p=prokka_p,
                                              return_cmd=False
                                              )]
+        if not p_files:
+            break
+            continue
         p_file = p_files[0]
 
         if (not exists(ofile)) and p_file.endswith('.gz') and exists(p_file):
