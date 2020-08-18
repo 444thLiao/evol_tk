@@ -11,8 +11,16 @@ dataset_text_template = join(indir, 'dataset_text_template.txt')
 
 
 def read_tree(in_tree, format=None):
-    if isinstance(in_tree, str):
-        t = Tree(open(in_tree).read(), format=format)
+    if isinstance(in_tree, str) and exists(in_tree):
+        if format=='auto':
+            for f in [0,1,2,3,4,5]:
+                try:
+                    t = Tree(in_tree, format=f)
+                    return t
+                except:
+                    pass
+        else:
+            t = Tree(open(in_tree).read(), format=format)
     elif isinstance(in_tree, Tree):
         t = in_tree
     else:

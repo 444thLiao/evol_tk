@@ -10,7 +10,10 @@ from ete3 import NCBITaxa
 from ncbi_genome_download import NgdConfig
 from tqdm import tqdm
 from collections import defaultdict
-import os
+import os,time
+from glob import glob
+
+
 HOME = os.getenv("HOME")
 db_dir = f"{HOME}/data/NCBI/"
 
@@ -61,10 +64,11 @@ def from_name2ids(phylum_name,
 
     domain2aids = defaultdict(list)
     collect_info = []
+    descend_ids = set(descend_ids)
     for domain, ids in domain2dids.items():
         d = domain.lower()
         metadata = join(metadata_files_dir, f"genbank_{d}_assembly_summary.txt")
-        tqdm.write(f'read {metadata}')
+        tqdm.write(f'read {metadata} which last modified at : {time.ctime(os.path.getmtime(metadata))}')
         for row in tqdm(open(metadata)):
             if row.startswith("GC"):
                 rows = row.split('\t')
@@ -84,7 +88,7 @@ def id2domain_to_ids(ids_list):
         for row in tqdm(open(metadata)):
             if row.startswith("GC"):
                 rows = row.split('\t')
-                if int(rows[0]) in ids_list:
+                if str(rows[0]) in ids_list:
                     collect_info.append(row)
                     domain2aids[d].append(rows[0])
     return domain2aids, collect_info
@@ -112,10 +116,10 @@ def main(name=None,
     for d, aids in domain2aids.items():
         old_d = aids[::]
         curr_dir = join(db_dir,'genbank',d)
-        if formats == 'fasta':
+        if 'fasta' in formats:
             # check whether other kinds of files have been downloaded
-            sub_aids = [_ for _ in aids
-                    if not exists(join(curr_dir,_))]
+            sub_aids = [_ for _ in tqdm(aids)
+                    if not glob(join(curr_dir,_,'*.fna.gz'))]
             new_domain2aids[d] = sub_aids
         downloaded_aids.extend(new_domain2aids[d])
         print(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
@@ -126,6 +130,7 @@ def main(name=None,
                     "section": "genbank",
                     "output": db_dir, # all genomes were downloaded to db_dir
                     "file_formats": formats})
+    
     with open(join(odir,'metadata.csv'),'w') as f1:
         f1.write('\n'.join(cinfos))
 

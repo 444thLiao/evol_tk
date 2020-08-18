@@ -2,7 +2,6 @@
     "python.formatting.provider": "black",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.pythonPath": "D:\\ProgramData\\Anaconda3\\python.exe",
     "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
     "python.formatting.autopep8Path": "d:\\ProgramData\\Anaconda3\\Scripts\\autopep8",
     "python.condaPath": "conda activate 'D:\\ProgramData\\Anaconda3' ",

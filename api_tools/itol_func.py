@@ -41,6 +41,9 @@ LEGEND_LABELS{sep}{legend_labels}"""
     return legend_text
 
 
+
+
+
 def deduced_legend2(info2style, infos, same_colors=False, sep='\t'):
     # for info2style instead of info2color
     import plotly.express as px
@@ -98,7 +101,8 @@ def to_binary_shape(ID2info,
                      info_name='dataset', 
                      manual_v=[], 
                      unfilled_other=False,
-                    extra_replace={},no_legend= False):
+                    extra_replace={},
+                    no_legend= False):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.

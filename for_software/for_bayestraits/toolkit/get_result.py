@@ -46,14 +46,15 @@ def get_df(infile, key='Iteration'):
 
 
 def get_result(infile, cat2info={"M": '#0000ff',
-                                 "N": '#D68529'}):
+                                 "N": '#D68529'},
+               threshold={"Y":0.5}):
     result_df = get_df(infile)
 
     mean_vals = result_df.mean()
     mean_v = mean_vals.to_dict()
 
-    transition_rate = {k: v
-                       for k, v in mean_v.items() if k.startswith('q')}
+    # transition_rate = {k: v
+    #                    for k, v in mean_v.items() if k.startswith('q')}
 
     n2cat2prob = defaultdict(lambda: defaultdict(dict))
     for key, v in mean_v.items():
@@ -64,6 +65,13 @@ def get_result(infile, cat2info={"M": '#0000ff',
             cat = key.split('(')[-1].strip(')')
             n2cat2prob[node_name][cat] = v
 
+    if threshold:
+        k = list(threshold.keys())[0]
+        n2cat2prob = {n:cat2prob 
+                          for n,cat2prob in n2cat2prob.items()
+                          if cat2prob[k] > threshold[k]}
+        
+                          
     # cat2info = {"M": '#0000ff',
     #             "N": '#D68529'}
 

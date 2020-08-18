@@ -3,12 +3,23 @@ from tqdm import tqdm
 import pandas as pd
 
 # assert plotly.__version__ == '4.8.1'
-
+def filled_unassigned(df):
+    """
+    fill unassigned level using parental name with U. prefixed
+    """
+    for idx,level in enumerate(df.columns[1:-1]):
+        sub_df = df.loc[df.loc[:,level].isna(),:]
+        previous_names = ["U. " + _ for _ in sub_df.loc[:,df.columns[idx]]]
+        df.loc[df.loc[:,level].isna(),level] = previous_names
+    return df
+    
 
 def rename_ambiguous(complete_df):
     # process the copy one instead of the original one
     complete_df = complete_df.copy()
-    level2names = {l: complete_df[l].unique() for l in complete_df.columns}  # besides species
+    level2names = {l: complete_df[l].unique() 
+                   for l in complete_df.columns}  # besides species
+    
     dup_names = []
     for l, names in level2names.items():
         other_l = set(level2names).difference({l})
