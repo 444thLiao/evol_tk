@@ -470,6 +470,7 @@ LEGEND_LABELS	{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()))])
 def pie_chart(id2cat2val,
               cat2style,
               dataset_label='habitat prob',
+              pos=0.5
               ):
     """
 
@@ -489,7 +490,7 @@ def pie_chart(id2cat2val,
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat, '0')))
         cat_vals = '\t'.join(cat_vals)
-        annotate_text.append(f"{gid}\t0.5\t10\t{cat_vals}")
+        annotate_text.append(f"{gid}\t{pos}\t10\t{cat_vals}")
 
     field_labels = '\t'.join(sorted_cat)
     field_colors = '\t'.join([cat2style.get(c) for c in sorted_cat])

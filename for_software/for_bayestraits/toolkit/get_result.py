@@ -77,6 +77,6 @@ def get_result(infile, cat2info={"M": '#0000ff',
     # cat2info = {"M": '#0000ff',
     #             "N": '#D68529'}
 
-    text = pie_chart(n2cat2prob, cat2info, )
+    text = pie_chart(n2cat2prob, cat2info,pos=0.5 )
 
     return text
