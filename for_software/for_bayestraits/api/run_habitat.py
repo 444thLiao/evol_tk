@@ -26,22 +26,27 @@ bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
 
 def run(cmd):
     check_call(cmd, shell=True)
-    
-    
+
+
+
 @click.command()
 @click.option('-i', 'intree')
 @click.option('-im', 'inmetadata')
 @click.option('-o', 'odir')
 @click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529")
 @click.option("-extra_cmd","extra_cmd",default='')
-def main(intree, inmetadata, odir,color_dict,extra_cmd):
+def cli(intree, inmetadata, odir,color_dict,extra_cmd):
+    main(intree, inmetadata, odir,color_dict,extra_cmd,3)
+    
+
+def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=None):
     if not exists(odir):
         os.makedirs(odir)
     tree_prepared_file = join(odir, basename(intree))
     metadata_pre_file = join(odir, 'metadata.txt')
 
     # format tree
-    t = Tree(intree, format=3)
+    t = Tree(intree, format=tree_format)
     all_gids = set(t.get_leaf_names())
     new_tree_text = nw2nexus(t)
     with open(tree_prepared_file, 'w') as f1:
@@ -112,4 +117,4 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd):
 
 
 if __name__ == '__main__':
-    main()
+    cli()

@@ -11,7 +11,7 @@ def get_tags(intree):
     Use formatted newick which generate by thliao. (internal node has been named one)
     """
     rows = []
-    t = Tree(intree, format=3)
+    t = Tree(intree, format=1)
     for _ in t.traverse():
         if (not _.is_leaf()) and (_.name):
             rows.append(f"AddTag {_.name} {' '.join(_.get_leaf_names())}")

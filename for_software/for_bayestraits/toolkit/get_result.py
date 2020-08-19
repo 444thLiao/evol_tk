@@ -65,12 +65,14 @@ def get_result(infile, cat2info={"M": '#0000ff',
             cat = key.split('(')[-1].strip(')')
             n2cat2prob[node_name][cat] = v
 
-    if threshold:
+    if threshold is None:
+        pass
+    else:
         k = list(threshold.keys())[0]
         n2cat2prob = {n:cat2prob 
                           for n,cat2prob in n2cat2prob.items()
                           if cat2prob[k] > threshold[k]}
-        
+    
                           
     # cat2info = {"M": '#0000ff',
     #             "N": '#D68529'}
