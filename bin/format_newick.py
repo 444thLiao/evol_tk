@@ -224,6 +224,27 @@ def reformat(in_newick, out_newick, tree_format, new_format):
     with open(out_newick, 'w') as f1:
         f1.write(text.replace('NoName', ''))
 
+# preset for post analysis for the contree generate by iqtree
+# 1. renamed it
+# 2. reroot
+# 3. sort it
+@cli.command()
+@click.option('-i', 'in_newick')
+@click.option('-o', 'out_newick', default=None)
+@click.option('-f', 'tree_format', default=0)
+@click.option('-f_to', 'new_format', default=3)
+@click.option('-r', 'root_name', help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
+@click.option('-descend', 'descend', default=True, required=False, is_flag=True)
+def set1(in_newick, out_newick, tree_format, new_format,root_name,descend):
+    out_newick = process_IO(in_newick, out_newick)
+    t = renamed_tree(in_newick, format=tree_format)
+    if ',' in root_name:
+        root_names = [_.strip() for _ in root_name.split(',')]
+    else:
+        root_names = [root_name.strip()]
+    t = root_tree_with(t, gene_names=root_names)
+    t = sort_tree(t, ascending=descend)
+    t.write(outfile=out_newick, format=new_format)
 
 if __name__ == "__main__":
     cli()

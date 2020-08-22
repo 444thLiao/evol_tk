@@ -87,7 +87,7 @@ def main(newick1, newick2,
 
     # get dendrogram parts
     tqdm.write('drawing dendrograms')
-    datas, labels, _, labels_draw_tMDSext, labels_x, labels_y = get_plotly_data_from_newick(newick1,
+    datas, labels, _, labels_draw_text, labels_x, labels_y = get_plotly_data_from_newick(newick1,
                                                                                          fixed_length=l_legnth,
                                                                                          yscale=yscale)
     datas2, labels2, _, labels_draw_text2, labels_x2, labels_y2 = get_plotly_data_from_newick(newick2,
@@ -122,8 +122,12 @@ def main(newick1, newick2,
 
     # init data of middle part
     # get the y-coordinate information from below. put them into two dict.
-    left_data = {k:v for k,v in dict(zip(labels_draw_text, labels_y)).items() if k in left_leaves}
-    right_data = {k:v for k,v in dict(zip(labels_draw_text2, labels_y2)).items() if k in right_leaves}
+    left_data = {k:v
+                 for k,v in dict(zip(labels_draw_text, labels_y)).items()
+                 if k in left_leaves}
+    right_data = {k:v
+                  for k,v in dict(zip(labels_draw_text2, labels_y2)).items()
+                  if k in right_leaves}
 
     # get mapping relationship, default is from left to the right.. one to multi
     # so, the leaf names from the left tree should be the part of right, separate with `underline` or `space`
@@ -137,7 +141,7 @@ def main(newick1, newick2,
             l2r[leaf1] = leaf2s
     else:
         l2r = relationship_l2r.copy()
-        l2r =
+
     # init the data from above mapping dict
     c2data = defaultdict(lambda: ([], []))
     for l, color in l2color.items():
