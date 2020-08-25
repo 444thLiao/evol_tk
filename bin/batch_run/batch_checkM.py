@@ -83,7 +83,8 @@ def cli(indir, odir, tax, suffix, force, num_parellel, use_fa, genome_list):
          num_parellel=num_parellel,
          suffix=suffix,
          force=force,
-         use_fa=use_fa)
+         use_fa=use_fa,
+         genome_list=genome_list)
 
 
 if __name__ == "__main__":
