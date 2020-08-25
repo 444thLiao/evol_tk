@@ -30,11 +30,11 @@ def run(cmd):
 
 
 @click.command()
-@click.option('-i', 'intree')
-@click.option('-im', 'inmetadata')
-@click.option('-o', 'odir')
-@click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529")
-@click.option("-extra_cmd","extra_cmd",default='')
+@click.option('-i', 'intree',help="input tree in newick format. (should have internal node name)")
+@click.option('-im', 'inmetadata',help="input metadata which contain two columns using tab as separator. No header. First line should be the id from the input tree. The second line should be the state you want to assign. ")
+@click.option('-o', 'odir',help="output directory")
+@click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529",help="color scheme for states. default is 'M:#0000ff;N:#D68529' . ")
+@click.option("-extra_cmd","extra_cmd",default='',help="extrac command for bayestraits.")
 def cli(intree, inmetadata, odir,color_dict,extra_cmd):
     main(intree, inmetadata, odir,color_dict,extra_cmd,3)
     
@@ -53,6 +53,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
         f1.write(new_tree_text)
 
     # check metadata
+    # It only contains one state for each tips label
     states_collect = []
     m_text = []
     for row in open(inmetadata):

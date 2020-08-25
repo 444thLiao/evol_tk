@@ -45,7 +45,8 @@ def get_df(infile, key='Iteration'):
     return result_df
 
 
-def get_result(infile, cat2info={"M": '#0000ff',
+def get_result(infile, 
+               cat2info={"M": '#0000ff',
                                  "N": '#D68529'},
                threshold={"Y":0.5}):
     result_df = get_df(infile)
