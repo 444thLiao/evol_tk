@@ -6,7 +6,7 @@ This script is mainly used to generate tags and tree file for bayestraits.
 import sys
 import os
 from os.path import *
-sys.path.insert(0,dirname(__file__))
+sys.path.insert(0,dirname(dirname(dirname(dirname(__file__)))))
 
 import click
 from ete3 import Tree
