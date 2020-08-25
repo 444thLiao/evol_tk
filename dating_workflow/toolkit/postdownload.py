@@ -71,9 +71,9 @@ def cli(indir, odir=None, tmp_dir=None,
         os.makedirs(tmp_dir, exist_ok=True)
 
     all_dir = [_
-               for _ in glob(join(indir, '**', 'GC*'),
+               for _ in glob(join(indir, '**', 'GC*','*.fna.gz'),
                              recursive=True)
-               if isdir(_)]
+               ]
     tqdm.write("gunzip fna file and collect jobs")
     jobs = []
     jobs2 = []
