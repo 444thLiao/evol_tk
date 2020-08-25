@@ -78,6 +78,7 @@ def cli(indir, odir=None, tmp_dir=None,
     jobs = []
     jobs2 = []
     for p_dir in tqdm(all_dir):
+        p_dir = dirname(p_dir)
         p_files = glob(join(p_dir, '*.faa.gz'))
         ofile = join(odir, basename(p_dir)) + '.faa'
         if exists(ofile) and not force:
