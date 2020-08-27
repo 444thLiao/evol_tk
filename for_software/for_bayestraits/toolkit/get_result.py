@@ -48,7 +48,7 @@ def get_df(infile, key='Iteration'):
 def get_result(infile, 
                cat2info={"M": '#0000ff',
                                  "N": '#D68529'},
-               threshold={"Y":0.5}):
+               threshold={"Y":0.5},return_p=False):
     result_df = get_df(infile)
 
     mean_vals = result_df.mean()
@@ -73,7 +73,8 @@ def get_result(infile,
         n2cat2prob = {n:cat2prob 
                           for n,cat2prob in n2cat2prob.items()
                           if cat2prob[k] > threshold[k]}
-    
+    if return_p:
+        return n2cat2prob
                           
     # cat2info = {"M": '#0000ff',
     #             "N": '#D68529'}

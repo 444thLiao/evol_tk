@@ -48,7 +48,8 @@ def root_tree_with(in_tree_file, gene_names=[], format=0):
         leaf_list += leafs
     if len(leaf_list) != 1:
         LCA = t.get_common_ancestor(leaf_list)
-        if LCA.name == t.name:
+        if LCA is t:
+            print("same root as previous.")
             pass
         else:
             t.set_outgroup(LCA)
