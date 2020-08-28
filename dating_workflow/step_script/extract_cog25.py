@@ -92,7 +92,11 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 
 
 # extract protein
-def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
+def write_cog(outdir, genome2cdd, 
+              raw_proteins, 
+              genome_ids=[], 
+              get_type='prot',
+              prokka_dir=None):
     genome2seq = {}
     if not genome_ids:
         genome_ids = list(genome2cdd)
@@ -111,22 +115,32 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
     tqdm.write('get sequence file')
     collect_no_prokka_gids = []
     for genome_name in tqdm(genome_ids):
-        g_dict = genome2cdd[genome_name]
+        cdd2locus = genome2cdd[genome_name]
         gfile = f'{pdir}/{genome_name}.faa'
-        new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        if suffix == 'faa':
-            # important bugs!!!!! fixed
-            new_gfile = gfile
-        else:
-            new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
         
-        if exists(new_gfile):
+        
+        
+        # try to find the prokka dir
+        if prokka_dir is None:
+            prokka_basedir = abspath(dirname(dirname(realpath(gfile))))
+        else:
+            prokka_basedir = abspath(realpath(prokka_dir))
+        
+        if suffix == 'faa':
+            # get prot
+            ori_file = gfile
+        elif suffix == 'ffn':
+            # get nucleotide of genes
+            ori_file = f"{prokka_dir}/{genome_name}/{genome_name}.{suffix}"
+        else:
+            raise IOError
+        if exists(ori_file):
             _cache = {record.id: record
-                      for record in SeqIO.parse(new_gfile, format='fasta')}
+                      for record in SeqIO.parse(ori_file, format='fasta')}
             seq_set = {k: [_cache[_]
                            for _ in v
                            if _ in _cache]
-                       for k, v in g_dict.items()}
+                       for k, v in cdd2locus.items()}
             genome2seq[genome_name] = seq_set
         else:
             # not with prokka annotations
@@ -140,7 +154,7 @@ def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
             seq_set = {k: [_cache[_]
                            for _ in v
                            if _ in _cache]
-                       for k, v in g_dict.items()}
+                       for k, v in cdd2locus.items()}
             genome2seq[genome_name] = seq_set
     if collect_no_prokka_gids:
         with open(join(outdir,'no_prokka.gids'),'w')  as f1:
