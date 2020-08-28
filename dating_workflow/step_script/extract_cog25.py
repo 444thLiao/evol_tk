@@ -131,7 +131,7 @@ def write_cog(outdir, genome2cdd,
             ori_file = gfile
         elif suffix == 'ffn':
             # get nucleotide of genes
-            ori_file = f"{prokka_dir}/{genome_name}/{genome_name}.{suffix}"
+            ori_file = f"{prokka_basedir}/{genome_name}/{genome_name}.{suffix}"
         else:
             raise IOError
         if exists(ori_file):
@@ -208,6 +208,7 @@ def stats_cog(genome2genes, gene_ids):
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option("-ot", 'output_type', default='prot',help="prot(protein) or nucl(nucleotide)")
+@click.option("-pd", 'prokka_dir', default=None,help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
 def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,output_type):
     if genome_list is None:
         gids = []
@@ -224,9 +225,9 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,output
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
     if output_type.lower() in ['prot','protein']:
-        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
+        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot',prokka_dir=)
     elif output_type.lower() in ['nucl','nucleotide']:
-        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
+        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc',prokka_dir=)
     else:
         raise IOError('wrong input of output_type')
     # write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
