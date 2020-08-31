@@ -230,6 +230,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     ofile = join(odir, '03_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
+    tqdm.write("start running the final mcmctree. ")
     run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl > /dev/null 2>&1",
          ofile.replace('.ctl', '.log')))
 

@@ -158,7 +158,7 @@ It includes
 @click.option("-o", "odir", help="input directory [./genome_protein_files]", default="./genome_protein_files")
 @click.option("-tmp", "tmp_dir", help='For saving time and space, you could assign tmp_dir [./tmp]',
               default=None)
-@click.option("-id", "id_file", help="input directory. Default is retrieving dir startswith GC. ", default=None)
+@click.option("-id", "id_file", help="id list which contain the ids you want to process. Default is retrieving dir startswith GC. ", default=None)
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
 def main(indir, odir, tmp_dir, id_file, num_parellel,force):

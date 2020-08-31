@@ -3,16 +3,15 @@ extract 25 proteins for dating analysis
 """
 import multiprocessing as mp
 import os
+import pickle
 from collections import defaultdict
 from glob import glob
 from os.path import *
-from subprocess import check_call
 
 import click
-from Bio import SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import _parse_blastp
+from dating_workflow.step_script import parse_blastp, run, get_seq_and_write, write_out_stats
 
 HOME = os.getenv("HOME")
 resource_dir = f"{HOME}/data/protein_db/dating_resource"
@@ -36,13 +35,6 @@ cdd_num.pop('TIGR00487')
 
 # TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
-
-def run(cmd):
-    check_call(cmd,
-               shell=True,
-               stdout=open('/dev/null', 'w'),
-               stderr=open('/dev/null', 'w'))
-
 
 def annotate_cog(protein_file_list, cog_out_dir):
     params = []
@@ -74,14 +66,25 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     # cdd annotations
     tqdm.write('start to read/parse output files')
     cdd_anno_files = glob(join(cog_out_dir, '*.out'))
+
+    hash_str = int(hash(tuple(sorted(cdd_anno_files))))
+    cache_file = join(cog_out_dir, f'.tmp{hash_str}')
+    if exists(cache_file):
+        genome2cdd = pickle.load(open(cache_file, 'rb'))
+        return genome2cdd
+
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
-        locus_dict = _parse_blastp(ofile=ofile,
-                                   match_ids=[],
-                                   top_hit=top_hit,
-                                   filter_evalue=evalue)
+        locus_dict = parse_blastp(ofile=ofile,
+                                  match_ids=[],
+                                  top_hit=top_hit,
+                                  filter_evalue=evalue)
         genome2cdd[gname].update(locus_dict)
+    if not exists(cache_file):
+        with open(cache_file, 'wb') as f1:
+            pickle.dump(genome2cdd, f1)
     # tigrfam annotations
+    # it doesn't need it now... all embedded into cdd
     # tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
     # for ofile in tqdm(tigrfam_anno_files):
     #     gname = basename(ofile).replace('.out','')
@@ -91,125 +94,18 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     return genome2cdd
 
 
-# extract protein
-def write_cog(outdir, genome2cdd, 
-              raw_proteins, 
-              genome_ids=[], 
-              get_type='prot',
-              prokka_dir=None):
-    genome2seq = {}
-    if not genome_ids:
-        genome_ids = list(genome2cdd)
-    gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-    pdir = dirname(expanduser(raw_proteins))
-    if get_type == 'nuc':
-        suffix = 'ffn'
-        final_suffix = 'ffn'
-    elif get_type == 'prot':
-        suffix = 'faa'
-        final_suffix = 'faa'
-    else:
-        raise Exception
-    if not exists(outdir):
-        os.makedirs(outdir)
-    tqdm.write('get sequence file')
-    collect_no_prokka_gids = []
-    for genome_name in tqdm(genome_ids):
-        cdd2locus = genome2cdd[genome_name]
-        gfile = f'{pdir}/{genome_name}.faa'
-        
-        
-        
-        # try to find the prokka dir
-        if prokka_dir is None:
-            prokka_basedir = abspath(dirname(dirname(realpath(gfile))))
-        else:
-            prokka_basedir = abspath(realpath(prokka_dir))
-        
-        if suffix == 'faa':
-            # get prot
-            ori_file = gfile
-        elif suffix == 'ffn':
-            # get nucleotide of genes
-            ori_file = f"{prokka_basedir}/{genome_name}/{genome_name}.{suffix}"
-        else:
-            raise IOError
-        if exists(ori_file):
-            _cache = {record.id: record
-                      for record in SeqIO.parse(ori_file, format='fasta')}
-            seq_set = {k: [_cache[_]
-                           for _ in v
-                           if _ in _cache]
-                       for k, v in cdd2locus.items()}
-            genome2seq[genome_name] = seq_set
-        else:
-            # not with prokka annotations
-            print('not annotated with prokka')
-            collect_no_prokka_gids.append(genome_name)
-            if not gfile.endswith(suffix):
-                print(f"{genome_name} doesn't have {suffix},past it")
-                continue
-            _cache = {record.id: record
-                      for record in SeqIO.parse(gfile, format='fasta')}
-            seq_set = {k: [_cache[_]
-                           for _ in v
-                           if _ in _cache]
-                       for k, v in cdd2locus.items()}
-            genome2seq[genome_name] = seq_set
-    if collect_no_prokka_gids:
-        with open(join(outdir,'no_prokka.gids'),'w')  as f1:
-            f1.write('\n'.join(collect_no_prokka_gids))
-    # concat/output proteins
-    tqdm.write('write out')
-    for each_gene in tqdm(gene_ids):
-        gene_records = []
-        for gname, seq_dict in genome2seq.items():
-            get_records = seq_dict.get(each_gene, [])
-            for record in get_records:
-                record.name = gname
-            gene_records += get_records
-        unique_cdd_records = []
-        [unique_cdd_records.append(record)
-         for record in gene_records
-         if record.id not in [_.id
-                              for _ in unique_cdd_records]]
-
-        with open(join(outdir, f"{each_gene.replace('CDD:', '')}.{final_suffix}"), 'w') as f1:
-            SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
-
-
-def stats_cog(genome2genes, gene_ids):
-    gene_multi = {g: 0 for g in gene_ids}
-    for genome, pdict in genome2genes.items():
-        for gene, seqs in pdict.items():
-            if len(seqs) >= 2:
-                gene_multi[gene] += 1
-    gene_Ubiquity = {g: 0 for g in gene_ids}
-    for genome, pdict in genome2genes.items():
-        for gene, seqs in pdict.items():
-            gene_Ubiquity[gene] += 1
-
-    gene2genome_num = {}
-    gene2genomes = {}
-    for gene in gene_ids:
-        _cache = [k for k, v in genome2genes.items() if v.get(gene, [])]
-        # for genome, pdict in genome2genes.items():
-        gene2genome_num[gene] = len(_cache)
-        gene2genomes[gene] = _cache
-    return gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes
-
-
 @click.command()
 @click.option("-in_p", 'in_proteins', help='input directory which contains protein sequences file')
 @click.option("-in_a", 'in_annotations', help="Actually output directory which contains annotations files during extraction")
 @click.option("-s", "suffix", default='faa', help='suffix of protein files in `in_p`')
 @click.option("-o", 'outdir', help="name of output directory")
-@click.option("-evalue", 'evalue', default=1e-50, help="evalue for filtering out false-positive proteins. default is 1e-50 ")
+@click.option("-evalue", 'evalue', default=1e-20, help="evalue for filtering out false-positive proteins. default is 1e-3 ")
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
-@click.option("-ot", 'output_type', default='prot',help="prot(protein) or nucl(nucleotide)")
-@click.option("-pd", 'prokka_dir', default=None,help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,output_type,prokka_dir):
+@click.option("-ot", 'output_type', default='prot', help="prot(protein) or nucl(nucleotide)")
+@click.option("-pd", 'prokka_dir', default=None,
+              help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir):
     if genome_list is None:
         gids = []
     else:
@@ -224,19 +120,20 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,output
 
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
-    if output_type.lower() in ['prot','protein']:
-        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot',prokka_dir=prokka_dir)
-    elif output_type.lower() in ['nucl','nucleotide']:
-        write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc',prokka_dir=prokka_dir)
+    if output_type.lower() in ['prot', 'protein']:
+        get_seq_and_write(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
+    elif output_type.lower() in ['nucl', 'nucleotide']:
+        get_seq_and_write(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc', prokka_dir=prokka_dir)
     else:
         raise IOError('wrong input of output_type')
-    # write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-    gene_multi, gene_Ubiquity, gene2genome_num, gene2genomes = stats_cog(_subgenome2cdd, gene_ids)
+    gene_multi, gene_Ubiquity, gene2genomes = write_out_stats(outdir,_subgenome2cdd, gene_ids)
 
-    bb_g = [k for k, v in gene2genome_num.items() if v == len(gids)]
+    bb_g = [k
+            for k, v in gene_Ubiquity.items()
+            if v == len(gids)]
     if bb_g and gids:
         print(f"backbone genes is {str(bb_g)}")
     else:

@@ -9,7 +9,7 @@ import click
 from Bio import SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import _parse_blastp
+from dating_workflow.step_script import parse_blastp
 
 rbp_db = "/home-user/thliao/data/protein_db/rbp55"
 
@@ -56,10 +56,10 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     cdd_anno_files = glob(join(cog_out_dir, '*.out'))
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
-        locus_dict = _parse_blastp(ofile=ofile,
-                                   match_ids=[],
-                                   top_hit=top_hit,
-                                   filter_evalue=evalue)
+        locus_dict = parse_blastp(ofile=ofile,
+                                  match_ids=[],
+                                  top_hit=top_hit,
+                                  filter_evalue=evalue)
         genome2cdd[gname].update(locus_dict)
     return genome2cdd
 
