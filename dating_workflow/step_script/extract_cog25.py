@@ -80,6 +80,7 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
                                   top_hit=top_hit,
                                   filter_evalue=evalue)
         genome2cdd[gname].update(locus_dict)
+    genome2cdd = dict(genome2cdd)  # change it into normal dict in order to pickle it
     if not exists(cache_file):
         with open(cache_file, 'wb') as f1:
             pickle.dump(genome2cdd, f1)

@@ -1,5 +1,5 @@
 """
-reformat the result tree from formatted into tree without branch and with calibrations.
+reformat the result tree from mcmctree without branch and with calibrations.
 """
 import click
 import os

@@ -1,3 +1,7 @@
+"""
+Get substitution rate
+example. Still raw scripts
+"""
 import multiprocessing as mp
 import os
 import subprocess
