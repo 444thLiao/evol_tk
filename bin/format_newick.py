@@ -12,7 +12,8 @@ sys.path.insert(0, dirname(__file__))
 import click
 from api_tools.for_tree.format_tree import renamed_tree, root_tree_with, add_cal_api, Tree, read_tree, sort_tree, earse_name, draw_cal_itol
 import os
-from os.path import exists
+from api_tools.itol_func import to_node_symbol
+from os.path import exists,join,basename
 from dating_workflow.step_script import process_path
 
 '''
@@ -153,6 +154,16 @@ def itol_cal(calibration_txt, odir):
     if not exists(odir):
         os.makedirs(odir)
     draw_cal_itol(calibration_txt, odir)
+
+@cli.command()
+@click.option('-i', 'tree_file')
+@click.option('-o', 'odir', default='./')
+def itol_bp(tree_file, odir):
+    if not exists(odir):
+        os.makedirs(odir)
+    text = to_node_symbol(tree_file)
+    with open(join(odir,basename(tree_file).rpartition('.')[0]+'.bp.txt'),'w') as f1:
+        f1.write(text)
 
 
 @cli.command()
