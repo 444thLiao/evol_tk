@@ -91,17 +91,22 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
     
     cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')} > /dev/null"
     cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')} > /dev/null"
-    
+    print(cmd1)
     print("start to run cmd")
     cmds = [cmd1,cmd2]
     with mp.Pool(processes=2) as tp:
         r = list(tp.imap(run, cmds))
         
+    result_file = join(odir, 'complex_m', 'bst_complex.Log.txt')
+    if not exists(result_file):
+        print("Unknown errors. No results of cmd: \n" + cmd1)
+        return
+        
     if isinstance(color_dict,str):
         cat2color = color_dict.split(';')
         cat2color = {_.split(':')[0]:_.split(':')[1] for _ in cat2color if _}
         
-    text = get_result(join(odir, 'complex_m', 'bst_complex.Log.txt'),
+    text = get_result(result_file,
                       cat2info=cat2color)
 
     with open(join(odir, 'complex_habitat_prob.itol.txt'), 'w') as f1:
@@ -110,7 +115,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
     text = summaized_r(complex_f=join(odir, 'complex_m', 'bst_complex.Stones.txt'),
                        simple_f=join(odir, 'simple_m','bst_simple.Stones.txt'),
                        key='Stone')
-    text2 = summaized_rate(complex_f=join(odir, 'complex_m', 'bst_complex.Log.txt'),
+    text2 = summaized_rate(complex_f=result_file,
                            key='Iteration')
     
     with open(join(odir, 'summaized_result.txt'), 'w') as f1:

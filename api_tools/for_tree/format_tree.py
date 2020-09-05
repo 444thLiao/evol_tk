@@ -172,7 +172,10 @@ def draw_cal_itol(calibration_txt, odir):
     rows = []
     for row in open(calibration_txt):
         if row and not row.startswith('#'):
-            LCA, time, _remained = row.split('\t')
+            try:
+                LCA, time, _remained = row.split('\t')
+            except:
+                LCA, time = row.split('\t')
 
             row = '\t'.join([LCA, shape, size, color, filled, '1', time])
             rows.append(row)

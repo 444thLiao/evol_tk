@@ -64,11 +64,13 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     # tigrfam annotations
     tigrfam_anno_files = glob(join(odir, 'TIGRFAM', '*.out'))
     # add cache to avoid iterate it again and again
-    hash_str = int(hash(tuple(sorted(tigrfam_anno_files + cdd_anno_files))))
+    hash_str = int(hash(tuple(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)]))))
     cache_file = join(odir, f'.tmp{hash_str}')
     if exists(cache_file):
         genome2annotate = pickle.load(open(cache_file, 'rb'))
+        genome2annotate = dict(genome2annotate)
         return genome2annotate
+    
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
         locus_dict = parse_hmmscan(ofile=ofile,
@@ -76,6 +78,7 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
                                    filter_evalue=evalue,
                                    gene_pos=1)
         genome2annotate[gname].update(locus_dict)
+        
     genome2annotate = dict(genome2annotate)
     if not exists(cache_file):
         with open(cache_file, 'wb') as f1:
@@ -100,8 +103,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     else:
         gids = open(genome_list).read().split('\n')
         gids = list(set([_ for _ in gids if _]))
-    in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
-    protein_files = glob(in_proteins)
+    protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     # gids = []
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
@@ -118,10 +120,11 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
 
     genome2genes = parse_annotation(
         in_annotations, top_hit=True, evalue=evalue)
+    _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
     if output_type.lower() in ['prot', 'protein']:
-        get_seq_and_write(outdir, genome2genes, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, _subgenome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:
-        get_seq_and_write(outdir, genome2genes, in_proteins, genome_ids=gids, get_type='nuc', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, _subgenome2cdd, in_proteins, genome_ids=gids, get_type='nuc', prokka_dir=prokka_dir)
     else:
         raise IOError('wrong input of output_type')
 

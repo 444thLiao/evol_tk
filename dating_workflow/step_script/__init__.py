@@ -91,11 +91,11 @@ def type_process(get_type):
     return suffix, final_suffix
 
 
-def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, pdir,
+def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, protein_dir,
                                     gene2locus):
     genome2seq = {}
     collect_no_prokka_gids = []
-    gfile = f'{pdir}/{genome_name}.faa'
+    gfile = f'{protein_dir}/{genome_name}.faa'
     # try to find the prokka dir
     if prokka_dir is None:
         # Maybe it could reverse-seek the prokka directory.
@@ -117,10 +117,10 @@ def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, pdir,
     if exists(ori_file):
         _cache = {record.id: record
                   for record in SeqIO.parse(ori_file, format='fasta')}
-        seq_set = {k: [_cache[_]
-                       for _ in v
-                       if _ in _cache]
-                   for k, v in gene2locus.items()}
+        seq_set = {gene: [_cache[locus]
+                       for locus,evalue in locus_list
+                       if locus in _cache]
+                   for gene, locus_list in gene2locus.items()}
         genome2seq[genome_name] = seq_set
     else:
         # not with prokka annotations
@@ -133,7 +133,7 @@ def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, pdir,
 # extract protein
 def get_seq_and_write(outdir,
                       genome2cdd,
-                      used_protein_file,
+                      protein_dir,
                       genome_ids=[],
                       get_type='prot',
                       prokka_dir=None):
@@ -153,7 +153,6 @@ def get_seq_and_write(outdir,
     if not genome_ids:
         genome_ids = list(genome2cdd)
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-    pdir = dirname(expanduser(used_protein_file))
     suffix, final_suffix = type_process(get_type)
 
     tqdm.write('get sequence file')
@@ -161,9 +160,10 @@ def get_seq_and_write(outdir,
     for genome_name in tqdm(genome_ids):
         cdd2locus = genome2cdd[genome_name]
 
-        _genome2seq, _collect_no_prokka_gids = try_get_file_from_formatted_dir(genome_name, prokka_dir,
+        _genome2seq, _collect_no_prokka_gids = try_get_file_from_formatted_dir(genome_name,
+                                                                               prokka_dir,
                                                                                suffix,
-                                                                               pdir,
+                                                                               protein_dir,
                                                                                cdd2locus)
         genome2seq.update(_genome2seq)
         collect_no_prokka_gids.extend(_collect_no_prokka_gids)

@@ -167,8 +167,8 @@ def main(indir, name2group, odir, no_plot=False):
 @click.command()
 @click.option("-i", 'indir', help='dir have multiple calibration set')
 @click.option("-ns", 'target_group', default=None,
-              help='use , to separate each')
-@click.option("-name", 'groupname', default='')
+              help='use comma(,) to separate each')
+@click.option("-name", 'groupname', default='you could separated it with ; ')
 @click.option("-disable_plot", 'no_plot', default=False, required=False, is_flag=True)
 @click.option('-o', 'odir', default=None)
 def cli(indir, target_group, groupname, odir, no_plot):
