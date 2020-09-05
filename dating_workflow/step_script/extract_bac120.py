@@ -4,7 +4,7 @@ import pickle
 from collections import defaultdict
 from glob import glob
 from os.path import *
-
+import hashlib
 import click
 from tqdm import tqdm
 
@@ -59,18 +59,19 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     genome2annotate = defaultdict(lambda: defaultdict(list))
 
     # cdd annotations
-    tqdm.write('start to read/parse output files (cdd and tigrfam)')
+    
     cdd_anno_files = glob(join(odir, 'PFAM', '*.out'))
     # tigrfam annotations
     tigrfam_anno_files = glob(join(odir, 'TIGRFAM', '*.out'))
     # add cache to avoid iterate it again and again
-    hash_str = int(hash(tuple(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)]))))
-    cache_file = join(odir, f'.tmp{hash_str}')
-    if exists(cache_file):
-        genome2annotate = pickle.load(open(cache_file, 'rb'))
-        genome2annotate = dict(genome2annotate)
-        return genome2annotate
-    
+    # m = hashlib.md5()
+    # hash_str = m.update(tuple(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)])))
+    # cache_file = join(odir, f'.tmp{hash_str}')
+    # if exists(cache_file):
+    #     genome2annotate = pickle.load(open(cache_file, 'rb'))
+    #     genome2annotate = dict(genome2annotate)
+    #     return genome2annotate
+    tqdm.write('start to read/parse output files (cdd and tigrfam)')
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
         locus_dict = parse_hmmscan(ofile=ofile,
@@ -80,9 +81,9 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
         genome2annotate[gname].update(locus_dict)
         
     genome2annotate = dict(genome2annotate)
-    if not exists(cache_file):
-        with open(cache_file, 'wb') as f1:
-            pickle.dump(genome2annotate, f1)
+    # if not exists(cache_file):
+    #     with open(cache_file, 'wb') as f1:
+    #         pickle.dump(genome2annotate, f1)
     return genome2annotate
 
 

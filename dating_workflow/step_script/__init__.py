@@ -117,8 +117,14 @@ def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, protein_dir
     if exists(ori_file):
         _cache = {record.id: record
                   for record in SeqIO.parse(ori_file, format='fasta')}
-        seq_set = {gene: [_cache[locus]
+        try:
+            seq_set = {gene: [_cache[locus]
                        for (locus,evalue) in locus_list
+                       if locus in _cache]
+                   for gene, locus_list in gene2locus.items()}
+        except:
+            seq_set = {gene: [_cache[locus]
+                       for locus in locus_list
                        if locus in _cache]
                    for gene, locus_list in gene2locus.items()}
         genome2seq[genome_name] = seq_set
