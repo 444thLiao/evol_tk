@@ -121,7 +121,10 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
 
     genome2genes = parse_annotation(
         in_annotations, top_hit=True, evalue=evalue)
-    _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
+    if gids:
+        _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
+    else:
+        _subgenome2cdd = genome2genes.copy()
     if output_type.lower() in ['prot', 'protein']:
         get_seq_and_write(outdir, _subgenome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:

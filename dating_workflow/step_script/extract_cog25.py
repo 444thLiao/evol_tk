@@ -112,8 +112,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     else:
         gids = open(genome_list).read().split('\n')
         gids = list(set([_ for _ in gids if _]))
-    in_proteins = join(in_proteins, '*.' + suffix.strip('.'))
-    protein_files = glob(in_proteins)
+    protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     if not exists(in_annotations):
@@ -121,6 +120,10 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
 
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
+    if gids:
+        _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
+    else:
+        _subgenome2cdd = genome2cdd.copy()
     if output_type.lower() in ['prot', 'protein']:
         get_seq_and_write(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:
