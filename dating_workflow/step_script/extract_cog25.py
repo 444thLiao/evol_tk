@@ -67,11 +67,11 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     tqdm.write('start to read/parse output files')
     cdd_anno_files = glob(join(cog_out_dir, '*.out'))
 
-    hash_str = int(hash(tuple(sorted(cdd_anno_files))))
-    cache_file = join(cog_out_dir, f'.tmp{hash_str}')
-    if exists(cache_file):
-        genome2cdd = pickle.load(open(cache_file, 'rb'))
-        return genome2cdd
+    # hash_str = int(hash(tuple(sorted(cdd_anno_files))))
+    # cache_file = join(cog_out_dir, f'.tmp{hash_str}')
+    # if exists(cache_file):
+    #     genome2cdd = pickle.load(open(cache_file, 'rb'))
+    #     return genome2cdd
 
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
@@ -81,9 +81,9 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
                                   filter_evalue=evalue)
         genome2cdd[gname].update(locus_dict)
     genome2cdd = dict(genome2cdd)  # change it into normal dict in order to pickle it
-    if not exists(cache_file):
-        with open(cache_file, 'wb') as f1:
-            pickle.dump(genome2cdd, f1)
+    # if not exists(cache_file):
+    #     with open(cache_file, 'wb') as f1:
+    #         pickle.dump(genome2cdd, f1)
     # tigrfam annotations
     # it doesn't need it now... all embedded into cdd
     # tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
