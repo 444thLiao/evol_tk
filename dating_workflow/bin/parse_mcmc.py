@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.express as px
 from ete3 import Tree
 from tqdm import tqdm
-
+import re
 from dating_workflow.debug_for.draw_infinite_plot import get_plot
 
 warnings.filterwarnings('ignore')
@@ -147,7 +147,7 @@ def main(indir, name2group, odir, no_plot=False):
                 raw_name = 't_n%s' % t.get_common_ancestor(group).name
                 tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
                                                             df.loc[raw_name, 'CIs'])
-    tmp_df.loc[:, 'num_set'] = [int(_.split('_')[1].replace('set', ''))
+    tmp_df.loc[:, 'num_set'] = [re.findall('set(\d+)',_)[0]
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]
     tmp_df = tmp_df.sort_values('num_set')
