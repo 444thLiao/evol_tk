@@ -147,7 +147,7 @@ def main(indir, name2group, odir, no_plot=False):
                 raw_name = 't_n%s' % t.get_common_ancestor(group).name
                 tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
                                                             df.loc[raw_name, 'CIs'])
-    tmp_df.loc[:, 'num_set'] = [re.findall('set(\d+)',_)[0]
+    tmp_df.loc[:, 'num_set'] = [int(re.findall('set(\d+)',_)[0])
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]
     tmp_df = tmp_df.sort_values('num_set')
