@@ -153,12 +153,12 @@ def main(indir, name2group, odir, no_plot=False):
     tmp_df = tmp_df.sort_values('num_set')
     # tmp_df.columns = ["divergence time/100Mya (CI)"]
 
-    odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
+    #odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
     df = get_plot(pattern, odir, no_plot=no_plot)
     # draw infinite sites plot
 
-    writer = pd.ExcelWriter(join(odir, 'mcmc.xlsx'), engine='xlsxwriter')
+    writer = pd.ExcelWriter(join(odir, f'{basename(odir)}.xlsx'), engine='xlsxwriter')
     tmp_df.to_excel(writer, index_label='Calibration sets', sheet_name='Posterior time')
     df.to_excel(writer, index_label='Calibration sets', sheet_name='infinite site plots')
     writer.save()
