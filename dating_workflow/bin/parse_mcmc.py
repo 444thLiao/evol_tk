@@ -30,14 +30,17 @@ def cal_ESS(df):
     ess_array = df.apply(f, axis=0)
 
 
-def get_CI(f):
+def get_CI(infile):
     """
 
     :param f: log file?
     :return:
     """
-    f = open(f).read().split('\n')
-    head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+    f = open(infile).read().split('\n')
+    if infile.endswith('.out'):
+        head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+    elif infile.endswith(".log"):
+        head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
     if head not in f:
         return None
     idx = f.index(head)

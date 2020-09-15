@@ -1,6 +1,8 @@
+"""
+read the generated output of mcmctree
+
+"""
 import pandas as pd
-
-
 def read_outfile(f):
     f = open(f).read().split('\n')
     head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'

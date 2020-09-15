@@ -1,6 +1,8 @@
 """
 Construct a table with presence or absence from a list of fasta file ...
-
+The name of the file would be taken as the gene name.
+Such as
+it could parse nirK.faa nirS.faa , etc.
 
 """
 import pandas as pd

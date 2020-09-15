@@ -1,3 +1,6 @@
+"""
+it could read in both prior
+"""
 from glob import glob
 from os.path import *
 
@@ -10,6 +13,7 @@ from tqdm import tqdm
 from collections import defaultdict
 from dating_workflow.bin.parse_mcmc import get_CI
 from dating_workflow.figtree2itol import get_node_name
+import click
 
 prior_set = '~/data/AOB/dating/160g/batch_prior_nucl/*/mcmc.txt'
 posterior_set = '~/data/AOB/dating/160g/nucl/clock2_diff_cal/*run1/mcmc.txt'

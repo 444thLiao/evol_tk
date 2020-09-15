@@ -18,6 +18,18 @@ from bin.ncbi_convertor.pid2GI import pid2GI
 
 ncbi = NCBITaxa()
 
+def tax2tax_info(taxid):
+    lineage = ncbi.get_lineage(int(taxid))
+    rank = ncbi.get_rank(lineage)
+    rank = {v: k for k, v in rank.items()}
+    names = ncbi.get_taxid_translator(lineage)
+    _dict = {}
+    for c in taxons:
+        if c in rank:
+            _dict[c] = names[rank[c]]
+    return _dict
+
+
 def GI2tax(id2gi, redo=False):
     suffix = 'pid2tax'
     id_list = list(id2gi)
@@ -56,13 +68,7 @@ def GI2tax(id2gi, redo=False):
             pid2info_dict[each_aid]['taxid'] = result['TaxId'].real
             pid2info_dict[each_aid]['accession'] = aid
             try:
-                lineage = ncbi.get_lineage(result['TaxId'].real)
-                rank = ncbi.get_rank(lineage)
-                rank = {v: k for k, v in rank.items()}
-                names = ncbi.get_taxid_translator(lineage)
-                for c in taxons:
-                    if c in rank:
-                        pid2info_dict[each_aid][c] = names[rank[c]]
+                pid2info_dict[each_aid].update(tax2tax_info(result['TaxId'].real))
             except:
                 tqdm.write("failed to parse taxonomy info for " + aid)
 
