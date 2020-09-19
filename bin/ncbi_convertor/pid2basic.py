@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 
 def run(cmd, logf):
-    check_call(cmd, shell=1, stdout=logf)
+    check_call(cmd, shell=True, stdout=logf)
 
 
 def main(infile, odir, force=False, redo=False):
@@ -49,6 +49,7 @@ def main(infile, odir, force=False, redo=False):
     basic_df = basic_df.loc[~basic_df.assembly_ID.isna(), :]
     ofile = 'pro2basic_info_WITH_genome.tab'
     basic_df.to_csv(join(odir, ofile), sep='\t', index=1)
+
     # ofile = 'pro2full_info.tab'
     # df3 = pd.read_csv(join(odir,'pro2Bioinfo.tab'),sep='\t',index_col=0)
     # df3.index = [_.split('_')[1].split('.')[0] for _ in df3.index]

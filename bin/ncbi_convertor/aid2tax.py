@@ -1,98 +1,69 @@
 """
-Assembly id to taxnomy id
+It contain two kinds of functions.
+
+1. convert the summary tab into a taxonomy tab
+2. convert a assembly ID into taxid throught Entrez/api.
 
 """
-import io
 import os
-from os.path import exists, dirname
 
-import click
-from Bio import Entrez
+import pandas as pd
 from tqdm import tqdm
 
-from bin.ncbi_convertor import edl, access_intermedia, parse_id
-from ete3 import ncbi
+from bin.ncbi_convertor import NCBI_convertor, tax2tax_info
+
+HOME = os.getenv("HOME")
+db_dir = f"{HOME}/data/NCBI/"
+
+default_infile = f"{HOME}/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
+
+default_taxon_tab = f"{HOME}/.cache/ncbi-genome-download/bacteria2taxonomy.tab"
 
 
-def aid2GI(id_list, redo=False):
-    suffix = 'aid2GI'
-    _cache = access_intermedia(id_list, suffix=suffix, redo=redo)
-    if _cache is not None:
-        id2gi = _cache
-    else:
-        tqdm.write('from protein Accession ID to GI')
-        results, failed = edl.esearch(db='assembly',
-                                      ids=id_list,
-                                      result_func=lambda x: Entrez.read(
-                                          io.StringIO(x))['IdList'],
-                                      batch_size=1
-                                      )
-        _results_dict = {}
-        _count = 0
-        while failed:
-            failed_id_list = failed
-            _results, failed = edl.esearch(db='assembly',
-                                           ids=failed_id_list,
-                                           result_func=lambda x: Entrez.read(
-                                               io.StringIO(x))['IdList'],
-                                           batch_size=1
-                                           )
-            _results_dict.update(dict(_results))
-            _count += 1
-            if _count >= 5:
-                break
-        tqdm.write('still %s failed IDs, be careful.....' % len(failed))
-        # for edl.esearch, it will auto **zip** searched term and its result.
-        id2gi = dict(results)
-        id2gi.update(_results_dict)
-        id2gi = {pid: id2gi.get(pid, '') for pid in id_list}
-        # stodge the result into intermedia file for second access.
-        access_intermedia(id2gi, suffix=suffix)
-    return id2gi
+def file2taxon_tab(infile):
+    # infile = "/home-user/thliao/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
+    metadata_df = pd.read_csv(
+        infile, sep='\t', low_memory=False, comment='#', header=None)
+    f = open(infile)
+    _ = f.readline()
+    header = f.readline().strip('# \n').split('\t')
+    metadata_df.columns = header
+    metadata_df = metadata_df.set_index("assembly_accession")
+    failed_tids = []
+
+    aid2taxon_info = {}
+    for aid, row in tqdm(metadata_df.iterrows(), total=metadata_df.shape[0]):
+        try:
+            taxon_dict = tax2tax_info(int(row['taxid']))
+            aid2taxon_info[aid] = taxon_dict
+        except:
+            failed_tids.append(int(row['taxid']))
 
 
-
-id2gi = dict(results)
-all_GI = list(set(id2gi.values()))
-
-results, failed = edl.esummary(db='assembly',
-                                ids=all_GI,)
-new_results = []
-for r in results:
-    d = Entrez.read(io.StringIO(r),validate=False)
-    new_results.extend(d['DocumentSummarySet']['DocumentSummary'])
-    
-aid2sci_name = {}
-for r in new_results:
-    aid = r['AssemblyAccession'].replace('GCF','GCA')
-    name = r['Organism']
-    aid2sci_name[aid] = name
-    
-    
-aid2tid = {}
-for r in new_results:
-    aid = r['AssemblyAccession'].replace('GCF','GCA')
-    tid = r['Taxid']
-    aid2tid[aid] = tid
-    
-    lineage = ncbi.get_lineage(int(tid))
-    rank = ncbi.get_rank(lineage)
-    rank = {v: k for k, v in rank.items()}
-    names = ncbi.get_taxid_translator(lineage)
-    _dict = {}
-    for c in taxons:
-        if c in rank:
-            _dict[c] = names[rank[c]]
-    genome2tax.update( {aid.split('.')[0]: _dict} )
-for c in taxons:
-    if c in rank:
-        pid2info_dict[each_aid][c] = names[rank[c]]
+def rewrite_existing_tab(aid2taxon_info):
+    _df = pd.DataFrame.from_dict(aid2taxon_info, orient='index')
+    _df.index = [_.split('.')[0] for _ in _df.index]
+    now_num = _df.shape[0]
+    df2 = pd.read_csv(default_taxon_tab, sep='\t', index_col=0)
+    df = df2.reindex(set(_df.index).union(df2.index))
+    df.update(df2)
+    df.update(_df)
+    new_num = df.shape[0]
+    print(f"latest tab contain {now_num} assembly IDs, now, merged tab contain {new_num} assembly IDs")
+    df.to_csv(default_taxon_tab, index=1, index_label=df.index.name)
 
 
+def aid2taxon(id_list, redo=False):
+    convertor = NCBI_convertor(id_list, "protein")
+    suffix = 'protein2GI'
+    convertor.check_cache(suffix=suffix, redo=redo)
+    id2taxon = convertor.get_taxons_from_tid()
+    return id2taxon
 
 
+def cli():
+    pass
 
 
-
-
-
+if __name__ == '__main__':
+    cli()

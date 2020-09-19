@@ -95,10 +95,24 @@ def id2domain_to_ids(ids_list):
 
 # cids,cinfo = from_name2ids("Verrucomicrobia")
 
+def batch_iter(iter, batch_size):
+    # generating batch according batch_size
+    iter = list(iter)
+    n_iter = []
+    batch_d = 0
+    for batch_u in range(0, len(iter), batch_size):
+        if batch_u != 0:
+            n_iter.append(iter[batch_d:batch_u])
+        batch_d = batch_u
+    n_iter.append(iter[batch_d: len(iter) + 1])
+    return n_iter
+
 def main(name=None,
          odir=None,
          formats='fasta',
-         ids_list=None):
+         ids_list=None,
+         size_of_batch=30,
+         parallel=10):
     # name = "Nitrospirae;"
     # formats = 'fasta,protein-fasta'
     # odir = '/share/home-user/thliao/data/NCBI_genbank'
@@ -123,18 +137,20 @@ def main(name=None,
             new_domain2aids[d] = sub_aids
         downloaded_aids.extend(new_domain2aids[d])
         print(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
-    
-    
-    ngd.download(**{"assembly_accessions": downloaded_aids,
-                    "dry_run": False,
-                    "section": "genbank",
-                    "output": db_dir, # all genomes were downloaded to db_dir
-                    "file_formats": formats})
+
+
+    for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
+        ngd.download(**{"assembly_accessions": ','.join(batch_aids),
+                        "dry_run": False,
+                        "section": "genbank",
+                        "parallel": parallel,
+                        "output": db_dir,  # all genomes were downloaded to db_dir
+                        "file_formats": formats})
     
     with open(join(odir,'metadata.csv'),'w') as f1:
         f1.write('\n'.join(cinfos))
 
-@click.command()
+@click.command(help="It would split the list of assembly ids into batches. The size parameter would produce")
 @click.option("-n", "name", help="input the phylum name or other. use ; to separate multiple ")
 @click.option("-F", "formats", help='Which formats to download (default: %(default)s).'
                                     'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
@@ -142,8 +158,17 @@ def main(name=None,
               default=NgdConfig.get_default('file_formats'))
 @click.option("-o", "odir", help=f"Create output hierarchy in specified folder (default: {NgdConfig.get_default('output')}s)",
               default=NgdConfig.get_default('output'))
-def cli(name, odir, formats):
-    main(name, odir, formats)
+@click.option("-size", "size_of_batch", help=f"The size of each batch.",
+              default=NgdConfig.get_default('output'))
+@click.option("-p", "parallel", help=f"Run N downloads in parallel (default: 10)",
+              default=NgdConfig.get_default('output'))
+def cli(name, odir, formats,size_of_batch,parallel):
+    main(name=name,
+         odir=odir,
+         formats=formats,
+         ids_list=None,
+         size_of_batch=size_of_batch,
+         parallel=parallel)
 
 
 if __name__ == '__main__':

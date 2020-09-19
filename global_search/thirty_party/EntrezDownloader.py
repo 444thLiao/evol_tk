@@ -303,12 +303,12 @@ class EntrezDownloader:
             results.pbar.close()
         return results.results, results.failed
 
-    def esummary(self, db, ids, batch_size=None,result_func=lambda x: [x], **kwargs):
+    def esummary(self, db, ids, batch_size=None,result_func=lambda x: [x], no_pbar= True, **kwargs):
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
 
-        if self.pbar:
+        if self.pbar and not no_pbar:
             from tqdm import tqdm
             results = ResultCollector(
                 pbar=tqdm(total=len(ids), unit='records'))
@@ -333,7 +333,7 @@ class EntrezDownloader:
             fs.append(f)
 
         futures.wait(fs)
-        if self.pbar:
+        if self.pbar and not no_pbar:
             results.pbar.close()
         return results.results, results.failed
 

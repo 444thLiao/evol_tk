@@ -10,64 +10,24 @@ import click
 from Bio import Entrez
 from tqdm import tqdm
 
-from bin.ncbi_convertor import edl, access_intermedia, parse_id
-
+from bin.ncbi_convertor import edl, access_intermedia, parse_id,NCBI_convertor,process_path
 
 def pid2GI(id_list, redo=False):
-    suffix = 'pid2gi'
-    _cache = access_intermedia(id_list, suffix=suffix, redo=redo)
-    if _cache is not None:
-        id2gi = _cache
-    else:
-        tqdm.write('from protein Accession ID to GI')
-        results, failed = edl.esearch(db='protein',
-                                      ids=id_list,
-                                      result_func=lambda x: Entrez.read(
-                                          io.StringIO(x))['IdList'],
-                                      batch_size=1
-                                      )
-        _results_dict = {}
-        _count = 0
-        while failed:
-            failed_id_list = failed
-            _results, failed = edl.esearch(db='protein',
-                                           ids=failed_id_list,
-                                           result_func=lambda x: Entrez.read(
-                                               io.StringIO(x))['IdList'],
-                                           batch_size=1
-                                           )
-            _results_dict.update(dict(_results))
-            _count += 1
-            if _count >= 5:
-                break
-        tqdm.write('still %s failed IDs, be careful.....' % len(failed))
-        # for edl.esearch, it will auto **zip** searched term and its result.
-        id2gi = dict(results)
-        id2gi.update(_results_dict)
-        id2gi = {pid: id2gi.get(pid, '') for pid in id_list}
-        # stodge the result into intermedia file for second access.
-        access_intermedia(id2gi, suffix=suffix)
+    convertor = NCBI_convertor(id_list,"protein")
+    suffix = 'protein2GI'
+    convertor.check_cache(suffix=suffix,redo=redo)
+
+    convertor.get_GI()
+    id2gi = convertor.GI
     return id2gi
 
 
 def main(infile, ofile, force=False, redo=False):
+    ofile = process_path(ofile)
     order_id_list, id2annotate = parse_id(infile)
-    id2gi = {}
-    if isinstance(id2annotate[order_id_list[0]], dict):
-        # it is a dict, so it contains other infomation or implemented GI. it may be passed over.
-        if 'GI' in id2annotate[order_id_list[0]]:
-            print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
-            if not force:
-                id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
+    id2gi = pid2GI(order_id_list, redo=redo)
 
-        # todo: re-implemented original infomation into `ofile` from `infile`
-    else:
-        # no header, just a list of IDs
-        pass
-    if not id2gi:
-        id2gi = pid2GI(order_id_list, redo=redo)
-
-    if not exists(dirname(ofile)) and dirname(ofile):
+    if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))
 
     with open(ofile, 'w') as f1:
@@ -75,6 +35,18 @@ def main(infile, ofile, force=False, redo=False):
         for id, GI in id2gi.items():
             print(f'{id}\t{GI}', file=f1)
     tqdm.write('finish writing into ' + ofile)
+
+    # too verbose
+    # if isinstance(id2annotate[order_id_list[0]], dict):
+    #     # it is a dict, so it contains other infomation or implemented GI. it may be passed over.
+    #     if 'GI' in id2annotate[order_id_list[0]]:
+    #         print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
+    #         if not force:
+    #             id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
+    # else:
+    #     # no header, just a list of IDs
+    #     pass
+
 
 
 @click.command()

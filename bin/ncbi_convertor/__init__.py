@@ -10,11 +10,12 @@ from os.path import exists, dirname, join, expanduser
 from tqdm import tqdm
 
 from global_search.thirty_party.EntrezDownloader import EntrezDownloader
+from .func_factory import NCBI_convertor
+from .toolkit import *
 
 tmp_dir = '~/.tmp_getINFO'
 tmp_dir = expanduser(tmp_dir)
-taxons = ['superkingdom', 'phylum', 'class',
-          'order', 'family', 'genus', 'species']
+
 import hashlib
 
 
