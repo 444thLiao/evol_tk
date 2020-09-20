@@ -4,7 +4,7 @@ from os.path import expanduser, abspath
 import pandas as pd
 from Bio import Entrez
 from ete3 import NCBITaxa
-
+import xml.etree.ElementTree as ET
 from bin.ncbi_convertor import edl
 from global_search.thirty_party.metadata_parser import parse_bioproject_xml, parse_biosample_xml
 
@@ -35,7 +35,7 @@ def process_path(path):
     return path
 
 
-def _parse_ipg(t):
+def parse_ipg(t):
     """
     parse result efetched from Identical Protein Groups(ipg)
 23582877        INSDC   HQ650005.1      1       452     +       AEG74045.1      ammonia monooxygenase subunit alpha     uncultured bacterium
@@ -59,6 +59,9 @@ def _parse_ipg(t):
             bucket.append((row[6], pos, gb))
     return bucket
 
+def parse_xml(xml_data):
+    tree = ET.fromstring(xml_data)
+    pass
 
 def get_bioproject(bp_list):
     results, failed = edl.esearch(db='bioproject',

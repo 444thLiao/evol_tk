@@ -89,15 +89,15 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', gids=None, force=
 
 
 @click.command()
-@click.option('-i', 'indir')
-@click.option('-o', 'odir')
+@click.option('-i', 'indir',help="input directory which stodge files with suffix. Normally, it should contain faa files directly.  ")
+@click.option('-o', 'odir',help="output directory which stodge the ouput aln files.")
 @click.option('-s', 'suffix', help='suffix for files', default='faa')
 @click.option('-ns', 'new_suffix', default='aln')
-@click.option('-np', 'num_parellel', default=10)
+@click.option('-np', 'num_parellel', default=10,help="number of parellel processes you want to run. ")
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. / "
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
-@click.option('-m', 'mode_mafft', default='ginsi')
+@click.option('-m', 'mode_mafft', default='ginsi',help="the mode of mafft you want to use. You could choose mafft, ginsi, einsi, linsi. You could find the detailed descriptions of them at the help of mafft. ")
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
 @click.option('-rm_l', 'removed_gene_list', help='list of removed gene?')

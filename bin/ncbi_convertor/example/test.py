@@ -31,12 +31,28 @@ pids = open('./protein_ids').read().split('\n')
 convertor = NCBI_convertor(pids, db='protein')
 # convertor.check_cache(suffix=suffix, redo=redo)
 convertor.get_taxons_from_tid()
-pid2assembly_dict = convertor.get_protein_pos_INFO()
+pid2assembly_dict = convertor.pid2assembly()
+
+
 aids = open('./assembly_ids').read().split('\n')
 convertor = NCBI_convertor(aids, db='assembly')
 # convertor.check_cache(suffix=suffix, redo=redo)
 convertor.get_taxons_from_tid()
 
+
+nids = open('./nucleotide_ids').read().split('\n')
+convertor = NCBI_convertor(nids, db='nuccore')
+convertor.get_GI()
+convertor.get_db_summary()
+# convertor.check_cache(suffix=suffix, redo=redo)
+convertor.get_taxons_from_tid()
+
+
+results, failed = edl.efetch(db='nuccore',
+                             ids=all_GI,
+                             retmode='xml',
+                             retype='native',)
+                             result_func=lambda x: parse_ipg(x))
 
 if __name__ == "__main__":
     run(cmd1)

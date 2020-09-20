@@ -4,12 +4,13 @@ from collections import defaultdict
 from Bio import Entrez
 from tqdm import tqdm
 
-from bin.ncbi_convertor import edl, access_intermedia, tax2tax_info, _parse_ipg
+from bin.ncbi_convertor import edl, access_intermedia, tax2tax_info, parse_ipg
 from global_search.thirty_party.metadata_parser import parse_assembly_xml
 
-tax_convertable_dbs = ['protein', 'assembly']
+
+tax_convertable_dbs = ['protein', 'assembly','nuccore']
 batch_return_dbs = []
-single_return_dbs = ['protein']
+single_return_dbs = ['protein','nuccore']
 
 
 class NCBI_convertor():
@@ -26,7 +27,8 @@ class NCBI_convertor():
         self.GI = None
         self.tids = {}
         self.dbsummary = {}
-
+    def print_available_dbs(self):
+        print("")
     def get_biosample(self):
         pass
 
@@ -134,7 +136,7 @@ class NCBI_convertor():
             self.tids[aid] = int(result['TaxId'])
 
     def get_key_from_summary_results(self, retrieve_r):
-        if self.dbname == 'protein':
+        if self.dbname in ['protein','nuccore']:
             return {retrieve_r['AccessionVersion']: retrieve_r}
 
     def construct_taxon_info_dict(self):
@@ -152,7 +154,7 @@ class NCBI_convertor():
     def update_all(self):
         pass
 
-    def get_protein_pos_INFO(self):
+    def pid2assembly(self):
         if self.dbname != 'protein':
             raise SyntaxError("source database must be protein")
         self.get_GI()
@@ -161,7 +163,7 @@ class NCBI_convertor():
                                      ids=all_GI,
                                      retmode='ipg',
                                      retype='xml',
-                                     result_func=lambda x: _parse_ipg(x))
+                                     result_func=lambda x: parse_ipg(x))
         pid2assembly_dict = defaultdict(dict)
         for pid, nuc_info, assembly_ID in tqdm(results):
             pid2assembly_dict[pid]['assembly'] = assembly_ID

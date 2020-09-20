@@ -5,11 +5,12 @@ It includes
 2. perform prokka and rename the ID
 3. generate metadata.csv
 """
+import multiprocessing as mp
 import os
 from glob import glob
-from os.path import join, exists, basename, dirname, isdir, expanduser
+from os.path import join, exists, basename, dirname
 from subprocess import check_call
-import multiprocessing as mp
+
 import click
 from Bio import SeqIO
 from tqdm import tqdm
@@ -41,12 +42,15 @@ def get_faa_from_prokka_r(infile,
     return f'{oprefix}.faa'
 
 
-def cli(indir, odir=None, tmp_dir=None,
+def cli(indir,
+        odir=None, tmp_dir=None,
         reformatted_name=True,
         force=False,
         # force_prokka=False,
         prokka_p=" `which prokka`",
-        thread=5):
+        thread=5,
+        all_ids=None,
+        ):
     """
     It would use the downloaded protein first.
     If it doesn't exist, it will perform prokka to predict genes.
@@ -60,7 +64,6 @@ def cli(indir, odir=None, tmp_dir=None,
     :return:
     """
 
-
     # process the directory
     if odir is None:
         odir = './genome_protein_files'
@@ -71,9 +74,13 @@ def cli(indir, odir=None, tmp_dir=None,
         os.makedirs(tmp_dir, exist_ok=True)
 
     all_dir = [_
-               for _ in glob(join(indir, '**', 'GC*','*.fna.gz'),
+               for _ in glob(join(indir, '**', 'GC*', '*.fna.gz'),
                              recursive=True)
                ]
+    if all_ids is not None:
+        all_dir = [_ for _ in all_dir
+                   if basename(dirname(_)) in all_ids]
+
     tqdm.write("gunzip fna file and collect jobs")
     jobs = []
     jobs2 = []
@@ -93,15 +100,15 @@ def cli(indir, odir=None, tmp_dir=None,
             run_cmd(f'gunzip -d -c {fna_file} > {new_fna}')
         sample_name = basename(dirname(fna_file))
         prokka_cmd = get_faa_from_prokka_r(infile=new_fna,
-                                         odir=tmp_dir,
-                                         sample_name=sample_name,
-                                         prokka_p=prokka_p,
-                                         return_cmd=True
-                                         )
+                                           odir=tmp_dir,
+                                           sample_name=sample_name,
+                                           prokka_p=prokka_p,
+                                           return_cmd=True
+                                           )
         if exists(prokka_cmd):
             # output a file
             prokka_ofile = prokka_cmd
-            jobs2.append(f'cat {prokka_ofile} > {ofile}' )
+            jobs2.append(f'cat {prokka_ofile} > {ofile}')
             continue
         else:
             jobs.append(prokka_cmd)
@@ -118,7 +125,6 @@ def cli(indir, odir=None, tmp_dir=None,
         #     # print(p_file,ofile)
         #     pass
 
-
     tqdm.write('run prokka')
     with mp.Pool(processes=thread) as tp:
         r = list(tqdm(tp.imap(run_cmd, jobs), total=len(jobs)))
@@ -126,7 +132,7 @@ def cli(indir, odir=None, tmp_dir=None,
     tqdm.write('run cat')
     for j in tqdm(jobs2):
         run_cmd(j)
-    processed_ids = [_.split('/')[-1].strip().replace('.faa','') for _ in jobs2]
+    processed_ids = [_.split('/')[-1].strip().replace('.faa', '') for _ in jobs2]
     # format protein id
     # one thing need to be noted. The ID produced by prokka would not directly equal to the formatted name here. Because the number of prokka would include the rRNA gene. the formatted name here would not.
     if reformatted_name:
@@ -158,10 +164,11 @@ It includes
 @click.option("-o", "odir", help="input directory [./genome_protein_files]", default="./genome_protein_files")
 @click.option("-tmp", "tmp_dir", help='For saving time and space, you could assign tmp_dir [./tmp]',
               default=None)
-@click.option("-id", "id_file", help="id list which contain the ids you want to process. Default is retrieving dir startswith GC. ", default=None)
+@click.option("-gl", "genome_list", default=None,
+              help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
-def main(indir, odir, tmp_dir, id_file, num_parellel,force):
+def main(indir, odir, tmp_dir, genome_list, num_parellel, force):
     if not exists(indir):
         raise IOError("input dir doesn't exist")
     if not exists(odir):
@@ -175,12 +182,12 @@ def main(indir, odir, tmp_dir, id_file, num_parellel,force):
     # all_g_ids = set([basename(_)
     #                  for _ in glob(join(indir, 'bacteria', '*'))])
     # # from downloaded dir
-    # if id_file is None:
-    #     all_ids = all_g_ids
-    # else:
-    #     all_ids = open(id_file).read().split('\n')
-    #     all_ids = [_ for _ in all_ids if _]
-    #     all_ids = set(all_ids)
+    if genome_list is None:
+        all_ids = None
+    else:
+        all_ids = open(genome_list).read().split('\n')
+        all_ids = [_ for _ in all_ids if _]
+        all_ids = set(all_ids)
     # # from id list
     # metadatas = open(base_tab).read().split('\n')
     # rows = [_
@@ -197,7 +204,8 @@ def main(indir, odir, tmp_dir, id_file, num_parellel,force):
     cli(indir, odir,
         tmp_dir=tmp_dir,
         force=force,
-        thread=num_parellel)
+        thread=num_parellel,
+        all_ids=all_ids)
 
 
 if __name__ == "__main__":

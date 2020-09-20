@@ -35,7 +35,7 @@ def f(x):
 new_OG_df = OG_df.applymap(f)
 # raw part
 def get_contig(x,gene_info):
-    # uniqe to luo lab faa format
+    # unique to luo lab faa format
     locus = x.split('|')[-1].split(' ')[0].strip()
     info = gene_info[locus]
     return info['contig_name']

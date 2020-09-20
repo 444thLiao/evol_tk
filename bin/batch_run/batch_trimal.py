@@ -46,14 +46,14 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, 
         r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
-@click.command()
-@click.option('-i', 'indir')
-@click.option('-o', 'odir',default=None)
-@click.option('-s', 'suffix', default='aln')
-@click.option('-ns', 'new_suffix', default='trimal')
-@click.option('-np', 'num_parellel', default=10)
-@click.option('-ro', 'resoverlap', default=0.55)
-@click.option('-so', 'seqoverlap', default=60)
+@click.command(help="")
+@click.option('-i', 'indir',help="input directory which stodge files with suffix. Normally, it should contain aln files directly.  ")
+@click.option('-o', 'odir',default=None,help="output directory which stodge the ouput aln files. default is the identifical to the input dir. Inplaced output. ")
+@click.option('-s', 'suffix', default='aln',help="suffix")
+@click.option('-ns', 'new_suffix', default='trimal',help="new suffix")
+@click.option('-np', 'num_parellel', default=10,help="number of parellel processes you want to run. ")
+@click.option('-ro', 'resoverlap', default=0.55,help="Minimum overlap of a positions with other positions in the column to be considered a good position. Range: [0 - 1]. See the userguide of trimal ")
+@click.option('-so', 'seqoverlap', default=60,help="Minimum percentage of good positions that a sequence must have in order to be conserved. Range: [0 - 100]. See the userguide of trimal")
 def cli(indir, odir, num_parellel, suffix, new_suffix, resoverlap, seqoverlap):
     if odir is None:
         odir = indir

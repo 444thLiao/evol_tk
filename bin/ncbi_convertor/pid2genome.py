@@ -20,7 +20,7 @@ def main(infile, ofile, force=False):
     ofile = process_path(ofile)
     order_id_list, id2annotate = parse_id(infile)
     convertor = NCBI_convertor(order_id_list,db='protein')
-    pid2assembly_dict = convertor.get_protein_pos_INFO()
+    pid2assembly_dict = convertor.pid2assembly()
 
     if not exists(dirname(ofile)):
         os.makedirs(dirname(ofile))

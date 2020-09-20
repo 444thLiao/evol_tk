@@ -42,7 +42,7 @@ def main(infile, ofile, db='protein', force=False, redo=False):
 
     if db == 'protein':
         convertor = NCBI_convertor(order_id_list,db='protein')
-        pid2assembly_dict = convertor.get_protein_pos_INFO()
+        pid2assembly_dict = convertor.pid2assembly()
         genome_IDs = list([_dict['assembly']
                            for pid,_dict in pid2assembly_dict.items()])
         genome_IDs = [_ for _ in genome_IDs if _]

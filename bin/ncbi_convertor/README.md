@@ -1,6 +1,6 @@
 
-### NCBI convertor
-This is a series of scripts used to retrieve metadata of given IDs like protein ID or genome/assembly id.
+### NCBI converter
+All converter functions actually has been embedded into a single object namely `NCBI_convertor`.
 
 For retrieving metadata from bioproject and biosample of NCBI, you could use below command
 

@@ -100,7 +100,7 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 @click.option("-in_a", 'in_annotations', help="Actually output directory which contains annotations files during extraction")
 @click.option("-s", "suffix", default='faa', help='suffix of protein files in `in_p`')
 @click.option("-o", 'outdir', help="name of output directory")
-@click.option("-evalue", 'evalue', default=1e-20, help="evalue for filtering out false-positive proteins. default is 1e-3 ")
+@click.option("-evalue", 'evalue', default=1e-20, help="evalue for filtering out false-positive proteins. default is 1e-20 ")
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option("-ot", 'output_type', default='prot', help="prot(protein) or nucl(nucleotide)")
