@@ -1,16 +1,15 @@
 import io
 from collections import defaultdict
 
-from Bio import Entrez
+from Bio import Entrez,SeqIO
 from tqdm import tqdm
 
 from bin.ncbi_convertor import edl, access_intermedia, tax2tax_info, parse_ipg
 from global_search.thirty_party.metadata_parser import parse_assembly_xml
 
-
-tax_convertable_dbs = ['protein', 'assembly','nuccore']
+tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
 batch_return_dbs = []
-single_return_dbs = ['protein','nuccore']
+single_return_dbs = ['protein', 'nuccore']
 
 
 class NCBI_convertor():
@@ -27,8 +26,10 @@ class NCBI_convertor():
         self.GI = None
         self.tids = {}
         self.dbsummary = {}
+
     def print_available_dbs(self):
         print("")
+
     def get_biosample(self):
         pass
 
@@ -136,7 +137,7 @@ class NCBI_convertor():
             self.tids[aid] = int(result['TaxId'])
 
     def get_key_from_summary_results(self, retrieve_r):
-        if self.dbname in ['protein','nuccore']:
+        if self.dbname in ['protein', 'nuccore']:
             return {retrieve_r['AccessionVersion']: retrieve_r}
 
     def construct_taxon_info_dict(self):
@@ -152,6 +153,7 @@ class NCBI_convertor():
         return id2taxon
 
     def update_all(self):
+        # todo: update whole convertor when it add extra ID
         pass
 
     def pid2assembly(self):
@@ -176,5 +178,17 @@ class NCBI_convertor():
                                   if _ not in pid2assembly_dict})
         return pid2assembly_dict
 
-    def transform_into_other_db(self,another_db):
+    def nid2assembly(self):
+        if self.dbname != 'nuccore':
+            raise SyntaxError("source database must be nuccore")
+        self.get_GI()
+        all_GI = list(self.GI.values())
+        results, failed = edl.efetch(db='nuccore',
+                                     ids=all_GI,
+                                     retmode='text',
+                                     retype='gb',
+                                     result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
+        #todo: finish it
+
+    def transform_into_other_db(self, another_db):
         pass
