@@ -1,10 +1,10 @@
 import io
 from collections import defaultdict
 
-from Bio import Entrez,SeqIO
+from Bio import Entrez, SeqIO
 from tqdm import tqdm
 
-from bin.ncbi_convertor import edl, access_intermedia, tax2tax_info, parse_ipg
+from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
 from global_search.thirty_party.metadata_parser import parse_assembly_xml
 
 tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
@@ -188,7 +188,7 @@ class NCBI_convertor():
                                      retmode='text',
                                      retype='gb',
                                      result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
-        #todo: finish it
+        # todo: finish it
 
     def transform_into_other_db(self, another_db):
         pass

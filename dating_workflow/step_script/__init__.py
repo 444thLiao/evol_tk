@@ -235,16 +235,24 @@ def write_out_stats(outdir, genome2genes, gene_ids):
 # two function for dating workflow(formatting the name of assembly genomes)
 def convert_genome_ID(genome_ID):
     # for GCA_900078535.2
-    # it will return
+    # it will return 900078535v2
     if isinstance(genome_ID, str) and genome_ID.startswith('GC'):
         return genome_ID.split('_')[-1].replace('.', 'v')
     else:
         return genome_ID
 
 
-def convert_genome_ID_rev(locus_ID, prefix='GCA_'):
+def convert_genome_ID_rev(locus_ID, prefix='GCA_',not_add_prefix_ids=[]):
     # for 900078535v2
-    # it will return
+    # it will return prefix + 900078535.2
+    if '_' in str(locus_ID):
+        locus_ID = locus_ID.partition('_')[0]
+        if locus_ID in not_add_prefix_ids and locus_ID:
+            return locus_ID
+    else:
+        if locus_ID in not_add_prefix_ids and locus_ID:
+            return locus_ID
+
     if isinstance(locus_ID, str) and not locus_ID.startswith('GC'):
         if '|' in locus_ID:
             # other labmater used

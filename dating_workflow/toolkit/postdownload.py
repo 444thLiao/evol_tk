@@ -28,14 +28,15 @@ def get_faa_from_prokka_r(infile,
                           odir,
                           sample_name,
                           prokka_p,
-                          return_cmd=False):
+                          return_cmd=False,
+                          thread_per_prokka=0):
     locustag = convert_genome_ID(sample_name)
     oprefix = f"{odir}/{sample_name}/{sample_name}"
     if exists(f'{oprefix}.faa'):
         # To existing prokka output, it would not rerun it.
         return f'{oprefix}.faa'
 
-    cmd = f'{prokka_p} {infile} --outdir {odir}/{sample_name} --force --prefix {sample_name} --locustag {locustag} --cpus 0 '
+    cmd = f'{prokka_p} {infile} --outdir {odir}/{sample_name} --force --prefix {sample_name} --locustag {locustag} --cpus {thread_per_prokka} '
     if return_cmd:
         return cmd
     run_cmd(cmd)
@@ -50,6 +51,7 @@ def cli(indir,
         prokka_p=" `which prokka`",
         thread=5,
         all_ids=None,
+thread_per_prokka=0
         ):
     """
     It would use the downloaded protein first.
@@ -103,10 +105,11 @@ def cli(indir,
                                            odir=tmp_dir,
                                            sample_name=sample_name,
                                            prokka_p=prokka_p,
-                                           return_cmd=True
+                                           return_cmd=True,
+                                           thread_per_prokka=thread_per_prokka,
                                            )
         if exists(prokka_cmd):
-            # output a file
+            # output is a file instead of cmd.
             prokka_ofile = prokka_cmd
             jobs2.append(f'cat {prokka_ofile} > {ofile}')
             continue
@@ -168,7 +171,8 @@ It includes
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
-def main(indir, odir, tmp_dir, genome_list, num_parellel, force):
+@click.option('-t', 'thread_per_prokka', default=0, help="num of threads prokka used. default 0 means all threads of a server.")
+def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka):
     if not exists(indir):
         raise IOError("input dir doesn't exist")
     if not exists(odir):
@@ -205,7 +209,8 @@ def main(indir, odir, tmp_dir, genome_list, num_parellel, force):
         tmp_dir=tmp_dir,
         force=force,
         thread=num_parellel,
-        all_ids=all_ids)
+        all_ids=all_ids,
+        thread_per_prokka=thread_per_prokka)
 
 
 if __name__ == "__main__":

@@ -133,7 +133,8 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
 @click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... please be carefully if you input trimal result or aln result. ', default='genes')
 @click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
-def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln', fix_refseq=False,
+@click.option('-not_add_prefix', 'not_add_prefix', help='provide a list of id which do not add prefix as others. ', default=None, required=False)
+def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln', fix_refseq=False,not_add_prefix=None,
          partition_method='genes'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
@@ -145,6 +146,10 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
         prefix = 'GCF_'
     else:
         prefix = 'GCA_'
+    if not_add_prefix is not None:
+        not_add_prefix_ids = [_ for _ in open(not_add_prefix).read().split('\n') if _]
+    else:
+        not_add_prefix_ids = []
     # from GCA become locus_tag
     record_pos_info = []
     gid2record = {gid: '' for gid in gids}
@@ -207,8 +212,7 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
             if set(str(seq)) == {'-'}:
                 print(f"{gid} contains only gaps or missing data ")
                 continue
-
-            f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix)}\n')
+            f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:
@@ -217,14 +221,15 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
 
-        gids = [convert_genome_ID_rev(_)
+        gids = [convert_genome_ID_rev(_,
+                                      not_add_prefix_ids=not_add_prefix_ids)
                 for _ in gids]
 
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
                           partition_method=partition_method,
-                          name_convertor=lambda x: convert_genome_ID_rev(x))
+                          name_convertor=lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids))
     if graph:
         generate_stats_graph(g2num_miss, total=len(gids), ofile=ograph)
 

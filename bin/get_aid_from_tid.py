@@ -8,7 +8,9 @@ import pandas as pd
 from ete3 import NCBITaxa
 
 ncbi = NCBITaxa()
-base_file = "/home-user/thliao/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
+
+HOME = os.getenv("HOME")
+base_file = f"{HOME}/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
 a = pd.read_csv(io.StringIO('\n'.join(open(base_file).read().split('\n')[1:])), sep='\t')
 
 #
