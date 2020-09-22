@@ -76,7 +76,7 @@ if __name__ == "__main__":
         for cmd in _cmds:
             # workdir = './'
             cmd = cmd.split(';')[-1]
-            cmd = cmd.replace('--cpus 30','--cpus 0')
+            # cmd = cmd.replace('--cpus 30','--cpus 30')
             job_file = os.path.join(job_directory, f"job_lth{count_}.job")
 
             with open(job_file, 'w') as fh:

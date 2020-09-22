@@ -27,6 +27,9 @@ class NCBI_convertor():
         self.tids = {}
         self.dbsummary = {}
 
+    def load_from_file(self,infile):
+        # todo:
+        pass
     def print_available_dbs(self):
         print("")
 

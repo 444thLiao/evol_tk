@@ -71,8 +71,6 @@ def main(infile, ofile, db='protein', force=False, redo=False):
         full_df = full_df.applymap(lambda x: x.replace('\n', ' ')
         if isinstance(x, str) else x)
         full_df = full_df.drop(['GI', 'relative biosample'], axis=1)
-    else:
-        raise Exception('too much genomes to process')
 
         if exists(ofile) and not force:
             tqdm.write("detect existing " + ofile +
@@ -81,6 +79,11 @@ def main(infile, ofile, db='protein', force=False, redo=False):
 
         full_df.to_csv(ofile, sep='\t', index=1, index_label='AssemblyAccn raw')
         tqdm.write('finish writing into ' + ofile + ' with tab separator format.')
+        
+    else:
+        raise Exception('too much genomes to process')
+
+
 
 
 @click.command()
