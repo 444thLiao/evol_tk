@@ -78,7 +78,20 @@ def parse_color_scheme_files(file, extra_set=False,get_raw_name=False):
 def main(newick1, newick2,
          color_file1=None, color_file2=None,
          l_legnth='max', sep='_', extra_set=False,
-         identical=False,relationship_l2r=None):
+         identical=False, relationship_l2r=None):
+    """
+
+    :param newick1: gene tree
+    :param newick2: species tree
+    :param color_file1:
+    :param color_file2:
+    :param l_legnth:
+    :param sep:
+    :param extra_set:
+    :param identical:
+    :param relationship_l2r:
+    :return:
+    """
     left_leaves = get_leafs(newick1)
     right_leaves = get_leafs(newick2)
     yscale = get_preferred_scale(newick1, newick2)
@@ -150,6 +163,8 @@ def main(newick1, newick2,
         rs = l2r.get(l, [])
         l_y = left_data.get(l, 0)
         for r in rs:
+            if r not in right_data:
+                continue
             r_y = right_data[r]
             _xs += [0, 1, None]
             _ys += [l_y, r_y, None]

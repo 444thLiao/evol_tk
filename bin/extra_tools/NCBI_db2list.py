@@ -2,7 +2,8 @@ import click
 from glob import glob
 from os.path import *
 
-
+import kmapper as km
+mapper = km.KeplerMapper(verbose=1)
 
 indir = "./"
 dirs = glob(f'{indir}/bacteria/*/')

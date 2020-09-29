@@ -107,7 +107,15 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
         cat2color = {_.split(':')[0]:_.split(':')[1] for _ in cat2color if _}
         
     text = get_result(result_file,
-                      cat2info=cat2color)
+                      cat2info=cat2color,
+                      threshold=threshold)
+
+    with open(join(odir, 'complex_habitat_prob.itol.txt'), 'w') as f1:
+        f1.write(text)
+
+    text = get_result(join(odir, 'simple_m', 'bst_simple.Log.txt'),
+                      cat2info=cat2color,
+                      threshold=threshold)
 
     with open(join(odir, 'complex_habitat_prob.itol.txt'), 'w') as f1:
         f1.write(text)

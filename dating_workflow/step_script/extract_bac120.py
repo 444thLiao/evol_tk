@@ -98,7 +98,9 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option("-pd", 'prokka_dir', default=None,
               help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir):
+@click.option("-p_a", 'pass_annotation', is_flag=True,default=False,
+              help="skip the annotation parts")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation):
     if genome_list is None:
         gids = []
     else:
@@ -109,8 +111,9 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
-    annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
-    annotate_bac120(protein_files, in_annotations, db_id='pfam')
+    if not pass_annotation:
+        annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
+        annotate_bac120(protein_files, in_annotations, db_id='pfam')
 
     tqdm.write("Parsing the annotation results...")
     genome2genes = parse_annotation(in_annotations, top_hit=False)

@@ -106,7 +106,9 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 @click.option("-ot", 'output_type', default='prot', help="prot(protein) or nucl(nucleotide)")
 @click.option("-pd", 'prokka_dir', default=None,
               help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir):
+@click.option("-p_a", 'pass_annotation', is_flag=True,default=False,
+              help="skip the annotation parts")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation):
     if genome_list is None:
         gids = []
     else:
@@ -117,8 +119,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
         exit(f"error input proteins dir {in_proteins}")
     if not exists(in_annotations):
         os.makedirs(in_annotations)
-
-    annotate_cog(protein_files, in_annotations)
+    if not pass_annotation:
+        annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
     if gids:
         _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}

@@ -3,7 +3,7 @@
 "python3 draw_tanglegram.py -newick1 ./all_1469_new.newick -newick2 ./nxrA.newick -cf1 ./gene_annotation.txt -cf2 ./phylum_annotate.txt -length 'max' -sep '_' -extra_set 'rename' "
 import sys
 
-from vis_for.newick.draw_tanglegram import *
+from .tanglegram import *
 from bin.format_newick import sort_tree
 from os.path import dirname, join, exists
 from ete3 import Tree

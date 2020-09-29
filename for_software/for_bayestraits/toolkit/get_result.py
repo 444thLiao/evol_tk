@@ -48,7 +48,7 @@ def get_df(infile, key='Iteration'):
 def get_result(infile, 
                cat2info={"M": '#0000ff',
                                  "N": '#D68529'},
-               threshold={"Y":0.5},return_p=False):
+               threshold=None,return_p=False):
     result_df = get_df(infile)
 
     mean_vals = result_df.mean()
