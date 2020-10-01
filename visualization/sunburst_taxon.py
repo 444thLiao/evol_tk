@@ -97,6 +97,9 @@ GCA_005192855     Proteobacteria  Epsilonproteobacteria  Campylobacterales  Camp
                 val = df.loc[(df[col] == v) & (df[pre_col] == pre_v), :].shape[0]
             else:
                 val = df.loc[(df[col] == v), :].shape[0]
+            
+            if idx != len(df.columns)-1:
+                v = v + f"count: {val}"
             data['character'].append(v)
             data['parent'].append(pre_v)
             data["value"].append(val)

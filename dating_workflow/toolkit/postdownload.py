@@ -56,9 +56,9 @@ thread_per_prokka=0
     """
     It would use the downloaded protein first.
     If it doesn't exist, it will perform prokka to predict genes.
-    :param indir:
-    :param odir:
-    :param tmp_dir:
+    :param indir: ./genbank
+    :param odir: ./modified_data/genome_protein_files/
+    :param tmp_dir: ./modified_data/prokka_o/
     :param reformatted_name: reformatted the output file or not
     :param force: overlap the output file or not
     :param force_prokka: deprecated

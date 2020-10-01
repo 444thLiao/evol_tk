@@ -42,7 +42,7 @@ if __name__ == "__main__":
     count_ = 0
     for cmd in cmds:
         workdir = cmd.split(';')[0].strip().split(' ')[-1]
-        cmd = cmd.split(';')[-1]
+        cmd = cmd.split(';')[-1].strip()
         job_file = os.path.join(job_directory,f"job_lth{count_}.job" )
 
 
