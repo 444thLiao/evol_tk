@@ -79,7 +79,7 @@ def filtration_part(gid2locus2ko, evalue=1e-50):
 @click.option("-p", 'prefix', default=None, help='prefix of output file, just the file name, it does not need to include dir name. ')
 @click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
 @click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
-@click.option("-test", "test", default=False, is_flag=True, help="test the output by sampling several genomes")
+@click.option("-test", "test", default=False, is_flag=True, help="test the format of the output by sampling only three tabs")
 def main(indir, odir, suffix, evalue, transpose, prefix,test):
     indir = process_path(indir)
     odir = process_path(odir)
@@ -97,7 +97,7 @@ def main(indir, odir, suffix, evalue, transpose, prefix,test):
         ofile_binary = join(odir, "merged_hmm_binary.tab")
         ofile_num = join(odir, "merged_hmm_num.tab")
     tqdm.write("Complete filterations...")
-    tqdm.write("It need iterating df three times to convert it into three kinds of df. Be patient...")
+    tqdm.write("It need time to convert the generated dict into DataFrame. Be patient...")
     final_df = pd.DataFrame.from_dict(post_filtered, orient='index')
     bin_df = final_df.applymap(lambda x: 0 if pd.isna(x) else 1)
     num_df = final_df.applymap(lambda x: 0 if pd.isna(x) else len(str(x).split(',')))
