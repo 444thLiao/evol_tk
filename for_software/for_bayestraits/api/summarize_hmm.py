@@ -14,7 +14,7 @@ from tqdm import tqdm
 from dating_workflow.step_script import convert_genome_ID_rev, process_path
 
 
-def retrieve_info(indir, suffix='.tab'):
+def retrieve_info(indir, suffix='.tab',test_or_not=False):
     # deal with --tblout instead of --domtblout
     suffix = suffix.strip('.')
     gid2locus2ko = defaultdict(list)
@@ -24,6 +24,10 @@ def retrieve_info(indir, suffix='.tab'):
         files_list = [indir]
     else:
         raise Exception()
+    
+    if test_or_not:
+        files_list = files_list[:3]
+        
     if not files_list:
         exit(f"no files could be found with input {join(indir, f'*.{suffix}')},please check the parameters. ")
     tqdm.write("reading all annotated result")
@@ -75,10 +79,11 @@ def filtration_part(gid2locus2ko, evalue=1e-50):
 @click.option("-p", 'prefix', default=None, help='prefix of output file, just the file name, it does not need to include dir name. ')
 @click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
 @click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
-def main(indir, odir, suffix, evalue, transpose, prefix):
+@click.option("-test", "test", default=False, is_flag=True, help="test the output by sampling several genomes")
+def main(indir, odir, suffix, evalue, transpose, prefix,test):
     indir = process_path(indir)
     odir = process_path(odir)
-    gid2locus2ko = retrieve_info(indir, suffix)
+    gid2locus2ko = retrieve_info(indir, suffix,test_or_not=test)
     post_filtered = filtration_part(gid2locus2ko, evalue)
     if not exists(odir):
         os.makedirs(odir)
