@@ -127,7 +127,7 @@ def main(indir, name2group, odir, no_plot=False):
         if not outfile:
             continue
         else:
-            outfile = outfile[0]
+            outfile = [_ for _ in outfile if 'slurm' not in _][0]
         # mcmc = join(each_dir, 'mcmc.txt')
         log = join(each_dir, 'run.log')
         if not exists(log):

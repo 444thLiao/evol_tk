@@ -130,7 +130,19 @@ text = to_binary_shape(gid2genes,
 
 with open('./itol_txt/27genes.txt', 'w') as f1:
     f1.write(text)
+# annotate cog25
+from dating_workflow.step_script.extract_cog25 import parse_annotation
+in_annotations = '/mnt/home-backup/thliao/NCBI/modified_data/cog25_annotate'
+genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=1e-20)
+genomes_list = [_ for _ in open('./over20p_genomes_add_cyano.list').read().split('\n') if _]
+gid2genes = {k: [_k for _k, _v in v.items() if _v] for k, v in genome2cdd.items() if k in genomes_list}
+all_genes = set([_ for vl in gid2genes.values() for _ in vl])
+text = to_binary_shape(gid2genes,
+                       {g: {'color': '#007acc'} for g in all_genes})
 
+with open('./itol_txt/cog25genes.txt', 'w') as f1:
+    f1.write(text)
+    
 # annotate completeness
 
 sub_ids = [_ for _ in open('./over20p_genomes.list').read().split('\n') if _]
