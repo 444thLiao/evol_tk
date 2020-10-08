@@ -29,6 +29,7 @@ def process_path(path):
 
 
 def preprocess_locus_name(locus):
+    locus = locus.strip()
     if '|' in locus:
         locus = str(locus).split('|')[-1].split(' ')[0]
     else:
@@ -267,8 +268,9 @@ def get_locus2group(df):
     # specific here
     locus2group = {}
     for group, row in df.iterrows():
-        for locus in [locus for _ in row.values
-                      for locus in str(_).split(',')]:
+        for locus in [locus
+                      for _ in row.values
+                      for locus in str(_).split(',') if locus]:
             locus = preprocess_locus_name(locus)
             locus2group[locus] = group
     return locus2group

@@ -17,6 +17,7 @@ def getOrder(infile, format='fasta'):
     # because the phage doesn't have different contig
     if format == 'fasta':
         # fixme: doesn't consider different contig problems
+        # todo: 
         records = SeqIO.parse(infile, format='fasta')
         return tuple([_.id for _ in records])
     elif format == 'gff':
