@@ -121,7 +121,8 @@ def targegroup_compare_violin(collect_, odir):
 def main(indir, name2group, odir, no_plot=False):
     tmp_df = pd.DataFrame()
     # collect_ = {}
-    processed_dir = list(glob(join(indir, '*run1')))
+    processed_dir = list(glob(join(indir, '*run*')))
+    # it would overwrite each when there are run1/run2
     for each_dir in tqdm(processed_dir):
         outfile = glob(join(each_dir, '*.out'))
         if not outfile:
