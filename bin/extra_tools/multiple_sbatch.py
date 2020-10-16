@@ -4,6 +4,7 @@ import os
 import sys
 import click
 import time
+from tqdm import tqdm
 def mkdir_p(dir):
     '''make a directory (dir) if it doesn't exist'''
     if not os.path.exists(dir):
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     cmds = open('./cmds').read().split('\n')
     from os.path import *
     new_cmds = []
-    for cmd in cmds:
+    for cmd in tqdm(cmds):
         odir = cmd.strip().split(' ')[4]
         gbk_file = join(odir,basename(odir)+'.gbk')
         if not exists(gbk_file):
@@ -76,14 +77,16 @@ if __name__ == "__main__":
         for cmd in _cmds:
             # workdir = './'
             cmd = cmd.split(';')[-1]
-            # cmd = cmd.replace('--cpus 30','--cpus 30')
+            cmd = cmd.replace('--cpus 10','--cpus 10')
             job_file = os.path.join(job_directory, f"job_lth{count_}.job")
 
             with open(job_file, 'w') as fh:
                 fh.writelines(f"#!{zsh_path}\n")
                 fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
-                #fh.writelines(f"#SBATCH --cpus-per-task=30\n")
+                fh.writelines(f"#SBATCH --cpus-per-task=10\n")
                 fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
+                fh.writelines(f"#SBATCH --cluster-constraint=cl002\n")
+                
                 # fh.writelines(f"#SBATCH --error=.out/job_lth{count_}.err\n")
                 # fh.writelines(f"#SBATCH --workdir={workdir}\n")
 

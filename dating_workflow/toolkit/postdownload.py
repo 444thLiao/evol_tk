@@ -51,7 +51,8 @@ def cli(indir,
         prokka_p=" `which prokka`",
         thread=5,
         all_ids=None,
-thread_per_prokka=0
+thread_per_prokka=0,
+dry_run=False
         ):
     """
     It would use the downloaded protein first.
@@ -127,10 +128,14 @@ thread_per_prokka=0
         # else:
         #     # print(p_file,ofile)
         #     pass
-
-    tqdm.write('run prokka')
-    with mp.Pool(processes=thread) as tp:
-        r = list(tqdm(tp.imap(run_cmd, jobs), total=len(jobs)))
+    if dry_run:
+        with open('./cmds','w') as f1:
+            f1.write('\n'.join(jobs))
+        return
+    else:
+        tqdm.write('run prokka')
+        with mp.Pool(processes=thread) as tp:
+            r = list(tqdm(tp.imap(run_cmd, jobs), total=len(jobs)))
 
     tqdm.write('run cat')
     for j in tqdm(jobs2):
@@ -172,7 +177,8 @@ It includes
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
 @click.option('-t', 'thread_per_prokka', default=0, help="num of threads prokka used. default 0 means all threads of a server.")
-def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka):
+@click.option('-dry_run', 'dry_run', default=False, is_flag=True, help="output commands need to run only. don't run it. ")
+def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka,dry_run):
     if not exists(indir):
         raise IOError("input dir doesn't exist")
     if not exists(odir):
@@ -210,7 +216,8 @@ def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokk
         force=force,
         thread=num_parellel,
         all_ids=all_ids,
-        thread_per_prokka=thread_per_prokka)
+        thread_per_prokka=thread_per_prokka,
+        dry_run=dry_run)
 
 
 if __name__ == "__main__":
