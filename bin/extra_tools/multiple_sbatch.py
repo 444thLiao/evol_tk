@@ -77,7 +77,7 @@ if __name__ == "__main__":
         for cmd in _cmds:
             # workdir = './'
             cmd = cmd.split(';')[-1]
-            cmd = cmd.replace('--cpus 10','--cpus 10')
+            cmd = cmd.replace('--cpus 0','--cpus 10')
             job_file = os.path.join(job_directory, f"job_lth{count_}.job")
 
             with open(job_file, 'w') as fh:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                 fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
                 fh.writelines(f"#SBATCH --cpus-per-task=10\n")
                 fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
-                fh.writelines(f"#SBATCH --cluster-constraint=cl002\n")
+                #fh.writelines(f"#SBATCH --cluster-constraint=cl002\n")
                 
                 # fh.writelines(f"#SBATCH --error=.out/job_lth{count_}.err\n")
                 # fh.writelines(f"#SBATCH --workdir={workdir}\n")

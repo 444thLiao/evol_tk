@@ -153,6 +153,8 @@ dry_run=False
             records = []
             for idx, record in enumerate(SeqIO.parse(p, format='fasta')):
                 new_name = locus_prefix + '_{:0>5}'.format(idx + 1)
+                if record.id.split('_')[0] == locus_prefix:
+                    break
                 name_map[record.id] = new_name
                 record.id = new_name
                 records.append(record)
