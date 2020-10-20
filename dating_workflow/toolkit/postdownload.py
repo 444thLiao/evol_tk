@@ -112,14 +112,14 @@ dry_run=False
         if exists(prokka_cmd):
             # output is a file instead of cmd.
             prokka_ofile = prokka_cmd
-            jobs2.append(f'cat {prokka_ofile} > {ofile}')
+            jobs2.append(f'ln -s {prokka_ofile} {ofile}')
             continue
         else:
             jobs.append(prokka_cmd)
 
         # collect prokka output file
         prokka_ofile = f"{tmp_dir}/{sample_name}/{sample_name}.faa"
-        jobs2.append(f'cat {prokka_ofile} > {ofile}')
+        jobs2.append(f'ln -s {prokka_ofile} {ofile}')
 
         # if p_file.endswith('.gz') and exists(prokka_ofile):
         #     run_cmd(f'gunzip -d -c {p_file} >{ofile}')
@@ -154,7 +154,7 @@ dry_run=False
             for idx, record in enumerate(SeqIO.parse(p, format='fasta')):
                 new_name = locus_prefix + '_{:0>5}'.format(idx + 1)
                 if record.id.split('_')[0] == locus_prefix:
-                    break
+                    continue
                 name_map[record.id] = new_name
                 record.id = new_name
                 records.append(record)

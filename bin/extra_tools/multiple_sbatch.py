@@ -28,34 +28,53 @@ def batch_iter(iter, batch_size):
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
 
+
+
 @click.command()
 @click.option("-i","infile",help="input file which stodge commands you want to batch")
-@click.option("")
+@click.option("-w","reset_working",help="reseting the working directory. It mainly for mcmctree. ")
+@click.option("-t","thread_per_tasks",default=None,help="Default would not set it. You could specify it to restrict the number of threads it used in each task.")
 def cli():
     pass
 
 
-if __name__ == "__main__":
-
-    cmd_files = sys.argv[1]
-    cmds=[_ for _ in open(cmd_files).read().split('\n')]
-
+def main(cmds):
+    
     count_ = 0
     for cmd in cmds:
-        workdir = cmd.split(';')[0].strip().split(' ')[-1]
+        # workdir = cmd.split(';')[0].strip().split(' ')[-1]
         cmd = cmd.split(';')[-1].strip()
         job_file = os.path.join(job_directory,f"job_lth{count_}.job" )
-
-
+        
         with open(job_file,'w') as fh:
             fh.writelines(f"#!{zsh_path}\n")
             fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
-            # fh.writelines(f"#SBATCH --output=.out/job_lth{count_}.out\n")
-            # fh.writelines(f"#SBATCH --error=.out/job_lth{count_}.err\n")
-            fh.writelines(f"#SBATCH --workdir={workdir}\n")
-            
+            fh.writelines(f"#SBATCH --cpus-per-task=10\n")
+            fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
+            # fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)
+        os.system("sbatch %s" %job_file)
+        count_ += 1
+    
 
+if __name__ == "__main__":
+
+    cmd_file = sys.argv[1]
+    # cmd_file = './cmds'
+    cmds=[_ for _ in open(cmd_file).read().split('\n')]
+
+    count_ = 0
+    for cmd in cmds:
+        # workdir = cmd.split(';')[0].strip().split(' ')[-1]
+        cmd = cmd.split(';')[-1].strip()
+        job_file = os.path.join(job_directory,f"job_lth{count_}.job" )
+        
+        with open(job_file,'w') as fh:
+            fh.writelines(f"#!{zsh_path}\n")
+            fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
+            fh.writelines(f"#SBATCH --cpus-per-task=10\n")
+            # fh.writelines(f"#SBATCH --workdir={workdir}\n")
+            fh.writelines(cmd)
         os.system("sbatch %s" %job_file)
         count_ += 1
 

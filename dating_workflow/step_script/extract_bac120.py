@@ -24,7 +24,7 @@ tigfam_ids = [_.strip() for _ in id_list if _.startswith('TIGR')]
 
 # ABOVE is the default setting for luolab server.
 
-def annotate_bac120(protein_files, odir, db_id='pfam'):
+def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
     params = []
     if not exists(odir):
         os.makedirs(odir)
@@ -33,23 +33,19 @@ def annotate_bac120(protein_files, odir, db_id='pfam'):
         gname = basename(pfile).replace('.faa', '')
         if db_id == 'pfam':
             ofile = f'{odir}/PFAM/{gname}.out'
-            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu 40 {pfam_db} {pfile}"
+            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu {cpu} {pfam_db} {pfile}"
         elif db_id == 'tigrfam':
             ofile = f'{odir}/TIGRFAM/{gname}.out'
-            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu 40 {tigfam_db} {pfile}"
+            cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu {cpu} {tigfam_db} {pfile}"
         else:
             raise SyntaxError('unknown %s' % db_id)
-        # else:
-        #     ofile = f'{odir}/{db_id}/{gname}.out'
-        #     assert exists(f"{tigfam_db_dir}/{db_id}.HMM")
-        #     cmd = f"/usr/local/bin/hmmscan --tblout {ofile} --acc --noali --notextw --cpu 40 {tigfam_db_dir}/{db_id}.HMM {pfile}"
         if not exists(ofile):
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))
             params.append(cmd)
             # check_call(cmd, shell=1)
     # print(params)
-    with mp.Pool(processes=5) as tp:
+    with mp.Pool(processes=num_p) as tp:
         r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
@@ -100,7 +96,9 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
               help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
 @click.option("-p_a", 'pass_annotation', is_flag=True,default=False,
               help="skip the annotation parts")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation):
+@click.option("-a", 'annotation_only', is_flag=True,default=False,
+              help="only run the annotation parts")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only):
     if genome_list is None:
         gids = []
     else:
@@ -111,10 +109,13 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
+    
     if not pass_annotation:
         annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
         annotate_bac120(protein_files, in_annotations, db_id='pfam')
-
+    if annotation_only:
+        exit(f"finish annotation")
+        
     tqdm.write("Parsing the annotation results...")
     genome2genes = parse_annotation(in_annotations, top_hit=False)
     gene_ids = pfam_ids + tigfam_ids
