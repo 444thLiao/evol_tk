@@ -18,7 +18,6 @@ def get_r2(text):
 mc1 = './dating_for/198g_3cal_set3_rgene_1_10/mcmc_for/mcmc.txt'
 mc2 = './dating_for/198g_3cal_set3_rgene_1_10/mcmc_for/repeat04/mcmc.txt'
 def draw_conv_plot(mc1,mc2):
-    
     t1 = parse_mcmc(mc1)
     t2 = parse_mcmc(mc2)
     nodes = [_ for _ in t1.index if _.startswith('t_')]

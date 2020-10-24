@@ -28,9 +28,14 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
     params = []
     if not exists(odir):
         os.makedirs(odir)
+    
+    size0_pfiles = []
     hmmscan = '`which hmmscan`'
     for pfile in protein_files:
         gname = basename(pfile).replace('.faa', '')
+        if getsize(pfile) !=0:
+            size0_pfiles.append(pfile)
+            continue
         if db_id == 'pfam':
             ofile = f'{odir}/PFAM/{gname}.out'
             cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu {cpu} {pfam_db} {pfile}"
@@ -87,7 +92,7 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
 @click.option("-in_p", 'in_proteins', help='input directory which contains protein sequences file')
 @click.option("-in_a", 'in_annotations', help="Actually output directory which contains annotations files during extraction")
 @click.option("-s", "suffix", default='faa', help='suffix of protein files in `in_p`')
-@click.option("-o", 'outdir', help="name of output directory")
+@click.option("-o", 'outdir', help="name of output directory",default=None,required=False)
 @click.option("-evalue", 'evalue', default=1e-50, help="evalue for filtering out false-positive proteins. default is 1e-50 ")
 @click.option("-ot", 'output_type', default='prot', help="prot(protein) or nucl(nucleotide)")
 @click.option("-gl", "genome_list", default=None,

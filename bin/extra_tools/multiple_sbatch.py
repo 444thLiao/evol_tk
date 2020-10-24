@@ -44,16 +44,16 @@ def main(cmds):
     for cmd in cmds:
         # workdir = cmd.split(';')[0].strip().split(' ')[-1]
         cmd = cmd.split(';')[-1].strip()
-        job_file = os.path.join(job_directory,f"job_lth{count_}.job" )
+        job_file = os.path.join(job_directory,f"job_lth_{count_}.job" )
         
         with open(job_file,'w') as fh:
             fh.writelines(f"#!{zsh_path}\n")
-            fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
+            fh.writelines(f"#SBATCH --job-name=job_lth_{count_}.job\n")
             fh.writelines(f"#SBATCH --cpus-per-task=10\n")
-            fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
+            fh.writelines(f"#SBATCH --output={job_directory}/job_lth_{count_}.out\n")
             # fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)
-        os.system("sbatch %s" %job_file)
+        os.system("sbatch %s" % job_file)
         count_ += 1
     
 

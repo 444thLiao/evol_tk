@@ -99,7 +99,7 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 @click.option("-in_p", 'in_proteins', help='input directory which contains protein sequences file')
 @click.option("-in_a", 'in_annotations', help="Actually output directory which contains annotations files during extraction")
 @click.option("-s", "suffix", default='faa', help='suffix of protein files in `in_p`')
-@click.option("-o", 'outdir', help="name of output directory")
+@click.option("-o", 'outdir', help="name of output directory",default=None,required=False)
 @click.option("-evalue", 'evalue', default=1e-20, help="evalue for filtering out false-positive proteins. default is 1e-20 ")
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
@@ -108,7 +108,9 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
               help="directory which restore the output of each genome. acceptable directory should contain  prokka_dir/genome_id/genome_id.faa and ffn (for nucleotide). ")
 @click.option("-p_a", 'pass_annotation', is_flag=True,default=False,
               help="skip the annotation parts")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation):
+@click.option("-a", 'annotation_only', is_flag=True,default=False,
+              help="only run the annotation parts")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only):
     if genome_list is None:
         gids = []
     else:
@@ -121,6 +123,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
         os.makedirs(in_annotations)
     if not pass_annotation:
         annotate_cog(protein_files, in_annotations)
+    if annotation_only:
+        exit(f"finish annotation")
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
     if gids:
         _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
