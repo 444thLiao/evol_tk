@@ -38,9 +38,13 @@ cdd_num.pop('TIGR00487')
 
 def annotate_cog(protein_file_list, cog_out_dir):
     params = []
+    size0_pfiles = []
     for f in protein_file_list:
         gname = basename(f).replace('.faa', '')
         # for cdd
+        if getsize(f) ==0:
+            size0_pfiles.append(f)
+            continue
         ofile = f'{cog_out_dir}/{gname}.out'
         cmd = f"`which rpsblast` -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-3  -out {ofile}"
         if not os.path.exists(ofile):
@@ -54,6 +58,7 @@ def annotate_cog(protein_file_list, cog_out_dir):
         #     if not exists(dirname(ofile)):
         #         os.makedirs(dirname(ofile))
         #     params.append(cmd)
+    tqdm.write(f'{len(size0_pfiles)} files are empty.')
     with mp.Pool(processes=5) as tp:
         list(tqdm(tp.imap(run, params), total=len(params)))
 

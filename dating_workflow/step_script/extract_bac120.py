@@ -33,7 +33,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
     hmmscan = '`which hmmscan`'
     for pfile in protein_files:
         gname = basename(pfile).replace('.faa', '')
-        if getsize(pfile) !=0:
+        if getsize(pfile) ==0:
             size0_pfiles.append(pfile)
             continue
         if db_id == 'pfam':
@@ -50,6 +50,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
             params.append(cmd)
             # check_call(cmd, shell=1)
     # print(params)
+    tqdm.write(f'{len(size0_pfiles)} files are empty.')
     with mp.Pool(processes=num_p) as tp:
         r = list(tqdm(tp.imap(run, params), total=len(params)))
 
