@@ -7,7 +7,7 @@ import pickle
 from collections import defaultdict
 from glob import glob
 from os.path import *
-
+import hashlib
 import click
 from tqdm import tqdm
 
@@ -72,11 +72,15 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     tqdm.write('start to read/parse output files')
     cdd_anno_files = glob(join(cog_out_dir, '*.out'))
 
-    # hash_str = int(hash(tuple(sorted(cdd_anno_files))))
-    # cache_file = join(cog_out_dir, f'.tmp{hash_str}')
-    # if exists(cache_file):
-    #     genome2cdd = pickle.load(open(cache_file, 'rb'))
-    #     return genome2cdd
+    t = ''.join(sorted(cdd_anno_files + [str(top_hit)]))
+    m = hashlib.md5(t.encode())
+    hash_str = m.hexdigest()
+    
+    cache_file = join(cog_out_dir, f'.tmp{hash_str}')
+    if exists(cache_file):
+        genome2cdd = pickle.load(open(cache_file, 'rb'))
+        genome2cdd = dict(genome2cdd)
+        return genome2cdd
 
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
