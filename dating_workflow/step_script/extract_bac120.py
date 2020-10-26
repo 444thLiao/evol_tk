@@ -89,9 +89,9 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
         genome2annotate[gname].update(locus_dict)
         
     genome2annotate = dict(genome2annotate)
-    # if not exists(cache_file):
-    #     with open(cache_file, 'wb') as f1:
-    #         pickle.dump(genome2annotate, f1)
+    if not exists(cache_file):
+        with open(cache_file, 'wb') as f1:
+            pickle.dump(genome2annotate, f1)
     return genome2annotate
 
 
