@@ -225,6 +225,8 @@ def stats_cog(genome2genes, gene_ids):
 
 def write_out_stats(outdir, genome2genes, gene_ids):
     gene_multi, gene_Ubiquity, gene2genomes = stats_cog(genome2genes, gene_ids)
+    if not exists(outdir):
+        os.makedirs(outdir)
     with open(join(outdir, 'stats.tab'), 'w') as f1:
         f1.write("gene name\tnumber of genomes containing multiple of it\tnumber of genomes cotaining it\n")
         for g in gene_ids:
