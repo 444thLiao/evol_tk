@@ -143,24 +143,26 @@ dry_run=False
     processed_ids = [_.split('/')[-1].strip().replace('.faa', '') for _ in jobs2]
     # format protein id
     # one thing need to be noted. The ID produced by prokka would not directly equal to the formatted name here. Because the number of prokka would include the rRNA gene. the formatted name here would not.
-    if reformatted_name:
-        name_map = {}
-        for p in tqdm(glob(join(odir, '*.faa'))):
-            name = basename(p).replace('.faa', '')
-            if not force and name not in processed_ids:
-                continue
-            locus_prefix = convert_genome_ID(name)
-            records = []
-            for idx, record in enumerate(SeqIO.parse(p, format='fasta')):
-                new_name = locus_prefix + '_{:0>5}'.format(idx + 1)
-                if record.id.split('_')[0] == locus_prefix:
-                    continue
-                name_map[record.id] = new_name
-                record.id = new_name
-                records.append(record)
-            SeqIO.write(records,
-                        open(p, 'w'),
-                        format='fasta-2line')
+    
+    # danage behaviour
+    # if reformatted_name:
+    #     name_map = {}
+    #     for p in tqdm(glob(join(odir, '*.faa'))):
+    #         name = basename(p).replace('.faa', '')
+    #         if not force and name not in processed_ids:
+    #             continue
+    #         locus_prefix = convert_genome_ID(name)
+    #         records = []
+    #         for idx, record in enumerate(SeqIO.parse(p, format='fasta')):
+    #             new_name = locus_prefix + '_{:0>5}'.format(idx + 1)
+    #             if record.id.split('_')[0] == locus_prefix:
+    #                 continue
+    #             name_map[record.id] = new_name
+    #             record.id = new_name
+    #             records.append(record)
+    #         SeqIO.write(records,
+    #                     open(p, 'w'),
+    #                     format='fasta-2line')
 
 
 @click.command(help="""
