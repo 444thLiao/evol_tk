@@ -137,14 +137,14 @@ dry_run=False
         with mp.Pool(processes=thread) as tp:
             r = list(tqdm(tp.imap(run_cmd, jobs), total=len(jobs)))
 
-    tqdm.write('run cat')
+    tqdm.write('run soft link to save space')
     for j in tqdm(jobs2):
         run_cmd(j)
-    processed_ids = [_.split('/')[-1].strip().replace('.faa', '') for _ in jobs2]
+    # processed_ids = [_.split('/')[-1].strip().replace('.faa', '') for _ in jobs2]
     # format protein id
     # one thing need to be noted. The ID produced by prokka would not directly equal to the formatted name here. Because the number of prokka would include the rRNA gene. the formatted name here would not.
     
-    # danage behaviour
+    # dangerous behaviour
     # if reformatted_name:
     #     name_map = {}
     #     for p in tqdm(glob(join(odir, '*.faa'))):
