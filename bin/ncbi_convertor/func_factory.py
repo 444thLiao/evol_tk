@@ -1,3 +1,4 @@
+from bin.ncbi_convertor.pid2GI import main
 import io
 from collections import defaultdict
 
@@ -11,7 +12,7 @@ tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
 batch_return_dbs = []
 single_return_dbs = ['protein', 'nuccore']
 
-
+edl.num_threads = 5
 class NCBI_convertor():
     "prototype of function which convert ID to GI"
 
@@ -186,12 +187,63 @@ class NCBI_convertor():
             raise SyntaxError("source database must be nuccore")
         self.get_GI()
         all_GI = list(self.GI.values())
-        results, failed = edl.efetch(db='nuccore',
-                                     ids=all_GI,
-                                     retmode='text',
-                                     retype='gb',
-                                     result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
+        # results, failed = edl.efetch(db='nuccore',
+        #                              ids=all_GI,
+        #                              retmode='text',
+        #                              retype='gb',
+        #                              result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
+        
+        
+        results, failed = edl.elink(dbfrom='nuccore',
+                                    db='assembly',
+                                ids=all_GI,
+                                batch_size=1,
+                                result_func=lambda x: Entrez.read(
+                                                     io.StringIO(x)))
+        nid2assembly_dict = {}
+        for r in results:
+            if r['LinkSetDb']:
+                nid2assembly_dict[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
+        
+        return nid2assembly_dict
         # todo: finish it
 
     def transform_into_other_db(self, another_db):
         pass
+
+if __name__ == "__main__":
+    tab = pd.read_csv("/home-user/jjtao/Rhizobiales/FLnif-query/gene/query_result/nifH_custom.blast",sep='\t',header=None)
+    all_nuc_id = tab[0]
+    all_nuc_id = list(set(all_nuc_id))
+    nc = NCBI_convertor(all_nuc_id,'nuccore')
+    nc.get_GI()
+    all_GI = list(nc.GI.values())
+    
+    results, failed = edl.elink(dbfrom='nuccore',
+                                db='assembly',
+                            ids=all_GI,
+                            batch_size=1,
+                            result_func=lambda x: Entrez.read(
+                                                    io.StringIO(x)))
+    have_assembly_nuc = {}
+    for r in results:
+        if r['LinkSetDb']:
+            have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
+    
+    all_genome_id = [v for k,v in have_assembly_nuc.items() if v]
+    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_genome_id)
+    
+    ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
+    # ginfo_df.index = ginfo_df.iloc[:,0]
+    bp_df = pd.DataFrame.from_dict(bp2info, orient='index')
+    bs_df = pd.DataFrame.from_dict(bs2info, orient='index')
+    _df1 = bp_df.reindex(ginfo_df.loc[:, 'BioprojectAccn'])
+    _df1.index = ginfo_df.index
+    _df2 = bs_df.reindex(ginfo_df.loc[:, 'BioSampleAccn'])
+    _df2.index = ginfo_df.index
+    full_df = pd.concat([ginfo_df,
+                            _df1,
+                            _df2], axis=1)
+    full_df = full_df.applymap(lambda x: x.replace('\n', ' ')
+    if isinstance(x, str) else x)
+    full_df = full_df.drop(['GI', 'relative biosample'], axis=1)
