@@ -12,11 +12,10 @@ tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
 batch_return_dbs = []
 single_return_dbs = ['protein', 'nuccore']
 
-edl.num_threads = 5
 class NCBI_convertor():
     "prototype of function which convert ID to GI"
 
-    def __init__(self, IDs, db):
+    def __init__(self, IDs, db,given_edl=edl):
         """
         :param IDs: The requested ID
         :param db: Which database of those ID belong to
@@ -27,7 +26,7 @@ class NCBI_convertor():
         self.GI = None
         self.tids = {}
         self.dbsummary = {}
-
+        self.edl = given_edl
     def load_from_file(self,infile):
         # todo:
         pass
@@ -56,7 +55,7 @@ class NCBI_convertor():
         if self.GI is not None:
             return
         tqdm.write("Get GI......")
-        results, failed = edl.esearch(db=self.dbname,
+        results, failed = self.edl.esearch(db=self.dbname,
                                       ids=self.origin_ids,
                                       result_func=lambda x: Entrez.read(
                                           io.StringIO(x))['IdList'],
@@ -67,7 +66,7 @@ class NCBI_convertor():
         _count = 0
         while failed:
             failed_id_list = failed
-            _results, failed = edl.esearch(db=self.dbname,
+            _results, failed = self.edl.esearch(db=self.dbname,
                                            ids=failed_id_list,
                                            result_func=lambda x: Entrez.read(
                                                io.StringIO(x))['IdList'],
@@ -79,7 +78,7 @@ class NCBI_convertor():
                 break
 
         tqdm.write('still %s failed IDs, be careful.....' % len(failed))
-        # for edl.esearch, it will auto **zip** searched term and its result.
+        # for self.edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
         id2gi.update(_results_dict)
         id2gi = {pid: id2gi.get(pid, '') for pid in self.origin_ids}
@@ -101,7 +100,7 @@ class NCBI_convertor():
             pass
 
         elif self.dbname in single_return_dbs:
-            results, failed = edl.esummary(db=self.dbname,
+            results, failed = self.edl.esummary(db=self.dbname,
                                            ids=all_GI,
                                            result_func=lambda x: Entrez.read(
                                                io.StringIO(x))
@@ -110,7 +109,7 @@ class NCBI_convertor():
             if failed:
                 tqdm.write("failed retrieve summary of %s protein ID" % len(failed))
                 tqdm.write("retrieve each failed GI one by one")
-                _results, _failed = edl.esummary(db=self.dbname,
+                _results, _failed = self.edl.esummary(db=self.dbname,
                                                  ids=failed,
                                                  batch_size=1,
                                                  result_func=lambda x: Entrez.read(
@@ -122,7 +121,7 @@ class NCBI_convertor():
                 self.dbsummary.update(_dict)
 
         elif self.dbname == 'assembly':
-            results, failed = edl.esummary(db='assembly',
+            results, failed = self.edl.esummary(db='assembly',
                                            ids=all_GI,
                                            result_func=lambda x: parse_assembly_xml(x))
             # return results is a list of defaultdict.
@@ -165,7 +164,7 @@ class NCBI_convertor():
             raise SyntaxError("source database must be protein")
         self.get_GI()
         all_GI = list(self.GI.values())
-        results, failed = edl.efetch(db='protein',
+        results, failed = self.edl.efetch(db='protein',
                                      ids=all_GI,
                                      retmode='ipg',
                                      retype='xml',
@@ -187,14 +186,14 @@ class NCBI_convertor():
             raise SyntaxError("source database must be nuccore")
         self.get_GI()
         all_GI = list(self.GI.values())
-        # results, failed = edl.efetch(db='nuccore',
+        # results, failed = self.edl.efetch(db='nuccore',
         #                              ids=all_GI,
         #                              retmode='text',
         #                              retype='gb',
         #                              result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
         
         
-        results, failed = edl.elink(dbfrom='nuccore',
+        results, failed = self.edl.elink(dbfrom='nuccore',
                                     db='assembly',
                                 ids=all_GI,
                                 batch_size=1,
@@ -212,12 +211,15 @@ class NCBI_convertor():
         pass
 
 if __name__ == "__main__":
+    import pandas as pd
     tab = pd.read_csv("/home-user/jjtao/Rhizobiales/FLnif-query/gene/query_result/nifH_custom.blast",sep='\t',header=None)
     all_nuc_id = tab[0]
     all_nuc_id = list(set(all_nuc_id))
     nc = NCBI_convertor(all_nuc_id,'nuccore')
     nc.get_GI()
     all_GI = list(nc.GI.values())
+    nid2assembly_dict = nc.nid2assembly()
+    
     
     results, failed = edl.elink(dbfrom='nuccore',
                                 db='assembly',
