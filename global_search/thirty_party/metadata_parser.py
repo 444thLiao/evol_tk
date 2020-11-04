@@ -94,6 +94,7 @@ def parse_assembly_xml(xml_text):
     split_out = soup.find_all("DocumentSummary")
     for each_record in split_out:
         assembly2info = defaultdict(dict)
+        uid = each_record['id']
         aid = each_record.find('AssemblyAccession').text.strip().strip('\n')
         info_get_ = ['Genbank',
                      'SpeciesName',
@@ -107,6 +108,7 @@ def parse_assembly_xml(xml_text):
                      'BioSampleId',
                      'FtpPath_GenBank',
                      'FtpPath_RefSeq']
+        assembly2info[aid][GI] = uid
         for key in info_get_:
             _cache = each_record.find(key)
             if _cache:
@@ -121,6 +123,7 @@ def parse_assembly_xml(xml_text):
                     assembly2info[aid][key] = _cache.text.strip().strip('\n')
                 else:
                     assembly2info[aid][key] = _cache.text.strip().strip('\n')
+        
         bioproject_total = each_record.find_all('GB_BioProjects')
         if bioproject_total:
             bioproject_total = bioproject_total[0]

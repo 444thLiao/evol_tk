@@ -128,6 +128,7 @@ class NCBI_convertor():
                 _dict = dict(_dict)
                 for aid, info_dict in _dict.items():
                     info_dict['TaxId'] = info_dict['SpeciesTaxid']
+                    
                 self.dbsummary.update(_dict)
 
     def get_taxon(self, ):
@@ -214,24 +215,48 @@ if __name__ == "__main__":
     tab = pd.read_csv("/home-user/jjtao/Rhizobiales/FLnif-query/gene/query_result/nifH_custom.blast",sep='\t',header=None)
     all_nuc_id = tab[0]
     all_nuc_id = list(set(all_nuc_id))
-    nc = NCBI_convertor(all_nuc_id,'nuccore')
+    
+    edl = EntrezDownloader(
+        # An email address. You might get blocked by the NCBI without specifying one.
+        email='l0404th@gmail.com',
+        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+        api_key='8ed14220bcca55509d656978cb3f3aa09708',
+        num_threads=5,                       # The number of parallel requests to make
+        batch_size=5,                        # The number of IDs to fetch per request
+        pbar=True                             # Enables a progress bar, requires tqdm package
+    )
+    from Bio import Entrez
+    nid2GI = {}
+    failed_nid = []
+    for id in tqdm(all_nuc_id):
+        try:
+            x = Entrez.esearch('nuccore',id,
+                        )
+            r = Entrez.read(x)['IdList']
+            if r:
+                nid2GI[id] = r[0]
+            else:
+                failed_nid.append(id)
+        except:
+            failed_nid.append(id)
+    nc = NCBI_convertor(all_nuc_id,'nuccore',given_edl=edl)
     nc.get_GI()
     all_GI = list(nc.GI.values())
     nid2assembly_dict = nc.nid2assembly()
     
     
-    results, failed = edl.elink(dbfrom='nuccore',
-                                db='assembly',
-                            ids=all_GI,
-                            batch_size=1,
-                            result_func=lambda x: Entrez.read(
-                                                    io.StringIO(x)))
-    have_assembly_nuc = {}
-    for r in results:
-        if r['LinkSetDb']:
-            have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
+    # results, failed = edl.elink(dbfrom='nuccore',
+    #                             db='assembly',
+    #                         ids=all_GI,
+    #                         batch_size=1,
+    #                         result_func=lambda x: Entrez.read(
+    #                                                 io.StringIO(x)))
+    # have_assembly_nuc = {}
+    # for r in results:
+    #     if r['LinkSetDb']:
+    #         have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
     
-    all_genome_id = [v for k,v in have_assembly_nuc.items() if v]
+    all_genome_id = [v for k,v in nid2assembly_dict.items() if v]
     gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_genome_id)
     
     ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
