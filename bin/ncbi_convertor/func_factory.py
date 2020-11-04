@@ -1,8 +1,7 @@
-from bin.ncbi_convertor.pid2GI import main
 import io
 from collections import defaultdict
 
-from Bio import Entrez, SeqIO
+from Bio import Entrez
 from tqdm import tqdm
 
 from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
