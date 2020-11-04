@@ -108,7 +108,7 @@ def parse_assembly_xml(xml_text):
                      'BioSampleId',
                      'FtpPath_GenBank',
                      'FtpPath_RefSeq']
-        assembly2info[aid][GI] = uid
+        assembly2info[aid]['GI'] = uid
         for key in info_get_:
             _cache = each_record.find(key)
             if _cache:
