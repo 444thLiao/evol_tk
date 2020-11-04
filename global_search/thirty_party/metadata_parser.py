@@ -94,7 +94,7 @@ def parse_assembly_xml(xml_text):
     split_out = soup.find_all("DocumentSummary")
     for each_record in split_out:
         assembly2info = defaultdict(dict)
-        uid = each_record['id']
+        uid = each_record['uid']
         aid = each_record.find('AssemblyAccession').text.strip().strip('\n')
         info_get_ = ['Genbank',
                      'SpeciesName',

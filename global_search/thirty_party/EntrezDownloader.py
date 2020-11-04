@@ -236,7 +236,7 @@ class EntrezDownloader:
             result_collector.add_failed(ids)
             print(error)
 
-    def elink(self, dbfrom, db, ids, result_func=lambda x: [x], **kwargs):
+    def elink(self, dbfrom, db, ids,batch_size=None, result_func=lambda x: [x], **kwargs):
         """Interface to the elink database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
@@ -249,7 +249,8 @@ class EntrezDownloader:
             results = ResultCollector()
 
         executor = ThreadPoolExecutor(max_workers=self.num_threads)
-
+        if not batch_size:
+            batch_size = self.batch_size
         fs = []
         for start in range(0, len(ids), self.batch_size):
             num = len(ids)-start

@@ -181,11 +181,15 @@ class NCBI_convertor():
                                   if _ not in pid2assembly_dict})
         return pid2assembly_dict
 
-    def nid2assembly(self):
+    def nid2assembly(self,all_GI=None):
         if self.dbname != 'nuccore':
             raise SyntaxError("source database must be nuccore")
-        self.get_GI()
-        all_GI = list(self.GI.values())
+        
+        if not all_GI:
+            if  self.GI is None:
+                self.get_GI()
+            all_GI = list(self.GI.values())
+            
         # results, failed = self.edl.efetch(db='nuccore',
         #                              ids=all_GI,
         #                              retmode='text',
@@ -196,7 +200,7 @@ class NCBI_convertor():
         results, failed = self.edl.elink(dbfrom='nuccore',
                                     db='assembly',
                                 ids=all_GI,
-                                batch_size=1,
+                                batch_size=30,
                                 result_func=lambda x: Entrez.read(
                                                      io.StringIO(x)))
         nid2assembly_dict = {}
@@ -242,9 +246,11 @@ if __name__ == "__main__":
     nc = NCBI_convertor(all_nuc_id,'nuccore',given_edl=edl)
     nc.get_GI()
     all_GI = list(nc.GI.values())
-    nid2assembly_dict = nc.nid2assembly()
+    nid2assembly_dict = nc.nid2assembly(all_GI)
     
-    
+    df = pd.read_csv("/home-user/thliao/tmp/nuc_info.tab",sep='\t')
+    all_assembly_GI = [str(int(_)) for _ in df['assembly GI'] if not pd.isna(_)]
+    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
     # results, failed = edl.elink(dbfrom='nuccore',
     #                             db='assembly',
     #                         ids=all_GI,
@@ -257,7 +263,7 @@ if __name__ == "__main__":
     #         have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
     
     all_genome_id = [v for k,v in nid2assembly_dict.items() if v]
-    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_genome_id)
+    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
     
     ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
     # ginfo_df.index = ginfo_df.iloc[:,0]
