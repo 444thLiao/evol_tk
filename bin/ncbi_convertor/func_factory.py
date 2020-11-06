@@ -50,49 +50,44 @@ class NCBI_convertor():
         else:
             print("No cache found.")
 
-    def get_GI(self, num_retry=5):
-        if self.GI is not None:
+    def get_GI(self, num_retry=5,method='init'):
+        if self.GI is not None and method !='update':
             return
+        if method =='update' and self.GI is not None:
+            ids = [k for k,v in self.GI.items() if not v]
+        elif method =='init' or self.GI is None:
+            ids = self.origin_ids
         tqdm.write("Get GI......")
         results, failed = self.edl.esearch(db=self.dbname,
-                                      ids=self.origin_ids,
+                                      ids=ids,
                                       result_func=lambda x: Entrez.read(
                                           io.StringIO(x))['IdList'],
                                       batch_size=1
                                       )
-        # manual retry the retrieval in case of network problems
-        _results_dict = {}
-        _count = 0
-        while failed:
-            failed_id_list = failed
-            _results, failed = self.edl.esearch(db=self.dbname,
-                                           ids=failed_id_list,
-                                           result_func=lambda x: Entrez.read(
-                                               io.StringIO(x))['IdList'],
-                                           batch_size=1
-                                           )
-            _results_dict.update(dict(_results))
-            _count += 1
-            if _count >= num_retry:
-                break
 
-        tqdm.write('still %s failed IDs, be careful.....' % len(failed))
         # for self.edl.esearch, it will auto **zip** searched term and its result.
         id2gi = dict(results)
-        id2gi.update(_results_dict)
-        id2gi = {pid: id2gi.get(pid, '') for pid in self.origin_ids}
+        id2gi = {pid: id2gi.get(pid, '') for pid in ids}
         # stodge the result into intermedia file for second access.
         process_name = f"{self.dbname}2GI"
         access_intermedia(id2gi, suffix=process_name)
 
-        self.GI = id2gi
+        if self.GI is None:
+            self.GI = id2gi
+        else:
+            self.GI.update(id2gi)
         self.failed_ids = failed
 
-    def get_db_summary(self):
+    def get_db_summary(self,all_GI=None,method='update'):
         if self.GI is None:
             self.get_GI()
-
-        all_GI = list(set(self.GI.values()))
+        if method=='update':
+            all_GI = list(set(self.GI.values()))
+            all_GI = list(set(all_GI).difference([v['GI'] for k,v in self.dbsummary.items()]))
+        else:
+            all_GI = list(set(self.GI.values()))
+        if all_GI is None:
+            all_GI = list(set(self.GI.values()))
         tqdm.write('Getting summary from each one')
         _results = []
         if self.dbname in batch_return_dbs:
