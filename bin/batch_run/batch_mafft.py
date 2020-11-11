@@ -15,7 +15,7 @@ from tqdm import tqdm
 from dating_workflow.step_script import convert_genome_ID_rev
 
 default_mode = 'ginsi'
-command_template = '{mode} --thread -1 {in_file} > {o_file} '
+command_template = '{mode} --anysymbol --thread -1 {in_file} > {o_file} '
 
 
 def run(args):

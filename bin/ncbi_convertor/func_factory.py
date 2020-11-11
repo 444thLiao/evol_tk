@@ -177,32 +177,24 @@ class NCBI_convertor():
         return pid2assembly_dict
 
     def nid2assembly(self,all_GI=None):
+        
         if self.dbname != 'nuccore':
             raise SyntaxError("source database must be nuccore")
         
-        if not all_GI:
+        if all_GI is None:
             if  self.GI is None:
                 self.get_GI()
             all_GI = list(self.GI.values())
-            
-        # results, failed = self.edl.efetch(db='nuccore',
-        #                              ids=all_GI,
-        #                              retmode='text',
-        #                              retype='gb',
-        #                              result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format='genbank')))
-        
         
         results, failed = self.edl.elink(dbfrom='nuccore',
-                                    db='assembly',
-                                ids=all_GI,
-                                batch_size=30,
-                                result_func=lambda x: Entrez.read(
-                                                     io.StringIO(x)))
+                                        db='assembly',
+                                    ids=all_GI,
+                                    result_func=lambda x: Entrez.read(
+                                                        io.StringIO(x)))
         nid2assembly_dict = {}
         for r in results:
             if r['LinkSetDb']:
                 nid2assembly_dict[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
-        
         return nid2assembly_dict
         # todo: finish it
 
