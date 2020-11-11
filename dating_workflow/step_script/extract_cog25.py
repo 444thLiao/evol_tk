@@ -47,7 +47,8 @@ def annotate_cog(protein_file_list, cog_out_dir):
             continue
         ofile = f'{cog_out_dir}/{gname}.out'
         cmd = f"`which rpsblast` -query {f} -db {cog_db} -max_target_seqs 1 -num_threads 10 -outfmt 6 -evalue 1e-3  -out {ofile}"
-        if not os.path.exists(ofile):
+        if not os.path.exists(ofile) and getsize(ofile)==0:
+            # in case manually interrupted
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))
             params.append(cmd)

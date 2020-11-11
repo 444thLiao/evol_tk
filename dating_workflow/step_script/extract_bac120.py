@@ -44,7 +44,8 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
             cmd = f"{hmmscan} --tblout {ofile} --acc --noali --notextw --cpu {cpu} {tigfam_db} {pfile}"
         else:
             raise SyntaxError('unknown %s' % db_id)
-        if not exists(ofile):
+        if not exists(ofile) and getsize(ofile)==0:
+            # in case manually interrupted
             if not exists(dirname(ofile)):
                 os.makedirs(dirname(ofile))
             params.append(cmd)
