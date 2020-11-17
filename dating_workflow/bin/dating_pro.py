@@ -111,7 +111,6 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, us
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
     run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl 2>&1")
-g
 
 def rename_tmp(ali_dir, ctl_file):
     phy_f = ctl_file.replace('.ctl', '.txt')
