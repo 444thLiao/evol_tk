@@ -49,7 +49,7 @@ def main(cmds):
         with open(job_file,'w') as fh:
             fh.writelines(f"#!{zsh_path}\n")
             fh.writelines(f"#SBATCH --job-name=job_lth_{count_}.job\n")
-            fh.writelines(f"#SBATCH --cpus-per-task=10\n")
+            fh.writelines(f"#SBATCH --cpus-per-task=1\n")
             fh.writelines(f"#SBATCH --output={job_directory}/job_lth_{count_}.out\n")
             # fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)

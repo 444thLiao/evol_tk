@@ -110,8 +110,8 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, us
     text = modify(template_ctl, **params)
     with open(new_01_ctl, 'w') as f1:
         f1.write(text)
-    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl > /dev/null 2>&1")
-
+    run(f"export PATH=''; cd {odir}; {paml_bin}/mcmctree 01_mcmctree_modify.ctl 2>&1")
+g
 
 def rename_tmp(ali_dir, ctl_file):
     phy_f = ctl_file.replace('.ctl', '.txt')
@@ -231,7 +231,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     with open(ofile, 'w') as f1:
         f1.write(text)
     tqdm.write("start running the final mcmctree. ")
-    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl > /dev/null 2>&1",
+    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2>&1",
          ofile.replace('.ctl', '.log')))
 
 
