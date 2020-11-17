@@ -153,7 +153,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
 @click.option('-od', 'itol_annotate', default=None)
 @click.option('-r', 'root_with', default=None, help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
 @click.option('-f', 'tree_format', default=None, help='')
-def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with):
+def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with,tree_format):
     output_dating_result_tree = process_path(output_dating_result_tree)
     if itol_annotate is None:
         itol_annotate = dirname(output_dating_result_tree)
@@ -167,7 +167,8 @@ def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, roo
 
     if not os.path.exists(dirname(output_dating_result_tree)):
         os.makedirs(dirname(output_dating_result_tree))
-    main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate=itol_annotate, root_with=root_with)
+    main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate=itol_annotate, root_with=root_with,
+         tree_format=tree_format)
 
 
 # intree_ori = ''
