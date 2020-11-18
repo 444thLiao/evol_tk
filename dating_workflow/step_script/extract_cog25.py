@@ -36,7 +36,7 @@ cdd_num.pop('TIGR00487')
 # TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
 
-def annotate_cog(protein_file_list, cog_out_dir):
+def annotate_cog(protein_file_list, cog_out_dir,num_p=5):
     params = []
     size0_pfiles = []
     for f in protein_file_list:
@@ -60,7 +60,7 @@ def annotate_cog(protein_file_list, cog_out_dir):
         #         os.makedirs(dirname(ofile))
         #     params.append(cmd)
     tqdm.write(f'{len(size0_pfiles)} files are empty.')
-    with mp.Pool(processes=5) as tp:
+    with mp.Pool(processes=num_p) as tp:
         list(tqdm(tp.imap(run, params), total=len(params)))
 
 
@@ -120,7 +120,8 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
               help="skip the annotation parts")
 @click.option("-a", 'annotation_only', is_flag=True,default=False,
               help="only run the annotation parts")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only):
+@click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only,num_parellel):
     if genome_list is None:
         gids = []
     else:
@@ -134,7 +135,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     if not exists(in_annotations):
         os.makedirs(in_annotations)
     if not pass_annotation:
-        annotate_cog(protein_files, in_annotations)
+        annotate_cog(protein_files, in_annotations,num_p=num_parellel)
     if annotation_only:
         exit(f"finish annotation")
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
