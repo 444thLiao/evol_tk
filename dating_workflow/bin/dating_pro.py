@@ -191,7 +191,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
         f1.write(text)
 
 
-def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False):
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False,extra_cmd=None,):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -230,8 +230,15 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     with open(ofile, 'w') as f1:
         f1.write(text)
     tqdm.write("start running the final mcmctree. ")
-    run((f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2>&1",
-         ofile.replace('.ctl', '.log')))
+    
+    params = [(f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2>&1",
+              ofile.replace('.ctl', '.log'))]
+    
+    if extra_cmd is not None:
+        params.append(extra_cmd)
+        
+    with mp.Pool(processes=2) as tp:
+        _ = list(tp.imap(run, params))
 
 
 def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False):
@@ -301,7 +308,7 @@ def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_
 
         run_each_tmp(tmp_odir,
                      mcmc_for_dir,
-                     extra_cmd=prior_cmd,
+                    #  extra_cmd=[prior_cmd],
                      use_nucl=use_nucl)
     elif isinstance(run_tmp, str):
         collecting_tmp(run_tmp,
