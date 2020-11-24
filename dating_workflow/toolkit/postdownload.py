@@ -76,8 +76,9 @@ dry_run=False
     if not exists(tmp_dir):
         os.makedirs(tmp_dir, exist_ok=True)
 
+    tqdm.write(f'iterating the {indir}')
     all_dir = [_
-               for _ in glob(join(indir, '**', 'GC*', '*.fna.gz'),
+               for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz')),
                              recursive=True)
                ]
     if all_ids is not None:
