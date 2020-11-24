@@ -138,7 +138,13 @@ def main(name=None,
         downloaded_aids.extend(new_domain2aids[d])
         print(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
 
-
+    _d = {"assembly_accessions": ','.join(batch_aids),
+                        "dry_run": False,
+                        "section": "genbank",
+                        "parallel": parallel,
+                        "output": db_dir,  # all genomes were downloaded to db_dir
+                        "file_formats": formats}
+    print(f'params is {_d}')
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
                         "dry_run": False,
