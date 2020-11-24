@@ -100,7 +100,7 @@ def batch_iter(iter, batch_size):
     iter = list(iter)
     n_iter = []
     batch_d = 0
-    for batch_u in range(0, len(iter), batch_size):
+    for batch_u in range(0, len(iter), int(batch_size)):
         if batch_u != 0:
             n_iter.append(iter[batch_d:batch_u])
         batch_d = batch_u
@@ -156,12 +156,12 @@ def main(name=None,
                                     'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                                     'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_formats')),
               default=NgdConfig.get_default('file_formats'))
-@click.option("-o", "odir", help=f"Create output hierarchy in specified folder (default: {NgdConfig.get_default('output')}s)",
+@click.option("-o", "odir", help=f"Create output hierarchy in specified folder (default: {NgdConfig.get_default('output')})",
               default=NgdConfig.get_default('output'))
 @click.option("-size", "size_of_batch", help=f"The size of each batch.",
-              default=NgdConfig.get_default('output'))
+              default=20)
 @click.option("-p", "parallel", help=f"Run N downloads in parallel (default: 10)",
-              default=NgdConfig.get_default('output'))
+              default=5)
 def cli(name, odir, formats,size_of_batch,parallel):
     main(name=name,
          odir=odir,

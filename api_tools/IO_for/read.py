@@ -1,5 +1,7 @@
 from collections import defaultdict
 from os.path import *
+import pandas as pd
+
 
 def read_table(infile,**kwargs):
     import pandas as pd
@@ -95,3 +97,13 @@ def _parse_hmmscan(ofile):
         gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
             (gene_id, ko, evalue))
     return gid2locus2ko
+
+def read_summary(metadata):
+    metadata_df = pd.read_csv(
+        metadata, sep='\t', low_memory=False, comment='#', header=None)
+    _ = open(metadata)
+    header = _.readline()
+    header = _.readline().strip('# \n').split('\t')
+    metadata_df.columns = header
+    metadata_df = metadata_df.set_index("assembly_accession")
+    return metadata_df

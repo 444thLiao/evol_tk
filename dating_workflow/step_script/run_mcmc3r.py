@@ -9,21 +9,22 @@ from tqdm import tqdm
 
 from dating_workflow.bin.dating_pro import run, modify
 
-def run_mcmc3r(indir,odir,intree,clock=2):
+
+def run_mcmc3r(indir,odir,intree,clock=2,usedata=1):
     if not exists(odir):
         os.system(f'mkdir -p {odir}')
     os.system(f'cp {indir}/04_mcmctree.ctl {odir}/')
     os.system(f'ln -s `realpath {indir}/in.BV` {odir}/')
     param = {'treefile': intree,
-                 'clock': clock,
-                 'usedata': '2 ../in.BV 1',
-                 'seqtype': '2'
+              'clock': clock,
+              'usedata': '1' if usedata ==1 else '2 ../in.BV 1',
+            #  'seqtype': '0'
                  }
     text = modify(f'{odir}/04_mcmctree.ctl',
                     **param)
     with open(f'{odir}/04_mcmctree.ctl', 'w') as f1:
         f1.write(text)
-    cmd = f"""/usr/bin/R -e "setwd('{odir}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
+    cmd = f""" `which R` -e "setwd('{odir}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
     check_call(cmd,shell=1,executable='/home-user/thliao/anaconda3/bin/zsh')
 
 def main():
