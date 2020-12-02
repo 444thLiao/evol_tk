@@ -77,13 +77,24 @@ dry_run=False
         os.makedirs(tmp_dir, exist_ok=True)
 
     tqdm.write(f'iterating the {indir}')
-    all_dir = [_
+    if all_ids is  None:
+        all_dir = [_
                for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz')),
                              recursive=True)
                ]
-    if all_ids is not None:
-        all_dir = [_ for _ in all_dir
-                   if basename(dirname(_)) in all_ids]
+    else:
+        not_found = []
+        all_dir = []
+        for aid in tqdm(all_ids):
+            fna = glob(join(indir, '**', aid, '*.fna.gz'))
+            if fna:
+                all_dir.append(fna[0])
+            else:
+                not_found.append(aid)
+        if not_found:
+            tqdm.write(f"{len(not_found)} are not found!")
+                #    if basename(dirname(_)) in all_ids]
+
 
     tqdm.write("gunzip fna file and collect jobs")
     jobs = []
@@ -182,7 +193,7 @@ It includes
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
 @click.option('-t', 'thread_per_prokka', default=0, help="num of threads prokka used. default 0 means all threads of a server.")
-@click.option('-dry_run', 'dry_run', default=False, is_flag=True, help="output commands need to run only. don't run it. ")
+@click.option('-dry_run', 'dry_run', default=False, is_flag=True, help="output commands to './cmds' needed to run. It only includes the prokka part. You need to soft link/move them to the odir don't run it. ")
 def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka,dry_run):
     if not exists(indir):
         raise IOError("input dir doesn't exist")

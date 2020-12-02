@@ -3,21 +3,22 @@ marine	marine	aquatic
 ocean	marine	aquatic	
 lagoon	marine	aquatic	
 brackish	marine	aquatic	
-wastewater	marine	aquatic	
-waste water	marine	aquatic	
-activated sludge	marine	aquatic	
+wastewater		human-made	
+waste water		human-made	
+activated sludge		human-made	
 soda lake	marine	aquatic	
 gulf of maine	marine	aquatic	
 sargasso sea	marine	aquatic	
 seawater	marine	aquatic	
-sludge	marine	aquatic	
+sludge		human-made	
 seabass	marine	aquatic	host-associated
 sea water	marine	aquatic	
 soil	non-marine	others	
 terrestrial	non-marine	others	
 wetland	non-marine	others	
 groundwater	non-marine	aquatic	
-bioreactor	non-marine	others	
+bioreactor		human-made	
+reactor		human-made	
 freshwater	non-marine	aquatic	
 fresh water	non-marine	aquatic	
 subsurface	non-marine	others	
@@ -32,8 +33,8 @@ intestine	non-marine	others	host-associated
 treatment plant	non-marine	aquatic	
 digester	non-marine	others	
 spring	non-marine	aquatic	
-geothermal	non-marine	others	
--associated	""	others	host-associated
+geothermal	non-marine	extreme	
+-associated		others	host-associated
 Human Microbiome Project	non-marine	others	host-associated
 mouse	non-marine	others	host-associated
 mice	non-marine	others	host-associated
@@ -43,6 +44,34 @@ mud	non-marine	others
 forest	non-marine	others	
 coral	marine	aquatic	host-associated
 algae	marine	aquatic	host-associated
-hypersaline	marine		
-aquatic	""	aquatic	""
-water	""	aquatic	""
+hypersaline	marine	extreme	
+aquatic		aquatic	
+water		aquatic	
+sea	marine	aquatic	
+rifle well	non-marine	others	
+reductisol	non-marine	others	
+estuary	marine	aquatic	
+saanich inlet	marine	aquatic	
+river		aquatic	
+sediment		sediment	
+sediments		sediment	
+oxygen minimum zone	marine	aquatic	
+hydrotherma		extreme	
+high temperature		extreme	
+anammox		human-made	
+sewage		human-made	
+hyper		extreme	
+wwtps		human-made	
+lake		aquatic	
+omz	marine	aquatic	""
+mississippi canyon	marine	aquatic	""
+compost	non-marine	human-made	""
+lab	""	human-made	""
+rhizosphere	non-marine	others	""
+culture	""	human-made	""
+leachate	""	human-made	""
+paddy field	""	human-made	""
+mining	""	human-made	""
+dgge gel band	""	human-made	""
+intertidal	""	sediment	""
+yangtz delta	""	human-made	""

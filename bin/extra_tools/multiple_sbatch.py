@@ -45,6 +45,7 @@ def main(cmds):
         # cmds = open('./cmds').read().strip('\n').split('\n')
         # workdir = cmd.split(';')[0].strip().split(' ')[-1]
         cmd = cmd.split(';')[-1].strip()
+        cmd = cmd.replace()
         job_file = os.path.join(job_directory,f"job_lth_{count_}.job" )
         
         with open(job_file,'w') as fh:

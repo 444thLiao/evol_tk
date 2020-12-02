@@ -40,6 +40,6 @@ def _classificated(ori_df):
             ori_df.loc[_,kw1] = 'SAGs'
         if 'whole genome' in row_text or 'type strain' in row_text or 'whole-genome' in row_text or 'isolate' in row_text:
             ori_df.loc[_,kw1] = 'isolate'
-        ori_df.loc[:,kw1].fillna('unidentified',inplace=True)
+    ori_df.loc[:,kw1].fillna('unidentified',inplace=True)
     return ori_df
 
