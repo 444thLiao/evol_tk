@@ -15,7 +15,7 @@ from tqdm import tqdm
 from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats
 
 HOME = os.getenv("HOME")
-pfam_db = f'{HOME}/data/protein_db/ar122/Pfam.v32.bac120.hmm'
+pfam_db = f'{HOME}/data/protein_db/ar122/Pfam.v32.ar122.hmm'
 tigfam_db = f'{HOME}/data/protein_db/ar122/TIGRFAMv14_ar122.hmm'
 
 __file__ = f'{HOME}/script/evolution_relative/dating_workflow/step_script/extrat_ar122.py'
