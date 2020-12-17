@@ -320,7 +320,9 @@ def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_
                    odir=mcmc_for_dir,
                    ndata=ndata,
                    params_dict=params_dict,
-                   use_nucl=use_nucl)
+                   use_nucl=use_nucl,
+                   extra_cmd=[prior_cmd]
+                   )
 
 
 def process_path(path):

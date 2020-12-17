@@ -134,6 +134,7 @@ def to_binary_shape(ID2info,
     if extra_replace:
         for k, v in extra_replace.items():
             template_text = template_text.replace(k, v)
+            
     return template_text + '\n' + annotate_text
 
 
@@ -306,6 +307,7 @@ def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='15'):
     template_text = open(dataset_symbol_template).read()
     from api_tools.for_tree.format_tree import read_tree
     tree = read_tree(in_tree, format=3)
+    id2node = {n.name:n for n in tree.traverse()}
     id2support = {}
     for n in tree.traverse():
         if (not n.is_leaf()) and n.name:
@@ -314,7 +316,6 @@ def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='15'):
             except:
                 support_v = 100
             id2support[n.name] = support_v
-
     # ID,symbol,size,color,fill,position,label
 
     rows = []
@@ -331,7 +332,9 @@ def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='15'):
         else:
             color = ''
         if color:
-            row = '\t'.join([id, shape, size, color, filled, '1', ''])
+            node = id2node[id]
+            new_id = node.children[0].get_leaf_names()[0] + '|' + node.children[1].get_leaf_names()[0]
+            row = '\t'.join([new_id, shape, size, color, filled, '1', ''])
             rows.append(row)
 
     annotate_text = '\n'.join(rows)

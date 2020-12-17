@@ -29,6 +29,26 @@ def batch_iter(iter, batch_size):
     return n_iter
 
 
+def main(cmds,reset_workdir=False,thread_per_tasks=1):
+    count_ = 0
+    for cmd in cmds:
+        # cmds = open('./cmds').read().strip('\n').split('\n')
+        # if reset_workdir:
+        workdir = cmd.split(';')[0].strip().split(' ')[-1]
+        cmd = cmd.split(';')[-1].strip()
+        cmd = cmd.replace()
+        job_file = os.path.join(job_directory,f"job{count_}.job" )
+        
+        with open(job_file,'w') as fh:
+            fh.writelines(f"#!{zsh_path}\n")
+            fh.writelines(f"#SBATCH --job-name=job{count_}\n")
+            fh.writelines(f"#SBATCH --cpus-per-task={thread_per_tasks}\n")
+            fh.writelines(f"#SBATCH --output={job_directory}/job_lth_{count_}.out\n")
+            if reset_workdir:
+                fh.writelines(f"#SBATCH --workdir={workdir}\n")
+            fh.writelines(cmd)
+        os.system("sbatch %s" % job_file)
+        count_ += 1
 
 @click.command()
 @click.option("-i","infile",help="input file which stodge commands you want to batch")
@@ -38,81 +58,62 @@ def cli():
     pass
 
 
-def main(cmds):
-    
-    count_ = 0
-    for cmd in cmds:
-        # cmds = open('./cmds').read().strip('\n').split('\n')
-        # workdir = cmd.split(';')[0].strip().split(' ')[-1]
-        cmd = cmd.split(';')[-1].strip()
-        cmd = cmd.replace()
-        job_file = os.path.join(job_directory,f"job_lth_{count_}.job" )
-        
-        with open(job_file,'w') as fh:
-            fh.writelines(f"#!{zsh_path}\n")
-            fh.writelines(f"#SBATCH --job-name=job_lth_{count_}.job\n")
-            fh.writelines(f"#SBATCH --cpus-per-task=1\n")
-            fh.writelines(f"#SBATCH --output={job_directory}/job_lth_{count_}.out\n")
-            # fh.writelines(f"#SBATCH --workdir={workdir}\n")
-            fh.writelines(cmd)
-        os.system("sbatch %s" % job_file)
-        count_ += 1
-    
-
 if __name__ == "__main__":
-
-    cmd_file = sys.argv[1]
+    cli()
+    
+    
+    # cmd_file = sys.argv[1]
     # cmd_file = './cmds'
-    cmds=[_ for _ in open(cmd_file).read().split('\n')]
+    # cmds=[_ for _ in open(cmd_file).read().split('\n')]
 
-    count_ = 0
-    for cmd in cmds:
-        # workdir = cmd.split(';')[0].strip().split(' ')[-1]
-        cmd = cmd.split(';')[-1].strip()
-        job_file = os.path.join(job_directory,f"job_lth{count_}.job" )
+    # count_ = 0
+    # for cmd in cmds:
+    #     workdir = cmd.split(';')[0].strip().split(' ')[-1]
+    #     cmd = cmd.split(';')[-1].strip()
+    #     job_file = os.path.join(job_directory,f"mcmctree{count_}.job" )
         
-        with open(job_file,'w') as fh:
-            fh.writelines(f"#!{zsh_path}\n")
-            fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
-            fh.writelines(f"#SBATCH --cpus-per-task=10\n")
-            # fh.writelines(f"#SBATCH --workdir={workdir}\n")
-            fh.writelines(cmd)
-        os.system("sbatch %s" %job_file)
-        count_ += 1
+    #     with open(job_file,'w') as fh:
+    #         fh.writelines(f"#!{zsh_path}\n")
+    #         fh.writelines(f"#SBATCH --job-name=mcmctree{count_}.job\n")
+    #         fh.writelines(f"#SBATCH --cpus-per-task=1\n")
+    #         fh.writelines(f"#SBATCH --workdir={workdir}\n")
+    #         fh.writelines(cmd)
+    #     os.system("sbatch %s" %job_file)
+    #     count_ += 1
 
-    cmds = open('./cmds').read().split('\n')
-    from os.path import *
-    new_cmds = []
-    for cmd in tqdm(cmds):
-        odir = cmd.strip().split(' ')[4]
-        gbk_file = join(odir,basename(odir)+'.gbk')
-        if not exists(gbk_file):
-            new_cmds.append(cmd)
+    # cmds = open('./cmds').read().split('\n')
+    # from os.path import *
+    # new_cmds = []
+    # for cmd in tqdm(cmds):
+    #     odir = cmd.strip().split(' ')[4]
+    #     gbk_file = join(odir,basename(odir)+'.gbk')
+    #     if not exists(gbk_file):
+    #         new_cmds.append(cmd)
 
-    list_cmds = batch_iter(new_cmds,1500)
+    # list_cmds = batch_iter(new_cmds,1500)
 
-    job_directory = './.job/'
+    # job_directory = './.job/'
 
-    for _cmds in list_cmds:
-        count_ = 0
-        for cmd in _cmds:
-            # workdir = './'
-            cmd = cmd.split(';')[-1]
-            cmd = cmd.replace('--cpus 0','--cpus 10')
-            job_file = os.path.join(job_directory, f"job_lth{count_}.job")
+    # for _cmds in list_cmds:
+    #     count_ = 0
+    #     for cmd in _cmds:
+    #         # workdir = './'
+    #         cmd = cmd.split(';')[-1]
+    #         cmd = cmd.replace('--cpus 0','--cpus 10')
+    #         job_file = os.path.join(job_directory, f"job_lth{count_}.job")
 
-            with open(job_file, 'w') as fh:
-                fh.writelines(f"#!{zsh_path}\n")
-                fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
-                fh.writelines(f"#SBATCH --cpus-per-task=10\n")
-                fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
-                #fh.writelines(f"#SBATCH --cluster-constraint=cl002\n")
+    #         with open(job_file, 'w') as fh:
+    #             fh.writelines(f"#!{zsh_path}\n")
+    #             fh.writelines(f"#SBATCH --job-name=job_lth{count_}.job\n")
+    #             fh.writelines(f"#SBATCH --cpus-per-task=10\n")
+    #             fh.writelines(f"#SBATCH --output={job_directory}/job_lth{count_}.out\n")
+    #             #fh.writelines(f"#SBATCH --cluster-constraint=cl002\n")
                 
-                # fh.writelines(f"#SBATCH --error=.out/job_lth{count_}.err\n")
-                # fh.writelines(f"#SBATCH --workdir={workdir}\n")
+    #             # fh.writelines(f"#SBATCH --error=.out/job_lth{count_}.err\n")
+    #             # fh.writelines(f"#SBATCH --workdir={workdir}\n")
 
-                fh.writelines(cmd)
+    #             fh.writelines(cmd)
 
-            os.system("sbatch %s" % job_file)
-            count_ += 1
-        time.sleep(18000)  # 4hours later
+    #         os.system("sbatch %s" % job_file)
+    #         count_ += 1
+    #     time.sleep(18000)  # 4hours later
