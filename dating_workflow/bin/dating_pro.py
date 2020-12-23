@@ -178,7 +178,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
             new_file.replace('.modify.ctl', '.log')))
 
     if extra_cmd is not None:
-        params.append(extra_cmd)
+        params.extend(extra_cmd)
     with mp.Pool(processes=30) as tp:
         _ = list(tqdm((tp.imap(run, params)), total=len(params)))
 
@@ -238,7 +238,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
               ofile.replace('.ctl', '.log'))]
     
     if extra_cmd is not None:
-        params.append(extra_cmd)
+        params.extend(extra_cmd)
         
     with mp.Pool(processes=2) as tp:
         _ = list(tp.imap(run, params))
@@ -279,6 +279,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
     ofile = join(odir, 'nodata_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
+        
     return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
             ofile.replace('.ctl', '.log'))
 
