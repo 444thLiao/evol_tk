@@ -28,6 +28,7 @@ from tqdm import tqdm
 template_dir = join(dirname(dirname(__file__)), 'ctl_template')
 mcmc_ctl = join(template_dir, 'mcmctree.ctl')
 codeml_ctl = join(template_dir, 'codeml.ctl')
+baseml_ctl = join(template_dir, 'baseml.ctl')
 aaRatefile = join(template_dir, 'lg.dat')
 
 
@@ -191,7 +192,8 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
         f1.write(text)
 
 
-def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False,extra_cmd=None,):
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False,extra_cmd=None,
+                   model='0'):
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
@@ -209,6 +211,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     param = {'seqfile': seqfile_b,
              'treefile': treefile_b,
              'ndata': ndata,
+             'model':str(model),
              'seqtype': seqtype,
              'usedata': "2 in.BV 1",
              'outfile': outfile,

@@ -116,6 +116,7 @@ def main(name=None,
     # name = "Nitrospirae;"
     # formats = 'fasta,protein-fasta'
     # odir = '/share/home-user/thliao/data/NCBI_genbank'
+    # db_dir
     formats = formats.split(',')
 
     odir = realpath(odir)

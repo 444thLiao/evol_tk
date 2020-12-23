@@ -67,17 +67,12 @@ def draw_r(df, group=None):
     df = df.reindex([_ for _ in df.index if _.startswith('t_n')])
     df.loc[:, 'Posterior mean time (100 Ma)'] = df.loc[:, 'Posterior mean time (100 Ma)'] / 10
     df.loc[:, 'CI_width'] = df.loc[:, 'CI_width'].astype(float) / 10
-    if group is None:
-        fig = px.scatter(df,
+    
+    fig = px.scatter(df,
                          x='Posterior mean time (100 Ma)',
                          y='CI_width',
                          trendline="ols")
-    else:
-        fig = px.scatter(df,
-                         x='Posterior mean time (100 Ma)',
-                         y='CI_width',
-                         color=group,
-                         trendline="ols")
+
     coef, r2 = fit_line(fig.data[0].x,
                         fig.data[0].y)
     coef = round(coef, 4)
@@ -86,7 +81,13 @@ def draw_r(df, group=None):
     fig.data[-1].y = coef * fig.data[-1].x
 
     r_squre_text = ["y = %s * x, R<sup>2</sup> = %s" % (coef, r2)]
-
+    if group is not None:
+        xs = list(df.loc[~df[group].isna(),"Posterior mean time (100 Ma)"])
+        ys = list(df.loc[~df[group].isna(),"CI_width"])
+        ts = list(df.loc[~df[group].isna(),"text"])
+        fig.add_scatter(x=xs,y=ys,mode='markers',text=ts,
+                        marker=dict(color='#ff0000'))
+        
     fig.update_layout(
         showlegend=False,
         annotations=[
@@ -105,7 +106,8 @@ def draw_r(df, group=None):
     return fig, r_squre_v, coef
 
 
-def get_plot(pattern, odir, no_plot=False):
+def get_plot(pattern, odir, no_plot=False,
+             highlight_nodes=None):
     if not exists(odir):
         os.makedirs(odir)
 
@@ -118,9 +120,14 @@ def get_plot(pattern, odir, no_plot=False):
         df1 = get_CI(f1)
         if df1 is None:
             continue
-        fig, r_squre_v, coef = draw_r(df1)
+        if highlight_nodes is not None:
+            ns = [_[0] for _ in highlight_nodes]
+            ts = [_[1] for _ in highlight_nodes]
+            df1.loc[ns,'Highlight'] = 'Target'
+            df1.loc[ns,'text'] = ts
+            # df1 = df1.fillna('')
+        fig, r_squre_v, coef = draw_r(df1,group='Highlight')
         if no_plot:
-
             pass
         else:
             fig.write_image(join(odir, f'repeat_{name}_{set_name}.png'))

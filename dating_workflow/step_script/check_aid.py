@@ -63,7 +63,10 @@ def check_cog25(aid):
 
 def main(genome_list):
     # test the existence of genome
-    all_ids = open(genome_list).read().split('\n')
+    if type(genome_list)==str:
+        all_ids = open(genome_list).read().split('\n')
+    elif type(genome_list)==list:
+        all_ids = genome_list[::]
     all_ids = [_ for _ in all_ids if _]
     df = pd.DataFrame(index=['counts'],
                       data=0,

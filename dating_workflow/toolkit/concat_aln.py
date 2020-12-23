@@ -69,7 +69,8 @@ def set_partition(f1, name, seq, partition_method):
     return str(seq), name
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remove_identical=False, partition_method='genes',name_convertor=None):
+def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, 
+                      remove_identical=False, partition_method='genes',name_convertor=None):
     """
 
     :param outfile:
@@ -134,7 +135,10 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, remo
 @click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... please be carefully if you input trimal result or aln result. ', default='genes')
 @click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
 @click.option('-not_add_prefix', 'not_add_prefix', help='provide a list of id which do not add prefix as others. ', default=None, required=False)
-def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, suffix='aln', fix_refseq=False,not_add_prefix=None,
+def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, 
+         suffix='aln', 
+         fix_refseq=False,
+         not_add_prefix=None,
          partition_method='genes'):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
@@ -173,7 +177,8 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
                           if basename(_).replace(f'.{suffix}', '') in gene_list]
     g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
     tqdm.write('itering all requested files ')
-    for idx, aln_file in tqdm(enumerate(order_seqs), total=len(order_seqs)):
+    for idx, aln_file in tqdm(enumerate(order_seqs), 
+                              total=len(order_seqs)):
         aln_file_name = basename(aln_file).replace(f'.{suffix}', '')
         aln_record = AlignIO.read(aln_file, format='fasta')
         length_this_aln = aln_record.get_alignment_length()

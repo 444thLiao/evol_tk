@@ -31,7 +31,10 @@ def get_cluster(c_file):
 
 def check_cog25(node):
     # if should prepare genome2cog25 first
+    # from dating_workflow.step_script.extract_cog25 import parse_annotation 
+    # genome2cog25 = parse_annotation(realpath('~/data/NCBI/modified_data/cog25_annotate/'), top_hit=True, evalue=1e-20)
     # the most simple way. If the most frequent one exist. Then return True
+    nonlocal genome2cog25
     if "CDD:223556" in genome2cog25.get(node,[]):
         return True
     else:

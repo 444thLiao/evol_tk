@@ -5,6 +5,8 @@ import sys
 import click
 import time
 from tqdm import tqdm
+from os.path import realpath
+
 def mkdir_p(dir):
     '''make a directory (dir) if it doesn't exist'''
     if not os.path.exists(dir):
@@ -34,16 +36,16 @@ def main(cmds,reset_workdir=False,thread_per_tasks=1):
     for cmd in cmds:
         # cmds = open('./cmds').read().strip('\n').split('\n')
         # if reset_workdir:
-        workdir = cmd.split(';')[0].strip().split(' ')[-1]
+        workdir = realpath(cmd.split(';')[0].strip().split(' ')[-1])
         cmd = cmd.split(';')[-1].strip()
-        cmd = cmd.replace()
+        # cmd = cmd.replace()
         job_file = os.path.join(job_directory,f"job{count_}.job" )
         
         with open(job_file,'w') as fh:
             fh.writelines(f"#!{zsh_path}\n")
             fh.writelines(f"#SBATCH --job-name=job{count_}\n")
             fh.writelines(f"#SBATCH --cpus-per-task={thread_per_tasks}\n")
-            fh.writelines(f"#SBATCH --output={job_directory}/job_lth_{count_}.out\n")
+            fh.writelines(f"#SBATCH --output={job_directory}/job{count_}.out\n")
             if reset_workdir:
                 fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)
@@ -61,14 +63,15 @@ def cli():
 if __name__ == "__main__":
     cli()
     
+    from subprocess import check_call
     
     # cmd_file = sys.argv[1]
     # cmd_file = './cmds'
-    # cmds=[_ for _ in open(cmd_file).read().split('\n')]
+    # cmds = [_ for _ in open(cmd_file).read().strip('\n').split('\n')]
 
     # count_ = 0
     # for cmd in cmds:
-    #     workdir = cmd.split(';')[0].strip().split(' ')[-1]
+    #     workdir = realpath(cmd.split(';')[0].strip().split(' ')[-1])
     #     cmd = cmd.split(';')[-1].strip()
     #     job_file = os.path.join(job_directory,f"mcmctree{count_}.job" )
         
@@ -78,7 +81,8 @@ if __name__ == "__main__":
     #         fh.writelines(f"#SBATCH --cpus-per-task=1\n")
     #         fh.writelines(f"#SBATCH --workdir={workdir}\n")
     #         fh.writelines(cmd)
-    #     os.system("sbatch %s" %job_file)
+    #     os.system("sbatch %s" % job_file)
+    #     # check_call(f"sbatch {job_file}",shell=1)
     #     count_ += 1
 
     # cmds = open('./cmds').read().split('\n')

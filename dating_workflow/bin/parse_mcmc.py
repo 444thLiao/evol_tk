@@ -92,7 +92,7 @@ def get_node_name(f):
     return t
 
 
-def targegroup_compare_violin(collect_, odir):
+def targetgroup_compare_violin(collect_, odir):
     # todo
     # not finish
     tmp = []
@@ -133,9 +133,9 @@ def main(indir, name2group, odir, no_plot=False):
         log = join(each_dir, 'run.log')
         if not exists(log):
             log = glob(join(each_dir, '*.log'))[0]
+        highlight_nodes = []
         if exists(join(each_dir, 'FigTree.tre')):
             t = get_node_name(outfile)
-
             # df = pd.read_csv(mcmc, sep='\t', index_col=0)
             set_name = basename(dirname(outfile)).partition('_')[-1]
             if not set_name:
@@ -149,6 +149,7 @@ def main(indir, name2group, odir, no_plot=False):
                                                         df.loc["lnL", 'CIs'])
             for gname, group in name2group.items():
                 raw_name = 't_n%s' % t.get_common_ancestor(group).name
+                highlight_nodes.append((raw_name,gname))
                 tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
                                                             df.loc[raw_name, 'CIs'])
     tmp_df.loc[:, 'num_set'] = [int(re.findall('set(\d+)',_)[0])
@@ -159,7 +160,8 @@ def main(indir, name2group, odir, no_plot=False):
 
     #odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
-    df = get_plot(pattern, odir, no_plot=no_plot)
+    df = get_plot(pattern, odir, no_plot=no_plot,
+                  highlight_nodes=highlight_nodes)
     # draw infinite sites plot
 
     writer = pd.ExcelWriter(join(odir, f'{basename(odir)}.xlsx'), engine='xlsxwriter')
@@ -170,7 +172,7 @@ def main(indir, name2group, odir, no_plot=False):
 
 @click.command()
 @click.option("-i", 'indir', help='dir have multiple calibration set')
-@click.option("-ns", 'target_group', default=None,
+@click.option("-ns", 'f', default=None,
               help='use comma(,) to separate each')
 @click.option("-name", 'groupname', default='you could separated it with ; ')
 @click.option("-disable_plot", 'no_plot', default=False, required=False, is_flag=True)
