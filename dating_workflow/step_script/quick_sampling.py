@@ -29,12 +29,12 @@ def get_cluster(c_file):
             cluster2genomes[rows[0]].append(rows[0])
     return cluster2genomes
 
-def check_cog25(node):
+def check_cog25(node,genome2cog25={}):
     # if should prepare genome2cog25 first
     # from dating_workflow.step_script.extract_cog25 import parse_annotation 
     # genome2cog25 = parse_annotation(realpath('~/data/NCBI/modified_data/cog25_annotate/'), top_hit=True, evalue=1e-20)
     # the most simple way. If the most frequent one exist. Then return True
-    nonlocal genome2cog25
+    #nonlocal genome2cog25
     if "CDD:223556" in genome2cog25.get(node,[]):
         return True
     else:
@@ -54,9 +54,9 @@ def get_basal_ones(node,up_level=3,maximum_retained=3):
         # print(len(all_leaves))
     return all_leaves
 
-def get_simple_LCA(node,maximum=10,l2cluster=None):
+def get_simple_LCA(node,maximum=10,l2cluster=None,genome2cog25={}):
     # get the necessary genomes descending from the requested node
-    match_leaves = [n for n in node.get_leaf_names() if check_cog25(n)]
+    match_leaves = [n for n in node.get_leaf_names() if check_cog25(n,genome2cog25=genome2cog25)]
     l2dis = {n.name:node.get_distance(n,topology_only=True) for n in node.get_leaves()}
     l2dis = {k:v for k,v in l2dis.items() if k in match_leaves}
     if len(match_leaves)<=maximum:
@@ -68,7 +68,7 @@ def get_simple_LCA(node,maximum=10,l2cluster=None):
 
 def sampling(st,target_nodes_text,must_in=[],node2cluster=None,
              up_level=3,max_num_up_each_level=3,
-             max_num_down=10):
+             max_num_down=10,genome2cog25={}):
     """
     node2cluster: leaf 2 cluster name
     """
@@ -79,7 +79,7 @@ def sampling(st,target_nodes_text,must_in=[],node2cluster=None,
     
     for tn in target_nodes:
         final_leaves += get_simple_LCA(tn,maximum=max_num_down,
-                                       l2cluster=node2cluster)
+                                       l2cluster=node2cluster,genome2cog25=genome2cog25)
         final_leaves += get_basal_ones(tn,up_level=up_level,
                                        maximum_retained=max_num_up_each_level)
     

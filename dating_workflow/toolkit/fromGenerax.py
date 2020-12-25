@@ -6,6 +6,7 @@ from api_tools import to_binary_shape,to_color_range,pie_chart
 
 def generax2mcmctree(xml_file,stree,gene,dating_o,
                      calbration_file,
+                     genome2cog25={}
                      ):
     """
     generate files for mcmctree, including 
@@ -25,9 +26,10 @@ def generax2mcmctree(xml_file,stree,gene,dating_o,
     target_nodes = list(_p2node.values())[0] + list(_p2node_transfer_receptor.values())[0]
     
     must_in_genomes = open("/mnt/home-backup/thliao/cyano_basal/rawdata/assembly_ids.list").read().strip('\n').split('\n')
+    # new calibrations are /mnt/home-backup/thliao/cyano/ref_genomes_list.txt
     cluster2genomes = get_cluster(stree.replace('.reroot.newick','.clusterd.list'))
     g2cluster = {v:c for c,d in cluster2genomes.items() for v in d}
-    retained_ids = sampling(st,target_nodes,must_in = must_in_genomes,node2cluster=g2cluster)
+    retained_ids = sampling(st,target_nodes,must_in = must_in_genomes,node2cluster=g2cluster,genome2cog25=genome2cog25)
 
     text = to_binary_shape({g:['keep'] for g in retained_ids},
                         {"keep":{"color":"#88b719"}})

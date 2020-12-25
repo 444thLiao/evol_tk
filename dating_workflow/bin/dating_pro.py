@@ -102,7 +102,6 @@ def generate_tmp(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, us
     params = {'ndata': ndata,
               'seqfile': in_phyfile,
               'treefile': in_treefile,
-
               'outfile': './01_out'}
     if use_nucl:
         params['seqtype'] = '0'
