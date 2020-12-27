@@ -124,14 +124,14 @@ dry_run=False
         if exists(prokka_cmd):
             # output is a file instead of cmd.
             prokka_ofile = prokka_cmd
-            jobs2.append(f'ln -s {prokka_ofile} {ofile}')
+            jobs2.append(f"ln -s `realpath {prokka_ofile}` {ofile}")
             continue
         else:
             jobs.append(prokka_cmd)
 
         # collect prokka output file
         prokka_ofile = f"{tmp_dir}/{sample_name}/{sample_name}.faa"
-        jobs2.append(f'ln -s {prokka_ofile} {ofile}')
+        jobs2.append(f'ln -s `realpath {prokka_ofile}` {ofile}')
 
         # if p_file.endswith('.gz') and exists(prokka_ofile):
         #     run_cmd(f'gunzip -d -c {p_file} >{ofile}')
