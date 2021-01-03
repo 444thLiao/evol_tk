@@ -40,14 +40,14 @@ def check_cog25(node,genome2cog25={}):
     else:
         return False
 
-def get_basal_ones(node,up_level=3,maximum_retained=3):
+def get_basal_ones(node,up_level=3,maximum_retained=3,**kwargs):
     # get required genoems which could maintain the topological structures of request node up to the root.
     all_leaves = []
     curr_n = node
     cur_l = 0
     while cur_l <= up_level:
         sister_node = [_ for _ in curr_n.up.children if _.name != curr_n.name][0]
-        leaves = get_simple_LCA(sister_node,maximum=maximum_retained)
+        leaves = get_simple_LCA(sister_node,maximum=maximum_retained,**kwargs)
         all_leaves += leaves
         curr_n = curr_n.up
         cur_l+=1
@@ -81,7 +81,8 @@ def sampling(st,target_nodes_text,must_in=[],node2cluster=None,
         final_leaves += get_simple_LCA(tn,maximum=max_num_down,
                                        l2cluster=node2cluster,genome2cog25=genome2cog25)
         final_leaves += get_basal_ones(tn,up_level=up_level,
-                                       maximum_retained=max_num_up_each_level)
+                                       maximum_retained=max_num_up_each_level,
+                                       l2cluster=node2cluster,genome2cog25=genome2cog25)
     
     final_leaves = list(set(final_leaves))
     return final_leaves

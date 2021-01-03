@@ -94,7 +94,6 @@ with open('./itol_txt/names.txt', 'w') as f1:
     f1.write(text)
 
 text = to_label(gid2taxons_str)
-
 with open('./itol_txt/taxons_names.txt', 'w') as f1:
     f1.write(text)
 

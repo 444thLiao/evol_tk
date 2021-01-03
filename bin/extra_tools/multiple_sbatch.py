@@ -31,7 +31,7 @@ def batch_iter(iter, batch_size):
     return n_iter
 
 
-def main(cmds,reset_workdir=False,thread_per_tasks=1):
+def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1):
     count_ = 0
     for cmd in cmds:
         # cmds = open('./cmds').read().strip('\n').split('\n')
@@ -54,10 +54,12 @@ def main(cmds,reset_workdir=False,thread_per_tasks=1):
 
 @click.command()
 @click.option("-i","infile",help="input file which stodge commands you want to batch")
-@click.option("-w","reset_working",help="reseting the working directory. It mainly for mcmctree. ")
+@click.option("-w","reset_working",help="reseting the working directory. It mainly for mcmctree. ",
+              default=False, required=False, is_flag=True,)
 @click.option("-t","thread_per_tasks",default=None,help="Default would not set it. You could specify it to restrict the number of threads it used in each task.")
-def cli():
-    pass
+def cli(infile,reset_working,thread_per_tasks):
+    cmds = open(infile).read().strip('\n').split('\n')
+    sbatch_all(cmds,reset_workdir=reset_working,thread_per_tasks=int(thread_per_tasks))
 
 
 if __name__ == "__main__":
