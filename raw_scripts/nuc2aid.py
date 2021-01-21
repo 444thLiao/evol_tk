@@ -36,7 +36,8 @@ assembly_GIs = list(nid2assembly_dict.values())
 gid2assembly_info, bp2info, bs2info = genomeID2Bio(assembly_GIs)
 GI2assembly_id = {_dict["GI"]:aid for aid,_dict in gid2assembly_info.items()}
 
-nid2aid = {GI2nid[nid]:GI2assembly_id[aid_GI] for nid,aid_GI in nid2assembly_dict.items()}
+nid2aid = {GI2nid[nid]:GI2assembly_id.get(aid_GI,'failed') for nid,aid_GI in nid2assembly_dict.items()}
+
 
 
 

@@ -72,3 +72,15 @@ text = to_binary_shape(gid2genes,
 
 with open('./itol_txt/cog25genes.txt', 'w') as f1:
     f1.write(text)
+    
+    
+    
+## Genome type
+import pandas as pd
+metadata = expanduser('~/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt')
+t = open(metadata)
+next(t)
+header = next(t).strip('#\n ').split('\t')
+df = pd.read_csv(metadata,sep='\t',header=None,comment='#',low_memory=False)
+
+

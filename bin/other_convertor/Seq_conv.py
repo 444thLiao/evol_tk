@@ -1,8 +1,9 @@
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 from os.path import *
 import os
-from Bio.Seq import Seq
+
 
 def gbk2faa(in_gbk,out_faa):
     records = SeqIO.parse(in_gbk,format='genbank')
