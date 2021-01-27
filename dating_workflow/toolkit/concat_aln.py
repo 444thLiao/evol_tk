@@ -194,7 +194,12 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
         record_pos_info.append((name, start, end, aln_record))
         # done record
         for gid in gid2record:
-            records = [_
+            if simple_concat:
+                records = [_
+                       for _ in aln_record
+                       if _.id == gid]
+            else:
+                records = [_
                        for _ in aln_record
                        if _.id.split('_')[0] == gid]
             if records:
