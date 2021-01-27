@@ -137,7 +137,7 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True,
 @click.option('-not_add_prefix', 'not_add_prefix', 
               help='provide a list of id which do not add prefix as others. ', default=None, required=False)
 @click.option('-simple', 'simple_concat', is_flag=True, default=False,
-              help='do not perform any name transformation ', default=None, required=False)
+              help='do not perform any name transformation ',  required=False)
 def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, 
          suffix='aln', 
          fix_refseq=False,
