@@ -31,7 +31,7 @@ def batch_iter(iter, batch_size):
     return n_iter
 
 
-def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1):
+def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1,fixed_cluster=''):
     count_ = 0
     for cmd in cmds:
         # cmds = open('./cmds').read().strip('\n').split('\n')
@@ -46,6 +46,8 @@ def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1):
             fh.writelines(f"#SBATCH --job-name=job{count_}\n")
             fh.writelines(f"#SBATCH --cpus-per-task={thread_per_tasks}\n")
             fh.writelines(f"#SBATCH --output={job_directory}/job{count_}.out\n")
+            if fixed_cluster:
+                fh.writelines(f"#SBATCh -w {fixed_cluster} \n") 
             if reset_workdir:
                 fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)

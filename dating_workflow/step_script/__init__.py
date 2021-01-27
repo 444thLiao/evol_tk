@@ -247,11 +247,13 @@ def convert_genome_ID(genome_ID):
 def convert_genome_ID_rev(locus_ID, prefix='GCA_',not_add_prefix_ids=[]):
     # for 900078535v2
     # it will return prefix + 900078535.2
+    if locus_ID in not_add_prefix_ids:
+        return locus_ID
     if '|' in str(locus_ID):
         # other labmate used
         genome_name = locus_ID.partition('|')[0]
         return genome_name
-    
+
     if isinstance(locus_ID, str) and not locus_ID.startswith('GC'):
         if '_' in locus_ID:
             # tianhua version, it won't contain |

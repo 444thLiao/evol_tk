@@ -79,7 +79,7 @@ dry_run=False
     tqdm.write(f'iterating the {indir}')
     if all_ids is  None:
         all_dir = [_
-               for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'),recursive=True )
+               for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
                              )
                ]
     else:

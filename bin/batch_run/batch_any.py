@@ -1,5 +1,8 @@
 """
 Advanced script for who wants to modify or manipulate the batch_run script
+
+example use it as batch_mafft
+
 """
 
 import multiprocessing as mp

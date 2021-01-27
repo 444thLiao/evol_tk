@@ -134,7 +134,8 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True,
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
 @click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... please be carefully if you input trimal result or aln result. ', default='genes')
 @click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
-@click.option('-not_add_prefix', 'not_add_prefix', help='provide a list of id which do not add prefix as others. ', default=None, required=False)
+@click.option('-not_add_prefix', 'not_add_prefix', 
+              help='provide a list of id which do not add prefix as others. ', default=None, required=False)
 def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, 
          suffix='aln', 
          fix_refseq=False,

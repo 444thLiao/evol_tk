@@ -144,7 +144,7 @@ def to_color_strip(ID2info, info2color, info_name='dataset'):
 
     template_text = open(color_strip_template).read()
     id2col = {id: info2color[info] for id, info in ID2info.items()}
-    annotate_text = '\n'.join(['%s,%s,%s\n' % (id, col,ID2info[id])
+    annotate_text = '\n'.join(['%s,%s,%s' % (id, col,ID2info[id])
                                for id, col in id2col.items()])
     legend_text = deduced_legend(info2color, info_name)
     info_name = info_name.replace('/', '_')
@@ -160,7 +160,7 @@ def to_color_labels_bg(ID2info, info2color, info_name='labels bg'):
     # info2color: could be {name: color,}
     template_text = open(dataset_styles_template).read()
     id2col = {ID: info2color[info] for ID, info in ID2info.items()}
-    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}\n'
+    each_template = '{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}'
     legend_text = deduced_legend(info2color, info_name, sep='\t')
 
     template_text = template_text.format(dataset_label=info_name,
