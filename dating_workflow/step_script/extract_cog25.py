@@ -150,7 +150,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
                           get_type='prot', 
                           prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:
-        get_seq_and_write(outdir, genome2cdd, protein_files,suffix=suffix, get_type='nuc', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, genome2cdd, protein_files,_suffix=suffix, get_type='nuc', prokka_dir=prokka_dir)
     else:
         raise IOError('wrong input of output_type')
 
