@@ -24,7 +24,7 @@ tigfam_ids = [_.strip() for _ in id_list if _.startswith('TIGR')]
 
 # ABOVE is the default setting for luolab server.
 
-def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
+def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5,suffix='.faa'):
     params = []
     if not exists(odir):
         os.makedirs(odir)
@@ -32,7 +32,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5):
     size0_pfiles = []
     hmmscan = '`which hmmscan`'
     for pfile in protein_files:
-        gname = basename(pfile).replace('.faa', '')
+        gname = basename(pfile).replace(suffix, '')
         if getsize(pfile) ==0:
             size0_pfiles.append(pfile)
             continue
@@ -127,8 +127,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
     
     if not pass_annotation:
-        annotate_bac120(protein_files, in_annotations, db_id='tigrfam')
-        annotate_bac120(protein_files, in_annotations, db_id='pfam')
+        annotate_bac120(protein_files, in_annotations, db_id='tigrfam',suffix=f'.{suffix}')
+        annotate_bac120(protein_files, in_annotations, db_id='pfam', suffix=f'.{suffix}')
     if annotation_only:
         exit(f"finish annotation")
         

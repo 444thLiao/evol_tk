@@ -227,10 +227,10 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
             if set(str(seq)) == {'-'}:
                 print(f"{gid} contains only gaps or missing data ")
                 continue
-            if not simple_concat:
-                f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
-            else:
+            if simple_concat:
                 f1.write(f">{gid}\n")
+            else:
+                f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:

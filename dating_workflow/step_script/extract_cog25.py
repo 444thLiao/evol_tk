@@ -36,11 +36,11 @@ cdd_num.pop('TIGR00487')
 # TIGRFAM_db = f"{resource_dir}/TIGRFAM_v14/TIGR00487.HMM"
 # ABOVE is the default setting for luolab server.
 
-def annotate_cog(protein_file_list, cog_out_dir,num_p=5):
+def annotate_cog(protein_file_list, cog_out_dir,num_p=5,suffix='.faa'):
     params = []
     size0_pfiles = []
     for f in protein_file_list:
-        gname = basename(f).replace('.faa', '')
+        gname = basename(f).replace(suffix, '')
         # for cdd
         if getsize(f) ==0:
             size0_pfiles.append(f)
@@ -135,7 +135,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     if not exists(in_annotations):
         os.makedirs(in_annotations)
     if not pass_annotation:
-        annotate_cog(protein_files, in_annotations,num_p=num_parellel)
+        annotate_cog(protein_files, in_annotations,num_p=num_parellel,suffix=f'.{suffix}')
     if annotation_only:
         exit(f"finish annotation")
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
