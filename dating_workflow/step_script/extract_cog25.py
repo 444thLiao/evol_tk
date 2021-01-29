@@ -144,9 +144,13 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     else:
         _subgenome2cdd = genome2cdd.copy()
     if output_type.lower() in ['prot', 'protein']:
-        get_seq_and_write(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, 
+                          genome2cdd, 
+                          protein_files, 
+                          get_type='prot', 
+                          prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:
-        get_seq_and_write(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='nuc', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, genome2cdd, protein_files,suffix=suffix, get_type='nuc', prokka_dir=prokka_dir)
     else:
         raise IOError('wrong input of output_type')
 

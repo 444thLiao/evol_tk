@@ -91,11 +91,11 @@ def type_process(get_type):
     return suffix, final_suffix
 
 
-def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, protein_dir,
+def try_get_file_from_formatted_dir(genome_name, prokka_dir, gene_file,
                                     gene2locus):
     genome2seq = {}
     collect_no_prokka_gids = []
-    gfile = f'{protein_dir}/{genome_name}.faa'
+    gfile = gene_file
     # try to find the prokka dir
     if prokka_dir is None:
         # Maybe it could reverse-seek the prokka directory.
@@ -104,7 +104,7 @@ def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, protein_dir
         # directly assign a directory
         prokka_basedir = abspath(realpath(prokka_dir))
 
-    # the following format is came from thliao scripts. (unchangeable)
+    # the following format is for thliao scripts. (unchangeable)
     if suffix == 'faa':
         # get prot
         ori_file = gfile
@@ -139,16 +139,18 @@ def try_get_file_from_formatted_dir(genome_name, prokka_dir, suffix, protein_dir
 # extract protein
 def get_seq_and_write(outdir,
                       genome2cdd,
-                      protein_dir,
+                      protein_files,
                       genome_ids=[],
                       get_type='prot',
+                      suffix='faa',
                       prokka_dir=None):
     """
 
     :param outdir: output directory
     :param genome2cdd: dict stored genome2cdd2locus
-    :param used_protein_file: the protein file used in annotation
-    :param genome_ids: genome id
+    :param protein_files: protein files 
+    :param genome_ids: list of genome id
+    :param suffix: used to remove the suffix n protein files
     :param get_type: type of sequence want. nucl or prot
     :param prokka_dir: the directory of the output of prokka. Unless the protein file is a soft link.
     :return:
@@ -163,13 +165,13 @@ def get_seq_and_write(outdir,
 
     tqdm.write('get sequence file')
     collect_no_prokka_gids = []
-    for genome_name in tqdm(genome_ids):
+    for gene_file in tqdm(protein_files):
+        genome_name = basename(gene_file).replace(f'.{suffix}','')
         cdd2locus = genome2cdd[genome_name]
 
         _genome2seq, _collect_no_prokka_gids = try_get_file_from_formatted_dir(genome_name,
                                                                                prokka_dir,
-                                                                               suffix,
-                                                                               protein_dir,
+                                                                               gene_file,
                                                                                cdd2locus)
         genome2seq.update(_genome2seq)
         collect_no_prokka_gids.extend(_collect_no_prokka_gids)
