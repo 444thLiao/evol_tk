@@ -173,7 +173,7 @@ def get_seq_and_write(outdir,
                                                                                prokka_dir,
                                                                                gene_file,
                                                                                suffix=suffix,
-                                                                               cdd2locus)
+                                                                               gene2locus=cdd2locus)
         genome2seq.update(_genome2seq)
         collect_no_prokka_gids.extend(_collect_no_prokka_gids)
     if collect_no_prokka_gids:
