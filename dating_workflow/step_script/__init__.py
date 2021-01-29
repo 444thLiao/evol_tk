@@ -91,7 +91,7 @@ def type_process(get_type):
     return suffix, final_suffix
 
 
-def try_get_file_from_formatted_dir(genome_name, prokka_dir, gene_file,
+def try_get_file_from_formatted_dir(genome_name, prokka_dir, gene_file,suffix,
                                     gene2locus):
     genome2seq = {}
     collect_no_prokka_gids = []
@@ -142,7 +142,7 @@ def get_seq_and_write(outdir,
                       protein_files,
                       genome_ids=[],
                       get_type='prot',
-                      suffix='faa',
+                      _suffix='faa',
                       prokka_dir=None):
     """
 
@@ -150,7 +150,7 @@ def get_seq_and_write(outdir,
     :param genome2cdd: dict stored genome2cdd2locus
     :param protein_files: protein files 
     :param genome_ids: list of genome id
-    :param suffix: used to remove the suffix n protein files
+    :param _suffix: used to remove the suffix n protein files
     :param get_type: type of sequence want. nucl or prot
     :param prokka_dir: the directory of the output of prokka. Unless the protein file is a soft link.
     :return:
@@ -166,12 +166,13 @@ def get_seq_and_write(outdir,
     tqdm.write('get sequence file')
     collect_no_prokka_gids = []
     for gene_file in tqdm(protein_files):
-        genome_name = basename(gene_file).replace(f'.{suffix}','')
+        genome_name = basename(gene_file).replace(f'.{_suffix}','')
         cdd2locus = genome2cdd[genome_name]
 
         _genome2seq, _collect_no_prokka_gids = try_get_file_from_formatted_dir(genome_name,
                                                                                prokka_dir,
                                                                                gene_file,
+                                                                               suffix=suffix,
                                                                                cdd2locus)
         genome2seq.update(_genome2seq)
         collect_no_prokka_gids.extend(_collect_no_prokka_gids)
