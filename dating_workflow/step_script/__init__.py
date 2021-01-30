@@ -168,7 +168,9 @@ def get_seq_and_write(outdir,
     for gene_file in tqdm(protein_files):
         genome_name = basename(gene_file).replace(f'.{_suffix}','')
         cdd2locus = genome2cdd[genome_name]
-
+        if genome_name not in genome2cdd:
+            tqdm.write(f'{genome_name} not in genome2cdd')
+            continue
         _genome2seq, _collect_no_prokka_gids = try_get_file_from_formatted_dir(genome_name,
                                                                                prokka_dir,
                                                                                gene_file,
