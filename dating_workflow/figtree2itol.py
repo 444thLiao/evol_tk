@@ -55,7 +55,7 @@ indir = join(dirname(dirname(__file__)),'api_tools','itol_template')
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
-def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None,tree_format=3 ):
+def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None,tree_format=3):
     tree2 = Tree(intree_ori, format=int(tree_format))
     if root_with is not None:
         tree2.set_outgroup(tree2.get_common_ancestor(root_with))

@@ -106,8 +106,10 @@ def draw_r(df, group=None):
     return fig, r_squre_v, coef
 
 
-def get_plot(pattern, odir, no_plot=False,
-             highlight_nodes=None):
+def get_plot(pattern, odir, 
+             no_plot=False,
+             highlight_nodes=None,
+             prefix='set'):
     if not exists(odir):
         os.makedirs(odir)
 
@@ -134,10 +136,9 @@ def get_plot(pattern, odir, no_plot=False,
         tmp_df.loc[name, set_name] = r_squre_v
         tmp_df2.loc[name, set_name] = coef
 
-    tmp_df = tmp_df.reindex(columns=sorted(tmp_df.columns, key=lambda x: int(x.replace('set', ''))))
+    tmp_df = tmp_df.reindex(columns=sorted(tmp_df.columns, key=lambda x: int(x.replace(prefix, ''))))
     # tmp_df.to_excel(join(odir, 'infinite_site_r2.xlsx'))
-
-    tmp_df2 = tmp_df2.reindex(columns=sorted(tmp_df2.columns, key=lambda x: int(x.replace('set', ''))))
+    tmp_df2 = tmp_df2.reindex(columns=sorted(tmp_df2.columns, key=lambda x: int(x.replace(prefix, ''))))
     # tmp_df2.to_excel(join(odir, 'infinite_site_coef.xlsx'))
     new_df = pd.concat([tmp_df.T, tmp_df2.T], axis=1)
     new_df.columns = ['r-square', 'slope']

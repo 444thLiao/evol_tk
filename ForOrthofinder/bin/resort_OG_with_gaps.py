@@ -5,10 +5,10 @@ The steps for resorting the OG_df
 3. reinsert extracted row from step2 into the raw_df(after removing step2 rows) based on
     a. use the leftmost locus/genome as standard to move whole row
     b. find the nearest locus (include up and down / left and right)
-    c. considerate the position of current locus and its neighbours
-    d. deal with flipped situation or normal order situation
-    e. return the locus it need to insert. (it might insert the up or down, it depends)
-    f. insert, the inserted list would gradually growth
+        c. considerate the position of current locus and its neighbours
+        d. deal with flipped situation or normal order situation
+    e. return the index for insertion. (it might insert into the upstream or downstream, it depends)
+    f. insert it, the inserted list would gradually growth
 
 """
 

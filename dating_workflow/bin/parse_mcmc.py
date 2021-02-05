@@ -118,11 +118,13 @@ def targetgroup_compare_violin(collect_, odir):
     fig.write_html('./dating_for/83g/nucl/set14_derivative.html', include_plotlyjs='cdn')
 
 
-def main(indir, name2group, odir, no_plot=False):
+def main(indir, name2group, odir, no_plot=False,
+         prefix='set'):
     tmp_df = pd.DataFrame()
     # collect_ = {}
     processed_dir = list(glob(join(indir, '*run*')))
     # it would overwrite each when there are run1/run2
+    highlight_nodes = []
     for each_dir in tqdm(processed_dir):
         outfile = glob(join(each_dir, '*.out'))
         if not outfile:
@@ -152,7 +154,7 @@ def main(indir, name2group, odir, no_plot=False):
                 highlight_nodes.append((raw_name,gname))
                 tmp_df.loc[set_name, gname] = '%s (%s) ' % (df.loc[raw_name, 'Posterior mean time (100 Ma)'],
                                                             df.loc[raw_name, 'CIs'])
-    tmp_df.loc[:, 'num_set'] = [int(re.findall('set(\d+)',_)[0])
+    tmp_df.loc[:, 'num_set'] = [int(re.findall(f'{prefix}(\d+)',_)[0])
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]
     tmp_df = tmp_df.sort_values('num_set')
@@ -161,11 +163,17 @@ def main(indir, name2group, odir, no_plot=False):
     #odir = join(odir, 'parsed_mcmc_result')  # './dating_for/83g/clock2_infinite_plot'
     pattern = join(indir, '*_run1', 'run.log')  # "./dating_for/83g/clock2_diff_cal/*_run1/run.log"
     df = get_plot(pattern, odir, no_plot=no_plot,
-                  highlight_nodes=highlight_nodes)
+                  highlight_nodes=highlight_nodes,
+                  prefix=prefix)
     # draw infinite sites plot
 
     writer = pd.ExcelWriter(join(odir, f'{basename(odir)}.xlsx'), engine='xlsxwriter')
-    tmp_df.to_excel(writer, index_label='Calibration sets', sheet_name='Posterior time')
+    
+    
+    _df = df.copy()
+    _df.index = tmp_df.index
+    final_df = pd.concat([tmp_df,_df],axis=1)
+    final_df.to_excel(writer, index_label='Calibration sets', sheet_name='Posterior time')
     df.to_excel(writer, index_label='Calibration sets', sheet_name='infinite site plots')
     writer.save()
 
@@ -177,7 +185,8 @@ def main(indir, name2group, odir, no_plot=False):
 @click.option("-name", 'groupname', default='you could separated it with ; ')
 @click.option("-disable_plot", 'no_plot', default=False, required=False, is_flag=True)
 @click.option('-o', 'odir', default=None)
-def cli(indir, target_group, groupname, odir, no_plot):
+@click.option('-p', 'prefix', default='set',help='set name prefix, default is set ')
+def cli(indir, target_group, groupname, odir, no_plot,prefix):
     name2group = dict(zip(groupname.split(';'),
                           [_.strip() for _ in target_group.split(';')]))
     name2group = {k: [_.strip() for _ in v.split(',')]
@@ -185,7 +194,8 @@ def cli(indir, target_group, groupname, odir, no_plot):
     # targe_group = [_.strip() for _ in targe_group.split(',')]
     if odir is None:
         odir = indir
-    main(indir=indir, name2group=name2group, odir=odir, no_plot=no_plot)
+    main(indir=indir, name2group=name2group, odir=odir, no_plot=no_plot,
+         prefix=prefix)
 
 
 if __name__ == '__main__':
