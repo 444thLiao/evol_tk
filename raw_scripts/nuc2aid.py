@@ -21,7 +21,34 @@ edl = EntrezDownloader(
     batch_size=50,                        # The number of IDs to fetch per request
     pbar=True                             # Enables a progress bar, requires tqdm package
 )
-    
+from Bio import Entrez
+import io
+all_GI = list(unique_id)
+results, failed = edl.elink(dbfrom='nuccore',
+                                db='assembly',
+                            ids=all_GI,
+                            result_func=lambda x: Entrez.read(
+                                                io.StringIO(x)))
+# GI of nuccore to GI of assembly
+nid2assembly_dict = {}
+for r in results:
+    if r['LinkSetDb']:
+        nid2assembly_dict[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
+
+gi_assembly = [_ for _ in nid2assembly_dict.values() if _]
+results, failed = edl.esummary(db='assembly',
+                                ids=gi_assembly,
+                                result_func=lambda x: parse_assembly_xml(x))
+# return results is a list of defaultdict.
+dbsummary = {}
+for _dict in results:
+    _dict = dict(_dict)
+    for aid, info_dict in _dict.items():
+        info_dict['TaxId'] = info_dict['SpeciesTaxid']
+        
+    dbsummary.update(_dict)
+
+
 nc = NCBI_convertor(all_nuc_id,'nuccore',given_edl=edl)
 nc.get_GI()
 GI2nid = {v:k for k,v in nc.GI.items()}

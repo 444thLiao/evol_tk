@@ -77,20 +77,17 @@ dry_run=False
         os.makedirs(tmp_dir, exist_ok=True)
 
     tqdm.write(f'iterating the {indir}')
-    if all_ids is  None:
-        all_dir = [_
-               for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
-                             )
-               ]
-    else:
-        not_found = []
-        all_dir = []
-        for aid in tqdm(all_ids):
-            fna = glob(join(indir, '**', aid, '*.fna.gz'))
-            if fna:
-                all_dir.append(fna[0])
-            else:
-                not_found.append(aid)
+    
+    all_dir = [_
+        for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
+                        )
+        ]
+            
+
+    if all_ids:
+        all_dir = [_ for _ in all_dir if basename(dirname(_)) in all_ids]
+        found = [basename(dirname(_)) for _ in all_dir]
+        not_found = list(set(all_ids).difference(set(found)))
         if not_found:
             tqdm.write(f"{len(not_found)} are not found!")
                 #    if basename(dirname(_)) in all_ids]

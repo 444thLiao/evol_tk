@@ -53,10 +53,12 @@ class NCBI_convertor():
     def get_GI(self, num_retry=5,method='init'):
         if self.GI is not None and method !='update':
             return
+        ids = self.origin_ids
         if method =='update' and self.GI is not None:
             ids = [k for k,v in self.GI.items() if not v]
         elif method =='init' or self.GI is None:
             ids = self.origin_ids
+            
         tqdm.write("Get GI......")
         results, failed = self.edl.esearch(db=self.dbname,
                                       ids=ids,

@@ -345,6 +345,17 @@ def to_node_symbol(in_tree, dataset_name='bootstrap',maxsize='15'):
 
 
 def get_text_anno(id2val, extra_replace):
+    """
+    It could generate text visualization for color gradient
+
+    Args:
+        id2val ([dict]): [description]
+        extra_replace ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    
     template_text = open(matrix_like_template).read()
     template_text = template_text.format(dataset_label="numerical text",
                                          field_color="rgba(0,255,0,0)",
