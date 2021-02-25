@@ -15,7 +15,7 @@ pfam_db = f'{HOME}/data/protein_db/bac120/Pfam.v32.sub6.hmm'
 tigfam_db = f'{HOME}/data/protein_db/bac120/TIGRFAMv14_sub114.hmm'
 
 __file__ = f'{HOME}/script/evolution_relative/dating_workflow/step_script/extrat_bac120.py'
-bac120_list = join(dirname(__file__), 'bac120.tsv')
+bac120_list = join(dirname(__file__),"data", 'bac120.tsv')
 id_list = [row.split('\t')[0] for row in open(bac120_list) if row]
 id_list = id_list[1:]  # remove first row
 pfam_ids = [_.strip() for _ in id_list if _.startswith('PF0')]

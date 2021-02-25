@@ -22,7 +22,7 @@ def compare_two_set(indir1,indir2):
                     mode='markers')
     fig.add_scatter(x=[min(dis1 + dis2), max(dis1 + dis2)],
                     y=[min(dis1 + dis2), max(dis1 + dis2)],
-                    mode='lines'，
+                    mode='lines',
                     name='y=x')
 
     fig.layout.width = 1000

@@ -7,10 +7,12 @@ from collections import defaultdict
 import pandas as pd
 from bioservices import KEGG
 from tqdm import tqdm
+import os
 
 kegg = KEGG()
 
-target_dir = "/home-user/thliao/data/protein_db/kegg"
+HOME = os.getenv('HOME')
+target_dir = f"{HOME}/data/protein_db/kegg"
 
 
 def ko_classified_br(ko_set):
@@ -97,7 +99,7 @@ def get_ko_infos(kos):
         kos = set(kos)
     kegg_info_tab = f"{target_dir}/ko_info.tab"
     ko2info_dict = {row.split('\t')[0].split(':')[-1]: row.strip('\n').split('\t')[1]
-                    for row in tqdm(open(kegg_info_tab))
+                    for row in open(kegg_info_tab)
                     if row.split('\t')[0].split(':')[-1] in kos}
     return ko2info_dict
 

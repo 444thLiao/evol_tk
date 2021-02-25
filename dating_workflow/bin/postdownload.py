@@ -12,10 +12,9 @@ from os.path import join, exists, basename, dirname
 from subprocess import check_call
 
 import click
-from Bio import SeqIO
 from tqdm import tqdm
 
-from dating_workflow.toolkit.concat_aln import convert_genome_ID
+from dating_workflow.bin.concat_aln import convert_genome_ID
 
 
 def run_cmd(cmd):

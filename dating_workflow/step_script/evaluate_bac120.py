@@ -6,7 +6,7 @@ from glob import glob
 import os
 from os.path import *
 from Bio import SeqIO
-
+from tqdm import tqdm
 
 def check_r(r):
     

@@ -1,5 +1,8 @@
-
+"""
+parse result from cd-hit
+"""
 from collections import defaultdict
+
 def parse_clstr(clstr):
     """
     make sure not special sequence id name which contains % or *

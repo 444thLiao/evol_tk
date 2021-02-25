@@ -2,6 +2,10 @@
 For implement some missing feature(but i need) for ncbi-genome-download
 """
 
+import os
+import time
+from collections import defaultdict
+from glob import glob
 from os.path import *
 
 import click
@@ -9,18 +13,16 @@ import ncbi_genome_download as ngd
 from ete3 import NCBITaxa
 from ncbi_genome_download import NgdConfig
 from tqdm import tqdm
-from collections import defaultdict
-import os,time
-from glob import glob
-
 
 HOME = os.getenv("HOME")
 db_dir = f"{HOME}/data/NCBI/"
 
 metadata_files_dir = f"{HOME}/.cache/ncbi-genome-download/"
+
+
 # genbank_bacteria_assembly_summary.txt
 def from_name2ids(phylum_name,
-                  return_d2ids = False):
+                  return_d2ids=False):
     """
     retrieve ids and metadata from genbank file
     :param phylum_name:
@@ -82,7 +84,7 @@ def id2domain_to_ids(ids_list):
     domain2aids = defaultdict(list)
     collect_info = []
     ids_list = set(ids_list)
-    for d in ["bacteria",'archaea']:
+    for d in ["bacteria", 'archaea']:
         metadata = join(metadata_files_dir, f"genbank_{d}_assembly_summary.txt")
         tqdm.write(f'read {metadata}')
         for row in tqdm(open(metadata)):
@@ -92,6 +94,7 @@ def id2domain_to_ids(ids_list):
                     collect_info.append(row)
                     domain2aids[d].append(rows[0])
     return domain2aids, collect_info
+
 
 # cids,cinfo = from_name2ids("Verrucomicrobia")
 
@@ -106,6 +109,7 @@ def batch_iter(iter, batch_size):
         batch_d = batch_u
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
+
 
 def main(name=None,
          odir=None,
@@ -130,21 +134,21 @@ def main(name=None,
     new_domain2aids = {}
     for d, aids in domain2aids.items():
         old_d = aids[::]
-        curr_dir = join(db_dir,'genbank',d)
+        curr_dir = join(db_dir, 'genbank', d)
         if 'fasta' in formats:
             # check whether other kinds of files have been downloaded
             sub_aids = [_ for _ in tqdm(aids)
-                    if not glob(join(curr_dir,_,'*.fna.gz'))]
+                        if not glob(join(curr_dir, _, '*.fna.gz'))]
             new_domain2aids[d] = sub_aids
         downloaded_aids.extend(new_domain2aids[d])
         print(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
 
     _d = {"assembly_accessions": '',
-                        "dry_run": False,
-                        "section": "genbank",
-                        "parallel": parallel,
-                        "output": db_dir,  # all genomes were downloaded to db_dir
-                        "file_formats": formats}
+          "dry_run": False,
+          "section": "genbank",
+          "parallel": parallel,
+          "output": db_dir,  # all genomes were downloaded to db_dir
+          "file_formats": formats}
     print(f'params is {_d}')
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
@@ -153,9 +157,10 @@ def main(name=None,
                         "parallel": parallel,
                         "output": db_dir,  # all genomes were downloaded to db_dir
                         "file_formats": formats})
-    
-    with open(join(odir,'metadata.csv'),'w') as f1:
+
+    with open(join(odir, 'metadata.csv'), 'w') as f1:
         f1.write('\n'.join(cinfos))
+
 
 @click.command(help="It would split the list of assembly ids into batches. The size parameter would produce")
 @click.option("-n", "name", help="input the phylum name or other. use ; to separate multiple ")
@@ -169,7 +174,7 @@ def main(name=None,
               default=20)
 @click.option("-p", "parallel", help=f"Run N downloads in parallel (default: 10)",
               default=5)
-def cli(name, odir, formats,size_of_batch,parallel):
+def cli(name, odir, formats, size_of_batch, parallel):
     main(name=name,
          odir=odir,
          formats=formats,

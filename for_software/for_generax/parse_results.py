@@ -1,9 +1,7 @@
-
 from os.path import *
 from ete3 import Tree
 from api_tools.itol_func import pie_chart
 from bs4 import BeautifulSoup
-
 
 
 def get_up_till_root(n):

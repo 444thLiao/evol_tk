@@ -1,6 +1,7 @@
 """
-This script is mainly for download genome from berry genomes company.
+This script is mainly for downloading genome from berry genomes sequencing company.
 """
+
 import io
 import json
 import os
@@ -49,7 +50,7 @@ def main(ssid, odir, dry_run):
                  # 'path': f'/{path}',
                  'sort': 'natural',
                  'dir': 'ASC',
-                 'ep':''}
+                 'ep': ''}
     r = requests.post('https://ss.berrygenomics.com/share.cgi',
                       post_data,
                       verify=False)

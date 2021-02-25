@@ -10,7 +10,7 @@ from ete3 import Tree
 from tqdm import tqdm
 import re
 import arviz as az
-from dating_workflow.debug_for.draw_infinite_plot import get_plot
+from dating_workflow.debug_for.draw_infinite_plot import get_plot,get_CI
 
 warnings.filterwarnings('ignore')
 
@@ -61,47 +61,6 @@ def cal_HPD_CI(df,burn_in=2000):
     return col2CI
     
     
-def get_CI(infile):
-    """
-
-    :param f: log file?
-    :return:
-    """
-    f = open(infile).read().split('\n')
-    if infile.endswith('.out'):
-        head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
-    elif infile.endswith(".log"):
-        head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
-    if head not in f:
-        return None
-    idx = f.index(head)
-    remained_txt = f[idx + 1:]
-
-    def format_v(x):
-        x = x.strip('(')
-        x = x.strip(')')
-        x = x.strip(',')
-        return float(x)
-
-    idx = []
-    CIs = []
-    mean_collect = []
-    CI_collect = []
-    for row in remained_txt:
-        if row.startswith('t_n') or row.startswith('lnL'):
-            vals = row.split(' ')
-            vals = [_ for _ in vals if _ and _ not in '(),']
-            posterior_mean, equal_tailed_95p_down, equal_tailed_95p_up = map(format_v, vals[1:4])
-            CI_collect.append((equal_tailed_95p_up - equal_tailed_95p_down))
-            mean_collect.append(posterior_mean)
-            idx.append(vals[0])
-            CIs.append('%s - %s' % (equal_tailed_95p_down, equal_tailed_95p_up))
-    df = pd.DataFrame()
-    df.loc[:, 'CI_width'] = CI_collect
-    df.loc[:, 'CIs'] = CIs
-    df.loc[:, 'Posterior mean time (100 Ma)'] = mean_collect
-    df.index = idx
-    return df
 
 
 def get_node_name(f):
@@ -153,40 +112,37 @@ def main(indir, name2group, odir, no_plot=False,
          prefix='set'):
     tmp_df = pd.DataFrame()
     # collect_ = {}
-    processed_dir = list(glob(join(indir, '*run*')))
+    processed_dir = [_ for _ in glob(join(indir, '*run*')) 
+                     if exists(join(_, 'FigTree.tre'))]
     # it would overwrite each when there are run1/run2
     highlight_nodes = []
     for each_dir in tqdm(processed_dir):
-        figtree = join(each_dir, 'FigTree.tre')
         mcmc = join(each_dir, 'mcmc.txt')
         outfile = glob(join(each_dir, '*.out'))
-        if not exists(figtree):
-            continue
-        else:
-            outfile = [_ for _ in outfile if 'slurm' not in _][0]
+        outfile = [_ for _ in outfile if 'slurm' not in _][0]
         
         highlight_nodes = []
-        if exists(join(each_dir, 'FigTree.tre')):
-            t = get_node_name(outfile)  # get the tree with internal node name
-            mcmc_df = pd.read_csv(mcmc, sep='\t', index_col=0)
-            set_name = basename(dirname(outfile)).partition('_')[-1]
-            if not set_name:
-                set_name = basename(dirname(outfile))
-            # collect_[set_name] = df.loc[:, name]
-            n2CI = cal_HPD_CI(mcmc_df,burn_in=0)  # it should be discarded already
-            n2CI = {k: f"{round(v[0],2)} - {round(v[1],2)}" for k,v in n2CI.items()}
-            n2mean_time = {k:round(v,2) for k,v in mcmc_df.mean().to_dict().items()}
-            root_name = 't_n%s' % t.name
-            
-            tmp_df.loc[set_name, 'ROOT'] = '%s (%s) ' % (n2mean_time[root_name],
-                                                         n2CI[root_name])
-            tmp_df.loc[set_name, 'lnL'] = '%s (%s) ' % (n2mean_time['lnL'],
-                                                         n2CI['lnL'])
-            for gname, group in name2group.items():
-                raw_name = 't_n%s' % t.get_common_ancestor(group).name
-                highlight_nodes.append((raw_name,gname))
-                tmp_df.loc[set_name, gname] = '%s (%s) ' % (n2mean_time[raw_name],
-                                                         n2CI[raw_name])
+        # if exists(join(each_dir, 'FigTree.tre')):
+        t = get_node_name(outfile)  # get the tree with internal node name
+        mcmc_df = pd.read_csv(mcmc, sep='\t', index_col=0)
+        set_name = basename(dirname(outfile)).partition('_')[-1]
+        if not set_name:
+            set_name = basename(dirname(outfile))
+        # collect_[set_name] = df.loc[:, name]
+        n2CI = cal_HPD_CI(mcmc_df,burn_in=0)  # it should be discarded already
+        n2CI = {k: f"{round(v[0],2)} - {round(v[1],2)}" for k,v in n2CI.items()}
+        n2mean_time = {k:round(v,2) for k,v in mcmc_df.mean().to_dict().items()}
+        root_name = 't_n%s' % t.name
+        
+        tmp_df.loc[set_name, 'ROOT'] = '%s (%s) ' % (n2mean_time[root_name],
+                                                        n2CI[root_name])
+        tmp_df.loc[set_name, 'lnL'] = '%s (%s) ' % (n2mean_time['lnL'],
+                                                        n2CI['lnL'])
+        for gname, group in name2group.items():
+            raw_name = 't_n%s' % t.get_common_ancestor(group).name
+            highlight_nodes.append((raw_name,gname))
+            tmp_df.loc[set_name, gname] = '%s (%s) ' % (n2mean_time[raw_name],
+                                                        n2CI[raw_name])
     tmp_df.loc[:, 'num_set'] = [int(re.findall(f'{prefix}(\d+)',_)[0])
                                 if 'run' in _ else 0
                                 for _ in tmp_df.index]

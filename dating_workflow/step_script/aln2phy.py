@@ -8,7 +8,7 @@ from os.path import *
 import click
 from Bio import AlignIO
 
-from dating_workflow.toolkit.concat_aln import generate_phy_file,convert_genome_ID_rev
+from dating_workflow.bin.concat_aln import convert_genome_ID_rev
 
 
 @click.command()

@@ -8,9 +8,17 @@ import plotly.graph_objects as go
 from tqdm import tqdm
 
 
-def get_CI(f):
-    f = open(f).read().split('\n')
-    head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+def get_CI(infile):
+    """
+
+    :param f: log file?
+    :return:
+    """
+    f = open(infile).read().split('\n')
+    if infile.endswith('.out'):
+        head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+    elif infile.endswith(".log"):
+        head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
     if head not in f:
         return None
     idx = f.index(head)
@@ -41,7 +49,6 @@ def get_CI(f):
     df.loc[:, 'Posterior mean time (100 Ma)'] = mean_collect
     df.index = idx
     return df
-
 
 def get_r2(text):
     r_squre_text = text['hovertemplate'].split('<br>')[2]

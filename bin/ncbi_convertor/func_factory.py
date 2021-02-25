@@ -1,11 +1,10 @@
 import io
 from collections import defaultdict
 
-from Bio import Entrez
 from tqdm import tqdm
 
 from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
-from global_search.thirty_party.metadata_parser import parse_assembly_xml
+from api_tools.third_party import parse_assembly_xml
 
 tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
 batch_return_dbs = []

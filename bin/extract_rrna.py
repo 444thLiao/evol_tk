@@ -1,6 +1,6 @@
 """
-From prokka output to extract rrna (mainly for 16S and 23S)
-it follow the structure of traditional prokka output
+extract rrna (mainly for 16S and 23S) from prokka's output
+it would follow the folder structures of traditional prokka output
 """
 
 import os

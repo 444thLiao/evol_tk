@@ -8,10 +8,10 @@ from glob import glob
 from os.path import *
 
 import click
-from ete3 import Tree
-
 from api_tools.for_tree.format_tree import sort_tree
 from dating_workflow.step_script import process_path
+from ete3 import Tree
+
 
 #   Tree with NHX style metadata:
 
@@ -51,11 +51,11 @@ def get_node_name(f):
     return t
 
 
-indir = join(dirname(dirname(__file__)),'api_tools','itol_template')
+indir = join(dirname(dirname(__file__)), 'api_tools', 'itol_template')
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
-def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None,tree_format=3):
+def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None, tree_format=3):
     tree2 = Tree(intree_ori, format=int(tree_format))
     if root_with is not None:
         tree2.set_outgroup(tree2.get_common_ancestor(root_with))
@@ -110,7 +110,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
                                        'bold',
                                        '1',
                                        '0']))
-    template = open(join(indir,'dataset_text_template.txt')).read()
+    template = open(join(indir, 'dataset_text_template.txt')).read()
     with open(join(itol_annotate, 'dating_tree_ages.txt'), 'w') as f1:
         f1.write(template + '\n' + '\n'.join(raw_text))
 
@@ -153,7 +153,7 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
 @click.option('-od', 'itol_annotate', default=None)
 @click.option('-r', 'root_with', default=None, help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
 @click.option('-f', 'tree_format', default=3, help='')
-def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with,tree_format):
+def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with, tree_format):
     output_dating_result_tree = process_path(output_dating_result_tree)
     if itol_annotate is None:
         itol_annotate = dirname(output_dating_result_tree)
