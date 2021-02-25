@@ -73,7 +73,8 @@ def parse_biosample_xml(xml_text):
         biosample2info[accession]['last_update'] = each_record.get('last_update','')
         biosample2info[accession]['publication_date'] = each_record.get('publication_date','')
         biosample2info[accession]['submission_date'] = each_record.get('submission_date','')
-
+        # each_record.find_all('ExclFromRefSeq')
+        # TODO: add xml from assembly page which contain above attr
         for dom in each_record.find_all('Id'):
             for attr in dom.attrs:
                 if attr.startswith('db'):
