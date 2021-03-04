@@ -57,7 +57,7 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
     
     post_df.loc[node_names,'Posterior mean time (100 Ma)'] = [n2mean_time[_] for _ in post_df.index if _ !='lnL']
     post_df.loc[node_names,'CIs'] = [n2CI[_] for _ in post_df.index if _ !='lnL']
-    post_df.loc[node_names,'CI_width'] = [n2CI[_][1]-n2CI[_][0] for _ in post_df.index if _ !='lnL']    
+    post_df.loc[node_names,'CI_width'] = [raw_n2CI[_][1]-raw_n2CI[_][0] for _ in post_df.index if _ !='lnL']    
     return post_df
     
     
