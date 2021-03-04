@@ -1,3 +1,4 @@
+from dating_workflow.toolkit.mcmctree_for import get_posterior_df
 from glob import glob
 from os.path import *
 
@@ -8,7 +9,6 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
 from collections import defaultdict
-from dating_workflow.bin.parse_mcmc import get_CI
 
 
 prior_set = '~/data/AOB/dating/160g/batch_prior_nucl/*/mcmc.txt'
@@ -33,7 +33,7 @@ for mcmc in tqdm(f):
         _df = pd.read_csv(mcmc, sep='\t', index_col=0)
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
         posterior_df.append((name, _df))
-        posterior_CIs[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
+        posterior_CIs[name] = get_posterior_df(join(dirname(mcmc), 'mcmc.txt')))
 # posterior_df = list(sorted(posterior_df,key=lambda x: int(x[0].split('set')[-1])))
 posterior_df = dict(posterior_df)
 

@@ -1,15 +1,6 @@
-from glob import glob
 from os.path import *
 
-import numpy as np
-import pandas as pd
 import plotly.figure_factory as ff
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
-from tqdm import tqdm
-from collections import defaultdict
-from dating_workflow.bin.parse_mcmc import get_CI
-from dating_workflow.figtree2itol import get_node_name
 from for_software.for_bayestraits.toolkit.get_result import *
 
 df = get_df('/mnt/ivy/thliao/project/NOB/ACE/wol_phylogeny/complex_m/bst_complex.Log.txt')

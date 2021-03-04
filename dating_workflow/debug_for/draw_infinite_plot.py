@@ -6,49 +6,49 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from tqdm import tqdm
+from dating_workflow.toolkit.mcmctree_for import *
 
+# def get_CI(infile):
+#     """
 
-def get_CI(infile):
-    """
+#     :param f: log file?
+#     :return:
+#     """
+#     f = open(infile).read().split('\n')
+#     if infile.endswith('.out'):
+#         head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+#     elif infile.endswith(".log"):
+#         head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
+#     if head not in f:
+#         return None
+#     idx = f.index(head)
+#     remained_txt = f[idx + 1:]
 
-    :param f: log file?
-    :return:
-    """
-    f = open(infile).read().split('\n')
-    if infile.endswith('.out'):
-        head = 'Posterior mean (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
-    elif infile.endswith(".log"):
-        head = 'Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width'
-    if head not in f:
-        return None
-    idx = f.index(head)
-    remained_txt = f[idx + 1:]
+#     def format_v(x):
+#         x = x.strip('(')
+#         x = x.strip(')')
+#         x = x.strip(',')
+#         return float(x)
 
-    def format_v(x):
-        x = x.strip('(')
-        x = x.strip(')')
-        x = x.strip(',')
-        return float(x)
-
-    idx = []
-    CIs = []
-    mean_collect = []
-    CI_collect = []
-    for row in remained_txt:
-        if row.startswith('t_n') or row.startswith('lnL'):
-            vals = row.split(' ')
-            vals = [_ for _ in vals if _ and _ not in '(),']
-            posterior_mean, equal_tailed_95p_down, equal_tailed_95p_up = map(format_v, vals[1:4])
-            CI_collect.append((equal_tailed_95p_up - equal_tailed_95p_down))
-            mean_collect.append(posterior_mean)
-            idx.append(vals[0])
-            CIs.append('%s - %s' % (equal_tailed_95p_down, equal_tailed_95p_up))
-    df = pd.DataFrame()
-    df.loc[:, 'CI_width'] = CI_collect
-    df.loc[:, 'CIs'] = CIs
-    df.loc[:, 'Posterior mean time (100 Ma)'] = mean_collect
-    df.index = idx
-    return df
+#     idx = []
+#     CIs = []
+#     mean_collect = []
+#     CI_collect = []
+#     for row in remained_txt:
+#         if row.startswith('t_n') or row.startswith('lnL'):
+#             vals = row.split(' ')
+#             vals = [_ for _ in vals if _ and _ not in '(),']
+#             posterior_mean, equal_tailed_95p_down, equal_tailed_95p_up = map(format_v, vals[1:4])
+#             CI_collect.append((equal_tailed_95p_up - equal_tailed_95p_down))
+#             mean_collect.append(posterior_mean)
+#             idx.append(vals[0])
+#             CIs.append('%s - %s' % (equal_tailed_95p_down, equal_tailed_95p_up))
+#     df = pd.DataFrame()
+#     df.loc[:, 'CI_width'] = CI_collect
+#     df.loc[:, 'CIs'] = CIs
+#     df.loc[:, 'Posterior mean time (100 Ma)'] = mean_collect
+#     df.index = idx
+#     return df
 
 def get_r2(text):
     r_squre_text = text['hovertemplate'].split('<br>')[2]
@@ -117,6 +117,7 @@ def get_plot(pattern, odir,
              no_plot=False,
              highlight_nodes=None,
              prefix='set'):
+    # pattern should be multiple mcmc.txt
     if not exists(odir):
         os.makedirs(odir)
 
@@ -126,7 +127,7 @@ def get_plot(pattern, odir,
     for f1 in tqdm(a):
         name = f1.split('_')[-3]
         set_name = f1.split('_')[-2]
-        df1 = get_CI(f1)
+        df1 = get_posterior_df(f1,burn_in=0,scale=1)
         if df1 is None:
             continue
         if highlight_nodes is not None:

@@ -73,7 +73,10 @@ class EntrezDownloader:
             min_wait=0.4 if not api_key else 0.2)
         self.print_lock = threading.Lock()
         self.pbar = pbar
-
+        
+    def disable_pbar(self):
+        self.pbar = False
+        
     def _general_batch(self, db, ids, result_collector, result_func, emode,**kwargs):
 
         post_data = {
@@ -273,7 +276,6 @@ class EntrezDownloader:
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """
-
         if self.pbar:
             from tqdm import tqdm
             results = ResultCollector(

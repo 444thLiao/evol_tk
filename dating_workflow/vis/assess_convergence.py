@@ -1,12 +1,12 @@
-from dating_workflow.bin.parse_mcmc import get_CI
+from dating_workflow.toolkit.mcmctree_for import get_posterior_df
 import plotly.graph_objects as go
 from os.path import join
 # p1 = "./dating/scheme1_v2/nucl/clock2_diff_cal/repeat_scheme1_v2_set17_run1"
 # p2 = "./dating/scheme1_v2/nucl/clock2_diff_cal/repeat_scheme1_v2_set17_run2_p2"
 
 def compare_two_set(indir1,indir2):
-    CI_1 = get_CI(join(indir1, '03_mcmctree.out'))
-    CI_2 = get_CI(join(indir2, '03_mcmctree.out'))
+    CI_1 = get_posterior_df(join(indir1, 'mcmc.txt'))
+    CI_2 = get_posterior_df(join(indir2, 'mcmc.txt'))
 
     # remove lnL row
     CI_1 = CI_1.iloc[:-1, :]

@@ -1,5 +1,6 @@
 
 
+from dating_workflow.toolkit.mcmctree_for import get_node_name_from_log
 from ete3 import Tree
 import pandas as pd
 from os.path import *
@@ -36,10 +37,10 @@ t_prior,i2l_prior = get_time("prior_only/test")
 
 dates_df = pd.DataFrame()
 
-from dating_workflow.bin.parse_mcmc import *
-log = '/mnt/home-backup/thliao/plancto/dating_for/83g/nucl/clock2_diff_cal/repeat_83g_set14_run1/run.log'
-df = get_CI(log)
-t = get_node_name(log.replace('run.log','03_mcmctree.out'))
+from dating_workflow.bin.parse_mcmc import get_posterior_df
+mcmc = '/mnt/home-backup/thliao/plancto/dating_for/83g/nucl/clock2_diff_cal/repeat_83g_set14_run1/mcmc.txt'
+df = get_posterior_df(mcmc)
+t = get_node_name_from_log(mcmc.replace('mcmc.txt','run.log'))
 n1_2_n2 = {}
 for n,l in i2l_1.items():
     _n = t.get_common_ancestor(l)
@@ -48,10 +49,7 @@ for n,l in i2l_1.items():
 order_date_phylobayes = t1.reindex([n1_2_n2[_] for _ in df.index if _ in n1_2_n2])
 sub_df = df.reindex([_ for _ in df.index if _ in n1_2_n2])
 
-from dating_workflow.debug_for.draw_repeat import *
-
-
-
+import plotly.express as px
 def draw_conv_plot(time1,time2):
     df = pd.DataFrame()
     df.loc[:, 'time1'] = time1/10

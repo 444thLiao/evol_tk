@@ -1,6 +1,7 @@
 """
 it could read in both prior
 """
+from dating_workflow.toolkit.mcmctree_for import get_posterior_df
 from glob import glob
 from os.path import *
 
@@ -11,7 +12,6 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
 from collections import defaultdict
-from dating_workflow.bin.parse_mcmc import get_CI
 from dating_workflow.figtree2itol import get_node_name
 import click
 
@@ -30,8 +30,7 @@ def read_multi_mcmc(f_pattern,
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
         df_list.append((name, _df))
     # prior_df = list(sorted(prior_df,key=lambda x: int(x[0].split('set')[-1])))
-        CIs_dict[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
-    # posterior_CIs[name] = get_CI(glob(join(dirname(mcmc), '*.log'))[0])
+        CIs_dict[name] = get_posterior_df(join(dirname(mcmc), 'mcmc.txt'))
     df_dict = dict(df_list)
     return df_dict,CIs_dict
 prior_df,prior_CIs = read_multi_mcmc(prior_set)

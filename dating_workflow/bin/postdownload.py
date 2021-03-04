@@ -43,7 +43,8 @@ def get_faa_from_prokka_r(infile,
 
 
 def cli(indir,
-        odir=None, tmp_dir=None,
+        odir=None, 
+        tmp_dir=None,
         reformatted_name=True,
         force=False,
         # force_prokka=False,
@@ -234,4 +235,4 @@ def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokk
 
 if __name__ == "__main__":
     main()
-    # python3 /home-user/thliao/script/evolution_relative/dating_workflow/toolkit/postdownload.py -i ./genbank -o ./genome_protein_files
+    # python3 /home-user/thliao/script/evol_tk/dating_workflow/toolkit/postdownload.py -i ./genbank -o ./genome_protein_files
