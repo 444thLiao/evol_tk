@@ -40,9 +40,11 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
     if pd.isna(mcmc_df.iloc[-1,-1]):
         mcmc_df = mcmc_df.drop(mcmc_df.index[-1])
 
+
+    node_names = [_ for _ in mcmc_df.columns if _.startswith('t_n')]
     post_df = pd.DataFrame(columns=['Posterior mean time (100 Ma)',
                                   'CI_width','CIs'],
-                         index=[_ for _ in mcmc_df.columns if _.startswith('t_n')] + ['lnL'])
+                          index=node_names + ['lnL'])
     
     raw_n2CI = cal_HPD_CI(mcmc_df,burn_in=burn_in)
     post_df.loc['lnL',:] = [mcmc_df.loc[:,'lnL'].mean(),
@@ -53,9 +55,9 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
     n2CI = {k: f"{round(v[0]*scale,2)} - {round(v[1]*scale,2)}" for k,v in raw_n2CI.items()}
     n2mean_time = {k:round(v*scale,2) for k,v in mcmc_df.mean().to_dict().items()}
     
-    post_df['Posterior mean time (100 Ma)'] = [n2mean_time[_] for _ in post_df.index if _ !='lnL']
-    post_df['CIs'] = [n2CI[_] for _ in post_df.index if _ !='lnL']
-    post_df['CI_width'] = [n2CI[_][1]-n2CI[_][0] for _ in post_df.index if _ !='lnL']    
+    post_df.loc[node_names,'Posterior mean time (100 Ma)'] = [n2mean_time[_] for _ in post_df.index if _ !='lnL']
+    post_df.loc[node_names,'CIs'] = [n2CI[_] for _ in post_df.index if _ !='lnL']
+    post_df.loc[node_names,'CI_width'] = [n2CI[_][1]-n2CI[_][0] for _ in post_df.index if _ !='lnL']    
     return post_df
     
     
