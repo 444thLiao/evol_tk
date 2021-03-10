@@ -52,7 +52,7 @@ def filtration_part(gid2locus2ko, evalue=1e-50):
                      for k, v in tqdm(gid2locus2ko.items())}
     # select minimum evalue among all matched KO for each locus
     # TODO: it may be corrected at following version
-    # it could considerate the position overlapping situations
+    ## it could considerate the position overlapping situations
     used_locus = {}
     locus2ko = {}
     tqdm.write("choose best ko for each locus")

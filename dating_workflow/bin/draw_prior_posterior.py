@@ -30,7 +30,7 @@ def read_multi_mcmc(f_pattern,
         _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
         df_list.append((name, _df))
     # prior_df = list(sorted(prior_df,key=lambda x: int(x[0].split('set')[-1])))
-        CIs_dict[name] = get_posterior_df(join(dirname(mcmc), 'mcmc.txt'))
+        CIs_dict[name] = get_posterior_df(mcmc)
     df_dict = dict(df_list)
     return df_dict,CIs_dict
 prior_df,prior_CIs = read_multi_mcmc(prior_set)

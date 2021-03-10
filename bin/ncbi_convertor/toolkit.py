@@ -10,7 +10,7 @@ from ete3 import NCBITaxa
 from tqdm import tqdm
 
 from api_tools.third_party.EntrezDownloader import EntrezDownloader
-from api_tools.third_party import parse_bioproject_xml, parse_biosample_xml
+from api_tools.third_party.metadata_parser import parse_bioproject_xml, parse_biosample_xml
 
 ncbi = NCBITaxa()
 taxons = ['superkingdom', 'phylum', 'class',

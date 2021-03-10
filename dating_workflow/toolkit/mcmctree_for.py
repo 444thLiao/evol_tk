@@ -47,9 +47,9 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
                           index=node_names + ['lnL'])
     
     raw_n2CI = cal_HPD_CI(mcmc_df,burn_in=burn_in)
-    post_df.loc['lnL',:] = [mcmc_df.loc[:,'lnL'].mean(),
-                            f"{round(raw_n2CI['lnL'][0],2)} - {round(raw_n2CI['lnL'][1],2)}",
+    post_df.loc['lnL',:] = [round(mcmc_df.loc[:,'lnL'].mean(),2),
                             round(raw_n2CI['lnL'][1]-raw_n2CI['lnL'][0] ,2),
+                            f"{round(raw_n2CI['lnL'][0],2)} - {round(raw_n2CI['lnL'][1],2)}",
                             ]
     
     n2CI = {k: f"{round(v[0]*scale,2)} - {round(v[1]*scale,2)}" for k,v in raw_n2CI.items()}
