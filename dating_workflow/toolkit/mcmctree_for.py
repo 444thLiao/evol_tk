@@ -44,10 +44,12 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
     node_names = [_ for _ in mcmc_df.columns if _.startswith('t_n')]
     post_df = pd.DataFrame(columns=['Posterior mean time (100 Ma)',
                                   'CI_width','CIs'],
-                          index=node_names + ['lnL'])
+                          index=node_names )
     
     raw_n2CI = cal_HPD_CI(mcmc_df,burn_in=burn_in)
-    post_df.loc['lnL',:] = [round(mcmc_df.loc[:,'lnL'].mean(),2),
+    if 'lnL' in mcmc_df.columns:
+        post_df.loc['lnL',:] = 'NA'
+        post_df.loc['lnL',:] = [round(mcmc_df.loc[:,'lnL'].mean(),2),
                             round(raw_n2CI['lnL'][1]-raw_n2CI['lnL'][0] ,2),
                             f"{round(raw_n2CI['lnL'][0],2)} - {round(raw_n2CI['lnL'][1],2)}",
                             ]
@@ -57,7 +59,7 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1):
     
     post_df.loc[node_names,'Posterior mean time (100 Ma)'] = [n2mean_time[_] for _ in post_df.index if _ !='lnL']
     post_df.loc[node_names,'CIs'] = [n2CI[_] for _ in post_df.index if _ !='lnL']
-    post_df.loc[node_names,'CI_width'] = [raw_n2CI[_][1]-raw_n2CI[_][0] for _ in post_df.index if _ !='lnL']    
+    post_df.loc[node_names,'CI_width'] = [raw_n2CI[_][1]*scale-raw_n2CI[_][0]*scale for _ in post_df.index if _ !='lnL']    
     return post_df
     
     
