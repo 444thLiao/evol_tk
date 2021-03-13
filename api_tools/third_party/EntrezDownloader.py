@@ -339,7 +339,7 @@ class EntrezDownloader:
             fs.append(f)
 
         futures.wait(fs)
-        if self.pbar and not no_pbar:
+        if self.pbar:
             results.pbar.close()
         return results.results, results.failed
 
