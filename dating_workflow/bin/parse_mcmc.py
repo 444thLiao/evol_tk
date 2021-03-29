@@ -91,8 +91,8 @@ def main(indir, name2group, odir, no_plot=False, prefix="set", burn_in=0, scale=
         t = get_node_name_from_log(logfile)  # get the tree with internal node name
         post_df = get_posterior_df(mcmc, scale=scale, burn_in=burn_in)
         coef, r2 = fit_line(
-            x=post_df["Posterior mean time (100 Ma)"].values, 
-            y=post_df["CI_width"].values
+            x=post_df["Posterior mean time (100 Ma)"].values[:-1],   # remove lnL
+            y=post_df["CI_width"].values[:-1]  # remove lnL
         )
         coef = round(coef, 4)
         r2 = abs(round(r2, 4))

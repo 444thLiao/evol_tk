@@ -241,7 +241,6 @@ class EntrezDownloader:
 
         if self.pbar:
             from tqdm import tqdm
-
             results = ResultCollector(
                 pbar=tqdm(total=(len(ids) // batch_size) + 1, unit="records")
             )
