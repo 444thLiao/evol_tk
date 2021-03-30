@@ -34,12 +34,11 @@ aaRatefile = join(template_dir, 'lg.dat')
 
 def env_exe(name):
     p = os.environ.get('PATH')
-    if p is None:
-        return ''
     p = p.split(':')
     for _p in p:
         if exists(join(_p,name)):
             return join(_p,name)
+    return 'None'
     #
     # bin_dir = dirname(sys.executable)
     # f = join(bin_dir, name)

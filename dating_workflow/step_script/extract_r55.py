@@ -13,7 +13,7 @@ from dating_workflow.step_script import parse_blastp
 
 rbp_db = "/home-user/thliao/data/protein_db/rbp55"
 
-__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extrat_r55.py'
+#__file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/extrat_r55.py'
 r55_list = join(dirname(__file__),"data", 'Rbp55.tsv')
 rbp55_id_list = [row.split('\t')[0] for row in open(r55_list) if row.split('\t')[0]]
 

@@ -18,7 +18,7 @@ HOME = os.getenv("HOME")
 pfam_db = f'{HOME}/data/protein_db/ar122/Pfam.v32.ar122.hmm'
 tigfam_db = f'{HOME}/data/protein_db/ar122/TIGRFAMv14_ar122.hmm'
 
-__file__ = f'{HOME}/script/evolution_relative/dating_workflow/step_script/extrat_ar122.py'
+#__file__ = f'{HOME}/script/evolution_relative/dating_workflow/step_script/extrat_ar122.py'
 ar120_list = join(dirname(__file__), 'data', 'ar122.tsv')
 id_list = [row.split('\t')[0] for row in open(ar120_list) if row]
 id_list = id_list[1:]  # remove first row

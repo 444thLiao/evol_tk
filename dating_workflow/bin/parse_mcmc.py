@@ -9,7 +9,7 @@ from ete3 import Tree
 from tqdm import tqdm
 import re
 from dating_workflow.debug_for.draw_infinite_plot import get_plot, fit_line
-from dating_workflow.toolkit.mcmctree_for import *
+from dating_workflow.toolkit.mcmctree_for import get_node_name_from_log,get_posterior_df
 
 warnings.filterwarnings("ignore")
 
