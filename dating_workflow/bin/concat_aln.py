@@ -1,3 +1,12 @@
+"""
+For concatenating multiple alignment files according to some criteria.
+
+1. name with converted/formatted ID (for those genes annotated from Genbank/refseq genome)
+2. input a file designating the grouping information.
+
+
+"""
+
 import os
 import random
 from collections import defaultdict
@@ -69,8 +78,13 @@ def set_partition(f1, name, seq, partition_method):
     return str(seq), name
 
 
-def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True, 
-                      remove_identical=False, partition_method='genes',name_convertor=None):
+def generate_phy_file(outfile, 
+                      record_pos_info, 
+                      genome_ids, 
+                      fill_gaps=True, 
+                      remove_identical=False,
+                      partition_method='genes',
+                      name_convertor=None):
     """
 
     :param outfile:
@@ -120,67 +134,73 @@ def generate_phy_file(outfile, record_pos_info, genome_ids, fill_gaps=True,
                 for remained_id in set(genome_ids).difference(set(used_ids)):
                     f1.write(f"{remained_id}        {'-' * length_this_aln}\n")
 
-@click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
-@click.option("-i", "indir", help="The input directory which contains all separate aln files")
-@click.option("-o", "outfile", default=None, help="path of outfile. default id in the `-i` directory and named `concat_aln.aln`")
-@click.option("-s", "suffix", default='aln', help="suffix for input files")
-@click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-@click.option("-genel", "gene_list", default=None,
-              help="list of gene need to be retained")
-@click.option("-rm_I", "remove_identical", is_flag=True, default=False, help='remove identical sequence for some software like Fasttree. default is not removed')
-@click.option("-no_graph", "graph", is_flag=True, default=True, help='generating a graph introducing the number of genes among all genomes. default is generating graph')
-@click.option("-no_fill", "fill_gaps", is_flag=True, default=True, help="fill with gaps for genomes doesn't contains this gene. default is filling ")
-@click.option("-seed", "seed", help='random seed when removing the identical sequences')
-@click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
-@click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... please be carefully if you input trimal result or aln result. ', default='genes')
-@click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
-@click.option('-not_add_prefix', 'not_add_prefix', 
-              help='provide a list of id which do not add prefix as others. ', default=None, required=False)
-@click.option('-simple', 'simple_concat', is_flag=True, default=False,
-              help='do not perform any name transformation ',  required=False)
-def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_type, graph, fill_gaps, 
-         suffix='aln', 
-         fix_refseq=False,
-         not_add_prefix=None,
-         partition_method='genes',
-         simple_concat=False):
-    if genome_list is None:
-        genome_list = join(indir, 'selected_genomes.txt')
-    gids = open(genome_list, 'r').read().split('\n')
-    if simple_concat:
-         gids = set(gids)
-    else:
-        gids = [convert_genome_ID(_) for _ in gids if _]
-        if fix_refseq:
-            prefix = 'GCF_'
-        else:
-            prefix = 'GCA_'
-        if not_add_prefix is not None:
-            not_add_prefix_ids = [_ for _ in open(not_add_prefix).read().split('\n') if _]
-        else:
-            not_add_prefix_ids = []
-    # from GCA become locus_tag
-    record_pos_info = []
-    gid2record = {gid: '' for gid in gids}
+def get_genomes(genome_list,
+                simple_concat=True):
 
-    las_pos = 0
+    """
+    Accepting a file. 
+    It could only contain a column of genome names for simple jobs.
+    
+    Or
+    It could contains multiple lines separated with TAB.
+    Besides the first column, the following columns should be the gene names in the alignment.
+
+    Returns:
+        dict: name2grouping, maybe empty grouping
+    """
+    # if genome_list is None:
+    #     genome_list = join(indir, 'selected_genomes.txt')
+        
+    rows = open(genome_list, 'r').read().split('\n')
+    
+    final_name2grouping = defaultdict(set)
+    for row in rows:
+        if '\t' not in row:
+            name = row if simple_concat else convert_genome_ID(row)
+            final_name2grouping[name] = set()
+        else:
+            name = row.split('\t')[0]
+            final_name2grouping[name].union(set(row.split('\t')[1:]))
+    return final_name2grouping
+
+def get_genes(indir,suffix,gene_list):
+    
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
     if gene_list is not None:
+        _genes = open(gene_list).read().split('\n')
         if exists(str(gene_list)):
-            gene_list = [_.strip()
-                         for _ in open(gene_list).read().split('\n')
-                         if _]
-            order_seqs = [_
-                          for _ in order_seqs
-                          if basename(_).replace(f'.{suffix}', '') in gene_list]
+            _genes = open(gene_list).read().split('\n')
+            
         elif isinstance(gene_list, str):
-            gene_list = [_.strip()
-                         for _ in gene_list.split(',')
-                         if _]
-            order_seqs = [_
+            _genes = gene_list.split(',')
+        gene_list = [_.strip() for _ in _genes if _]
+        order_seqs = [_
                           for _ in order_seqs
                           if basename(_).replace(f'.{suffix}', '') in gene_list]
-    g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
+    return order_seqs
+
+def concat_records(order_seqs,
+                   final_name2grouping,
+                   g2num_miss=defaultdict(int),
+                   suffix='aln',
+                   simple_concat=True,
+                   ):
+    """
+    Core function for concatenating.
+
+    Args:
+        order_seqs ([type]): ordered alignment files sorted by its name.
+        final_name2grouping ([type]): contain final_name to its genes grouping. The grouping maybe empty, and it will auto map the gene name with the final name. 
+        suffix ([type]): [description]
+        simple_concat ([type]): [description]
+        g2num_miss ([type]): only for recording
+
+    Returns:
+        [type]: [description]
+    """
+    record_pos_info = []
+    las_pos = 0
+    name2record = defaultdict(str)
     tqdm.write('itering all requested files ')
     for idx, aln_file in tqdm(enumerate(order_seqs), 
                               total=len(order_seqs)):
@@ -192,23 +212,85 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
         start, end = las_pos + 1, length_this_aln + las_pos
         las_pos = end
         record_pos_info.append((name, start, end, aln_record))
-        # done record
-        for gid in gid2record:
-            if simple_concat:
-                records = [_
-                       for _ in aln_record
-                       if _.id == gid]
+        # done recording
+        for final_name,grouping in final_name2grouping.items():
+            if not grouping:
+                records = [aln_r for aln_r in aln_record
+                           if (aln_r.id == final_name and simple_concat) or 
+                              (aln_r.id.split('_')[0] == final_name and not simple_concat) ]
             else:
-                records = [_
-                       for _ in aln_record
-                       if _.id.split('_')[0] == gid]
+                records = [aln_r for aln_r in aln_record
+                           if aln_r.id in grouping]
+            assert len(records) <=1
             if records:
-                gid2record[gid] += str(records[0].seq)
+                name2record[final_name] += str(records[0].seq)
             else:
-                gid2record[gid] += '-' * length_this_aln
+                name2record[final_name] += '-' * length_this_aln
+                g2num_miss[aln_file_name] += 1    
+    return record_pos_info,name2record
 
-                g2num_miss[aln_file_name] += 1
 
+@click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
+@click.option("-i", "indir", help="The input directory which contains all separate aln files")
+@click.option("-o", "outfile", default=None, help="Path of output concatenated aln file.")
+@click.option("-s", "suffix", default='aln', help="suffix for input files [aln]")
+@click.option("-gl", "genome_list", default=None, help="indicate the alternative name or path.")
+@click.option("-genel", "gene_list", default=None,
+              help="list of gene need to concatenate")
+@click.option("-rm_I", "remove_identical", is_flag=True, default=False, 
+              help='remove identical sequence for some software like Fasttree. default is not removed')
+@click.option("-no_graph", "graph", is_flag=True, default=True, 
+              help='generating a graph introducing the number of genes among all genomes. default is generating graph')
+@click.option("-no_fill", "fill_gaps", is_flag=True, default=True, help="fill with gaps for genomes doesn't contains this gene. default is filling ")
+@click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
+@click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... (genes|1,2) [genes]', default='genes')
+@click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
+@click.option('-not_add_prefix', 'not_add_prefix', 
+              help='file containing a list of id which do not add prefix as others. ', default=None, required=False)
+@click.option('-simple', 'simple_concat', is_flag=True, default=False,
+              help='do not perform any name transformation ',  required=False)
+def main(indir, 
+         outfile, 
+         genome_list, 
+         gene_list, 
+         remove_identical, 
+         concat_type, 
+         graph, 
+         fill_gaps, 
+         suffix='aln', 
+         fix_refseq=False,
+         not_add_prefix=None,
+         partition_method='genes',
+         simple_concat=False):
+    """
+    The simple_concat indicate that name in `genome_list` is the genome name.
+    If it is False, it indicates that name in `genome_list` is converted/formatted genome name like the prefix of locus.
+    """
+    if fix_refseq:
+        prefix = 'GCF_'
+    else:
+        prefix = 'GCA_'
+    if not_add_prefix is not None:
+        not_add_prefix_ids = [_ for _ in open(not_add_prefix).read().split('\n') if _]
+    else:
+        not_add_prefix_ids = []
+    # sampleing the genomes
+    final_name2grouping = get_genomes(genome_list,
+                       simple_concat)        
+    # sampling the gene 
+    order_seqs = get_genes(indir,suffix,gene_list)
+    
+    # init parameters
+    g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
+
+    # concat seqs
+    record_pos_info,name2record = concat_records(order_seqs,
+                                                 final_name2grouping,
+                                                 g2num_miss,
+                                                 suffix,
+                                                 simple_concat
+                                                 )
+    
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
@@ -223,27 +305,26 @@ def main(indir, outfile, genome_list, gene_list, remove_identical, seed, concat_
         ograph = join(dirname(outfile), 'aln_stats.png')
 
     with open(outfile, 'w') as f1:
-        for gid, seq in gid2record.items():
+        for final_name, seq in name2record.items():
             if set(str(seq)) == {'-'}:
-                print(f"{gid} contains only gaps or missing data ")
+                print(f"{final_name} contains only gaps or missing data ")
                 continue
             if simple_concat:
-                f1.write(f">{gid}\n")
+                f1.write(f">{final_name}\n")
             else:
-                f1.write(f'>{convert_genome_ID_rev(gid, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
+                f1.write(f'>{convert_genome_ID_rev(final_name, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:
-        remove_identical_seqs(outfile, seed=seed)
+        remove_identical_seqs(outfile)
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
         gids = open(genome_list, 'r').read().split('\n')
-
-        if not simple_concat:
-            name_convertor = lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids)
-        else:
+        if simple_concat:
             name_convertor = lambda x: x
+        else:
+            name_convertor = lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids)
         generate_phy_file(outphy, record_pos_info, gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
