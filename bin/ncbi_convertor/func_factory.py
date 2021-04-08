@@ -2,7 +2,7 @@ import io
 from collections import defaultdict
 
 from tqdm import tqdm
-
+from Bio import SeqIO
 from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
 from api_tools.third_party import parse_assembly_xml
 
@@ -48,7 +48,27 @@ class NCBI_convertor():
                 pass
         else:
             print("No cache found.")
-
+            
+    def get_seq(self,num_retry=5,method='init'):
+        # for protein
+        ids = self.origin_ids
+        results, failed = self.edl.efetch(db=self.dbname,
+                                      ids=ids,
+                                      result_func=lambda x: SeqIO.read(
+                                          io.StringIO(x)),
+                                      batch_size=1,
+                                      retype='fasta',
+                                      retmode='text'
+                                      )
+        return results 
+            results, failed = edl.efetch(db='protein',
+                                      ids=all_ids,
+                                      result_func=lambda x: SeqIO.read(
+                                          io.StringIO(x[0]),'fasta'),
+                                      batch_size=1,
+                                      retype='fasta',
+                                      retmode='text'
+                                      )
     def get_GI(self, num_retry=5,method='init'):
         if self.GI is not None and method !='update':
             return

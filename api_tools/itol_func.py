@@ -220,7 +220,7 @@ def to_color_range(ID2info, info2color, dataset_name='color branch', no_legend=T
     if no_legend:
         legend_text = ''
     else:
-        legend_text = deduced_legend(info2color, dataset_name, sep='\t')
+        legend_text = deduced_legend(info2color, dataset_name, sep='\t') + '\n'
 
     template_text = template_text.format(dataset_label=dataset_name,
                                          legend_text=legend_text)
