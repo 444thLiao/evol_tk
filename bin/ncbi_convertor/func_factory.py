@@ -2,7 +2,7 @@ import io
 from collections import defaultdict
 
 from tqdm import tqdm
-from Bio import SeqIO
+from Bio import SeqIO,Entrez
 from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
 from api_tools.third_party import parse_assembly_xml
 
@@ -61,14 +61,7 @@ class NCBI_convertor():
                                       retmode='text'
                                       )
         return results 
-            results, failed = edl.efetch(db='protein',
-                                      ids=all_ids,
-                                      result_func=lambda x: SeqIO.read(
-                                          io.StringIO(x[0]),'fasta'),
-                                      batch_size=1,
-                                      retype='fasta',
-                                      retmode='text'
-                                      )
+    
     def get_GI(self, num_retry=5,method='init'):
         if self.GI is not None and method !='update':
             return
@@ -223,67 +216,68 @@ class NCBI_convertor():
         pass
 
 if __name__ == "__main__":
-    import pandas as pd
-    tab = pd.read_csv("/home-user/jjtao/Rhizobiales/FLnif-query/gene/query_result/nifH_custom.blast",sep='\t',header=None)
-    all_nuc_id = tab[0]
-    all_nuc_id = list(set(all_nuc_id))
+    pass
+    # import pandas as pd
+    # tab = pd.read_csv("/home-user/jjtao/Rhizobiales/FLnif-query/gene/query_result/nifH_custom.blast",sep='\t',header=None)
+    # all_nuc_id = tab[0]
+    # all_nuc_id = list(set(all_nuc_id))
     
-    edl = EntrezDownloader(
-        # An email address. You might get blocked by the NCBI without specifying one.
-        email='l0404th@gmail.com',
-        # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-        api_key='8ed14220bcca55509d656978cb3f3aa09708',
-        num_threads=5,                       # The number of parallel requests to make
-        batch_size=5,                        # The number of IDs to fetch per request
-        pbar=True                             # Enables a progress bar, requires tqdm package
-    )
-    from Bio import Entrez
-    nid2GI = {}
-    failed_nid = []
-    for id in tqdm(all_nuc_id):
-        try:
-            x = Entrez.esearch('nuccore',id,
-                        )
-            r = Entrez.read(x)['IdList']
-            if r:
-                nid2GI[id] = r[0]
-            else:
-                failed_nid.append(id)
-        except:
-            failed_nid.append(id)
-    nc = NCBI_convertor(all_nuc_id,'nuccore',given_edl=edl)
-    nc.get_GI()
-    all_GI = list(nc.GI.values())
-    nid2assembly_dict = nc.nid2assembly(all_GI)
+    # edl = EntrezDownloader(
+    #     # An email address. You might get blocked by the NCBI without specifying one.
+    #     email='l0404th@gmail.com',
+    #     # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+    #     api_key='8ed14220bcca55509d656978cb3f3aa09708',
+    #     num_threads=5,                       # The number of parallel requests to make
+    #     batch_size=5,                        # The number of IDs to fetch per request
+    #     pbar=True                             # Enables a progress bar, requires tqdm package
+    # )
+    # from Bio import Entrez
+    # nid2GI = {}
+    # failed_nid = []
+    # for id in tqdm(all_nuc_id):
+    #     try:
+    #         x = Entrez.esearch('nuccore',id,
+    #                     )
+    #         r = Entrez.read(x)['IdList']
+    #         if r:
+    #             nid2GI[id] = r[0]
+    #         else:
+    #             failed_nid.append(id)
+    #     except:
+    #         failed_nid.append(id)
+    # nc = NCBI_convertor(all_nuc_id,'nuccore',given_edl=edl)
+    # nc.get_GI()
+    # all_GI = list(nc.GI.values())
+    # nid2assembly_dict = nc.nid2assembly(all_GI)
     
-    df = pd.read_csv("/home-user/thliao/tmp/nuc_info.tab",sep='\t')
-    all_assembly_GI = [str(int(_)) for _ in df['assembly GI'] if not pd.isna(_)]
-    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
-    # results, failed = edl.elink(dbfrom='nuccore',
-    #                             db='assembly',
-    #                         ids=all_GI,
-    #                         batch_size=1,
-    #                         result_func=lambda x: Entrez.read(
-    #                                                 io.StringIO(x)))
-    # have_assembly_nuc = {}
-    # for r in results:
-    #     if r['LinkSetDb']:
-    #         have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
+    # df = pd.read_csv("/home-user/thliao/tmp/nuc_info.tab",sep='\t')
+    # all_assembly_GI = [str(int(_)) for _ in df['assembly GI'] if not pd.isna(_)]
+    # gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
+    # # results, failed = edl.elink(dbfrom='nuccore',
+    # #                             db='assembly',
+    # #                         ids=all_GI,
+    # #                         batch_size=1,
+    # #                         result_func=lambda x: Entrez.read(
+    # #                                                 io.StringIO(x)))
+    # # have_assembly_nuc = {}
+    # # for r in results:
+    # #     if r['LinkSetDb']:
+    # #         have_assembly_nuc[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
     
-    all_genome_id = [v for k,v in nid2assembly_dict.items() if v]
-    gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
+    # all_genome_id = [v for k,v in nid2assembly_dict.items() if v]
+    # gid2assembly_info, bp2info, bs2info = genomeID2Bio(all_assembly_GI)
     
-    ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
-    # ginfo_df.index = ginfo_df.iloc[:,0]
-    bp_df = pd.DataFrame.from_dict(bp2info, orient='index')
-    bs_df = pd.DataFrame.from_dict(bs2info, orient='index')
-    _df1 = bp_df.reindex(ginfo_df.loc[:, 'BioprojectAccn'])
-    _df1.index = ginfo_df.index
-    _df2 = bs_df.reindex(ginfo_df.loc[:, 'BioSampleAccn'])
-    _df2.index = ginfo_df.index
-    full_df = pd.concat([ginfo_df,
-                            _df1,
-                            _df2], axis=1)
-    full_df = full_df.applymap(lambda x: x.replace('\n', ' ')
-    if isinstance(x, str) else x)
-    full_df = full_df.drop(['GI', 'relative biosample'], axis=1)
+    # ginfo_df = pd.DataFrame.from_dict(gid2assembly_info, orient='index')
+    # # ginfo_df.index = ginfo_df.iloc[:,0]
+    # bp_df = pd.DataFrame.from_dict(bp2info, orient='index')
+    # bs_df = pd.DataFrame.from_dict(bs2info, orient='index')
+    # _df1 = bp_df.reindex(ginfo_df.loc[:, 'BioprojectAccn'])
+    # _df1.index = ginfo_df.index
+    # _df2 = bs_df.reindex(ginfo_df.loc[:, 'BioSampleAccn'])
+    # _df2.index = ginfo_df.index
+    # full_df = pd.concat([ginfo_df,
+    #                         _df1,
+    #                         _df2], axis=1)
+    # full_df = full_df.applymap(lambda x: x.replace('\n', ' ')
+    # if isinstance(x, str) else x)
+    # full_df = full_df.drop(['GI', 'relative biosample'], axis=1)

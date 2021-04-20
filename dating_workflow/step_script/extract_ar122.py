@@ -8,7 +8,7 @@ import os
 import pickle
 from collections import defaultdict
 from glob import glob
-from os.path import *
+from os.path import getsize,basename,exists,dirname,join
 
 import click
 from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats

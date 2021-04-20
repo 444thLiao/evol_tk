@@ -5,6 +5,7 @@
     "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
     "python.formatting.autopep8Path": "d:\\ProgramData\\Anaconda3\\Scripts\\autopep8",
     "python.condaPath": "conda activate 'D:\\ProgramData\\Anaconda3' ",
+    "python.linting.pylintPath":"d:\\ProgramData\\Anaconda3\\envs\\lab\\Scripts\\pylint",
     "python.autoComplete.extraPaths":["D:\\Desktop\\github_repo\\evol_tk"],
     "cSpell.words": [
         "evolutional"

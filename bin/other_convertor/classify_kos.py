@@ -1,5 +1,8 @@
 """
 Transform KO id like K00928\nK13283 into a table with some columns could help use to classify them
+
+from bin.other_convertor.classify_kos import get_md_infos
+
 """
 import string
 from collections import defaultdict
@@ -152,3 +155,5 @@ def get_br_info(br, kos=None):
                     # break
                     # if break, only the first hierarchy would be retrieved
     return infos
+
+
