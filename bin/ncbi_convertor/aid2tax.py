@@ -38,7 +38,7 @@ def file2taxon_tab(infile):
             aid2taxon_info[aid] = taxon_dict
         except:
             failed_tids.append(int(row['taxid']))
-
+    return aid2taxon_info
 
 def rewrite_existing_tab(aid2taxon_info):
     _df = pd.DataFrame.from_dict(aid2taxon_info, orient='index')
@@ -50,6 +50,7 @@ def rewrite_existing_tab(aid2taxon_info):
     df.update(_df)
     new_num = df.shape[0]
     print(f"latest tab contain {now_num} assembly IDs, now, merged tab contain {new_num} assembly IDs")
+    df = df.sort_index()
     df.to_csv(default_taxon_tab, index=1, index_label=df.index.name)
 
 
@@ -62,7 +63,8 @@ def aid2taxon(id_list, redo=False):
 
 
 def cli():
-    pass
+    aid2taxon_info = file2taxon_tab(default_infile)
+    rewrite_existing_tab(aid2taxon_info=aid2taxon_info)
 
 
 if __name__ == '__main__':
