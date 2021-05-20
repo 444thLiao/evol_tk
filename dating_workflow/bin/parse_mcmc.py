@@ -1,6 +1,6 @@
 import warnings
 from glob import glob
-from os.path import *
+from os.path import dirname,exists,join,basename,getsize
 
 import click
 import pandas as pd

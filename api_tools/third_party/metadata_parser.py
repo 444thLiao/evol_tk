@@ -1,6 +1,11 @@
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
+def get_text(x):
+    if x is None:
+        return ''
+    else:
+        return x.text.strip().strip('\n')
 
 def parse_bioproject_xml(xml_text):
     result_bucket = []
@@ -60,7 +65,6 @@ def parse_bioproject_xml(xml_text):
         result_bucket.append(bioproject2info)
     return result_bucket
 
-
 def parse_biosample_xml(xml_text):
     result_bucket = []
     soup = BeautifulSoup(xml_text, 'xml')
@@ -87,7 +91,6 @@ def parse_biosample_xml(xml_text):
                                       dom['attribute_name']] = dom.text
         result_bucket.append(biosample2info)
     return result_bucket
-
 
 def parse_assembly_xml(xml_text):
     result_bucket = []
@@ -137,4 +140,48 @@ def parse_assembly_xml(xml_text):
         result_bucket.append(assembly2info)
     return result_bucket
         
+
+def parse_sra_xml(xml_text):
+    result_bucket = []
+    soup = BeautifulSoup(xml_text, 'xml')
+    split_out = soup.find_all("EXPERIMENT_PACKAGE")
+    for each_record in split_out:
+        accession = each_record.find('RUN').attrs['accession']
+        srr2info = defaultdict(dict)
         
+        for dom in each_record.find_all('TITLE'):
+            name = dom.parent.name + '_' + 'Title'
+            value = get_text(dom) 
+            srr2info[accession][name.capitalize()]=value
+            
+        key_words = ['STUDY_TITLE','STUDY_ABSTRACT','DESIGN_DESCRIPTION','LIBRARY_NAME']
+        for kw in key_words:
+            value = get_text(each_record.find(kw))
+            if not value:
+                continue
+            srr2info[accession][kw.capitalize()]=value
+        for dom in each_record.find_all('SAMPLE_ATTRIBUTE'):
+            tag,val = list(dom.children)[:2]
+            assert tag.name == 'TAG'
+            srr2info[accession]['attribute:' + get_text(tag)] = get_text(val)
+        result_bucket.append(dict(srr2info))
+    return result_bucket
+
+
+# TODO    
+# list(soup.find('SRAFiles').children)
+# [<SRAFile cluster="public" date="2020-06-11 11:02:36" filename="Iowa24_S16_L001_R1_001.fastq" md5="15bcfc0f45b12bfb78bf63deef6cab0c" semantic_name="fastq" size="72623128" sratoolkit="0" supertype="Original"><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="GCP" url="gs://sra-pub-src-10/SRR11994766/Iowa24_S16_L001_R1_001.fastq.1"/><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="AWS" url="s3://sra-pub-src-11/SRR11994766/Iowa24_S16_L001_R1_001.fastq.1"/></SRAFile>,
+#  <SRAFile cluster="public" date="2020-06-11 11:02:38" filename="Iowa24_S16_L001_R2_001.fastq" md5="2e815d368a39b1189aa3a61a8b12e322" semantic_name="fastq" size="72759976" sratoolkit="0" supertype="Original"><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="GCP" url="gs://sra-pub-src-10/SRR11994766/Iowa24_S16_L001_R2_001.fastq.1"/><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="AWS" url="s3://sra-pub-src-11/SRR11994766/Iowa24_S16_L001_R2_001.fastq.1"/></SRAFile>,
+#  <SRAFile cluster="public" date="2020-06-11 11:02:47" filename="SRR11994766" md5="e69dbfeb902f5cf1e348abc9e4edf3c5" semantic_name="run" size="34537385" sratoolkit="1" supertype="Primary ETL" url="https://sra-download.ncbi.nlm.nih.gov/traces/sra50/SRR/011713/SRR11994766"><Alternatives access_type="anonymous" free_egress="worldwide" org="NCBI" url="https://sra-download.ncbi.nlm.nih.gov/traces/sra50/SRR/011713/SRR11994766"/><Alternatives access_type="anonymous" free_egress="worldwide" org="AWS" url="https://sra-pub-run-odp.s3.amazonaws.com/sra/SRR11994766/SRR11994766"/><Alternatives access_type="gcp identity" free_egress="gs.US" org="GCP" url="gs://sra-pub-run-12/SRR11994766/SRR11994766.1"/></SRAFile>]
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

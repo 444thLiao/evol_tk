@@ -13,9 +13,7 @@ import multiprocessing as mp
 import os
 import re
 import subprocess
-import sys
 from glob import glob
-from os import popen
 from os.path import *
 from subprocess import check_call
 
@@ -48,7 +46,7 @@ def env_exe(name):
     # return f
 
 
-paml_bin = dirname(env_exe("mcmctree"))  # "/home-user/thliao/software/paml4.9j/bin"
+paml_bin = dirname(env_exe("mcmctree")) 
 
 
 def modify(file, **kwargs):

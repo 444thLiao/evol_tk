@@ -118,8 +118,7 @@ class EntrezDownloader:
             print(error)
 
     def _efetch_batch(
-        self, db, ids, result_collector, result_func, retmode, retype, **kwargs
-    ):
+        self, db, ids, result_collector, result_func, retmode, retype, **kwargs    ):
         if not retmode:
             retmode = "text"
         if not retype:
@@ -242,7 +241,7 @@ class EntrezDownloader:
         if self.pbar:
             from tqdm import tqdm
             results = ResultCollector(
-                pbar=tqdm(total=(len(ids) // batch_size) + 1, unit="records")
+                pbar=tqdm(total=(len(ids)) + 1, unit="records")
             )
         else:
             results = ResultCollector()
@@ -284,8 +283,7 @@ class EntrezDownloader:
         retype,
         batch_size=1,
         result_func=lambda x: [x],
-        **kwargs,
-    ):
+        **kwargs,    ):
         """Interface to the efetch database.
         result_func: A function to be applied to the response. Must return an iterable.
         """

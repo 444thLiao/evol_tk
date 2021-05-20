@@ -3,12 +3,13 @@ from collections import defaultdict
 
 from tqdm import tqdm
 from Bio import SeqIO,Entrez
-from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg
+from bin.ncbi_convertor.toolkit import edl, access_intermedia, tax2tax_info, parse_ipg,get_GI
 from api_tools.third_party import parse_assembly_xml
 
 tax_convertable_dbs = ['protein', 'assembly', 'nuccore']
 batch_return_dbs = []
 single_return_dbs = ['protein', 'nuccore']
+
 
 class NCBI_convertor():
     "prototype of function which convert ID to GI"
@@ -52,6 +53,8 @@ class NCBI_convertor():
     def get_seq(self,num_retry=5,method='init'):
         # for protein
         ids = self.origin_ids
+        if self.dbname not in ['nucleotide','protein']:
+            raise SyntaxError
         results, failed = self.edl.efetch(db=self.dbname,
                                       ids=ids,
                                       result_func=lambda x: SeqIO.read(
@@ -70,18 +73,8 @@ class NCBI_convertor():
             ids = [k for k,v in self.GI.items() if not v]
         elif method =='init' or self.GI is None:
             ids = self.origin_ids
-            
-        tqdm.write("Get GI......")
-        results, failed = self.edl.esearch(db=self.dbname,
-                                      ids=ids,
-                                      result_func=lambda x: Entrez.read(
-                                          io.StringIO(x))['IdList'],
-                                      batch_size=1
-                                      )
-
-        # for self.edl.esearch, it will auto **zip** searched term and its result.
-        id2gi = dict(results)
-        id2gi = {pid: id2gi.get(pid, '') for pid in ids}
+        
+        id2gi,failed = get_GI(ids,self.dbname,self.edl)
         # stodge the result into intermedia file for second access.
         process_name = f"{self.dbname}2GI"
         access_intermedia(id2gi, suffix=process_name)
@@ -92,6 +85,9 @@ class NCBI_convertor():
             self.GI.update(id2gi)
         self.failed_ids = failed
 
+    # def get_info():
+    #     pass
+    
     def get_db_summary(self,all_GI=None,method='update'):
         if self.GI is None:
             self.get_GI()
@@ -100,8 +96,7 @@ class NCBI_convertor():
             all_GI = list(set(all_GI).difference([v['GI'] for k,v in self.dbsummary.items()]))
         else:
             all_GI = list(set(self.GI.values()))
-        if all_GI is None:
-            all_GI = list(set(self.GI.values()))
+            
         tqdm.write('Getting summary from each one')
         _results = []
         if self.dbname in batch_return_dbs:
@@ -211,6 +206,33 @@ class NCBI_convertor():
                 nid2assembly_dict[r['IdList'][0]] = r['LinkSetDb'][0]['Link'][0]['Id']
         return nid2assembly_dict
         # todo: finish it
+        
+    def bp2srr(self,all_GI=None):
+        # one versus multiple
+        if self.dbname != 'bioproject':
+            raise SyntaxError("source database must be bioproject")
+        
+        if all_GI is None:
+            if  self.GI is None:
+                self.get_GI()
+            all_GI = list(self.GI.values())
+            
+        results, failed = edl.elink(dbfrom='bioproject',
+                                        db='sra',
+                                    ids=all_GI,
+                                    result_func=lambda x: Entrez.read(
+                                                        io.StringIO(x)))
+        bp2srr_ids = {}
+        for r in results:
+            if r['LinkSetDb']:
+                bp2srr_ids[r['IdList'][0]] = [_['Id'] for _ in r['LinkSetDb'][0]['Link']] 
+        srr_list = [srr for bp,srr_ids in bp2srr_ids.items() for srr in srr_ids]
+        
+        results
+        results, failed = edl.esummary(db='sra',
+                                      ids=srr_list,)
+        
+        return bp2srr_ids
 
     def transform_into_other_db(self, another_db):
         pass
