@@ -2,6 +2,9 @@ seed = -1
 seqfile = 00_seqs.phy
 treefile = 00_iqtree.sort.tre
 outfile = 02_mcmctree.out.txt
+checkpoint = 1  * 0: nothing; 1 : save; 2: resume
+* duplication = 1 (this force some nodes in the tree to have the same age)
+* TipDate = 1 100 * TipDate (1) & time unit
 
 ndata = 21
 seqtype = 2  * 0: nucleotides; 1:codons; 2:AAs
