@@ -57,6 +57,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5,suffix='.fa
 
 
 def parse_annotation(odir, top_hit=False, evalue=1e-50):
+    odir = realpath(odir) # otherwise the following hashlib might be differnt
     # for cdd
     _cdd_match_ids = pfam_ids
     genome2annotate = defaultdict(lambda: defaultdict(list))
@@ -87,12 +88,13 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
                                    top_hit=top_hit,
                                    filter_evalue=evalue,
                                    gene_pos=1)
-        genome2annotate[gname].update(locus_dict)
-        
+        genome2annotate[gname].update(locus_dict)   
     genome2annotate = dict(genome2annotate)
-    if not exists(cache_file):
-        with open(cache_file, 'wb') as f1:
-            pickle.dump(genome2annotate, f1)
+    
+    # if not exists(cache_file):  # redundant
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm")  # delete 2days ago cache
+    with open(cache_file, 'wb') as f1:
+        pickle.dump(genome2annotate, f1)
     return genome2annotate
 
 

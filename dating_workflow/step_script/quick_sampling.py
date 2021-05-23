@@ -1,3 +1,13 @@
+"""
+Automatic sampling according defined criterias for following dating analysis
+
+It would consider
+1. the completeness of target genes (now is cog25)
+2. the number of descending leaves to the total number of genomes it sampled
+3. is it a basal one
+"""
+
+
 from collections import defaultdict
 
 
