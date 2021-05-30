@@ -47,7 +47,7 @@ def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1,fixed_cluster='',pref
             fh.writelines(f"#SBATCH --cpus-per-task={thread_per_tasks}\n")
             fh.writelines(f"#SBATCH --output={job_directory}/{prefix_name}{count_}.out\n")
             if fixed_cluster:
-                fh.writelines(f"#SBATCh -w {fixed_cluster} \n") 
+                fh.writelines(f"#SBATCH -w {fixed_cluster} \n") 
             if reset_workdir:
                 fh.writelines(f"#SBATCH --workdir={workdir}\n")
             fh.writelines(cmd)
