@@ -157,7 +157,7 @@ def get_genomes(genome_list,
     for row in rows:
         if '\t' not in row:
             name = row if simple_concat else convert_genome_ID(row)
-            final_name2grouping[name] = set()
+            final_name2grouping[name] = set([row])
         else:
             name = row.split('\t')[0]
             final_name2grouping[name].union(set(row.split('\t')[1:]))
@@ -275,14 +275,14 @@ def main(indir,
     else:
         not_add_prefix_ids = []
     # sampleing the genomes
-    final_name2grouping = get_genomes(genome_list,
-                       simple_concat)        
+    final_name2grouping = get_genomes(genome_list,simple_concat)        
     # sampling the gene 
     order_seqs = get_genes(indir,suffix,gene_list)
     
     # init parameters
     g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
-
+    
+    
     # concat seqs
     record_pos_info,name2record = concat_records(order_seqs,
                                                  final_name2grouping,
@@ -290,7 +290,7 @@ def main(indir,
                                                  suffix,
                                                  simple_concat
                                                  )
-    
+    print(f"Found {len([k for k,v in g2num_miss.items() if v==0])} backbone genes")
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
