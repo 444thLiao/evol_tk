@@ -157,10 +157,10 @@ def get_genomes(genome_list,
     for row in rows:
         if '\t' not in row:
             name = row if simple_concat else convert_genome_ID(row)
-            final_name2grouping[name] = set([row])
+            final_name2grouping[name].add(name)
         else:
             name = row.split('\t')[0]
-            final_name2grouping[name].union(set(row.split('\t')[1:]))
+            final_name2grouping[name].add(row.split('\t')[1])
     return final_name2grouping
 
 def get_genes(indir,suffix,gene_list):

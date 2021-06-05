@@ -47,6 +47,26 @@ def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, top_hit=False):
     return gid2locus
 
 
+def parse_diamond(ofile, match_ids=[], filter_evalue=1e-3, cov=80,top_hit=False):
+    if not match_ids:
+        gid2locus = defaultdict(list)
+    else:
+        gid2locus = {k: [] for k in match_ids}
+    for row in open(ofile, 'r'):
+        sep_v = row.split('\t')
+        locus = sep_v[0]
+        evalue = float(sep_v[5])
+        if filter_evalue and evalue > filter_evalue:
+            continue
+        if cov and float(sep_v[7]) <= cov:
+            continue
+        if sep_v[1] in match_ids:
+            gid2locus[sep_v[1]].append((locus, evalue))
+        if not match_ids:
+            gid2locus[sep_v[1]].append((locus, evalue))
+    gid2locus = get_tophit(gid2locus, top_hit=top_hit)
+    return gid2locus
+
 def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, gene_pos=0):
     gid2locus = defaultdict(list)
 
