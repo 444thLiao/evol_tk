@@ -13,6 +13,37 @@ def run(cmd):
                )
 
 
+def get_genomes(genome_list,
+                simple_concat=True):
+
+    """
+    Accepting a file. 
+    It could only contain a column of genome names for simple jobs.
+    
+    Or
+    It could contains multiple lines separated with TAB.
+    Besides the first column, the following columns should be the gene names in the alignment.
+
+    Returns:
+        dict: name2grouping, maybe empty grouping
+    """
+    # if genome_list is None:
+    #     genome_list = join(indir, 'selected_genomes.txt')
+    if genome_list is None:
+        return
+    rows = open(genome_list, 'r').read().split('\n')
+    
+    final_name2grouping = defaultdict(set)
+    for row in rows:
+        if '\t' not in row:
+            name = row if simple_concat else convert_genome_ID(row)
+            final_name2grouping[name].add(name)
+        else:
+            name = row.split('\t')[0]
+            final_name2grouping[name].add(row.split('\t')[1])
+    return final_name2grouping
+
+
 def get_tophit(gid2locus, top_hit):
     if top_hit:
         gid2locus = {k: sorted(v,

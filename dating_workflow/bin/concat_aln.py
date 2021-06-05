@@ -18,7 +18,7 @@ import plotly.graph_objs as go
 from Bio import AlignIO, SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import process_path, convert_genome_ID, convert_genome_ID_rev
+from dating_workflow.step_script import process_path, convert_genome_ID, convert_genome_ID_rev,get_genomes
 
 
 def generate_stats_graph(stats, total, ofile):
@@ -69,13 +69,14 @@ def generate_partition_file(outfile, record_pos_info):
             f1.write(f"Protein, {name} = {start}-{end} \n")
 
 
-def set_partition(f1, name, seq, partition_method):
+def set_partition(name, seq, partition_method):
+    
     if partition_method == 'genes':
-        f1.write(f"{name}        {str(seq)}\n")
+        return f"{name}        {str(seq)}\n"
     elif partition_method == '1,2':
         seq = seq[::3] + seq[1::3]
-        f1.write(f"{name}        {str(seq)}\n")
-    return str(seq), name
+        return f"{name}        {str(seq)}\n"
+    #return str(seq), name
 
 
 def generate_phy_file(outfile, 
@@ -105,72 +106,61 @@ def generate_phy_file(outfile,
                 # fill unused genomes with gaps, thus the number of sequences should equal to the number of genome_ids
                 total_num = len(genome_ids)
             else:
-                total_num = len(aln_record)     
+                total_num = len(aln_record)
             # processing the seqs                
             if remove_identical:
                 _total_num = len(set([str(_.seq) for _ in aln_record]))
                 num_identical = total_num - _total_num
                 print(f"found {num_identical} identical seq")
                 total_num = _total_num
+            
+            remaining_seq = []
+            for _idx in range(num_seq):
+                record_id = aln_record[_idx, :].id
+                if name_convertor is not None:
+                    record_id = name_convertor(record_id)
+                    if not record_id:
+                        continue
+                    remaining_seq.append(_idx)
+
+            
+            texts = []
+            added_seq = []
+            used_ids = []
+            for _idx in range(num_seq):
+                record_id = aln_record[_idx, :].id
+                sequence = aln_record[_idx, :].seq
+                
+                if name_convertor is not None:
+                    record_id = name_convertor(record_id)
+                    if not record_id:
+                        # if the record has not been converted into a validate name, remove it
+                        continue
+                if (str(aln_record[_idx, :].seq) in set(added_seq)) and remove_identical:
+                    # if the record has been removed, continue
+                    continue
+                if record_id in genome_ids:
+                    # if the 
+                    text = set_partition(name=record_id, # might be the changed one
+                                              seq=sequence,
+                                              partition_method=partition_method)
+                    used_ids.append(text.split(' ')[0])
+                    added_seq.append(text.split(' ')[-1].strip('\n'))
+                    texts.append(text)
+            #   fill unused genomes with gaps                  
+            if fill_gaps:
+                for remained_id in set(genome_ids).difference(set(used_ids)):
+                    # missing genomes
+                    texts.append(f"{remained_id}        {'-' * length_this_aln}\n")
+
             # write out the length
             if partition_method == 'genes':
                 f1.write(f'{total_num}        {length_this_aln}\n')
             elif partition_method == '1,2':
                 length_this_aln -= length_this_aln // 3
                 f1.write(f'{total_num}        {length_this_aln}\n') 
-                                  
-            used_ids = []
-            added_seq = []
-            for _idx in range(num_seq):
-                record_id = aln_record[_idx, :].id
-                sequence = aln_record[_idx, :].seq
-                if name_convertor is not None:
-                    record_id = name_convertor(record_id)
-                if (str(aln_record[_idx, :].seq) in set(added_seq)) and remove_identical:
-                    # if the record has been removed, continue
-                    continue
-                if record_id in genome_ids:
-                    # if the 
-                    _seq, _id = set_partition(f1,
-                                              name=record_id, # might be the changed one
-                                              seq=sequence,
-                                              partition_method=partition_method)
-                    added_seq.append(str(_seq))
-                    used_ids.append(record_id)
-            #   fill unused genomes with gaps                  
-            if fill_gaps:
-                for remained_id in set(genome_ids).difference(set(used_ids)):
-                    # missing genomes
-                    f1.write(f"{remained_id}        {'-' * length_this_aln}\n")
+            f1.write(''.join(texts))
 
-def get_genomes(genome_list,
-                simple_concat=True):
-
-    """
-    Accepting a file. 
-    It could only contain a column of genome names for simple jobs.
-    
-    Or
-    It could contains multiple lines separated with TAB.
-    Besides the first column, the following columns should be the gene names in the alignment.
-
-    Returns:
-        dict: name2grouping, maybe empty grouping
-    """
-    # if genome_list is None:
-    #     genome_list = join(indir, 'selected_genomes.txt')
-        
-    rows = open(genome_list, 'r').read().split('\n')
-    
-    final_name2grouping = defaultdict(set)
-    for row in rows:
-        if '\t' not in row:
-            name = row if simple_concat else convert_genome_ID(row)
-            final_name2grouping[name].add(name)
-        else:
-            name = row.split('\t')[0]
-            final_name2grouping[name].add(row.split('\t')[1])
-    return final_name2grouping
 
 def get_genes(indir,suffix,gene_list):
     
@@ -189,7 +179,7 @@ def get_genes(indir,suffix,gene_list):
     return order_seqs
 
 def concat_records(order_seqs,
-                   final_name2grouping,
+                   name2prefix,
                    g2num_miss=defaultdict(int),
                    suffix='aln',
                    simple_concat=True,
@@ -199,7 +189,7 @@ def concat_records(order_seqs,
 
     Args:
         order_seqs ([type]): ordered alignment files sorted by its name.
-        final_name2grouping ([type]): contain final_name to its genes grouping. The grouping maybe empty, and it will auto map the gene name with the final name. 
+        name2prefix ([type]): contain final_name to the prefix of its locus
         suffix ([type]): [description]
         simple_concat ([type]): [description]
         g2num_miss ([type]): only for recording
@@ -222,20 +212,20 @@ def concat_records(order_seqs,
         las_pos = end
         record_pos_info.append((name, start, end, aln_record))
         # done recording
-        for final_name,grouping in final_name2grouping.items():
-            if not grouping:
+        for name,prefix in name2prefix.items():
+            if not prefix:
                 records = [aln_r for aln_r in aln_record
-                           if (aln_r.id == final_name and simple_concat) or 
-                              (aln_r.id.split('_')[0] == final_name and not simple_concat) ]
+                           if (aln_r.id == name and simple_concat) or 
+                              (aln_r.id.split('_')[0] == name and not simple_concat) ]
             else:
                 # designated prefix
                 records = [aln_r for aln_r in aln_record
-                           if aln_r.id.split('_')[0] in grouping]
+                           if aln_r.id.split('_')[0] in prefix]
             assert len(records) <=1
             if records:
-                name2record[final_name] += str(records[0].seq)
+                name2record[name] += str(records[0].seq)
             else:
-                name2record[final_name] += '-' * length_this_aln
+                name2record[name] += '-' * length_this_aln
                 g2num_miss[aln_file_name] += 1    
     return record_pos_info,name2record
 
@@ -286,7 +276,7 @@ def main(indir,
     else:
         not_add_prefix_ids = []
     # sampleing the genomes
-    final_name2grouping = get_genomes(genome_list,simple_concat)        
+    name2prefix = get_genomes(genome_list,simple_concat)        
     # sampling the gene 
     order_seqs = get_genes(indir,suffix,gene_list)
     
@@ -296,7 +286,7 @@ def main(indir,
     
     # concat seqs
     record_pos_info,name2record = concat_records(order_seqs,
-                                                 final_name2grouping,
+                                                 name2prefix,
                                                  g2num_miss,
                                                  suffix,
                                                  simple_concat
@@ -331,8 +321,8 @@ def main(indir,
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        gids = list(final_name2grouping)
-        name_convertor = lambda x: [k for k,v in final_name2grouping.items() if x.split('_')[0] in v][0]
+        gids = list(name2prefix)
+        name_convertor = lambda x: [k for k,v in name2prefix.items() if x.split('_')[0] in v][0]
         
         # if simple_concat:
         #     name_convertor = lambda x: x
