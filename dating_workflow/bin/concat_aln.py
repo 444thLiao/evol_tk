@@ -219,8 +219,9 @@ def concat_records(order_seqs,
                            if (aln_r.id == final_name and simple_concat) or 
                               (aln_r.id.split('_')[0] == final_name and not simple_concat) ]
             else:
+                # designated prefix
                 records = [aln_r for aln_r in aln_record
-                           if aln_r.id in grouping]
+                           if aln_r.id.split('_')[0] in grouping]
             assert len(records) <=1
             if records:
                 name2record[final_name] += str(records[0].seq)
