@@ -133,11 +133,14 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     t = earse_name(t)
     # iterate each calibration in calibration_dict
     for LCA, time in calibration_dict.items():
-        names = LCA.split('|')
-        # get the common ancestor
-        LCA_node = t.get_common_ancestor([l
-                                          for l in t.get_leaves()
-                                          if l.name in names])
+        if LCA.upper() == 'ROOT':
+            LCA_node = t
+        else:
+            names = LCA.split('|')
+            # get the common ancestor
+            LCA_node = t.get_common_ancestor([l
+                                            for l in t.get_leaves()
+                                            if l.name in names])
         # rename the common ancestor with give name
         LCA_node.name = time
     # write out the tree

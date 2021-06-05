@@ -97,41 +97,50 @@ def generate_phy_file(outfile,
     """
     with open(outfile, 'w') as f1:
         for name, start, end, aln_record in record_pos_info:
+            num_seq = len(aln_record)
+            length_this_aln = aln_record.get_alignment_length()
+            
+            # setting the number of sequences
             if fill_gaps:
+                # fill unused genomes with gaps, thus the number of sequences should equal to the number of genome_ids
                 total_num = len(genome_ids)
             else:
-                total_num = len(aln_record)
+                total_num = len(aln_record)     
+            # processing the seqs                
             if remove_identical:
                 _total_num = len(set([str(_.seq) for _ in aln_record]))
                 num_identical = total_num - _total_num
                 print(f"found {num_identical} identical seq")
                 total_num = _total_num
-            # total_num = len(aln_record)
-            num_seq = len(aln_record)
-            length_this_aln = aln_record.get_alignment_length()
+            # write out the length
             if partition_method == 'genes':
                 f1.write(f'{total_num}        {length_this_aln}\n')
             elif partition_method == '1,2':
                 length_this_aln -= length_this_aln // 3
-                f1.write(f'{total_num}        {length_this_aln}\n')
+                f1.write(f'{total_num}        {length_this_aln}\n') 
+                                  
             used_ids = []
             added_seq = []
-            for _ in range(num_seq):
-                fid = aln_record[_, :].id
+            for _idx in range(num_seq):
+                record_id = aln_record[_idx, :].id
+                sequence = aln_record[_idx, :].seq
                 if name_convertor is not None:
-                    fid = name_convertor(fid)
-                if str(aln_record[_, :].seq) in set(added_seq) and remove_identical:
+                    record_id = name_convertor(record_id)
+                if (str(aln_record[_idx, :].seq) in set(added_seq)) and remove_identical:
+                    # if the record has been removed, continue
                     continue
-                if fid in genome_ids:
-                    # before _ , should be the converted genome id
+                if record_id in genome_ids:
+                    # if the 
                     _seq, _id = set_partition(f1,
-                                              name=fid,
-                                              seq=aln_record[_, :].seq,
+                                              name=record_id, # might be the changed one
+                                              seq=sequence,
                                               partition_method=partition_method)
                     added_seq.append(str(_seq))
-                    used_ids.append(fid)
+                    used_ids.append(record_id)
+            #   fill unused genomes with gaps                  
             if fill_gaps:
                 for remained_id in set(genome_ids).difference(set(used_ids)):
+                    # missing genomes
                     f1.write(f"{remained_id}        {'-' * length_this_aln}\n")
 
 def get_genomes(genome_list,
@@ -254,12 +263,13 @@ def main(indir,
          outfile, 
          genome_list, 
          gene_list, 
-         remove_identical, 
+         
          concat_type, 
          graph, 
          fill_gaps, 
          suffix='aln', 
          fix_refseq=False,
+         remove_identical=False,
          not_add_prefix=None,
          partition_method='genes',
          simple_concat=False):
@@ -321,12 +331,16 @@ def main(indir,
     if concat_type.lower() in ['both', 'partition']:
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
-        gids = open(genome_list, 'r').read().split('\n')
-        if simple_concat:
-            name_convertor = lambda x: x
-        else:
-            name_convertor = lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids)
-        generate_phy_file(outphy, record_pos_info, gids,
+        gids = list(final_name2grouping)
+        name_convertor = lambda x: [k for k,v in final_name2grouping.items() if x.split('_')[0] in v][0]
+        
+        # if simple_concat:
+        #     name_convertor = lambda x: x
+        # else:
+        #     name_convertor = lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids)
+        generate_phy_file(outphy, 
+                          record_pos_info, 
+                          gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
                           partition_method=partition_method,
