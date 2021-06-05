@@ -40,7 +40,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
         suffix = '.' + suffix
     file_list = glob(join(in_dir, f'*{suffix}'))
     if name2prefix is not None:
-        all_prefix = list(name2prefix.values())
+        all_prefix = [_ for k in name2prefix.values() for _ in k]
         os.makedirs(join(odir, 'tmp'), exist_ok=1)
         new_file_list = []
         tqdm.write('iterating files to collect with giving genome ids')
@@ -49,7 +49,8 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
             records = [_
                        for _ in records
                        if _.id.split('_')[0] in all_prefix]
-            if not records or len(records) == 1:
+            if (not records) or (len(records) == 1):
+                #import pdb;pdb.set_trace()
                 print(f'no available (or only one) record could be used in {f}')
                 continue
             n_f = join(odir, 'tmp', basename(f))
