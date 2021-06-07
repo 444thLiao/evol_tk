@@ -322,8 +322,14 @@ def main(indir,
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
         gids = list(name2prefix)
-        name_convertor = lambda x: [k for k,v in name2prefix.items() if x.split('_')[0] in v][0]
         
+        
+        def name_convertor(x):
+            tmp = [k for k,v in name2prefix.items() if x.split('_')[0] in v]
+            if not tmp:
+                return
+            else:
+                return tmp[0]
         # if simple_concat:
         #     name_convertor = lambda x: x
         # else:
