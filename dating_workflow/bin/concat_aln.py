@@ -253,7 +253,6 @@ def main(indir,
          outfile, 
          genome_list, 
          gene_list, 
-         
          concat_type, 
          graph, 
          fill_gaps, 
@@ -276,7 +275,7 @@ def main(indir,
     else:
         not_add_prefix_ids = []
     # sampleing the genomes
-    name2prefix = get_genomes(genome_list,simple_concat)        
+    name2prefix = get_genomes(genome_list,simple_concat)
     # sampling the gene 
     order_seqs = get_genes(indir,suffix,gene_list)
     

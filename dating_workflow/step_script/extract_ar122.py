@@ -8,10 +8,10 @@ import os
 import pickle
 from collections import defaultdict
 from glob import glob
-from os.path import getsize,basename,exists,dirname,join
+from os.path import getsize,basename,exists,dirname,join,realpath
 
 import click
-from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats
+from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes
 from tqdm import tqdm
 
 HOME = os.getenv("HOME")
@@ -116,12 +116,12 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
 @click.option("-a", 'annotation_only', is_flag=True, default=False,
               help="only run the annotation parts")
 def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir, pass_annotation, annotation_only):
-    if genome_list is None:
-        gids = []
-    else:
-        gids = open(genome_list).read().split('\n')
-        gids = list(set([_ for _ in gids if _]))
-
+    # if genome_list is None:
+    #     gids = []
+    # else:
+    #     gids = open(genome_list).read().split('\n')
+    #     gids = list(set([_ for _ in gids if _]))
+    gids = list(get_genomes(genome_list,False))
     protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}', '') in gids]

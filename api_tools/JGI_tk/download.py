@@ -11,8 +11,21 @@ import multiprocessing as mp
 from os.path import *
 
 headers = {
-  'Cookie': """externallySequenced="true"; showRestricted="true"; activateHighlights="false"; showOnlyPublished="false"; showSuperseded="false"; showAll="false"; searchWebExecuted="false"; JSESSIONID=BFD9B5A8922A32C86DDC96B0D34E7E2F; currentUserId="l0404th@gmail.com"; query="2721755844|2718217642|2708742552|2654588083|2654587960|2619618950|2558309099|2545555825|2527291509|2527291500|2524023104|2513237068|2513237066|2264867229|2264867070|2264867067|2263082000"; genomeSearchParams="?core=genome&query=2721755844%7C2718217642%7C2708742552%7C2654588083%7C2654587960%7C2619618950%7C2558309099%7C2545555825%7C2527291509%7C2527291500%7C2524023104%7C2513237068%7C2513237066%7C2264867229%7C2264867070%7C2264867067%7C2263082000'&searchIn=Anything&searchType=Keyword&showAll=false&externallySequenced=true&sortBy=displayNameStr&showRestricted=true&showOnlyPublished=false&showSuperseded=true&sortOrder=asc&rawQuery=false&showFungalOnly=false&activateHighlights=false&programName=all&programYear=all&superkingdom=--any--&status=--any--&scientificProgram=--any--&productCategory=--any--"; searchGenomeExecuted="false"; savedSearchNames=[{"lastUpdated":"2021-06-04 18:33:02","name":"tmp","fullName":"tmp"}]; _ga=GA1.2.1287611267.1622814897; _gid=GA1.2.173042913.1622814897; __utmc=249693981; __utmz=249693981.1622816314.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); jgi_session=/api/sessions/6b71279de53c0b18934e8cbe4f1fdcf4; __utma=249693981.1287611267.1622814897.1622816314.1622856202.2; jgi_return=https://img.jgi.doe.gov//cgi-bin/mer/main.cgi?section=TaxonDetail&page=taxonDetail&taxon_oid=2545555825; __utmb=249693981.14.9.1622858562261""",
+  'Cookie': """ """,
 }
+
+# def get_portal_name(img_id):
+#     # some img_id is different to its protal name
+    
+#     # the web content is dynamic generated. hard to retrieve
+#     url = f"https://genome.jgi.doe.gov/portal/?core=genome&query={img_id}"
+#     response = requests.get(url,headers=headers)    
+#     xml_text = response.text    
+#     soup = BeautifulSoup(xml_text)
+#     doms = soup.find_all('tbody')
+#     for b in doms[0].find_all('b'):
+#         if b.text == 'Project: ':
+#             break
 
 img_ids = ['IMG_2721755844',
  'IMG_2718217642',

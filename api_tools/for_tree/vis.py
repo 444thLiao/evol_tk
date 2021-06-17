@@ -20,6 +20,9 @@ class tree_vis(object):
         self.clade_y_pos = self.get_y_positions()
         self.labels = []
         self.labels_info = []
+        self.idx2clade = {}
+        self.yscaled = 1
+        self.xscaled = 1
     def refresh(self, branch_length=True, leaves2top=True):
         self.clade_x_pos = self.get_x_positions(
             branch_length=branch_length, leaves2top=leaves2top
@@ -38,8 +41,6 @@ class tree_vis(object):
     def get_fig(self,interval=1.5,width=600,height=1200):
         # generate a suitable figure which has automodify the layout including the template, size, ticks
         fig = go.Figure()
-
-            
         fig.update_layout(
             xaxis=dict(
                 zeroline=False,
@@ -60,6 +61,29 @@ class tree_vis(object):
                 tickvals = [-self.max_depth + (interval*i) for i in range(v) ],
                 ticktext = [round(self.max_depth- (interval*i),2) for i in range(v)]  ))
         return fig
+
+    def get_index(self,l1,l2,whole_clade=True):
+        # get the indexs of lines with particular name
+        
+        # if you want to annotate particular clade, you could retrieve the index of datas which are the lines descending to the clade
+  
+        clade = self.tree_obj.common_ancestor([l1,l2])
+        idx_collections = []
+        for idx,_clade in self.idx2clade.items():
+            if clade.is_parent_of(_clade):
+                idx_collections.append(idx)
+        return idx_collections
+    
+    def clade2name(self,clade):
+        return clade.get_terminals()[0].name + '|' + clade.get_terminals()[-1].name
+    
+    def get_clade(self,label):
+        if '|' in label:
+            l1,l2 = label.split('|')
+            return self.tree_obj.common_ancestor([l1,l2])
+        else:
+            return [_ for _ in self.tree_obj.get_terminals() if _.name==label][0]
+        
     def get_plotly_data(
         self, xscale=1, yscale=1, color="#000000", width=1, x_shift=0, y_shift=0
     ):
@@ -80,20 +104,24 @@ class tree_vis(object):
             self.draw_clade(self.root, root_pos, "k", "")
         else:
             self.draw_clade(self.root, 0, "k", "")
-
+        self.yscaled = yscale
+        self.xscaled = xscale
+        
         datas = []
         labels = [None if "INT" in _i else _i for _i in self.labels]
         labels[0] = None
-        for idx, (left_coord, right_coord) in enumerate(
+        
+        datas_idx = len(datas)
+        for idx, (left_coord, right_coord,clade) in enumerate(
             self.horizontal_linecollections
         ):
             horizontal_draws_x = []
             horizontal_draws_y = []
 
             scaled_left_x = xscale * (left_coord[0] + x_shift)
-            scaled_left_y = yscale * (left_coord[1] - 1 + y_shift)
+            scaled_left_y = yscale * (left_coord[1]  + y_shift)
             scaled_right_x = xscale * (right_coord[0] + x_shift)
-            scaled_right_y = yscale * (right_coord[1] - 1 + y_shift)
+            scaled_right_y = yscale * (right_coord[1]  + y_shift)
             horizontal_draws_x.extend([scaled_left_x, scaled_right_x])
             horizontal_draws_y.extend([scaled_left_y, scaled_right_y])
             if labels[idx] is not None:
@@ -113,13 +141,15 @@ class tree_vis(object):
                 showlegend=False,
             )
             datas.append(trace1)
-        for down_coord, above_coord in self.vertical_linecollections:
+            self.idx2clade[datas_idx] = clade
+            datas_idx+=1
+        for down_coord, above_coord,clade in self.vertical_linecollections:
             vertical_draws_x = []
             vertical_draws_y = []
             scaled_down_x = xscale * (down_coord[0] + x_shift)
-            scaled_down_y = yscale * (down_coord[1] - 1 + y_shift)
+            scaled_down_y = yscale * (down_coord[1]  + y_shift)
             scaled_above_x = xscale * (above_coord[0] + x_shift)
-            scaled_above_y = yscale * (above_coord[1] - 1 + y_shift)
+            scaled_above_y = yscale * (above_coord[1]  + y_shift)
             vertical_draws_x.extend([scaled_above_x, scaled_down_x])
             vertical_draws_y.extend([scaled_above_y, scaled_down_y])
 
@@ -134,8 +164,19 @@ class tree_vis(object):
                 showlegend=False,
             )
             datas.append(trace1)
+            self.idx2clade[datas_idx] = clade
+            datas_idx+=1            
         return datas
 
+    def add_marker(self,l1,l2,style={'size':10}):
+        clade = self.tree_obj.common_ancestor([l1,l2])
+        y_pos = self.clade_y_pos[clade]        
+        x_here = self.clade_x_pos[clade]
+
+        data = go.Scatter(x=[x_here*self.xscaled],y=[(y_pos)*self.yscaled],
+                          mode='markers',marker=style)
+        return data
+    
     def draw_clade(self, clade, x_start, color, lw, fixed_length=None):
         """Recursively draw a tree, down from the given clade."""
         x_here = self.clade_x_pos[clade]
@@ -146,10 +187,12 @@ class tree_vis(object):
 
         # Draw a horizontal line from start to here
         self.add_line(
-            orientation="horizontal", y_here=y_here, x_start=x_start, x_here=x_here
+            orientation="horizontal", y_here=y_here, x_start=x_start, x_here=x_here,clade=clade
         )
 
         label = str(clade)
+        if label== 'Clade':
+            label = clade.get_terminals()[0].name + '|' + clade.get_terminals()[-1].name
         self.labels.append(label)
 
         if clade.clades:
@@ -157,9 +200,9 @@ class tree_vis(object):
             # Draw a vertical line connecting all children
             y_top = self.clade_y_pos[clade.clades[0]]
             y_bot = self.clade_y_pos[clade.clades[-1]]
-            # Only apply widths to horizontal lines, like Archaeopteryx
+            # Only apply widths to horizontal lines
             self.add_line(
-                orientation="vertical", x_here=x_here, y_bot=y_bot, y_top=y_top
+                orientation="vertical", x_here=x_here, y_bot=y_bot, y_top=y_top,clade=clade
             )
 
             # Draw descendents
@@ -167,7 +210,7 @@ class tree_vis(object):
                 self.draw_clade(child, x_here, color, lw, fixed_length=fixed_length)
 
     def add_line(
-        self, orientation="horizontal", y_here=0, x_start=0, x_here=0, y_bot=0, y_top=0
+        self, orientation="horizontal", y_here=0, x_start=0, x_here=0, y_bot=0, y_top=0,clade=None
     ):
         """Create a line with or without a line collection object.
 
@@ -176,10 +219,10 @@ class tree_vis(object):
         """
         if orientation == "horizontal":
             self.horizontal_linecollections.append(
-                [(x_start, y_here), (x_here, y_here)]
+                [(x_start, y_here), (x_here, y_here),clade]
             )
         if orientation == "vertical":
-            self.vertical_linecollections.append([(x_here, y_bot), (x_here, y_top)])
+            self.vertical_linecollections.append([(x_here, y_bot), (x_here, y_top),clade])
 
     def get_y_positions(self):
         """Create a mapping of each clade to its vertical position.
@@ -229,3 +272,5 @@ class tree_vis(object):
             pass
 
         return x_posns
+
+

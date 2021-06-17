@@ -83,8 +83,8 @@ def parse_color_scheme_files(file, extra_set=False, get_raw_name=False):
 def tanglegram(
     newick1,
     newick2,
-    color_file1=None,
-    color_file2=None,
+    l_color_setting=None,
+    r_color_setting=None,
     l_legnth="max",
     sep="_",
     extra_set=False,
@@ -93,10 +93,19 @@ def tanglegram(
 ):
     """
 
+    If you want to annotate some lines descending to the particular clade
+    
+    For example:
+    datas2 = [_ for _ in fig.data if _['xaxis'] == 'x3']  # the right tree
+    for idx in right_tre.get_index('GCF_900248165.1','GCF_900696045.1'):
+        datas2[idx]['line']['color']='#ff0000'  
+    datas1 = [_ for _ in fig.data if _['xaxis'] == 'x']  # the left tree
+    for idx in right_tre.get_index('GCF_900248165.1','GCF_900696045.1'):
+        datas1[idx]['line']['color']='#ff0000'          
     :param newick1: gene tree
     :param newick2: species tree
-    :param color_file1:
-    :param color_file2:
+    :param l_color_setting: itol annotating file or a dict
+    :param r_color_setting: itol annotating file or a dict
     :param l_legnth:
     :param sep:
     :param extra_set:
@@ -122,10 +131,14 @@ def tanglegram(
     # add colors or something else into above datas
     l2color = {_[2]: "#000000" for _ in left_tre.labels_info}
     r2color = {_[2]: "#000000" for _ in right_tre.labels_info}
-    if color_file1 is not None:
-        l2color.update(parse_color_scheme_files(color_file1, extra_set=False))
-    if color_file2 is not None:
-        r2color.update(parse_color_scheme_files(color_file2, extra_set=extra_set))
+    if l_color_setting is not None and type(l_color_setting)==str:
+        l2color.update(parse_color_scheme_files(l_color_setting, extra_set=False))
+    elif l_color_setting is not None and type(l_color_setting)==dict:
+        l2color.update(l_color_setting)
+    if r_color_setting is not None and type(r_color_setting)==str:
+        r2color.update(parse_color_scheme_files(r_color_setting, extra_set=extra_set))
+    elif r_color_setting is not None and type(r_color_setting)==dict:
+        l2color.update(r_color_setting)        
     # add color into generated trace
     tqdm.write("adding color")
     name2trace = {_["name"]: _ for _ in datas1 if _["name"] is not None}
@@ -203,4 +216,5 @@ def tanglegram(
         yaxis=d,
     )
     fig.layout.xaxis3.autorange = "reversed"
-    return fig
+    return fig,left_tre,right_tre
+

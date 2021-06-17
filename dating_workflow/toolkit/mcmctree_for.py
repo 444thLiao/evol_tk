@@ -35,13 +35,16 @@ def cal_HPD_CI(df,burn_in=2000):
         col2CI[colname] = az.hdi(vals,hdi_prob=.95)
     return col2CI
 
-def get_posterior_df(mcmc,burn_in=2000,scale=1):
+def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=False):
     mcmc_df = pd.read_csv(mcmc, sep='\t', index_col=0)
     if pd.isna(mcmc_df.iloc[-1,-1]):
         mcmc_df = mcmc_df.drop(mcmc_df.index[-1])
 
 
     node_names = [_ for _ in mcmc_df.columns if _.startswith('t_n')]
+    rates = [_ for _ in mcmc_df.columns if _.startswith('r_g')]
+    paras = [_ for _ in mcmc_df.columns if _.startswith('mu') or _.startswith('sigma2')]
+    
     post_df = pd.DataFrame(columns=['Posterior mean time (100 Ma)',
                                   'CI_width','CIs'],
                           index=node_names )

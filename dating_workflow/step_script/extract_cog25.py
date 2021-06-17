@@ -11,7 +11,7 @@ import hashlib
 import click
 from tqdm import tqdm
 
-from dating_workflow.step_script import parse_blastp, run, get_seq_and_write, write_out_stats
+from dating_workflow.step_script import parse_blastp, run, get_seq_and_write, write_out_stats,get_genomes
 
 HOME = os.getenv("HOME")
 resource_dir = f"{HOME}/data/protein_db/dating_resource"
@@ -125,11 +125,12 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
               help="only run the annotation parts")
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
 def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only,num_parellel):
-    if genome_list is None:
-        gids = []
-    else:
-        gids = open(genome_list).read().split('\n')
-        gids = list(set([_ for _ in gids if _]))
+    # if genome_list is None:
+    #     gids = []
+    # else:
+    #     gids = open(genome_list).read().split('\n')
+    #     gids = list(set([_ for _ in gids if _]))
+    gids = list(get_genomes(genome_list,False))
     protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]

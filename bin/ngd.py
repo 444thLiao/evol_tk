@@ -157,7 +157,13 @@ def main(name=None,
                         "parallel": parallel,
                         "output": db_dir,  # all genomes were downloaded to db_dir
                         "file_formats": formats})
-
+    for batch_aids in tqdm(batch_iter(miss_ids, 20)):
+        ngd.download(**{"assembly_accessions": ','.join(batch_aids),
+                        "dry_run": False,
+                        "section": "refseq",
+                        "parallel": 2,
+                        "output": '/home-user/thliao/data/NCBI',  # all genomes were downloaded to db_dir
+                        "file_formats": 'fasta'})
     with open(join(odir, 'metadata.csv'), 'w') as f1:
         f1.write('\n'.join(cinfos))
 
