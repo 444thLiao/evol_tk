@@ -220,7 +220,7 @@ def concat_records(order_seqs,
             else:
                 # designated prefix
                 records = [aln_r for aln_r in aln_record
-                           if aln_r.id.split('_')[0] in prefix]
+                           if aln_r.id.split('_')[0] in prefix or aln_r.id == prefix]
             assert len(records) <=1
             if records:
                 name2record[name] += str(records[0].seq)
