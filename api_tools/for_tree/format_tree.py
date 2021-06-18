@@ -97,7 +97,7 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
             else:
                 n.name = 'I%s_S%s' % (count, str(int(n.support)))
             count += 1
-        elif isinstance(n.name, str) and n.name.startswith('I'):
+        elif isinstance(n.name, str) and (n.name.startswith('I') and '_' in n.name ):
             S_ori = n.name.split('_')[-1]
             S_ori = S_ori.strip('S')
             if not S_ori.isnumeric():

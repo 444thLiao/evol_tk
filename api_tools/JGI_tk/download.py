@@ -52,7 +52,6 @@ for img_id in img_ids:
     response = requests.get(url,headers=headers)    
     xml_text = response.text
     soup = BeautifulSoup(xml_text)
-    
     for d in soup.find_all('file'):
         if d.attrs['filename'] == img_id.split('_')[-1]+'.tar.gz':
             img_id2url[img_id] = "https://genome.jgi.doe.gov" + d.attrs['url']
