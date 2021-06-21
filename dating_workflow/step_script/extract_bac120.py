@@ -119,7 +119,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     # else:
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
-    gids = list(get_genomes(genome_list,False))    
+    gids = list(get_genomes(genome_list,True))    
     protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]

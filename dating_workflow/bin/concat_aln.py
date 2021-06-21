@@ -163,7 +163,6 @@ def generate_phy_file(outfile,
 
 
 def get_genes(indir,suffix,gene_list):
-    
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
     if gene_list is not None:
         _genes = open(gene_list).read().split('\n')
@@ -213,15 +212,9 @@ def concat_records(order_seqs,
         record_pos_info.append((name, start, end, aln_record))
         # done recording
         for name,prefix in name2prefix.items():
-            if not prefix:
-                records = [aln_r for aln_r in aln_record
-                           if (aln_r.id == name and simple_concat) or 
-                              (aln_r.id.split('_')[0] == name and not simple_concat) ]
-            else:
-                # designated prefix
-                records = [aln_r 
-                           for aln_r in aln_record
-                           if (aln_r.id.split('_')[0] in prefix) or (aln_r.id in prefix)]
+            records = [aln_r 
+                        for aln_r in aln_record
+                        if (aln_r.id.split('_')[0] in prefix) or (aln_r.id in prefix)]
             assert len(records) <=1
             if records:
                 name2record[name] += str(records[0].seq)
@@ -246,8 +239,6 @@ def concat_records(order_seqs,
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
 @click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... (genes|1,2) [genes]', default='genes')
 @click.option('-fix_ref', 'fix_refseq', help='fix the name of refseq?', default=False, required=False, is_flag=True)
-@click.option('-not_add_prefix', 'not_add_prefix', 
-              help='file containing a list of id which do not add prefix as others. ', default=None, required=False)
 @click.option('-simple', 'simple_concat', is_flag=True, default=False,
               help='do not perform any name transformation ',  required=False)
 def main(indir, 
@@ -260,9 +251,8 @@ def main(indir,
          suffix='aln', 
          fix_refseq=False,
          remove_identical=False,
-         not_add_prefix=None,
          partition_method='genes',
-         simple_concat=False):
+         simple_concat=True):
     """
     The simple_concat indicate that name in `genome_list` is the genome name.
     If it is False, it indicates that name in `genome_list` is converted/formatted genome name like the prefix of locus.
@@ -271,10 +261,6 @@ def main(indir,
         prefix = 'GCF_'
     else:
         prefix = 'GCA_'
-    if not_add_prefix is not None:
-        not_add_prefix_ids = [_ for _ in open(not_add_prefix).read().split('\n') if _]
-    else:
-        not_add_prefix_ids = []
     # sampleing the genomes
     name2prefix = get_genomes(genome_list,simple_concat)
     # sampling the gene 
@@ -289,8 +275,7 @@ def main(indir,
                                                  name2prefix,
                                                  g2num_miss,
                                                  suffix,
-                                                 simple_concat
-                                                 )
+                                                 simple_concat)
     print(f"Found {len([k for k,v in g2num_miss.items() if v==0])} backbone genes")
     if outfile is None:
         outfile = join(indir, 'concat_aln.aln')
@@ -313,7 +298,7 @@ def main(indir,
             if simple_concat:
                 f1.write(f">{final_name}\n")
             else:
-                f1.write(f'>{convert_genome_ID_rev(final_name, prefix=prefix,not_add_prefix_ids=not_add_prefix_ids)}\n')
+                f1.write(f'>{convert_genome_ID_rev(final_name, prefix=prefix)}\n')
             f1.write(f'{seq}\n')
 
     if remove_identical:
@@ -322,18 +307,12 @@ def main(indir,
         generate_partition_file(outpartition, record_pos_info)
     if concat_type.lower() in ['both', 'phy']:
         gids = list(name2prefix)
-        
-        
         def name_convertor(x):
-            tmp = [k for k,v in name2prefix.items() if x.split('_')[0] in v]
+            tmp = [k for k,v in name2prefix.items() if x.split('_')[0] in v or x in v]
             if not tmp:
                 return
             else:
                 return tmp[0]
-        # if simple_concat:
-        #     name_convertor = lambda x: x
-        # else:
-        #     name_convertor = lambda x: convert_genome_ID_rev(x,not_add_prefix_ids=not_add_prefix_ids)
         generate_phy_file(outphy, 
                           record_pos_info, 
                           gids,

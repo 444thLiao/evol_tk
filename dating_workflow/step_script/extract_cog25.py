@@ -130,7 +130,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     # else:
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
-    gids = list(get_genomes(genome_list,False))
+    gids = list(get_genomes(genome_list,True))
     protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
@@ -154,6 +154,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
                            _suffix=suffix,
                           get_type='prot', 
                           prokka_dir=prokka_dir)
+        # output sequence would use genome name as its sequence id
     elif output_type.lower() in ['nucl', 'nucleotide']:
         get_seq_and_write(outdir, genome2cdd, protein_files,_suffix=suffix, get_type='nuc', prokka_dir=prokka_dir)
     else:

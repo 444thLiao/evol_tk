@@ -10,6 +10,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 
 from dating_workflow.step_script import parse_blastp
+from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes
 
 rbp_db = "/home-user/thliao/data/protein_db/rbp55"
 
@@ -64,73 +65,6 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     return genome2cdd
 
 
-# extract protein
-def write_cog(outdir, genome2cdd, raw_proteins, genome_ids=[], get_type='prot'):
-    genome2seq = {}
-    if not genome_ids:
-        genome_ids = list(genome2cdd)
-    gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])
-    pdir = dirname(expanduser(raw_proteins))
-    if get_type == 'nuc':
-        suffix = 'ffn'
-    elif get_type == 'prot':
-        suffix = 'faa'
-    else:
-        raise Exception
-    if not exists(outdir):
-        os.makedirs(outdir)
-    tqdm.write('get sequence file')
-    for genome_name in tqdm(genome_ids):
-        g_dict = genome2cdd[genome_name]
-        gfile = f'{pdir}/{genome_name}.faa'
-        new_pdir = abspath(dirname(dirname(realpath(gfile))))
-        if suffix == 'faa':
-            # important bugs!!!!! fixed
-            new_gfile = gfile
-        else:
-            new_gfile = f"{new_pdir}/tmp/{genome_name}/{genome_name}.{suffix}"
-
-        if exists(new_gfile):
-            _cache = {record.id: record
-                      for record in SeqIO.parse(new_gfile, format='fasta')}
-            seq_set = {k: [_cache[_]
-                           for _ in v
-                           if _ in _cache]
-                       for k, v in g_dict.items()}
-            genome2seq[genome_name] = seq_set
-        else:
-            # not with prokka annotations
-            print('not annotated with prokka')
-            if not gfile.endswith(suffix):
-                print(f'not {suffix},past it')
-                continue
-            _cache = {record.id: record
-                      for record in SeqIO.parse(gfile, format='fasta')}
-            seq_set = {k: [_cache[_]
-                           for _ in v
-                           if _ in _cache]
-                       for k, v in g_dict.items()}
-            genome2seq[genome_name] = seq_set
-
-    # concat/output proteins
-    tqdm.write('write out')
-    for each_gene in tqdm(gene_ids):
-        gene_records = []
-        for gname, seq_dict in genome2seq.items():
-            get_records = seq_dict.get(each_gene, [])
-            for record in get_records:
-                record.name = gname
-            gene_records += get_records
-        unique_cdd_records = []
-        [unique_cdd_records.append(record)
-         for record in gene_records
-         if record.id not in [_.id
-                              for _ in unique_cdd_records]]
-
-        with open(join(outdir, f"{each_gene.replace('CDD:', '')}.faa"), 'w') as f1:
-            SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
-
-
 def stats_cog(genome2genes, gene_ids):
     gene_multi = {g: 0 for g in gene_ids}
     for genome, pdict in genome2genes.items():
@@ -175,8 +109,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list):
 
     annotate_cog(protein_files, in_annotations)
     genome2cdd = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
-    write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
-    # write_cog(outdir + '_nuc', genome2cdd, in_proteins, genome_ids=gids, get_type='nuc')
+    get_seq_and_write(outdir, genome2cdd, protein_files,_suffix=suffix, get_type='prot')
+    #write_cog(outdir, genome2cdd, in_proteins, genome_ids=gids, get_type='prot')
 
     _subgenome2cdd = {k: v for k, v in genome2cdd.items() if k in set(gids)}
     gene_ids = set([_ for vl in genome2cdd.values() for _ in vl])

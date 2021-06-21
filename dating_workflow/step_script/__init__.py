@@ -196,7 +196,9 @@ def get_seq_and_write(outdir,
                       _suffix='faa',
                       prokka_dir=None):
     """
-
+    Extract the sequence and rename it with its genome name.
+    It should be ensured that, for each gene/cdd, each genome contains only one locus.
+    
     :param outdir: output directory
     :param genome2cdd: dict stored genome2cdd2locus
     :param protein_files: protein files 
@@ -239,13 +241,12 @@ def get_seq_and_write(outdir,
         for gname, seq_dict in genome2seq.items():
             get_records = seq_dict.get(each_gene, [])
             for record in get_records:
-                record.name = gname
+                record.id = gname
             gene_records += get_records
         unique_cdd_records = []
         [unique_cdd_records.append(record)
          for record in gene_records
-         if record.id not in [_.id
-                              for _ in unique_cdd_records]]
+         if record.id not in [_.id for _ in unique_cdd_records]]
 
         with open(join(outdir, f"{each_gene.replace('CDD:', '')}.{final_suffix}"), 'w') as f1:
             SeqIO.write(unique_cdd_records, f1, format='fasta-2line')
