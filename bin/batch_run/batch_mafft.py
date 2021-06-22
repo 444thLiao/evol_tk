@@ -31,7 +31,7 @@ def unit_run(in_file, o_file, mode):
                stderr=open('/dev/null', 'w'))
 
 
-def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None, force=False, mode=default_mode,removed_gene_list=None, not_add_prefix_ids=[],**kwarg):
+def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None, force=False, mode=default_mode,removed_gene_list=None):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -46,9 +46,10 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
         tqdm.write('iterating files to collect with giving genome ids')
         for f in tqdm(file_list):
             records = SeqIO.parse(f, format='fasta')
+            
             records = [_
                        for _ in records
-                       if _.id.split('_')[0] in all_prefix]
+                       if _.id in all_prefix]
             if (not records) or (len(records) == 1):
                 #import pdb;pdb.set_trace()
                 print(f'no available (or only one) record could be used in {f}')
@@ -88,19 +89,13 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-m', 'mode_mafft', default='ginsi',help="the mode of mafft you want to use. You could choose mafft, ginsi, einsi, linsi. You could find the detailed descriptions of them at the help of mafft. ")
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-@click.option('-fix_ref', 'fix_refseq', help='fix name of refseq?', default=False, required=False, is_flag=True)
 @click.option('-rm_l', 'removed_gene_list', help='list of removed gene?')
-@click.option('-not_add_prefix', 'not_add_prefix', help='provide a list of id which do not add prefix as others. ', default=None, required=False)
-def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft, removed_gene_list, fix_refseq,not_add_prefix):
+def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft, removed_gene_list):
     
-    name2prefix = get_genomes(genome_list,0)
+    name2prefix = get_genomes(genome_list,1)
     if removed_gene_list is not None:
         removed_gene_list = open(removed_gene_list).read().split('\n')
-    if not_add_prefix is not None:
-        not_add_prefix_ids = [_ for _ in open(not_add_prefix).read().split('\n') if _]
-    else:
-        not_add_prefix_ids = []
-    main(indir, odir, num_parellel, suffix, new_suffix, name2prefix=name2prefix, force=force, mode=mode_mafft, removed_gene_list=removed_gene_list, fix_refseq=fix_refseq,not_add_prefix_ids=not_add_prefix_ids)
+    main(indir, odir, num_parellel, suffix, new_suffix, name2prefix=name2prefix, force=force, mode=mode_mafft, removed_gene_list=removed_gene_list)
 
 
 if __name__ == "__main__":
