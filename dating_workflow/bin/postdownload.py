@@ -82,17 +82,25 @@ dry_run=False
         for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
                         )
         ]
-            
-
     if all_ids:
+        paths = os.listdir(indir)
+        all_dir = []
+        for aid in all_ids:
+            for p in paths:
+                if exists(join(p,aid)):
+                    all_dir.append(glob(join(p, aid, '*.fna.gz'))[0])
+                    break
+    else:
+        all_dir = [_
+            for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
+                            )
+            ]        
         all_dir = [_ for _ in all_dir if basename(dirname(_)) in all_ids]
         found = [basename(dirname(_)) for _ in all_dir]
         not_found = list(set(all_ids).difference(set(found)))
         if not_found:
             tqdm.write(f"{len(not_found)} are not found!")
-                #    if basename(dirname(_)) in all_ids]
-
-
+            
     tqdm.write("gunzip fna file and collect jobs")
     jobs = []
     jobs2 = []

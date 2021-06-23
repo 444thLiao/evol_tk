@@ -11,7 +11,7 @@ from subprocess import check_call
 import click
 from Bio import SeqIO
 from tqdm import tqdm
-
+from Bio.Seq import Seq
 from dating_workflow.step_script import convert_genome_ID_rev,get_genomes
 
 default_mode = 'ginsi'
@@ -30,8 +30,19 @@ def unit_run(in_file, o_file, mode):
                stdout=open('/dev/null', 'w'),
                stderr=open('/dev/null', 'w'))
 
+def remove_3rd(record,return_seq=False):
+    # inplace remove the 3rd
+    seq = str(record.seq)
+    two_partitions = [seq[::3],seq[1::3]]
+    final_seq = ''.join([''.join(_) for _ in zip(*two_partitions)])
+    #final_seq = final_seq[:-2]
+    if return_seq:
+        return final_seq
+    record.seq = Seq(final_seq)  # :-2 mean remove the lefted stop codon 
+    return record
 
-def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None, force=False, mode=default_mode,removed_gene_list=None):
+def main(in_dir, odir, num_parellel, suffix='', new_suffix='', 
+         name2prefix=None, force=False, mode=default_mode,removed_gene_list=None,remove3rd=False):
     suffix = suffix.strip('.')
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
@@ -58,6 +69,9 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
             if removed_gene_list is not None:
                 records = [_ for _ in records
                            if _.id not in removed_gene_list]
+            if remove3rd:
+                records = [remove_3rd(r)
+                           for r in records]
             with open(n_f, 'w') as f1:
                 SeqIO.write(records, f1, format='fasta-2line')
             new_file_list.append(n_f)
@@ -90,12 +104,14 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', name2prefix=None,
 @click.option('-m', 'mode_mafft', default='ginsi',help="the mode of mafft you want to use. You could choose mafft, ginsi, einsi, linsi. You could find the detailed descriptions of them at the help of mafft. ")
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
 @click.option('-rm_l', 'removed_gene_list', help='list of removed gene?')
-def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft, removed_gene_list):
+@click.option('-r3', 'remove3rd', help='remove 3rd codon', default=False, required=False, is_flag=True)
+def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft, removed_gene_list,remove3rd):
     
     name2prefix = get_genomes(genome_list,1)
     if removed_gene_list is not None:
         removed_gene_list = open(removed_gene_list).read().split('\n')
-    main(indir, odir, num_parellel, suffix, new_suffix, name2prefix=name2prefix, force=force, mode=mode_mafft, removed_gene_list=removed_gene_list)
+    main(indir, odir, num_parellel, suffix, new_suffix, name2prefix=name2prefix, 
+         force=force, mode=mode_mafft, removed_gene_list=removed_gene_list,remove3rd=remove3rd)
 
 
 if __name__ == "__main__":

@@ -24,10 +24,6 @@ def precluster_based_selection(nodes, l2cluster=None):
 
 
 def get_cluster(c_file):
-    # c_file = infile.replace('.reroot.newick','.clusterd.list')
-    # cmd = f"/home-user/thliao/script/TreeCluster/TreeCluster.py -i {infile} -tf argmax_clusters -t 0.2 > {c_file}"
-    # if not exists(c_file):
-    #     check_call(cmd,shell=1)
 
     cluster2genomes = defaultdict(list)
     for row in open(c_file).read().split('\n')[1:]:
@@ -59,6 +55,8 @@ def get_basal_ones(node, up_level=3, maximum_retained=3, **kwargs):
     curr_n = node
     cur_l = 0
     while cur_l <= up_level:
+        if curr_n.is_root:
+            break
         sister_node = [_ for _ in curr_n.up.children if _.name != curr_n.name][0]
         leaves = get_simple_LCA(sister_node, maximum=maximum_retained, **kwargs)
         all_leaves += leaves
