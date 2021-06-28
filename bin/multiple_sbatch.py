@@ -37,7 +37,7 @@ def sbatch_all(cmds,reset_workdir=False,thread_per_tasks=1,fixed_cluster='',pref
         # cmds = open('./cmds').read().strip('\n').split('\n')
         # if reset_workdir:
         workdir = realpath(cmd.split(';')[0].strip().split(' ')[-1])
-        cmd = cmd.split(';')[-1].strip()
+        #cmd = cmd.split(';')[-1].strip()
         # cmd = cmd.replace()
         job_file = os.path.join(job_directory,f"{prefix_name}{count_}.job" )
         

@@ -42,4 +42,3 @@ def get_ftp_file(link,odir='./'):
     # ftp.retrbinary("RETR " + filename, open(odir+ filename, 'wb').write)
     ftp.quit()            
             
-            
