@@ -12,9 +12,9 @@ from bin.ncbi_convertor.toolkit import (
 )
 from api_tools.third_party import parse_assembly_xml
 
-tax_convertable_dbs = ["protein", "assembly", "nuccore"]
+tax_convertable_dbs = ["protein", "assembly", "nuccore",'nucleotide']
 batch_return_dbs = []
-single_return_dbs = ["protein", "nuccore"]
+single_return_dbs = ["protein", "nuccore",'nucleotide']
 
 
 class NCBI_convertor:
@@ -200,7 +200,7 @@ class NCBI_convertor:
 
     def nid2assembly(self, all_GI=None):
 
-        if self.dbname != "nuccore":
+        if self.dbname not in  ["nuccore",]:
             raise SyntaxError("source database must be nuccore")
 
         if all_GI is None:
