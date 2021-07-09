@@ -146,14 +146,14 @@ class NCBI_convertor:
 
     def get_taxon(self,):
         if self.dbname not in tax_convertable_dbs:
-            raise IOError(f"the original ID not in ")
+            raise IOError(f"the original ID not in '{' '.join(tax_convertable_dbs)}' ")
         if not self.dbsummary:
             self.get_db_summary()
         for aid, result in self.dbsummary.items():
             self.tids[aid] = int(result["TaxId"])
 
     def get_key_from_summary_results(self, retrieve_r):
-        if self.dbname in ["protein", "nuccore"]:
+        if self.dbname in ["protein", "nuccore","nucleotide"]:
             return {retrieve_r["AccessionVersion"]: retrieve_r}
 
     def construct_taxon_info_dict(self):
