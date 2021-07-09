@@ -67,7 +67,7 @@ class NCBI_convertor:
             ids=ids,
             result_func=lambda x: SeqIO.read(io.StringIO(x), "fasta"),
             batch_size=1,
-            rettype="fasta",
+            retype="fasta",
             retmode="text",
         )
         return results

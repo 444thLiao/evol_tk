@@ -78,15 +78,16 @@ dry_run=False
 
     tqdm.write(f'iterating the {indir}')
     
-    all_dir = [_
-        for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
-                        )
-        ]
+    # all_dir = [_
+    #     for _ in tqdm(glob(join(indir, '**', 'GC*', '*.fna.gz'))
+    #                     )
+    #     ]
     if all_ids:
         paths = os.listdir(indir)
         all_dir = []
         for aid in all_ids:
             for p in paths:
+                p = indir+'/'+p
                 if exists(join(p,aid)):
                     all_dir.append(glob(join(p, aid, '*.fna.gz'))[0])
                     break
