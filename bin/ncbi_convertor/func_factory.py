@@ -65,7 +65,7 @@ class NCBI_convertor:
         results, failed = self.edl.efetch(
             db=self.dbname,
             ids=ids,
-            result_func=lambda x: SeqIO.read(io.StringIO(x), "fasta"),
+            result_func=lambda x: list(SeqIO.parse(io.StringIO(x), "fasta")),
             batch_size=1,
             retype="fasta",
             retmode="text",
