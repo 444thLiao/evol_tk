@@ -84,6 +84,11 @@ color_scheme = {'type':{'NOB': '#e41a1c', 'comammox': '#edc31d',
                                 }
 
                 }
+phyla_color = {'Proteobacteria': '#358f0f',
+                                'Firmicutes': '#edc31d',
+                                'Actinobacteria': '#78fce0',
+                                'Bacteroidetes': '#e41a1c'}
+
 
 # rename
 def rename_gene(each_og,ofile,extra={}):

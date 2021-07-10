@@ -57,7 +57,7 @@ class NCBI_convertor:
         else:
             print("No cache found.")
 
-    def get_seq(self, num_retry=5, method="init"):
+    def get_seq(self, batch_size=5, method="init"):
         # for protein
         ids = self.origin_ids
         if self.dbname not in ["nucleotide", "protein"]:
@@ -66,7 +66,7 @@ class NCBI_convertor:
             db=self.dbname,
             ids=ids,
             result_func=lambda x: list(SeqIO.parse(io.StringIO(x), "fasta")),
-            batch_size=1,
+            batch_size=batch_size,
             retype="fasta",
             retmode="text",
         )
