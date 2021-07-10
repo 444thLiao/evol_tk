@@ -67,17 +67,23 @@ class NCBI_convertor:
         else:
             print("No cache found.")
 
-    def get_seq(self, batch_size=5, method="init"):
+    def get_seq(self, batch_size=5, method="init",preset='seq'):
         # for protein
         ids = self.origin_ids
-        if self.dbname not in ["nucleotide", "protein"]:
+        if self.dbname not in ["nucleotide", "protein",'nuccore']:
             raise SyntaxError
+        if preset == 'seq':
+            retype='fasta'
+            format='fasta'
+        elif preset=='genbank':
+            retype='gb'
+            format='genbank'
         results, failed = self.edl.efetch(
             db=self.dbname,
             ids=ids,
-            result_func=lambda x: list(SeqIO.parse(io.StringIO(x), "fasta")),
+            result_func=lambda x: list(SeqIO.parse(io.StringIO(x), format)),
             batch_size=batch_size,
-            retype="fasta",
+            retype=retype,
             retmode="text",
         )
         return results
