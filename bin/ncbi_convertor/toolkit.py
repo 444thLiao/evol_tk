@@ -25,7 +25,19 @@ tmp_dir = expanduser(tmp_dir)
 
 import hashlib
 
-
+email = os.getenv('EMAIL')
+api_key = os.getenv("EKEY")
+edl = EntrezDownloader(
+    # An email address. You might get blocked by the NCBI without specifying one.
+    email=email,
+    # An API key. You can obtain one by creating an NCBI account. Speeds things up.
+    api_key=api_key,
+    num_threads=30,  # The number of parallel requests to make
+    # The number of IDs to fetch per request
+    batch_size=50,
+    pbar=True,  # Enables a progress bar, requires tqdm package
+)
+        
 def shash(astr):
     return hashlib.md5(astr.encode()).hexdigest()
 
@@ -126,17 +138,6 @@ def unpack_gb(prot_t):
     _cache_dict["comment"] = comment
     return _cache_dict
 
-
-edl = EntrezDownloader(
-    # An email address. You might get blocked by the NCBI without specifying one.
-    email="l0404th@gmail.com",
-    # An API key. You can obtain one by creating an NCBI account. Speeds things up.
-    api_key="ccf9847611deebe1446b9814a356f14cde08",
-    num_threads=30,  # The number of parallel requests to make
-    # The number of IDs to fetch per request
-    batch_size=50,
-    pbar=True,  # Enables a progress bar, requires tqdm package
-)
 
 
 def tax2tax_info(taxid):

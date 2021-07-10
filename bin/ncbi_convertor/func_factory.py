@@ -9,6 +9,7 @@ from bin.ncbi_convertor.toolkit import (
     tax2tax_info,
     parse_ipg,
     get_GI,
+    os
 )
 from api_tools.third_party import parse_assembly_xml
 
@@ -32,7 +33,16 @@ class NCBI_convertor:
         self.tids = {}
         self.dbsummary = {}
         self.edl = given_edl
-
+        if self.edl.email is None:
+            print("EDL you pass without an API key. If you pass a key, it could speed up 3times at most. You could use API key by set the environment parameters 'EMAIL' and 'EKEY', and then run it in new terminal. Or use the function refresh_key to update the email and api_key. " )
+    
+    def refresh_key(self,email=None,api_key=None):
+        if email is None:
+            email = os.getenv('EMAIL')
+            api_key = os.getenv("EKEY")
+        self.edl.email = email
+        self.edl.api_key = api_key
+        
     def load_from_file(self, infile):
         # todo:
         pass

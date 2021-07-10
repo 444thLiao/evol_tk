@@ -71,7 +71,7 @@ class EntrezDownloader:
         self.request_limiter = RequestLimiter(min_wait=0.4 if not api_key else 0.2)
         self.print_lock = threading.Lock()
         self.pbar = pbar
-
+        
     def disable_pbar(self):
         self.pbar = False
 
