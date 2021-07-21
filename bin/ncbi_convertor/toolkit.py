@@ -17,6 +17,13 @@ from api_tools.third_party.metadata_parser import (
     parse_assembly_xml,
 )
 
+import Bio
+def eread(x):
+    if float(Bio.__version__)>=1.77:
+        return Entrez.read(io.BytesIO(x.encode()))
+    else:
+        return Entrez.read(io.StringIO(x))
+    
 ncbi = NCBITaxa()
 taxons = ["superkingdom", "phylum", "class", "order", "family", "genus", "species"]
 
@@ -192,7 +199,7 @@ def get_GI(ids, db, edl, no_order=False):
         results, failed = edl.esearch(
             db=db,
             ids=ids,
-            result_func=lambda x: Entrez.read(io.StringIO(x))["IdList"],
+            result_func=lambda x: eread(x)["IdList"],
             batch_size=50,
         )
         all_GI = [_[-1] if type(_) == tuple else _ for _ in results]
@@ -200,7 +207,7 @@ def get_GI(ids, db, edl, no_order=False):
     results, failed = edl.esearch(
         db=db,
         ids=ids,
-        result_func=lambda x: Entrez.read(io.StringIO(x))["IdList"],
+        result_func=lambda x: eread(x)["IdList"],
         batch_size=1,
     )
 

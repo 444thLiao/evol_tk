@@ -18,6 +18,14 @@ batch_return_dbs = []
 single_return_dbs = ["protein", "nuccore",'nucleotide']
 
 
+import Bio
+def eread(x):
+    if float(Bio.__version__)>=1.77:
+        return Entrez.read(io.BytesIO(x.encode()))
+    else:
+        return Entrez.read(io.StringIO(x))
+
+
 class NCBI_convertor:
     "prototype of function which convert ID to GI"
 
@@ -131,7 +139,7 @@ class NCBI_convertor:
             results, failed = self.edl.esummary(
                 db=self.dbname,
                 ids=all_GI,
-                result_func=lambda x: Entrez.read(io.StringIO(x)),
+                result_func=lambda x: eread(x),
             )
 
             if failed:
@@ -141,7 +149,7 @@ class NCBI_convertor:
                     db=self.dbname,
                     ids=failed,
                     batch_size=1,
-                    result_func=lambda x: Entrez.read(io.StringIO(x)),
+                    result_func=lambda x: eread(x),
                 )
                 tqdm.write("Following ID failed: " + "\n".join(map(str, _failed)))
             for result in results + _results:
@@ -228,7 +236,7 @@ class NCBI_convertor:
             dbfrom="nuccore",
             db="assembly",
             ids=all_GI,
-            result_func=lambda x: Entrez.read(io.StringIO(x)),
+            result_func=lambda x: eread(x),
         )
         nid2assembly_dict = {}
         for r in results:
@@ -251,7 +259,7 @@ class NCBI_convertor:
             dbfrom="bioproject",
             db="sra",
             ids=all_GI,
-            result_func=lambda x: Entrez.read(io.StringIO(x)),
+            result_func=lambda x: eread(x),
         )
         bp2srr_ids = {}
         for r in results:
