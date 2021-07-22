@@ -131,15 +131,12 @@ class EntrezDownloader:
             "retmode": retmode,
             "rettype": retype,
         }
-
         post_data.update(kwargs)
-
         if self.email:
             post_data.update({"email": self.email})
 
         if self.api_key:
             post_data.update({"api_key": self.api_key})
-
         error = None
         for i in range(3):  # Retry three times
             try:
@@ -241,7 +238,7 @@ class EntrezDownloader:
         if self.pbar:
             from tqdm import tqdm
             results = ResultCollector(
-                pbar=tqdm(total=(len(ids)) + 1, unit="records")
+                pbar=tqdm(total=(len(ids)) , unit="records")
             )
         else:
             results = ResultCollector()

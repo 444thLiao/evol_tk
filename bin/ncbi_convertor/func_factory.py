@@ -1,4 +1,4 @@
-import io
+import io,os
 from collections import defaultdict
 
 from tqdm import tqdm
@@ -9,7 +9,7 @@ from bin.ncbi_convertor.toolkit import (
     tax2tax_info,
     parse_ipg,
     get_GI,
-    os
+    unpack_gb
 )
 from api_tools.third_party import parse_assembly_xml
 
@@ -25,7 +25,13 @@ def eread(x):
     else:
         return Entrez.read(io.StringIO(x))
 
-
+def read_efetch(t):
+    tmp = {}
+    records = list(SeqIO.parse(io.StringIO(t),'genbank'))
+    for r in records:
+        tmp[r.id] = unpack_gb(r)
+    return [tmp]
+    
 class NCBI_convertor:
     "prototype of function which convert ID to GI"
 
@@ -134,7 +140,19 @@ class NCBI_convertor:
         _results = []
         if self.dbname in batch_return_dbs:
             pass
-
+        
+        elif self.dbname in ['protein']:
+            # more solid than esummary
+            results, failed = self.edl.efetch(
+                db=self.dbname,
+                ids=self.origin_ids,
+                retmode="gp",
+                retype="xml",
+                result_func=lambda x: unpack_gb(x),
+            )
+            for result in results:
+                self.dbsummary.update(result)
+        
         elif self.dbname in single_return_dbs:
             results, failed = self.edl.esummary(
                 db=self.dbname,
@@ -174,12 +192,14 @@ class NCBI_convertor:
         if not self.dbsummary:
             self.get_db_summary()
         for aid, result in self.dbsummary.items():
-            self.tids[aid] = int(result["TaxId"])
+            if 'TaxId' in result:
+                self.tids[aid] = int(result["TaxId"])
+            elif 'taxon' in result:
+                self.tids[aid] = int(result["taxon"])
 
     def get_key_from_summary_results(self, retrieve_r):
         if self.dbname in ["protein", "nuccore","nucleotide"]:
             return {retrieve_r["AccessionVersion"]: retrieve_r}
-
     def construct_taxon_info_dict(self):
         pass
 
@@ -199,11 +219,11 @@ class NCBI_convertor:
     def pid2assembly(self):
         if self.dbname != "protein":
             raise SyntaxError("source database must be protein")
-        self.get_GI()
-        all_GI = list(self.GI.values())
+        # self.get_GI()
+        # all_GI = list(self.GI.values())
         results, failed = self.edl.efetch(
             db="protein",
-            ids=all_GI,
+            ids=self.origin_ids,
             retmode="ipg",
             retype="xml",
             result_func=lambda x: parse_ipg(x),

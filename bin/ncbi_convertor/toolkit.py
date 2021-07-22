@@ -114,6 +114,19 @@ def unpack_gb(prot_t):
     if not prot_t:
         return {}
     _cache_dict = {}
+    # source feature (some have been implemented into annotations)
+    source_fea = [_ for _ in prot_t.features if _.type=='source']
+    if source_fea:
+        source_fea = source_fea[0]
+        v = source_fea.qualifiers.get('isolation_source',[])
+        v = [_ for _ in v if _]
+        if v:
+            _cache_dict[f'isolation_source'] = ';'.join(v)
+        v = source_fea.qualifiers.get('db_xref',[])
+        v = [_ for _ in v if _]
+        if v:
+            _cache_dict[f'taxon'] = int(v[0].split(':')[-1])
+    # above annotations
     annotations = prot_t.annotations
     ref_texts = [
         _
@@ -285,3 +298,14 @@ def get_biosample(bs_list=None, all_GI=None):
         if isinstance(_, dict):
             bs2info.update(_)
     return bs2info
+
+
+import requests
+from bs4 import BeautifulSoup
+def hard_retrieval():
+    # for some protein ids, it can not retrieve via Entrez but can access with web
+    requests.get(f"https://www.ncbi.nlm.nih.gov/protein/pids")
+    
+    record = requests.get("https://www.ncbi.nlm.nih.gov/protein/MBI3798512.1")
+    soup = BeautifulSoup(record.content)
+    pass
