@@ -192,7 +192,7 @@ def parse_ipg(t):
     """
     bucket = []
     whole_df = pd.read_csv(io.StringIO(t), sep="\t", header=None)
-    gb = whole_df.groupby(0)
+    gb = whole_df.groupby(6)  # groupby the locus id
     all_dfs = [gb.get_group(x) for x in gb.groups]
     for indivi_df in all_dfs:
         indivi_df.index = range(indivi_df.shape[0])

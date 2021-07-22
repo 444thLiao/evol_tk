@@ -126,8 +126,12 @@ class NCBI_convertor:
     #     pass
 
     def get_db_summary(self, all_GI=None, method="update"):
-        if self.GI is None:
-            self.get_GI()
+        if self.dbname in ['protein','nuccore']:
+            # NCBI start to abandon GI
+            all_GI = self.origin_ids
+        else:
+            if self.GI is None:
+                self.get_GI()
         if method == "update":
             all_GI = list(set(self.GI.values()))
             all_GI = list(
@@ -148,7 +152,7 @@ class NCBI_convertor:
                 ids=self.origin_ids,
                 retmode="gp",
                 retype="xml",
-                result_func=lambda x: unpack_gb(x),
+                result_func=lambda x: read_efetch(x),
             )
             for result in results:
                 self.dbsummary.update(result)
@@ -159,7 +163,6 @@ class NCBI_convertor:
                 ids=all_GI,
                 result_func=lambda x: eread(x),
             )
-
             if failed:
                 tqdm.write("failed retrieve summary of %s protein ID" % len(failed))
                 tqdm.write("retrieve each failed GI one by one")
@@ -219,8 +222,6 @@ class NCBI_convertor:
     def pid2assembly(self):
         if self.dbname != "protein":
             raise SyntaxError("source database must be protein")
-        # self.get_GI()
-        # all_GI = list(self.GI.values())
         results, failed = self.edl.efetch(
             db="protein",
             ids=self.origin_ids,

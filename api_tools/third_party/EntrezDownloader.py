@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent import futures
 import pandas as pd
 from bs4 import BeautifulSoup
-
+from tqdm import tqdm
 
 class RequestLimiter:
     def __init__(self, min_wait=0.4):
@@ -43,13 +43,15 @@ class ResultCollector:
         self.failed = []
         self.lock = threading.Lock()
 
-    def add_results(self, results):
+    def add_results(self, results,num=None):
         """Adds results to the collector. If a progress bar was provided, it updates the progress bar."""
         with self.lock:
             self.results += results
             if self.pbar:
-                self.pbar.update(len(results))
-
+                if num is None:
+                    self.pbar.update(len(results))
+                else:
+                    self.pbar.update(num)
     def add_failed(self, ids):
         """Adds failed IDs to the collector. If a progress bar was provided, it updates the progress bar."""
         with self.lock:
@@ -75,6 +77,23 @@ class EntrezDownloader:
     def disable_pbar(self):
         self.pbar = False
 
+    def _init_pb(self, ids, batch_size=1):
+        tqdm.write('it might over the progress bar since it also retrieve information of identical locus.')
+        if isinstance(ids, str) and "," in ids:
+            ids = [_.strip() for _ in ids.split(",") if _]
+        else:
+            ids = ids
+        if batch_size == 1:
+            batch_size = self.batch_size
+        
+        if self.pbar:
+            results = ResultCollector(
+                pbar=tqdm(total=(len(ids)) , unit="records")
+            )
+        else:
+            results = ResultCollector()
+        return ids, results
+    
     def _general_batch(self, db, ids, result_collector, result_func, emode, **kwargs):
 
         post_data = {"email": self.email, "api_key": self.api_key, "db": db}
@@ -144,7 +163,8 @@ class EntrezDownloader:
                 response = requests.post(f"{self.baseurl}/efetch.fcgi", post_data)
                 if response.status_code == 200:
                     results = result_func(response.text)
-                    result_collector.add_results(results)
+                    num = len(post_data['id'].split(','))
+                    result_collector.add_results(results,num=num)
                     error = None
                     break
                 else:
@@ -227,22 +247,6 @@ class EntrezDownloader:
             result_collector.add_failed(ids)
             print(error)
 
-    def _init_pb(self, ids, batch_size=1):
-        if isinstance(ids, str) and "," in ids:
-            ids = [_.strip() for _ in ids.split(",") if _]
-        else:
-            ids = ids
-        if batch_size == 1:
-            batch_size = self.batch_size
-
-        if self.pbar:
-            from tqdm import tqdm
-            results = ResultCollector(
-                pbar=tqdm(total=(len(ids)) , unit="records")
-            )
-        else:
-            results = ResultCollector()
-        return ids, results
 
     def elink(self, dbfrom, db, ids, batch_size=1, result_func=lambda x: [x], **kwargs):
         """Interface to the elink database.
