@@ -227,6 +227,18 @@ def get_GI(ids, db, edl, no_order=False):
     # for self.edl.esearch, it will auto **zip** searched term and its result.
     id2gi = dict(results)
     id2gi = {pid: id2gi.get(pid, "") for pid in ids}
+    # extra
+    if db=='assembly':
+        remained_ids = [_.replace('GCF','GCA') for _ in ids if _.startswith('GCF') and _ not in id2gi]
+        if remained_ids:
+            results, failed = edl.esearch(
+        db=db,
+        ids=remained_ids,
+        result_func=lambda x: eread(x)["IdList"],
+        batch_size=1,
+    )
+            id2gi.update(dict(results))
+            id2gi.update({k.replace('GCA','GCF'):v for k in dict(results).items()})
     return id2gi, failed
 
 def get_assembly(assembly_id=None, all_GI=None):

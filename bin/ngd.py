@@ -19,7 +19,6 @@ db_dir = f"{HOME}/data/NCBI/"
 
 metadata_files_dir = f"{HOME}/.cache/ncbi-genome-download/"
 
-
 # genbank_bacteria_assembly_summary.txt
 def from_name2ids(phylum_name,
                   return_d2ids=False):
@@ -93,6 +92,9 @@ def id2domain_to_ids(ids_list):
                 if str(rows[0]) in ids_list:
                     collect_info.append(row)
                     domain2aids[d].append(rows[0])
+    missing_ids = ids_list.difference(set([_.split('\t')[0] for _ in collect_info]))
+    if missing_ids:
+        tqdm.write(f'{len(missing_ids)} are missing in summary file.')
     return domain2aids, collect_info
 
 
@@ -116,7 +118,8 @@ def main(name=None,
          formats='fasta',
          ids_list=None,
          size_of_batch=30,
-         parallel=10):
+         parallel=10,
+         enable_check=True):
     # name = "Nitrospirae;"
     # formats = 'fasta,protein-fasta'
     # odir = '/share/home-user/thliao/data/NCBI_genbank'
@@ -124,32 +127,35 @@ def main(name=None,
     formats = formats.split(',')
 
     odir = realpath(odir)
-    if ids_list:
-        domain2aids, cinfos = id2domain_to_ids(ids_list)
-    else:
-        domain2aids, cinfos = from_name2ids(name)
+    if enable_check:
+        if ids_list:
+            domain2aids, cinfos = id2domain_to_ids(ids_list)
+        else:
+            domain2aids, cinfos = from_name2ids(name)
 
-    # filter with existing files
-    downloaded_aids = []
-    new_domain2aids = {}
-    for d, aids in domain2aids.items():
-        old_d = aids[::]
-        curr_dir = join(db_dir, 'genbank', d)
-        if 'fasta' in formats:
-            # check whether other kinds of files have been downloaded
-            sub_aids = [_ for _ in tqdm(aids)
-                        if not glob(join(curr_dir, _, '*.fna.gz'))]
-            new_domain2aids[d] = sub_aids
-        downloaded_aids.extend(new_domain2aids[d])
-        print(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
-
-    _d = {"assembly_accessions": '',
-          "dry_run": False,
-          "section": "genbank",
-          "parallel": parallel,
-          "output": db_dir,  # all genomes were downloaded to db_dir
-          "file_formats": formats}
-    print(f'params is {_d}')
+        # filter with existing files
+        downloaded_aids = []
+        new_domain2aids = {}
+        for d, aids in domain2aids.items():
+            old_d = aids[::]
+            curr_dir = join(db_dir, 'genbank', d)
+            if 'fasta' in formats:
+                # check whether other kinds of files have been downloaded
+                sub_aids = [_ for _ in tqdm(aids)
+                            if not glob(join(curr_dir, _, '*.fna.gz'))]
+                new_domain2aids[d] = sub_aids
+            downloaded_aids.extend(new_domain2aids[d])
+            tqdm.write(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
+    elif not enable_check and ids_list:        
+        # disable the check and give a list of ids_list
+        downloaded_aids = ids_list[::]
+    _d = {
+        "dry_run": False,
+        "section": "genbank",
+        "parallel": parallel,
+        "output": db_dir,  # all genomes were downloaded to db_dir
+        "file_formats": formats}
+    tqdm.write(f'params is {_d}')
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
                         "dry_run": False,
@@ -180,13 +186,25 @@ def main(name=None,
               default=20)
 @click.option("-p", "parallel", help=f"Run N downloads in parallel (default: 10)",
               default=5)
-def cli(name, odir, formats, size_of_batch, parallel):
+@click.option("-id", "id_list", help=f" ',' separated assembly ids or a single file  ",
+              default=None)
+@click.option("-C", "enable_check", help=f"use summary file or use the id input directly",
+              is_flag=True,default=True)
+def cli(name, odir, formats, size_of_batch, parallel,enable_check,id_list):
+    if exists(id_list):
+        ids_list = [_ for _ in open(id_list).read().split('\n') if _]
+    elif type(id_list) == str:
+        ids_list = id_list.split(',')
+    else:
+        ids_list=  None
+    
     main(name=name,
          odir=odir,
          formats=formats,
-         ids_list=None,
+         ids_list=ids_list,
          size_of_batch=size_of_batch,
-         parallel=parallel)
+         parallel=parallel,
+         enable_check=enable_check)
 
 
 if __name__ == '__main__':

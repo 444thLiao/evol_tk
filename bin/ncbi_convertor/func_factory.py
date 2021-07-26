@@ -144,7 +144,6 @@ class NCBI_convertor:
         _results = []
         if self.dbname in batch_return_dbs:
             pass
-        
         elif self.dbname in ['protein']:
             # more solid than esummary
             results, failed = self.edl.efetch(
@@ -179,21 +178,21 @@ class NCBI_convertor:
 
         elif self.dbname == "assembly":
             results, failed = self.edl.esummary(
-                db="assembly", ids=all_GI, result_func=lambda x: parse_assembly_xml(x)
+                db="assembly", 
+                ids=all_GI, 
+                result_func=lambda x: parse_assembly_xml(x)
             )
             # return results is a list of defaultdict.
             for _dict in results:
                 _dict = dict(_dict)
                 for aid, info_dict in _dict.items():
                     info_dict["TaxId"] = info_dict["SpeciesTaxid"]
-
                 self.dbsummary.update(_dict)
 
     def get_taxon(self,):
         if self.dbname not in tax_convertable_dbs:
             raise IOError(f"the original ID not in '{' '.join(tax_convertable_dbs)}' ")
-        if not self.dbsummary:
-            self.get_db_summary()
+        self.get_db_summary()    
         for aid, result in self.dbsummary.items():
             if 'TaxId' in result:
                 self.tids[aid] = int(result["TaxId"])
@@ -207,8 +206,7 @@ class NCBI_convertor:
         pass
 
     def get_taxons_from_tid(self):
-        if not self.tids:
-            self.get_taxon()
+        self.get_taxon()
         id2taxon = {}
         for ori_id, tid in self.tids.items():
             taxon_dict = tax2tax_info(tid)
@@ -219,7 +217,7 @@ class NCBI_convertor:
         # todo: update whole convertor when it add extra ID
         pass
 
-    def pid2assembly(self):
+    def pid2assembly(self,batch_size=50):
         if self.dbname != "protein":
             raise SyntaxError("source database must be protein")
         results, failed = self.edl.efetch(
@@ -227,6 +225,7 @@ class NCBI_convertor:
             ids=self.origin_ids,
             retmode="ipg",
             retype="xml",
+            batch_size=batch_size,
             result_func=lambda x: parse_ipg(x),
         )
         pid2assembly_dict = defaultdict(dict)
