@@ -337,6 +337,23 @@ def process_path(path):
     return path
 
 
+def change_parameters(mcmc_for_dir,odir=None,**kwargs):
+    if odir is None:
+        parent_dir = dirname(realpath(mcmc_for_dir))
+        odir = join(parent_dir,'new_odir')
+    if not exists(odir):
+        os.makedirs(odir)
+    cmd = f'ln -sf `realpath {mcmc_for_dir}/in.BV` {odir}/'
+    check_call(cmd,shell=1)  
+    existed_mcmc = glob(join(mcmc_for_dir,'*.ctl'))[0]
+    text = modify(existed_mcmc,
+                  **kwargs)
+    ofile = join(odir, 'mcmctree.ctl')
+    with open(ofile, 'w') as f1:
+        f1.write(text)
+    return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree mcmctree.ctl ",
+            ofile.replace('.ctl', '.log'))
+
 @click.command()
 @click.option('-i', '--in_phy', 'in_phyfile')
 @click.option('-it', '--in_tree', 'in_treefile')

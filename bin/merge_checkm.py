@@ -26,6 +26,16 @@ def main(indir, ofile):
     new_df.to_csv(ofile, sep='\t')
 
 
+def sing(infile):
+    result = {}
+    for row in tqdm(open(infile)):
+        text = row.strip('\n')
+        gid, v = text.split('\t')
+        v = eval(v)
+        v = {k: _v for k, _v in v.items() if not k.startswith('GCN')}
+        result[gid] = v
+
+
 @click.command()
 @click.option('-i', 'indir', help='actually is the odir of checkm process')
 @click.option('-o', 'ofile', help='output tab file')

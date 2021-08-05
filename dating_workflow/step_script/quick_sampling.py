@@ -55,7 +55,7 @@ def get_basal_ones(node, up_level=3, maximum_retained=3, **kwargs):
     curr_n = node
     cur_l = 0
     while cur_l <= up_level:
-        if curr_n.is_root:
+        if curr_n.is_root():
             break
         sister_node = [_ for _ in curr_n.up.children if _.name != curr_n.name][0]
         leaves = get_simple_LCA(sister_node, maximum=maximum_retained, **kwargs)
