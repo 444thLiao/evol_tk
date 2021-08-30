@@ -18,12 +18,15 @@ from api_tools.third_party.metadata_parser import (
 )
 
 import Bio
+
+
 def eread(x):
-    if float(Bio.__version__)>=1.77:
+    if float(Bio.__version__) >= 1.77:
         return Entrez.read(io.BytesIO(x.encode()))
     else:
         return Entrez.read(io.StringIO(x))
-    
+
+
 ncbi = NCBITaxa()
 taxons = ["superkingdom", "phylum", "class", "order", "family", "genus", "species"]
 
@@ -32,7 +35,7 @@ tmp_dir = expanduser(tmp_dir)
 
 import hashlib
 
-email = os.getenv('EMAIL')
+email = os.getenv("EMAIL")
 api_key = os.getenv("EKEY")
 edl = EntrezDownloader(
     # An email address. You might get blocked by the NCBI without specifying one.
@@ -44,7 +47,8 @@ edl = EntrezDownloader(
     batch_size=50,
     pbar=True,  # Enables a progress bar, requires tqdm package
 )
-        
+
+
 def shash(astr):
     return hashlib.md5(astr.encode()).hexdigest()
 
@@ -115,17 +119,17 @@ def unpack_gb(prot_t):
         return {}
     _cache_dict = {}
     # source feature (some have been implemented into annotations)
-    source_fea = [_ for _ in prot_t.features if _.type=='source']
+    source_fea = [_ for _ in prot_t.features if _.type == "source"]
     if source_fea:
         source_fea = source_fea[0]
-        v = source_fea.qualifiers.get('isolation_source',[])
+        v = source_fea.qualifiers.get("isolation_source", [])
         v = [_ for _ in v if _]
         if v:
-            _cache_dict[f'isolation_source'] = ';'.join(v)
-        v = source_fea.qualifiers.get('db_xref',[])
+            _cache_dict[f"isolation_source"] = ";".join(v)
+        v = source_fea.qualifiers.get("db_xref", [])
         v = [_ for _ in v if _]
         if v:
-            _cache_dict[f'taxon'] = int(v[0].split(':')[-1])
+            _cache_dict[f"taxon"] = int(v[0].split(":")[-1])
     # above annotations
     annotations = prot_t.annotations
     ref_texts = [
@@ -157,7 +161,6 @@ def unpack_gb(prot_t):
     _cache_dict["keyword"] = kw
     _cache_dict["comment"] = comment
     return _cache_dict
-
 
 
 def tax2tax_info(taxid):
@@ -210,41 +213,40 @@ def get_GI(ids, db, edl, no_order=False):
     ids = list(ids)
     if no_order:
         results, failed = edl.esearch(
-            db=db,
-            ids=ids,
-            result_func=lambda x: eread(x)["IdList"],
-            batch_size=50,
+            db=db, ids=ids, result_func=lambda x: eread(x)["IdList"], batch_size=50
         )
         all_GI = [_[-1] if type(_) == tuple else _ for _ in results]
         return all_GI
     results, failed = edl.esearch(
-        db=db,
-        ids=ids,
-        result_func=lambda x: eread(x)["IdList"],
-        batch_size=1,
+        db=db, ids=ids, result_func=lambda x: eread(x)["IdList"], batch_size=1
     )
 
     # for self.edl.esearch, it will auto **zip** searched term and its result.
     id2gi = dict(results)
     id2gi = {pid: id2gi.get(pid, "") for pid in ids}
     # extra
-    if db=='assembly':
-        remained_ids = [_.replace('GCF','GCA') for _ in ids if _.startswith('GCF') and _ not in id2gi]
+    if db == "assembly":
+        remained_ids = [
+            _.replace("GCF", "GCA")
+            for _ in ids
+            if _.startswith("GCF") and _ not in id2gi
+        ]
         if remained_ids:
             results, failed = edl.esearch(
-        db=db,
-        ids=remained_ids,
-        result_func=lambda x: eread(x)["IdList"],
-        batch_size=1,
-    )
+                db=db,
+                ids=remained_ids,
+                result_func=lambda x: eread(x)["IdList"],
+                batch_size=1,
+            )
             id2gi.update(dict(results))
-            id2gi.update({k.replace('GCA','GCF'):v for k in dict(results).items()})
+            id2gi.update({k.replace("GCA", "GCF"): v for k, v in dict(results).items()})
     return id2gi, failed
+
 
 def get_assembly(assembly_id=None, all_GI=None):
     if all_GI is None:
         all_GI = get_GI(assembly_id, "assembly", edl, no_order=True)
-        
+
     results, failed = edl.esummary(
         db="assembly", ids=all_GI, result_func=lambda x: parse_assembly_xml(x)
     )
@@ -252,8 +254,8 @@ def get_assembly(assembly_id=None, all_GI=None):
     for _dict in results:
         _dict = dict(_dict)
         for aid, info_dict in _dict.items():
-            info_dict['TaxId'] = info_dict['SpeciesTaxid']
-        dbsummary.update(info_dict)
+            info_dict["TaxId"] = info_dict["SpeciesTaxid"]
+            dbsummary.update(info_dict)
     return dbsummary
 
 
@@ -312,12 +314,48 @@ def get_biosample(bs_list=None, all_GI=None):
     return bs2info
 
 
+from Bio import SeqIO
+
+
+def get_seq_with_pos(nid2pos):
+    # nid2pos = {}
+    # for idx,row in tqdm(sub_df.iterrows()):
+    #     nid = row['nucleotide id']
+    #     v = (row['start'],row['end'],row['strand'])
+    #     if nid not in nid2pos:
+    #         nid2pos[nid] = [v]
+    #     else:
+    #         nid2pos[nid].append(v)
+    get_records = []
+    for nid, v_d in tqdm(nid2pos.items()):
+        for s, e, strand in v_d:
+            s, e = int(s), int(e)
+            if str(s) == "nan":
+                continue
+            strand = 1 if strand == "+" else 2
+            results, failed = edl.efetch(
+                db="nucleotide",
+                ids=[nid],
+                result_func=lambda x: list(SeqIO.parse(io.StringIO(x), "fasta")),
+                batch_size=1,
+                retype="fasta",
+                retmode="text",
+                seq_start=s,
+                seq_stop=e,
+                strand=strand,
+            )
+            get_records.extend(results)
+    return get_records
+
+
 import requests
 from bs4 import BeautifulSoup
+
+
 def hard_retrieval():
     # for some protein ids, it can not retrieve via Entrez but can access with web
     requests.get(f"https://www.ncbi.nlm.nih.gov/protein/pids")
-    
+
     record = requests.get("https://www.ncbi.nlm.nih.gov/protein/MBI3798512.1")
     soup = BeautifulSoup(record.content)
     pass

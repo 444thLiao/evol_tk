@@ -142,7 +142,10 @@ def type_process(get_type):
     return suffix, final_suffix
 
 
-def try_get_file_from_formatted_dir(genome_name, prokka_dir, gene_file,suffix,
+def try_get_file_from_formatted_dir(genome_name, 
+                                    prokka_dir, 
+                                    gene_file,
+                                    suffix,
                                     gene2locus):
     genome2seq = {}
     collect_no_prokka_gids = []

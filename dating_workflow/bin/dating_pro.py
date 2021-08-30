@@ -282,7 +282,9 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
             ofile.replace('.ctl', '.log'))
 
 
-def main(in_phyfile, in_treefile, total_odir, use_nucl=False, ali_dir=None, run_tmp=True, run_prior_only=True, params_dict={}):
+def main(in_phyfile, in_treefile, total_odir, 
+         use_nucl=False, ali_dir=None, 
+         run_tmp=True, run_prior_only=True, params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
     ndata = get_num_phy_file(in_phyfile)
@@ -351,8 +353,10 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
     ofile = join(odir, 'mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree mcmctree.ctl ",
-            ofile.replace('.ctl', '.log'))
+    
+    p = realpath(dirname(ofile))
+    return (f"cd {p}; {paml_bin}/mcmctree mcmctree.ctl ",
+            ofile.replace('.ctl', '.log'))       
 
 @click.command()
 @click.option('-i', '--in_phy', 'in_phyfile')
@@ -367,8 +371,11 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
 @click.option('-p', 'print_f', default='2')
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
-@click.option('-c', 'clock', default='2')
-def cli(in_phyfile, in_treefile, in_ali_dir,inBV, odir, use_nucl, run_tmp, only_prior, sampfreq, print_f, rgene_gamma, sigma2_gamma, clock):
+@click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model")
+def cli(in_phyfile, in_treefile, in_ali_dir,
+        inBV, odir, use_nucl, 
+        run_tmp, only_prior, sampfreq, 
+        print_f, rgene_gamma, sigma2_gamma, clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),
@@ -379,7 +386,8 @@ def cli(in_phyfile, in_treefile, in_ali_dir,inBV, odir, use_nucl, run_tmp, only_
     main(in_phyfile, in_treefile,
          use_nucl=use_nucl,
          ali_dir=in_ali_dir,
-         total_odir=odir, run_tmp=run_tmp, run_prior_only=only_prior, params_dict=params_dict)
+         total_odir=odir, run_tmp=run_tmp, 
+         run_prior_only=only_prior, params_dict=params_dict)
 
 
 if __name__ == "__main__":

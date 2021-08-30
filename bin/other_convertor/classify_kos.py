@@ -121,7 +121,7 @@ def get_br_info(br, kos=None):
         iter_br = list(br)
 
     infos = []
-    for br in tqdm(iter_br):
+    for br in iter_br:
         if not br.startswith('br'):
             new_br = f"br:{br}"
         else:
@@ -140,7 +140,7 @@ def get_br_info(br, kos=None):
         for ko in tqdm(iter_ko):
             hier_dict = {'top': br_name, 'top_br': br}
             level_index = string.ascii_letters[26:]  # ABCDEF...
-            for row in tqdm(hier_infos[1:]):
+            for row in hier_infos[1:]:
                 if not row:
                     continue
                 if row[0] in level_index:

@@ -23,6 +23,24 @@ def get_preferred_scale(newick1, newick2):
     yscale = num_1 / num_2
     return 1 / yscale
 
+from ete3 import Tree
+def cooridinate_two_identical_trees(newick1,newick2):
+    def sort_way(n):
+        if n.is_leaf():
+            return n.name
+        else:
+            return ';'.join(n.get_leaf_names())
+    t1 = Tree(newick1,3)
+    t2 = Tree(newick2,3)
+    for n in t1.traverse('postorder'):
+        if not n.is_leaf():
+            ls = n.get_leaf_names()
+            n2 = t2.get_common_ancestor([ls[0],ls[-1]])
+            if set(n.get_leaf_names()) == set(n2.get_leaf_names()):
+                if tuple(n.get_leaf_names()) != tuple(n2.get_leaf_names()):
+                    n.children = sorted(n.children,key=lambda x:sort_way(x))
+                    n2.children = sorted(n2.children,key=lambda x:sort_way(x))
+    return t1,t2
 
 def parse_color_scheme_files(file, extra_set=False, get_raw_name=False):
     """

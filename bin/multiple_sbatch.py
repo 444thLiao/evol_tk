@@ -54,8 +54,12 @@ def sbatch_all(
             fh.writelines(
                 f"#SBATCH --output={job_directory}/{prefix_name}{count_}.out\n"
             )
-            if fixed_cluster:
+            if fixed_cluster=='cl007':
                 fh.writelines(f"#SBATCH -w {fixed_cluster} \n")
+            else:
+                fh.writelines(f"#SBATCH --exclude=cl007 \n")
+                fh.writelines(f"#SBATCH -N 1 \n")
+                
             if reset_workdir:
                 fh.writelines(f"#SBATCH --workdir={workdir}\n")
             for cmd in batch_cmds:
@@ -90,7 +94,7 @@ def cli(infile, reset_working, thread_per_tasks):
 if __name__ == "__main__":
     cli()
 
-    from subprocess import check_call
+    # from subprocess import check_call
 
     # cmd_file = sys.argv[1]
     # cmd_file = './cmds'

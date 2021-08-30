@@ -14,5 +14,10 @@
         "click",
         "pythoner"
     ],
-    "python.analysis.extraPaths": ["D:\\Desktop\\github_repo\\evol_tk"]
+    "python.analysis.extraPaths": [
+        "D:\\Desktop\\github_repo\\evol_tk"
+    ],
+    "python.linting.pylintArgs": [
+        "--disable=no-value-for-parameter,missing-function-docstring,invalid-name"
+    ]
 }

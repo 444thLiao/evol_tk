@@ -18,7 +18,7 @@ import plotly.graph_objs as go
 from Bio import AlignIO, SeqIO
 from tqdm import tqdm
 
-from dating_workflow.step_script import process_path, convert_genome_ID, convert_genome_ID_rev,get_genomes
+from dating_workflow.step_script import process_path, convert_genome_ID_rev,get_genomes
 
 
 def generate_stats_graph(stats, total, ofile):

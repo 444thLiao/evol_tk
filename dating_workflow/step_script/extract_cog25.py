@@ -124,7 +124,8 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 @click.option("-a", 'annotation_only', is_flag=True,default=False,
               help="only run the annotation parts")
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
-def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, output_type, prokka_dir,pass_annotation,annotation_only,num_parellel):
+def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, 
+         output_type, prokka_dir,pass_annotation,annotation_only,num_parellel):
     # if genome_list is None:
     #     gids = []
     # else:
