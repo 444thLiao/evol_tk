@@ -18,11 +18,11 @@ def get_pairwise_iden(aln):
     iden_pairwise = defaultdict(dict)
     for _1,_2 in tqdm(itertools.combinations(range(len(aln)),2),
                  total=(len(aln)**2-len(aln))/2):
-    s1,s2 = aln[_1],aln[_2]
-    num_same,gap_c = count_same(s1,s2)
-    iden_pairwise[s1.id][s2.id] = float(num_same/(aln.get_alignment_length()-gap_c) )*100
+        s1,s2 = aln[_1],aln[_2]
+        num_same,gap_c = count_same(s1,s2)
+        iden_pairwise[s1.id][s2.id] = float(num_same/(aln.get_alignment_length()-gap_c) )*100
     return iden_pairwise   
- 
+
 aln_16S = AlignIO.read('/home-user/mxie/rpob/16S_all.aln','fasta')
 
 aln_rpoB = AlignIO.read('/home-user/mxie/rpob/all_rpoB-D.aln','fasta')
@@ -31,8 +31,6 @@ aln_rpoB.get_alignment_length()
 iden_pairwise_rpoB = get_pairwise_iden(aln_rpoB)
 iden_pairwise_16S = get_pairwise_iden(aln_16S)
 
-all_genomes = [_.split('_')[0] for _ in iden_pairwise_16S]
-all_genomes_rpoB = [_.split('_')[0] for _ in iden_pairwise_rpoB]
 
 def get_genome2genome(iden_pairwise):
     genome2genome = defaultdict(lambda : defaultdict(list))
@@ -72,12 +70,11 @@ genome2genome_rpoB = get_genome2genome(iden_pairwise_rpoB)
 genome2genome_rpoB = {k:{_k:np.mean(_v) for _k,_v in v.items()} for k,v in genome2genome_rpoB.items()}        
 
 
-
 shared_genomes = set(genome2genome_rpoB).intersection(set(genome2genome_16S))
 print(len(shared_genomes))
 
 
-## visualizations   (versy project specific)
+## visualizations   (very project specific)
 def assign_color(g1,g2):
     cri = set([g1,g2])
     if cri == {'target'}:
