@@ -189,8 +189,24 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
     with open(join(odir, 'in.BV'), 'w') as f1:
         f1.write(text)
 
+default_params = {'seqfile': '',
+             'treefile': '',
+             'ndata': '',
+             'model':0,
+             'seqtype': 0,
+             'usedata': "2 in.BV 1",
+             'outfile': './03_mcmctree.out',
+             'clock': 2,
+             'BDparas': "1 1 0.1",
+             'rgene_gamma': '1 35 1',
+             'sigma2_gamma': '1 10 1',
+             'burnin': '2000',
+             'sampfreq': '2',
+             'nsample': '20000',
+             'alpha': 0.5}
 
-def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False,extra_cmd=None,
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, 
+                   use_nucl=False,extra_cmd=None,
                    model='0'):
     # for final mcmctree
     if not exists(odir):

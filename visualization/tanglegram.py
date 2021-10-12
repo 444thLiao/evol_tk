@@ -24,7 +24,7 @@ def get_preferred_scale(newick1, newick2):
     return 1 / yscale
 
 from ete3 import Tree
-def cooridinate_two_identical_trees(newick1,newick2):
+def cooridinate_two_identical_trees(newick1,newick2,l2r=None):
     def sort_way(n):
         if n.is_leaf():
             return n.name

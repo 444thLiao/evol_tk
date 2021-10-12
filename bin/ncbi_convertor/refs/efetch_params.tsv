@@ -1,0 +1,90 @@
+Record Type	&rettype	&retmode
+All Databases		
+Document summary	docsum	"xml, default"
+List of UIDs in XML	uilist	xml
+List of UIDs in plain text	uilist	text
+db = bioproject		
+Full record XML	"xml, default"	"xml, default"
+db = biosample		
+Full record XML	"full, default"	"xml, default"
+Full record text	"full, default"	text
+db = biosystems		
+Full record XML	"xml, default"	"xml, default"
+db = gds		
+Summary	"summary, default"	"text, default"
+db = gene		
+text ASN.1	null	"asn.1, default"
+XML	null	xml
+Gene table	gene_table	text
+db = homologene		
+text ASN.1	null	"asn.1, default"
+XML	null	xml
+Alignment scores	alignmentscores	text
+FASTA	fasta	text
+HomoloGene	homologene	text
+db = mesh		
+Full record	"full, default"	"text, default"
+db = nlmcatalog		
+Full record	null	"text, default"
+XML	null	xml
+"db = nuccore, nucest, nucgss, protein or popset"		
+text ASN.1	null	"text, default"
+binary ASN.1	null	asn.1
+Full record in XML	native	xml
+Accession number(s)	acc	text
+FASTA	fasta	text
+TinySeq XML	fasta	xml
+SeqID string	seqid	text
+"Additional options for db = nuccore, nucest, nucgss or popset"		
+GenBank flat file	gb	text
+GBSeq XML	gb	xml
+INSDSeq XML	gbc	xml
+Additional option for db = nuccore and protein		
+Feature table	ft	text
+Additional option for db = nuccore		
+GenBank flat file with full sequence (contigs)	gbwithparts	text
+CDS nucleotide FASTA	fasta_cds_na	text
+CDS protein FASTA	fasta_cds_aa	text
+Additional option for db = nucest		
+EST report	est	text
+Additional option for db = nucgss		
+GSS report	gss	text
+Additional options for db = protein		
+GenPept flat file	gp	text
+GBSeq XML	gp	xml
+INSDSeq XML	gpc	xml
+Identical Protein XML	ipg	xml
+db = pmc		
+XML	null	"xml, default"
+MEDLINE	medline	text
+db = pubmed		
+text ASN.1	null	"asn.1 , default"
+XML	null	xml
+MEDLINE	medline	text
+PMID list	uilist	text
+Abstract	abstract	text
+db = sequences		
+text ASN.1	null	"text, default"
+Accession number(s)	acc	text
+FASTA	fasta	text
+SeqID string	seqid	text
+db = snp		
+text ASN.1	null	"asn.1, default"
+XML	null	xml
+Flat file	flt	text
+FASTA	fasta	text
+RS Cluster report	rsr	text
+SS Exemplar list	ssexemplar	text
+Chromosome report	chr	text
+Summary	docset	text
+UID list	uilist	text or xml
+db = sra		
+XML	"full, default"	"xml, default"
+db = taxonomy		
+XML	null	"xml, default"
+TaxID list	uilist	text or xml
+db = clinvar		
+ClinVar Set	clinvarset	"xml, default"
+UID list	uilist	text or xml
+db = gtr		
+GTR Test Report	gtracc	"xml, default"

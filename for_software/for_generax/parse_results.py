@@ -10,6 +10,46 @@ def get_up_till_root(n):
     else:
         return []
 
+def get_tree_from_xml(xml_file):
+    soup = BeautifulSoup(open(xml_file), 'xml')
+    all_speciations = soup.find_all("speciation") # speciation events
+    all_s_nodes = [t.attrs['speciesLocation'] for t in all_speciations]
+    # construct tree from xml_file (more exact)
+    def get_info(n):
+        # if not 
+        name = [_ for _ in n.children if _.name =='name'][0].text
+        children = [_ for _ in n.children if _.name == 'clade']
+        if len(children)==2:
+            l,r = children
+            return name,l,r
+        else:
+            return name,
+    from ete3 import TreeNode 
+    p = list(soup.find_all('phylogeny'))
+    p = [_ for _ in p if not _.attrs][0]
+    root = list(p.children)[1]
+    tre = Tree()
+    def DFS_get_tree(root,par_node):
+        results = get_info(root)
+        par_node.name = results[0]
+        if len(results)==1:
+            # par node is a leaf, end
+            
+            return 
+        elif len(results)==3:
+            name,l,r = results
+            l_node = TreeNode()
+            r_node = TreeNode()
+            par_node.add_child(l_node)
+            par_node.add_child(r_node)
+            return DFS_get_tree(l,l_node),DFS_get_tree(r,r_node)
+        # else:
+        #     import pdb;pdb.set_trace()
+        #     print(len(results))
+        #     return
+    DFS_get_tree(root,tre)      
+    return tre
+
 def get_p2node(xml_file,stree,key=''):
     p2node = {}
     p2node_transfer_receptor = {}

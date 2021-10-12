@@ -145,12 +145,11 @@ class NCBI_convertor:
         if self.dbname in batch_return_dbs:
             pass
         elif self.dbname in ['protein']:
-            # more solid than esummary
             results, failed = self.edl.efetch(
                 db=self.dbname,
                 ids=self.origin_ids,
-                retmode="gp",
-                retype="xml",
+                retmode="text",
+                retype="gp",
                 result_func=lambda x: read_efetch(x),
             )
             for result in results:

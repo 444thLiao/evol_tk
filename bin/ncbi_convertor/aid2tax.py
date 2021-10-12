@@ -55,7 +55,7 @@ def rewrite_existing_tab(aid2taxon_info):
 
 
 def aid2taxon(id_list, redo=False):
-    convertor = NCBI_convertor(id_list, "protein")
+    convertor = NCBI_convertor(id_list, "assembly")
     suffix = 'protein2GI'
     convertor.check_cache(suffix=suffix, redo=redo)
     id2taxon = convertor.get_taxons_from_tid()

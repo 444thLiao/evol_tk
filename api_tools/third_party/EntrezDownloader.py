@@ -12,6 +12,11 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+
+def check_retmode(retmode):
+    if retmode not in ['xml','text','asn.1']:
+        print("The retmode you pass might be error one. check it ")
+        
 class RequestLimiter:
     def __init__(self, min_wait=0.4):
         """The RequestLimiter class provides functionality to limit the rate at which new requests are made."""
@@ -138,6 +143,7 @@ class EntrezDownloader:
 
     def _efetch_batch(
         self, db, ids, result_collector, result_func, retmode, retype, **kwargs    ):
+        
         if not retmode:
             retmode = "text"
         if not retype:
@@ -150,6 +156,7 @@ class EntrezDownloader:
             "retmode": retmode,
             "rettype": retype,
         }
+        check_retmode(retmode)
         post_data.update(kwargs)
         if self.email:
             post_data.update({"email": self.email})
