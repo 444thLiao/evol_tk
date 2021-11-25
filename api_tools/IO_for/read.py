@@ -53,7 +53,7 @@ def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
         r = row.split(' ')
         r = [_ for _ in r if _]
 
-        gene_id = r[1]
+        gene_id = r[0]
         locus_tag = r[2]
         evalue = float(r[4])
         if filter_evalue and evalue <= filter_evalue:
@@ -84,19 +84,19 @@ def _parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):
     return gid2locus
 
 
-def _parse_hmmscan(ofile):
-    gid2locus2ko = defaultdict(list)
-    for row in open(ofile):
-        if row.startswith('#'):
-            continue
-        r = row.split(' ')
-        r = [_ for _ in r if _]
-        gene_id = r[0]
-        ko = r[2]
-        evalue = float(r[4])
-        gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
-            (gene_id, ko, evalue))
-    return gid2locus2ko
+# def _parse_hmmscan(ofile):
+#     gid2locus2ko = defaultdict(list)
+#     for row in open(ofile):
+#         if row.startswith('#'):
+#             continue
+#         r = row.split(' ')
+#         r = [_ for _ in r if _]
+#         gene_id = r[0]
+#         ko = r[2]
+#         evalue = float(r[4])
+#         gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
+#             (gene_id, ko, evalue))
+#     return gid2locus2ko
 
 def read_summary(metadata):
     metadata_df = pd.read_csv(

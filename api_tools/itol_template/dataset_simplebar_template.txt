@@ -11,7 +11,7 @@ DATASET_SIMPLEBAR
 SEPARATOR COMMA
 
 #label is used in the legend table (can be changed later)
-DATASET_LABEL,label 1
+DATASET_LABEL,{dataset_name}
 
 #dataset color (can be changed later)
 COLOR,#ff0000
@@ -47,7 +47,7 @@ COLOR,#ff0000
 #all other optional settings can be set or changed later in the web interface (under 'Datasets' tab)
 
 #maximum width
-#WIDTH,1000
+WIDTH,100
 
 #left margin, used to increase/decrease the spacing to the next dataset. Can be negative, causing datasets to overlap.
 #MARGIN,0

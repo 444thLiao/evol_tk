@@ -144,7 +144,7 @@ class NCBI_convertor:
         _results = []
         if self.dbname in batch_return_dbs:
             pass
-        elif self.dbname in ['protein']:
+        elif self.dbname == 'protein':
             results, failed = self.edl.efetch(
                 db=self.dbname,
                 ids=self.origin_ids,

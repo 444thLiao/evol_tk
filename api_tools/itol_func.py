@@ -86,10 +86,11 @@ def annotate_outgroup(
     return template_text + annotate_text
 
 
-def to_simple_bar(id2val):
+def to_simple_bar(id2val,dataset_name='label'):
     # id2value, could be {ID: number /string like number}
 
-    template_text = open(dataset_simplebar_template).read() + "\n"
+    template_text = open(dataset_simplebar_template).read().format(dataset_name=dataset_name)
+    template_text += "\n"
 
     c = []
     for gid, val in id2val.items():

@@ -21,7 +21,8 @@ def main(indir, suffix, num_genes,not_add_prefix_ids):
     for f in tqdm(all_genes):
         records = SeqIO.parse(f, format='fasta')
         for r in records:
-            gid = convert_genome_ID_rev(r.id,not_add_prefix_ids=not_add_prefix_ids)
+            gid = convert_genome_ID_rev(r.id,
+                                        not_add_prefix_ids=not_add_prefix_ids)
             gid2num[gid] += 1
     genomes = {k for k, v in gid2num.items() if v >= num_genes}
     tqdm.write(f"detect {len(genomes)} match given params...")

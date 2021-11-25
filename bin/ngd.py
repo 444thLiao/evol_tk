@@ -13,11 +13,14 @@ import ncbi_genome_download as ngd
 from ete3 import NCBITaxa
 from ncbi_genome_download import NgdConfig
 from tqdm import tqdm
+import pandas as pd
+import io
 
 HOME = os.getenv("HOME")
 db_dir = f"{HOME}/data/NCBI/"
 
 metadata_files_dir = f"{HOME}/.cache/ncbi-genome-download/"
+
 
 # genbank_bacteria_assembly_summary.txt
 def from_name2ids(phylum_name,
@@ -97,7 +100,36 @@ def id2domain_to_ids(ids_list):
         tqdm.write(f'{len(missing_ids)} are missing in summary file.')
     return domain2aids, collect_info
 
+def from_tid2ids(taxons):
+    ncbi = NCBITaxa()
+    def desc_taxa(taxid):
+        descendent_taxa = ncbi.get_descendant_taxa(taxid,intermediate_nodes=True)
+        descendent_taxas = []
 
+        for _taxid in descendent_taxa:
+            descendent_taxa_names = ncbi.translate_to_names([_taxid])
+            descendent_taxas.append((str(_taxid), descendent_taxa_names[0]))
+
+        return descendent_taxas
+
+
+    def get_aid_from_tid(all_taxas):
+        tids = [_[0] for _ in all_taxas]
+        aids = []
+        for d in ["bacteria", 'archaea']:
+            metadata = join(metadata_files_dir, f"genbank_{d}_assembly_summary.txt")        
+            a = pd.read_csv(io.StringIO('\n'.join(open(metadata).read().split('\n')[1:])), sep='\t')
+            aids += list(a.loc[a['taxid'].astype(str).isin(tids),'# assembly_accession'])
+        return aids   
+     
+    all_taxas = []
+    for tid in taxons.split(';'):
+        descendent_taxas = desc_taxa(int(tid))
+        all_taxas += descendent_taxas
+
+    aids = get_aid_from_tid(all_taxas)
+    return aids
+    
 # cids,cinfo = from_name2ids("Verrucomicrobia")
 
 def batch_iter(iter, batch_size):
@@ -115,6 +147,7 @@ def batch_iter(iter, batch_size):
 
 def main(name=None,
          odir=None,
+         taxons=None,
          formats='fasta',
          ids_list=None,
          size_of_batch=30,
@@ -129,9 +162,12 @@ def main(name=None,
     odir = realpath(odir)
     if enable_check:
         if ids_list:
+            # should be assembly ID list
             domain2aids, cinfos = id2domain_to_ids(ids_list)
-        else:
+        elif name is not None:
             domain2aids, cinfos = from_name2ids(name)
+        elif taxons is not None:
+            domain2aids, cinfos = from_tid2ids(taxons)
 
         # filter with existing files
         downloaded_aids = []
@@ -176,6 +212,7 @@ def main(name=None,
 
 @click.command(help="It would split the list of assembly ids into batches. The size parameter would produce")
 @click.option("-n", "name", help="input the phylum name or other. use ; to separate multiple ")
+@click.option("-t", "taxons", help="input the taxon id. It will retrieve all the genomes desceding to the provided taxon; to separate multiple ")
 @click.option("-F", "formats", help='Which formats to download (default: %(default)s).'
                                     'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                                     'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_formats')),
@@ -190,7 +227,7 @@ def main(name=None,
               default=None)
 @click.option("-C", "enable_check", help=f"use summary file or use the id input directly",
               is_flag=True,default=True)
-def cli(name, odir, formats, size_of_batch, parallel,enable_check,id_list):
+def cli(name, odir, taxons, formats, size_of_batch, parallel,enable_check,id_list):
     if exists(id_list):
         ids_list = [_ for _ in open(id_list).read().split('\n') if _]
     elif type(id_list) == str:
@@ -200,6 +237,7 @@ def cli(name, odir, formats, size_of_batch, parallel,enable_check,id_list):
     
     main(name=name,
          odir=odir,
+         taxons=taxons,
          formats=formats,
          ids_list=ids_list,
          size_of_batch=size_of_batch,

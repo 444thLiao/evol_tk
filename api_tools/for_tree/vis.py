@@ -84,8 +84,7 @@ class tree_vis(object):
         else:
             return [_ for _ in self.tree_obj.get_terminals() if _.name==label][0]
         
-    def get_plotly_data(
-        self, xscale=1, yscale=1, color="#000000", width=1, x_shift=0, y_shift=0
+    def get_plotly_data(        self, xscale=1, yscale=1, color="#000000", width=1, x_shift=0, y_shift=0,fix_length=None,
     ):
         """[summary]
 
@@ -101,9 +100,9 @@ class tree_vis(object):
         """
         if self.leaves2top:
             root_pos = 0 - self.max_depth
-            self.draw_clade(self.root, root_pos, "k", "")
+            self.draw_clade(self.root, root_pos, "k", "",fix_length)
         else:
-            self.draw_clade(self.root, 0, "k", "")
+            self.draw_clade(self.root, 0, "k", "",fix_length)
         self.yscaled = yscale
         self.xscaled = xscale
         
