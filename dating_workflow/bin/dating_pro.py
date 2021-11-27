@@ -378,7 +378,6 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
 @click.option('-i', '--in_phy', 'in_phyfile')
 @click.option('-it', '--in_tree', 'in_treefile')
 @click.option('-id', '--in_ali_dir', 'in_ali_dir')
-@click.option('-inBV',  'inBV',default=None)
 @click.option('-o', 'odir')
 @click.option('-nucl', 'use_nucl', is_flag=True, default=False)
 @click.option('-no_tmp', 'run_tmp', default=True)
@@ -387,17 +386,21 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
 @click.option('-p', 'print_f', default='2')
 @click.option('-rg', 'rgene_gamma', default='1 35 1')
 @click.option('-sg', 'sigma2_gamma', default='1 10 1')
+@click.option('-bd', 'bdparse', default='1 1 0.1')
 @click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model")
 def cli(in_phyfile, in_treefile, in_ali_dir,
-        inBV, odir, use_nucl, 
+        odir, use_nucl, 
         run_tmp, only_prior, sampfreq, 
-        print_f, rgene_gamma, sigma2_gamma, clock):
+        print_f, rgene_gamma, sigma2_gamma, 
+        bdparse,
+        clock):
     in_phyfile = process_path(in_phyfile)
     in_treefile = process_path(in_treefile)
     params_dict = {'sampfreq': str(sampfreq),
                    'print': str(print_f),
                    'rgene_gamma': rgene_gamma,
                    'sigma2_gamma': sigma2_gamma,
+                   "BDparas":bdparse,
                    'clock': clock}
     main(in_phyfile, in_treefile,
          use_nucl=use_nucl,

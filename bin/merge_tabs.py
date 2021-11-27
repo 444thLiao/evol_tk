@@ -66,3 +66,5 @@ if __name__ == "__main__":
 
     cm, sa, sr, of = sys.argv[1:]
     main(cm, sa, sr, of)
+
+    # python /home-user/thliao/script/evol_tk/bin/merge_tabs.py ./checkM_ruegeria_summary.tab 20211015/summary_output/seqtk_assembly_accessment.csv 20211015/summary_output/seqtk_reads_accessment.csv ./summary_info.xlsx
