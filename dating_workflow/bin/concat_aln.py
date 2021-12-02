@@ -215,7 +215,7 @@ def concat_records(order_seqs,
             records = [aln_r 
                         for aln_r in aln_record
                         if (aln_r.id.split('_')[0] in prefix) or (aln_r.id in prefix)]
-            if len(records) <=1:
+            if len(records) >1:
                 exit("Duplicated IDs are found in the input file")
             if records:
                 name2record[name] += str(records[0].seq)
