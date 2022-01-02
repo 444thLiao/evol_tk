@@ -34,7 +34,7 @@ def get_used_sep(text):
     separator = [_ for _ in text.split("\n") if _.startswith("SEPARATOR")]
     assert len(separator) == 1
     separator = separator[0].strip()
-    sep = separator[0].split(" ")
+    sep = separator.split(" ")[1]
     if sep == "TAB":
         return "\t"
     elif sep == "SPACE":
@@ -47,8 +47,9 @@ def replacing_params(text, kwarg={}):
     for k, v in kwarg.items():
         if k.upper() in ['MARGIN',"STRIP_WIDTH"]:
             row = [_ for _ in text.split('\n') if k.upper() in _]
+            assert len(row) == 1
             if row:
-                text.replace(row,sep.join([k.upper(),str(v)])+'\n' )
+                text = text.replace(row[0],sep.join([k.upper(),str(v)])+'\n' )
         else:
             text = text.replace(k, v)
     return text
@@ -183,7 +184,7 @@ def to_color_strip(ID2info, info2color, dataset_name="strip", other_params={}):
     ID2info = {k: str(v) for k, v in ID2info.items()}
 
     template_text = open(color_strip_template).read()
-    sep = get_used_sep()
+    sep = get_used_sep(template_text)
 
     id2color = {id: info2color[info] for id, info in ID2info.items()}
     annotate_text = "\n".join(
