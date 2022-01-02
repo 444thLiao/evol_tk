@@ -47,9 +47,11 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
         r_header=set(r_header)
         for row in f1:
             text += '\t'.join([r for r,h in zip(row.strip().split('\t'),header) if h in r_header])+'\n'  
-        mcmc_df = pd.read_csv(io.StringIO(text), sep='\t', index_col=0)        
+        mcmc_df = pd.read_csv(io.StringIO(text), sep='\t', index_col=0)    
+
     if pd.isna(mcmc_df.iloc[-1,-1]):
         mcmc_df = mcmc_df.drop(mcmc_df.index[-1])
+    mcmc_df = mcmc_df.loc[~mcmc_df.isna().any(1),:]
     node_names = [_ for _ in mcmc_df.columns if _.startswith('t_n')]
     rates = [_ for _ in mcmc_df.columns if _.startswith('r_g')]
     paras = [_ for _ in mcmc_df.columns if _.startswith('mu') or _.startswith('sigma2')]
@@ -79,7 +81,9 @@ def get_node_name_from_log(f):
     # f should be the *.log file
     rows = open(f).read().split('\n')
     idx = [_ for _,r in enumerate(rows) if r == 'Species tree']
-    
+    if not idx:
+        print("prior not complete")
+        return
     idx = idx[0]
     start_idx = idx +3 
     end_idx = 0

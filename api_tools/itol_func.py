@@ -1,12 +1,13 @@
+import os
+from ete3 import Tree
 import sys
 from os.path import join, exists, dirname
 
 import matplotlib as mpl
 import numpy as np
+import plotly.express as px
 
 sys.path.insert(0, dirname(__file__))
-from ete3 import Tree
-import os
 
 home = os.getenv("HOME")
 indir = f"{home}/template_txt/"
@@ -27,9 +28,33 @@ dataset_simplebar_template = join(indir, "dataset_simplebar_template.txt")
 collapse_template = join(indir, "collapse.txt")
 
 
+
+
+def get_used_sep(text):
+    separator = [_ for _ in text.split("\n") if _.startswith("SEPARATOR")]
+    assert len(separator) == 1
+    separator = separator[0].strip()
+    sep = separator[0].split(" ")
+    if sep == "TAB":
+        return "\t"
+    elif sep == "SPACE":
+        return " "
+    elif sep == "COMMA":
+        return ","
+    
+def replacing_params(text, kwarg={}):
+    sep= get_used_sep(text)
+    for k, v in kwarg.items():
+        if k.upper() in ['MARGIN',"STRIP_WIDTH"]:
+            row = [_ for _ in text.split('\n') if k.upper() in _]
+            if row:
+                text.replace(row,sep.join([k.upper(),str(v)])+'\n' )
+        else:
+            text = text.replace(k, v)
+    return text
+
 def deduced_legend(info2color, info_name="dataset", sep=","):
     # for implemented a legend with dictinonary named info2color.
-
     legend_title = info_name
     legend_shape = sep.join(["1"] * len(info2color))
     legend_colors = sep.join([_ for _ in info2color.values()])
@@ -44,8 +69,7 @@ LEGEND_LABELS{sep}{legend_labels}"""
 
 def deduced_legend2(info2style, infos, same_colors=False, sep="\t"):
     # for info2style instead of info2color
-    import plotly.express as px
-
+    
     colors_theme = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
     shapes = []
     labels = []
@@ -86,17 +110,17 @@ def annotate_outgroup(
     return template_text + annotate_text
 
 
-def to_simple_bar(id2val,dataset_name='label'):
+def to_simple_bar(id2val, dataset_name="Value", other_params={}):
     # id2value, could be {ID: number /string like number}
-
-    template_text = open(dataset_simplebar_template).read().format(dataset_name=dataset_name)
-    template_text += "\n"
-
+    used_template = dataset_simplebar_template
+    template_text = open(used_template).read().format(
+        dataset_name=dataset_name) + "\n"
+    sep = get_used_sep(template_text)
     c = []
     for gid, val in id2val.items():
         val = str(val)
-        c.append(f"{gid},{val}")
-
+        c.append(f"{gid}{sep}{val}")
+    template_text = replacing_params(template_text, other_params)
     return template_text + "\n".join(c)
 
 
@@ -104,92 +128,97 @@ def to_binary_shape(
     ID2info,
     info2style=None,
     same_color=False,
-    info_name="dataset",
+    dataset_name="Presence/Absence matrix",
     manual_v=[],
     unfilled_other=False,
-    extra_replace={},
+    other_params={},
     no_legend=False,
-    coord_cols=False,
 ):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
     # None will use default.
     # if turn unfilled_other on, it will not draw the unfilled markers
     #
-    template_text = open(dataset_binary_template).read()
+    template_text = open(dataset_binary_template).read() + "\n"
+    sep = get_used_sep(template_text)
     if not manual_v:
-        all_v = list(sorted(set([_ for v in ID2info.values() for _ in v if _])))
+        all_v = list(
+            sorted(set([_ for v in ID2info.values() for _ in v if _])))
     else:
         all_v = manual_v
-    if coord_cols:
-        extra_replace.update({'#SYMBOL_SPACING,10':"SYMBOL_SPACING\t-27"})
+
+    # if coord_cols:
+    #     extra_replace.update({'#SYMBOL_SPACING,10':"SYMBOL_SPACING\t-27"})
     if info2style is None:
         info2style = {k: {} for k in all_v}
-    others_label = "-1" if unfilled_other else "0"
+    unfilled_label = "-1" if unfilled_other else "0"
+
     annotate_text = []
     for ID, vset in ID2info.items():
-        row = "\t".join([ID] + ["1" if _ in vset else others_label for _ in all_v])
+        row = sep.join(
+            [ID] + ["1" if _ in vset else unfilled_label for _ in all_v])
         annotate_text.append(row)
     annotate_text = "\n".join(annotate_text)
 
-    legend_text = deduced_legend2(info2style, all_v, sep="\t", same_colors=same_color)
-
-    real_legend_text = f"LEGEND_TITLE\t{info_name}\n" + legend_text.replace(
-        "FIELD", "LEGEND"
-    )
+    legend_text = deduced_legend2(
+        info2style, all_v, sep=sep, same_colors=same_color)
     if no_legend:
         real_legend_text = ""
+    else:
+        real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace(
+            "FIELD", "LEGEND"
+        )
+
+    template_text = replacing_params(template_text, other_params)
     template_text = template_text.format(
-        legend_text=legend_text + "\n" + real_legend_text, dataset_label=info_name
+        legend_text=legend_text + "\n" + real_legend_text, dataset_label=dataset_name
     )
-    if extra_replace:
-        for k, v in extra_replace.items():
-            template_text = template_text.replace(k, v)
 
     return template_text + "\n" + annotate_text
 
 
-def to_color_strip(ID2info, info2color, info_name="dataset"):
+def to_color_strip(ID2info, info2color, dataset_name="strip", other_params={}):
     # id2info, could be {ID: name}
     # info2color: could be {name: color,}
+    ID2info = {k: str(v) for k, v in ID2info.items()}
 
     template_text = open(color_strip_template).read()
-    id2col = {id: info2color[info] for id, info in ID2info.items()}
-    annotate_text = "\n".join(
-        ["%s,%s,%s" % (id, col, ID2info[id]) for id, col in id2col.items()]
-    )
-    legend_text = deduced_legend(info2color, info_name)
-    info_name = info_name.replace("/", "_")
-    template_text = template_text.format(
-        legend_text=legend_text, dataset_label=info_name
-    )
+    sep = get_used_sep()
 
+    id2color = {id: info2color[info] for id, info in ID2info.items()}
+    annotate_text = "\n".join(
+        [sep.join([id, color, ID2info[id]]) for id, color in id2color.items()]
+    )
+    legend_text = deduced_legend(info2color, dataset_name)
+    dataset_name = dataset_name.replace("/", "_")
+
+    template_text = replacing_params(template_text, other_params)
+    template_text = template_text.format(
+        legend_text=legend_text, dataset_label=dataset_name
+    )
     return template_text + "\n" + annotate_text
 
 
-def to_color_labels_bg(ID2info, info2color, info_name="labels bg"):
+def to_color_labels_bg(ID2info, info2color, dataset_name="labels bg", other_params={}):
     # clade for
     # id2info, could be {ID: name}
     # info2color: could be {name: color,}
     template_text = open(dataset_styles_template).read()
-    id2col = {ID: info2color[info] for ID, info in ID2info.items()}
-    each_template = "{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}"
-    legend_text = deduced_legend(info2color, info_name, sep="\t")
+    sep = get_used_sep(template_text)
 
-    template_text = template_text.format(dataset_label=info_name, legend_text="")
+    id2color = {ID: info2color[info] for ID, info in ID2info.items()}
+
+    # row_remplate = sep.join(["{ID}\t{TYPE}\t{WHAT}\t{COLOR}\t{WIDTH_OR_SIZE_FACTOR}\t{STYLE}\t{BACKGROUND_COLOR}"])
+    legend_text = deduced_legend(info2color, dataset_name, sep="\t")
+
+    template_text = template_text.format(
+        dataset_label=dataset_name, legend_text="")
 
     rows = [
-        each_template.format(
-            ID=ID,
-            TYPE="label",
-            WHAT="node",
-            COLOR="#000000",
-            WIDTH_OR_SIZE_FACTOR=1,
-            STYLE="bold",
-            BACKGROUND_COLOR=color,
-        )
-        for ID, color in id2col.items()
+        sep.join([ID, "label", "node", "#000000", "1", "bold", color])
+        for ID, color in id2color.items()
     ]
+    template_text = replacing_params(template_text, other_params)
     return template_text + "\n".join(rows)
 
 
@@ -235,25 +264,27 @@ def to_color_branch(ID2info, info2color, dataset_name="color branch", no_legend=
     return template_text + "\n".join(rows)
 
 
-def to_color_range(ID2info, info2color, dataset_name="color branch", no_legend=True):
+def to_color_range(
+    ID2info, info2color, dataset_name="color branch", no_legend=True, other_params={}
+):
     # add color range
     # id2info, could be {ID: name}
     # info2color: could be {name: color,}
     template_text = open(color_style_template).read()
-    id2col = {ID: info2color[info] for ID, info in ID2info.items()}
-    each_template = "{ID}\trange\t{COLOR}\t{name}"
+    sep = get_used_sep(template_text)
+    id2color = {ID: info2color[info] for ID, info in ID2info.items()}
+    # each_template = "{ID}\trange\t{COLOR}\t{name}"
     if no_legend:
         legend_text = ""
     else:
-        legend_text = deduced_legend(info2color, dataset_name, sep="\t") + "\n"
+        legend_text = deduced_legend(info2color, dataset_name, sep=sep) + "\n"
 
     template_text = template_text.format(
         dataset_label=dataset_name, legend_text=legend_text
     )
-    rows = [
-        each_template.format(ID=ID, COLOR=color, name=ID2info[ID])
-        for ID, color in id2col.items()
-    ]
+    rows = [sep.join(ID, color, str(ID2info[ID]))
+            for ID, color in id2color.items()]
+    template_text = replacing_params(template_text, other_params)
     return template_text + "\n".join(rows)
 
 
@@ -291,7 +322,8 @@ def to_color_Clade(
 
     new_tree_obj = Tree(tree_obj.write(is_leaf_fn=collapsed_leaf))
     new_leaves_names = [_.name for _ in new_tree_obj.get_leaves()]
-    internal_nodes = [tree_obj.search_nodes(name=_)[0] for _ in new_leaves_names]
+    internal_nodes = [tree_obj.search_nodes(
+        name=_)[0] for _ in new_leaves_names]
     internal_nodes = [_ for _ in internal_nodes if not _.is_leaf()]
     internal_node2info = {
         n.name: info2color.get(ID2info.get(n.get_leaves()[0].name, ""), "")
@@ -347,12 +379,13 @@ def to_color_Clade(
     return template_text + "\n".join(rows)
 
 
-def to_node_symbol(in_tree, dataset_name="bootstrap", maxsize="15"):
+def to_node_symbol(in_tree, dataset_name="bootstrap", maxsize="15", other_params={}):
     # normally for bootstrap
     # give it a tree is enough, must have internal node name.
     template_text = open(dataset_symbol_template).read()
-    from api_tools.for_tree.format_tree import read_tree
+    sep = get_used_sep(template_text)
 
+    from api_tools.for_tree.format_tree import read_tree
     tree = read_tree(in_tree, format=3)
     id2node = {n.name: n for n in tree.traverse()}
     id2support = {}
@@ -385,60 +418,64 @@ def to_node_symbol(in_tree, dataset_name="bootstrap", maxsize="15"):
                 + "|"
                 + node.children[1].get_leaf_names()[0]
             )
-            row = "\t".join([new_id, shape, size, color, filled, "1", ""])
+            row = sep.join([new_id, shape, size, color, filled, "1", ""])
             rows.append(row)
 
     annotate_text = "\n".join(rows)
     template_text = template_text.format(
         dataset_label=dataset_name, legend_text="", maximum_size=maxsize
     )
+    template_text = replacing_params(template_text, other_params)
     return template_text + annotate_text
 
 
-def get_text_anno(id2val, extra_replace):
+def get_text_anno(id2val, other_params={}, dataset_name="numerical text"):
     """
     It could generate text visualization for color gradient
-
     Args:
         id2val ([dict]): [description]
-        extra_replace ([type]): [description]
+        other_params ([dict]): [description]
 
     Returns:
         [type]: [description]
     """
 
     template_text = open(matrix_like_template).read()
+    sep = get_used_sep(template_text)
+
     template_text = template_text.format(
-        dataset_label="numerical text",
+        dataset_label=dataset_name,
+        # must use the color with alpha/transparency
         field_color="rgba(0,255,0,0)",
-        field_labels="\t".join(["text"]),
+        field_labels=sep.join(["text"]),
     )
     annotate_text = []
-    for id, v in id2val.items():
-        annotate_text.append(f"{id}\t{str(round(v, 2))}")
-    if extra_replace:
-        for k, v in extra_replace.items():
-            template_text = template_text.replace(k, v)
+    for id, val in id2val.items():
+        annotate_text.append(f"{id}{sep}{val:.2f}")
+
+    template_text = replacing_params(template_text, other_params)
     # template_text = template_text.replace("#HEIGHT_FACTOR,1","HEIGHT_FACTOR\t1.5")
     return template_text + "\n".join(annotate_text)
 
 
-def to_matrix_shape(ID2categorical_v, dataset_label, color="#000000"):
+def to_matrix_shape(ID2categorical_v, dataset_name, color="#000000", other_params={}):
     # id2info, could be {ID: name}
 
     template_text = open(matrix_like_template).read()
+    sep = get_used_sep(template_text)
+
     all_v = set(map(str, ID2categorical_v.values()))
     all_v = list(sorted(all_v))
     if type(color) == str:
-        color_str = "\t".join([color] * len(all_v))
+        color_str = sep.join([color] * len(all_v))
     elif type(color) == dict:
-        color_str = "\t".join([color.get(_, "#000000") for _ in all_v])
+        color_str = sep.join([color.get(_, "#000000") for _ in all_v])
     else:
         raise IOError
     template_text = template_text.format(
-        dataset_label=dataset_label,
+        dataset_label=dataset_name,
         field_color=color_str,
-        field_labels="\t".join(all_v),
+        field_labels=sep.join(all_v),
     )
     annotate_text = ""
     for ID, v in ID2categorical_v.items():
@@ -448,23 +485,26 @@ def to_matrix_shape(ID2categorical_v, dataset_label, color="#000000"):
                 vals.append("10")
             else:
                 vals.append("0")
-        annotate_text += "\t".join(vals) + "\n"
+        annotate_text += sep.join(vals) + "\n"
+    template_text = replacing_params(template_text, other_params)
     return template_text + annotate_text
 
 
-def to_label(id2new_id):
+def to_label(id2new_id, other_params={}):
     template_text = open(label_template).read()
+    sep = get_used_sep(template_text)
+    full_text = replacing_params(template_text, other_params)
+
     full_text = template_text[::]
     for id, new_id in id2new_id.items():
         id = str(id)
         new_id = str(new_id)
-        full_text += "%s,%s\n" % (id, new_id)
+        full_text += sep.join([id, new_id])+'\n'  # "%s,%s\n" % (id, new_id)
     return full_text
 
 
-def colorFader(
-    c1, c2, mix=0
-):  # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
+def colorFader(c1, c2, mix=0
+               ):  # (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
     c1 = np.array(mpl.colors.to_rgb(c1))
     c2 = np.array(mpl.colors.to_rgb(c2))
     return mpl.colors.to_hex((1 - mix) * c1 + mix * c2)
@@ -502,13 +542,14 @@ def generate_gradient_legend(
 
 
 def color_gradient(
-    id2val, dataset_label="Completness", max_val=None, min_val=None, mid_val=50
+    id2val, dataset_name="Completness", max_val=None, min_val=None, mid_val=50, other_params={}
 ):
     default_max = "#ff0000"
     default_min = "#0000ff"
     default_mid = "#FFFFFF"
 
-    import numpy as np
+    template_text = open(dataset_gradient_template).read()
+    sep = get_used_sep(template_text)
 
     all_vals = list(set([v for k, v in id2val.items()]))
 
@@ -519,57 +560,56 @@ def color_gradient(
     l2colors = generate_gradient_legend(
         max_val, mid_val, min_val, default_max, default_mid, default_min, num_interval=7
     )
-    sep = "\t"
+
     legend_text = f"""
-LEGEND_TITLE	{dataset_label}
-LEGEND_SHAPES	{sep.join(['1'] * 7)}
-LEGEND_COLORS	{sep.join([_[1] for _ in list(sorted(l2colors.items()))])}
-LEGEND_LABELS	{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()))]))}"""
+LEGEND_TITLE{sep}{dataset_name}
+LEGEND_SHAPES{sep}{sep.join(['1'] * 7)}
+LEGEND_COLORS{sep}{sep.join([_[1] for _ in list(sorted(l2colors.items()))])}
+LEGEND_LABELS{sep}{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()))]))}"""
 
-    annotate_text = "\n".join([f"{label}\t{val}" for label, val in id2val.items()])
+    annotate_text = "\n".join(
+        [f"{label}{sep}{val}" for label, val in id2val.items()])
 
-    text = (
-        open(dataset_gradient_template)
-        .read()
-        .format(
-            dataset_label=dataset_label,
-            legend_text=legend_text,
-            color_min=default_min,
-            color_max=default_max,
-            color_mid=default_mid,
-        )
-    )
+    text = template_text.format(
+        dataset_label=dataset_name,
+        legend_text=legend_text,
+        color_min=default_min,
+        color_max=default_max,
+        color_mid=default_mid)
+    text = replacing_params(text, other_params)
+
     return text + "\n" + annotate_text
 
 
-def pie_chart(id2cat2val, cat2style, dataset_label="habitat prob", pos=0.5):
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=0.5):
     """
-
     :param id2cat2val:
     :param cat2style:
     :param dataset_label:
     :return:
     """
     template_text = open(dataset_piechart_template).read()
+    sep = get_used_sep(template_text)
     annotate_text = []
-    all_cat = [_k for k, v in id2cat2val.items() for _k in v]
+    all_cat = [_k for _k, v in id2cat2val.items() for _k in v]
     all_cat = list(set(all_cat))
     sorted_cat = sorted(all_cat)
 
     for gid in id2cat2val:
-        cat_vals = []
+        cat_vals = [gid, pos, '10']
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat, "0")))
-        cat_vals = "\t".join(cat_vals)
-        annotate_text.append(f"{gid}\t{pos}\t10\t{cat_vals}")
+        cat_vals = sep.join(cat_vals)
+        # gid,pos = str(gid),str(pos)
+        annotate_text.append(cat_vals)
 
-    field_labels = "\t".join(sorted_cat)
-    field_colors = "\t".join([cat2style.get(c) for c in sorted_cat])
+    field_labels = sep.join(sorted_cat)
+    field_colors = sep.join([cat2style.get(c) for c in sorted_cat])
     template_text = template_text.format(
-        dataset_label=dataset_label,
+        dataset_label=dataset_name,
         field_colors=field_colors,
         field_labels=field_labels,
-        legend_text=deduced_legend(cat2style, sep="\t", info_name=dataset_label),
+        legend_text=deduced_legend(cat2style, sep=sep, info_name=dataset_name),
     )
     final_text = template_text + "\n" + "\n".join(annotate_text)
     return final_text
