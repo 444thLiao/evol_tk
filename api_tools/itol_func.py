@@ -283,7 +283,7 @@ def to_color_range(
     template_text = template_text.format(
         dataset_label=dataset_name, legend_text=legend_text
     )
-    rows = [sep.join(ID, color, str(ID2info[ID]))
+    rows = [sep.join([ID, color, str(ID2info[ID])])
             for ID, color in id2color.items()]
     template_text = replacing_params(template_text, other_params)
     return template_text + "\n".join(rows)
