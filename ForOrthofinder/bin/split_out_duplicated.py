@@ -392,7 +392,7 @@ def main(infile, prokka_o, use_gbk=False, use_pattern=False, threads=20, num_nei
 
 
 @click.command(help="This script is mainly for splitting duplicated Orthogroups according to the similarity of their neighbours.")
-@click.option("-i", "infile", help='input file. normally is the concated orthfinder output')
+@click.option("-i", "infile", help='input file. normally is the orthfinder ouput table')
 @click.option("-o", "ofile", help='output file')
 @click.option("-p", "prokka_dir", help='path of prokka output')
 @click.option("-gbk", "use_gbk", is_flag=True, default=False, help='normally it use gff')
@@ -406,7 +406,8 @@ def cli(infile, prokka_dir, ofile, use_gbk, use_pattern, threads, num_neighbour)
     if not dirname(ofile):
         os.makedirs(dirname(ofile))
     modify_df.to_csv(ofile, sep='\t', index=1)
-
+    
+# python ~/script/evol_tk/ForOrthofinder/bin/split_out_duplicated.py -i ./data_processing/of_out/Results_Dec25/Orthogroups/Orthogroups.tsv -o ./test.tsv -p ./data_processing/20211224/prokka_o -nn 10
 
 if __name__ == '__main__':
     cli()

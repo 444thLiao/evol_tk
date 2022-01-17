@@ -10,7 +10,7 @@ import pandas as pd
 import plotly.graph_objs as go
 import plotly
 from plotly import tools
-from ..process_gbk.utils import fetch_total_length
+# from ..process_gbk.utils import fetch_total_length
 ### can sepratetly perform extracted_part and whole part blastn result
 def construct_plot4_splited(labels_df,fasta_dir,blastx_result,extracted_id,dendrogram_data,draw_loss_nasN = False,draw_only_loss_nasN = False,output_fig = False):
     '''

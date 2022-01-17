@@ -136,7 +136,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
     if not protein_files:
-        exit(f"error input proteins dir {in_proteins}")
+        exit(f"error input proteins dir {in_proteins} since no wanted files were found")
     if not exists(in_annotations):
         os.makedirs(in_annotations)
     if not pass_annotation:

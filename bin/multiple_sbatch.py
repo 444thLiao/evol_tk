@@ -54,9 +54,9 @@ def sbatch_all(
             fh.writelines(
                 f"#SBATCH --output={job_directory}/{prefix_name}{count_}.out\n"
             )
-            if fixed_cluster=='cl007':
+            if fixed_cluster.startswith('cl00'):
                 fh.writelines(f"#SBATCH -w {fixed_cluster} \n")
-            else:
+            elif fixed_cluster.lower() == 'others':
                 fh.writelines(f"#SBATCH --exclude=cl007 \n")
                 fh.writelines(f"#SBATCH -N 1 \n")
                 

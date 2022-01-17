@@ -72,7 +72,6 @@ def draw_barplot(plot_data):
 @click.option("-o", "output_file")
 @click.option("-s", "subset_samples")
 def cli(input_OG, output_file, subset_samples):
-
     plot_data = parse_OG_tab(input_OG)
 
 

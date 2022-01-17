@@ -154,7 +154,8 @@ def main(name=None,
          parallel=10,
          enable_check=True):
     # name = "Nitrospirae;"
-    # formats = 'fasta,protein-fasta'
+    # formats = ['genbank', 'fasta', 'rm', 'features', 'gff',
+    #         'protein-fasta', 'genpept', 'wgs', 'cds-fasta', 'rna-fna', 'rna-fasta', 'assembly-report', 'assembly-stats', 'all']
     # odir = '/share/home-user/thliao/data/NCBI_genbank'
     # db_dir
     formats = formats.split(',')
@@ -174,7 +175,7 @@ def main(name=None,
         new_domain2aids = {}
         for d, aids in domain2aids.items():
             old_d = aids[::]
-            curr_dir = join(db_dir, 'genbank', d)
+            curr_dir = join(db_dir, 'refseq', d)
             if 'fasta' in formats:
                 # check whether other kinds of files have been downloaded
                 sub_aids = [_ for _ in tqdm(aids)
@@ -195,7 +196,7 @@ def main(name=None,
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
                         "dry_run": False,
-                        "section": "genbank",
+                        "section": "refseq",
                         "parallel": parallel,
                         "output": db_dir,  # all genomes were downloaded to db_dir
                         "file_formats": formats})

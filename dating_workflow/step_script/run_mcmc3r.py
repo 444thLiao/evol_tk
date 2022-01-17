@@ -8,13 +8,17 @@ import pandas as pd
 from tqdm import tqdm
 
 from dating_workflow.bin.dating_pro import run, modify
-
+from glob import glob
 
 def run_mcmc3r(indir,odir,intree,clock=2,usedata=1):
     if not exists(odir):
         os.system(f'mkdir -p {odir}')
-    os.system(f'cp {indir}/04_mcmctree.ctl {odir}/')
-    os.system(f'ln -s `realpath {indir}/in.BV` {odir}/')
+    ctl = glob(f"{indir}/*.ctl")
+    if not ctl:
+        raise IOError('not ctl file')
+    
+    os.system(f'cp {ctl[0]} {odir}/04_mcmctree.ctl')
+    os.system(f'ln -sf `realpath {indir}/in.BV` {odir}/')
     param = {'treefile': intree,
               'clock': clock,
               'usedata': '1' if usedata ==1 else '2 ../in.BV 1',
@@ -24,8 +28,14 @@ def run_mcmc3r(indir,odir,intree,clock=2,usedata=1):
                     **param)
     with open(f'{odir}/04_mcmctree.ctl', 'w') as f1:
         f1.write(text)
-    cmd = f""" `which R` -e "setwd('{odir}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
+    cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('{odir}'); b = mcmc3r::make.beta(n=8, a=5, method='step-stones'); mcmc3r::make.bfctlf(b, ctlf='04_mcmctree.ctl', betaf='beta.txt')" """
     check_call(cmd,shell=1,executable='/home-user/thliao/anaconda3/bin/zsh')
+
+    _ctl = "04_mcmctree.ctl"
+    cmds = []
+    for _ in range(1, 9):
+        cmds.append(f"cd {odir}/{_}/ ; mcmctree {_ctl} > run.log ")
+    return cmds
 
 def main():
     pass
