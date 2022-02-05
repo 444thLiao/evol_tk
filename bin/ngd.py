@@ -165,7 +165,7 @@ def main(name=None,
             # should be assembly ID list
             domain2aids, cinfos = id2domain_to_ids(ids_list)
         elif name is not None:
-            domain2aids, cinfos = from_name2ids(name)
+            domain2aids, cinfos = from_name2ids(name,dataset=section)
         elif taxons is not None:
             domain2aids, cinfos = from_tid2ids(taxons)
 
@@ -203,7 +203,8 @@ def main(name=None,
 
     _d = {
         "dry_run": False,
-        "section": "genbank",
+        "section": section,
+        "groups":group,
         "parallel": parallel,
         "output": db_dir,  # all genomes were downloaded to db_dir
         "file_formats": formats}
