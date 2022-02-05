@@ -14,7 +14,7 @@ from subprocess import check_call
 import click
 from tqdm import tqdm
 
-from dating_workflow.bin.concat_aln import convert_genome_ID
+from dating_workflow.step_script import convert_genome_ID
 
 
 def run_cmd(cmd):
