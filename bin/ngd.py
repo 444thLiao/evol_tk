@@ -146,6 +146,29 @@ def batch_iter(iter, batch_size):
     n_iter.append(iter[batch_d: len(iter) + 1])
     return n_iter
 
+def check_not_down(formats,acc_set,domain,odir):
+    old_d = acc_set[::]
+    refseq_acc = [_ for _ in old_d if _.startswith('GCF')]
+    genbank_acc = [_ for _ in old_d if _.startswith('GCA')]
+
+    format2suffix = {'fasta':'*.fna.gz',
+                     "protein-fasta":"*.faa.gz",}
+    sub_aids_all = []
+    for f in formats:
+        if f in format2suffix:
+            suffix = format2suffix[f]
+            # check whether other kinds of files have been downloaded
+            sub_aids = []
+            for acc in refseq_acc:
+                if not glob(join(odir, 'refseq', domain, acc, suffix)):
+                    sub_aids.append(acc)
+            for acc in genbank_acc:
+                if not glob(join(odir, 'genbank', domain, acc, suffix)):
+                    sub_aids.append(acc)
+            sub_aids_all.extend(sub_aids)
+        else:
+            sub_aids_all.extend(refseq_acc+genbank_acc) 
+    return sub_aids_all
 
 def main(name=None,
          odir=None,
@@ -176,30 +199,10 @@ def main(name=None,
         downloaded_aids = []
         new_domain2aids = {}
         for d, aids in domain2aids.items():
-            old_d = aids[::]
-            refseq_acc = [_ for _ in old_d if _.startswith('GCF')]
-            genbank_acc = [_ for _ in old_d if _.startswith('GCA')]
-            if 'fasta' in formats:
-                # check whether other kinds of files have been downloaded
-                sub_aids = []
-                for acc in refseq_acc:
-                    if not glob(join(odir, 'refseq', d, acc, '*.fna.gz')):
-                        sub_aids.append(acc)
-                for acc in genbank_acc:
-                    if not glob(join(odir, 'genbank', d, acc, '*.fna.gz')):
-                        sub_aids.append(acc)
-                new_domain2aids[d] = sub_aids
-            else:
-                sub_aids = []
-                for acc in refseq_acc:
-                    if not glob(join(odir, 'refseq', d, acc)):
-                        sub_aids.append(acc)
-                for acc in genbank_acc:
-                    if not glob(join(odir, 'genbank', d, acc)):
-                        sub_aids.append(acc)
-                new_domain2aids[d] = sub_aids
+            sub_aids = check_not_down(formats,aids,d,odir)
+            new_domain2aids[d] = sub_aids
             downloaded_aids.extend(new_domain2aids[d])
-            tqdm.write(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
+            tqdm.write(f"domain: {d}, original number of ids: {len(aids)}, now ids: {len(new_domain2aids[d])} ")
     elif not enable_check and ids_list:
         # disable the check and give a list of ids_list
         downloaded_aids = ids_list[::]

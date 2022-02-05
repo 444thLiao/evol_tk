@@ -47,12 +47,12 @@ def cli(indir,
         tmp_dir=None,
         reformatted_name=True,
         force=False,
-        # force_prokka=False,
         prokka_p=" `which prokka`",
         thread=5,
         all_ids=None,
 thread_per_prokka=0,
-dry_run=False
+dry_run=False,
+protein=protein
         ):
     """
     It would use the downloaded protein first.
@@ -89,7 +89,9 @@ dry_run=False
             for p in paths:
                 p = indir+'/'+p
                 if exists(join(p,aid)):
-                    all_dir.append(glob(join(p, aid, '*.fna.gz'))[0])
+                    d = glob(join(p, aid, '*.fna.gz'))
+                    if d:
+                        all_dir.append(d[0])
                     break
     else:
         all_dir = [_
@@ -108,6 +110,15 @@ dry_run=False
     for p_dir in tqdm(all_dir):
         p_dir = dirname(p_dir)
         p_files = glob(join(p_dir, '*.faa.gz'))
+        if protein and p_files:
+            # if protein is given, it indicate that it use the downloaded protein file directly instead of the protein file annotated by prokka
+            faa = p_files[0]
+            run_cmd(f"gunzip -d -c {faa} > {faa.replace('.gz', '')}")
+            ofile = join(odir, basename(p_dir)) + '.faa'
+            cmd = f"ln -s `realpath {faa.replace('.gz', '')}` {ofile}"
+            jobs.append(cmd)
+            continue
+        
         ofile = join(odir, basename(p_dir)) + '.faa'
         if exists(ofile) and not force:
             # if the output faa exists and not force, pass  it
@@ -128,7 +139,7 @@ dry_run=False
                                            thread_per_prokka=thread_per_prokka,
                                            )
         if exists(prokka_cmd):
-            # output is a file instead of cmd.
+            # output is a file instead of cmd which means it has prokka_output already.
             prokka_ofile = prokka_cmd
             jobs2.append(f"ln -s `realpath {prokka_ofile}` {ofile}")
             continue
@@ -197,10 +208,12 @@ It includes
 @click.option("-gl", "genome_list", default=None,
               help="It will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path. It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-f', 'force', help='overwrite? mainly for prokka', default=False, required=False, is_flag=True)
+@click.option('-protein', 'protein', help='unzip protein file and link it to odir', 
+default=False, required=False, is_flag=True)
 @click.option('-np', 'num_parellel', default=5, help="num of processes could be parellel.. default is 10")
 @click.option('-t', 'thread_per_prokka', default=0, help="num of threads prokka used. default 0 means all threads of a server.")
 @click.option('-dry_run', 'dry_run', default=False, is_flag=True, help="output commands to './cmds' needed to run. It only includes the prokka part. You need to soft link/move them to the odir don't run it. ")
-def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka,dry_run):
+def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokka,dry_run,protein):
     if not exists(indir):
         raise IOError("input dir doesn't exist")
     if not exists(odir):
@@ -239,6 +252,7 @@ def main(indir, odir, tmp_dir, genome_list, num_parellel, force,thread_per_prokk
         thread=num_parellel,
         all_ids=all_ids,
         thread_per_prokka=thread_per_prokka,
+        protein=protein,
         dry_run=dry_run)
 
 
