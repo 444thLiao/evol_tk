@@ -52,7 +52,7 @@ def cli(indir,
         all_ids=None,
 thread_per_prokka=0,
 dry_run=False,
-protein=protein
+protein=False
         ):
     """
     It would use the downloaded protein first.
