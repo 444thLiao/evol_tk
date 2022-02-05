@@ -1,3 +1,4 @@
+#! /env/python
 """
 For implement some missing feature(but i need) for ncbi-genome-download
 """
@@ -225,7 +226,7 @@ def main(name=None,
 @click.option("-F", "formats", help='Which formats to download (default: %(default)s).'
                                     'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                                     'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_formats')),
-              default=NgdConfig.get_default('file_formats'))
+              default='fasta')
 @click.option("-o", "odir", help=f"Create output hierarchy in specified folder (default: {NgdConfig.get_default('output')})",
               default=NgdConfig.get_default('output'))
 @click.option("-size", "size_of_batch", help=f"The size of each batch.",
@@ -233,7 +234,7 @@ def main(name=None,
 @click.option("-p", "parallel", help=f"Run N downloads in parallel (default: 10)",
               default=5)
 @click.option("-id", "id_list", help=f" ',' separated assembly ids or a single file  ",
-              default=None)
+              default='')
 @click.option("-C", "enable_check", help=f"use summary file or use the id input directly",
               is_flag=True,default=True)
 @click.option("-s", "section", help=f"refseq or genbank",
@@ -243,7 +244,7 @@ def main(name=None,
 def cli(name, odir, taxons, formats, size_of_batch, parallel, enable_check,id_list,section,group):
     if exists(id_list):
         ids_list = [_ for _ in open(id_list).read().split('\n') if _]
-    elif type(id_list) == str:
+    elif type(id_list) == str and id_list:
         ids_list = id_list.split(',')
     else:
         ids_list=  None
