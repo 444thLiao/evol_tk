@@ -12,6 +12,7 @@ import click
 import ncbi_genome_download as ngd
 from ete3 import NCBITaxa
 from ncbi_genome_download import NgdConfig
+from ncbi_genome_download.core import select_candidates
 from tqdm import tqdm
 import pandas as pd
 import io
@@ -24,6 +25,7 @@ metadata_files_dir = f"{HOME}/.cache/ncbi-genome-download/"
 
 # genbank_bacteria_assembly_summary.txt
 def from_name2ids(phylum_name,
+dataset='genbank',
                   return_d2ids=False):
     """
     retrieve ids and metadata from genbank file
@@ -71,7 +73,7 @@ def from_name2ids(phylum_name,
     descend_ids = set(descend_ids)
     for domain, ids in domain2dids.items():
         d = domain.lower()
-        metadata = join(metadata_files_dir, f"genbank_{d}_assembly_summary.txt")
+        metadata = join(metadata_files_dir, f"{dataset}_{d}_assembly_summary.txt")
         tqdm.write(f'read {metadata} which last modified at : {time.ctime(os.path.getmtime(metadata))}')
         for row in tqdm(open(metadata)):
             if row.startswith("GC"):
@@ -100,7 +102,7 @@ def id2domain_to_ids(ids_list):
         tqdm.write(f'{len(missing_ids)} are missing in summary file.')
     return domain2aids, collect_info
 
-def from_tid2ids(taxons):
+def from_tid2ids(taxons,dataset='genbank'):
     ncbi = NCBITaxa()
     def desc_taxa(taxid):
         descendent_taxa = ncbi.get_descendant_taxa(taxid,intermediate_nodes=True)
@@ -112,16 +114,15 @@ def from_tid2ids(taxons):
 
         return descendent_taxas
 
-
     def get_aid_from_tid(all_taxas):
         tids = [_[0] for _ in all_taxas]
         aids = []
         for d in ["bacteria", 'archaea']:
-            metadata = join(metadata_files_dir, f"genbank_{d}_assembly_summary.txt")        
+            metadata = join(metadata_files_dir, f"{dataset}_{d}_assembly_summary.txt")
             a = pd.read_csv(io.StringIO('\n'.join(open(metadata).read().split('\n')[1:])), sep='\t')
             aids += list(a.loc[a['taxid'].astype(str).isin(tids),'# assembly_accession'])
-        return aids   
-     
+        return aids
+
     all_taxas = []
     for tid in taxons.split(';'):
         descendent_taxas = desc_taxa(int(tid))
@@ -129,7 +130,7 @@ def from_tid2ids(taxons):
 
     aids = get_aid_from_tid(all_taxas)
     return aids
-    
+
 # cids,cinfo = from_name2ids("Verrucomicrobia")
 
 def batch_iter(iter, batch_size):
@@ -152,12 +153,9 @@ def main(name=None,
          ids_list=None,
          size_of_batch=30,
          parallel=10,
-         enable_check=True):
-    # name = "Nitrospirae;"
-    # formats = ['genbank', 'fasta', 'rm', 'features', 'gff',
-    #         'protein-fasta', 'genpept', 'wgs', 'cds-fasta', 'rna-fna', 'rna-fasta', 'assembly-report', 'assembly-stats', 'all']
-    # odir = '/share/home-user/thliao/data/NCBI_genbank'
-    # db_dir
+         enable_check=True,
+         section='genbank',
+         group='bacteria'):
     formats = formats.split(',')
 
     odir = realpath(odir)
@@ -175,17 +173,33 @@ def main(name=None,
         new_domain2aids = {}
         for d, aids in domain2aids.items():
             old_d = aids[::]
-            curr_dir = join(db_dir, 'refseq', d)
+            refseq_acc = [_ for _ in old_d if _.startswith('GCF')]
+            genbank_acc = [_ for _ in old_d if _.startswith('GCA')]
             if 'fasta' in formats:
                 # check whether other kinds of files have been downloaded
-                sub_aids = [_ for _ in tqdm(aids)
-                            if not glob(join(curr_dir, _, '*.fna.gz'))]
+                sub_aids = []
+                for acc in refseq_acc:
+                    if not glob(join(db_dir, 'refseq', d, acc, '*.fna.gz')):
+                        sub_aids.append(acc)
+                for acc in genbank_acc:
+                    if not glob(join(db_dir, 'genbank', d, acc, '*.fna.gz')):
+                        sub_aids.append(acc)
+                new_domain2aids[d] = sub_aids
+            else:
+                sub_aids = []
+                for acc in refseq_acc:
+                    if not glob(join(db_dir, 'refseq', d, acc)):
+                        sub_aids.append(acc)
+                for acc in genbank_acc:
+                    if not glob(join(db_dir, 'genbank', d, acc)):
+                        sub_aids.append(acc)
                 new_domain2aids[d] = sub_aids
             downloaded_aids.extend(new_domain2aids[d])
             tqdm.write(f"domain: {d}, original number of ids: {len(old_d)}, now ids: {len(new_domain2aids[d])} ")
-    elif not enable_check and ids_list:        
+    elif not enable_check and ids_list:
         # disable the check and give a list of ids_list
         downloaded_aids = ids_list[::]
+
     _d = {
         "dry_run": False,
         "section": "genbank",
@@ -196,17 +210,11 @@ def main(name=None,
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
                         "dry_run": False,
-                        "section": "refseq",
+                        "section": section,
                         "parallel": parallel,
                         "output": db_dir,  # all genomes were downloaded to db_dir
+                        "groups":group,  # if not assign this, it will take long time to iterate all groups
                         "file_formats": formats})
-    # for batch_aids in tqdm(batch_iter(miss_ids, 20)):
-    #     ngd.download(**{"assembly_accessions": ','.join(batch_aids),
-    #                     "dry_run": False,
-    #                     "section": "refseq",
-    #                     "parallel": 2,
-    #                     "output": '/home-user/thliao/data/NCBI',  # all genomes were downloaded to db_dir
-    #                     "file_formats": 'fasta'})
     with open(join(odir, 'metadata.csv'), 'w') as f1:
         f1.write('\n'.join(cinfos))
 
@@ -228,14 +236,18 @@ def main(name=None,
               default=None)
 @click.option("-C", "enable_check", help=f"use summary file or use the id input directly",
               is_flag=True,default=True)
-def cli(name, odir, taxons, formats, size_of_batch, parallel,enable_check,id_list):
+@click.option("-s", "section", help=f"refseq or genbank",
+              default='genbank')
+@click.option("-g", "group", help=f"The NCBI taxonomic groups to download (default: bacteria).",
+              default='bacteria')
+def cli(name, odir, taxons, formats, size_of_batch, parallel, enable_check,id_list,section,group):
     if exists(id_list):
         ids_list = [_ for _ in open(id_list).read().split('\n') if _]
     elif type(id_list) == str:
         ids_list = id_list.split(',')
     else:
         ids_list=  None
-    
+
     main(name=name,
          odir=odir,
          taxons=taxons,
@@ -243,7 +255,9 @@ def cli(name, odir, taxons, formats, size_of_batch, parallel,enable_check,id_lis
          ids_list=ids_list,
          size_of_batch=size_of_batch,
          parallel=parallel,
-         enable_check=enable_check)
+         enable_check=enable_check,
+         section=section,group=group
+         )
 
 
 if __name__ == '__main__':

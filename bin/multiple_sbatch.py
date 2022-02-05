@@ -65,6 +65,7 @@ def sbatch_all(
             for cmd in batch_cmds:
                 fh.writelines(cmd + "\n")
         os.system("sbatch %s >/dev/null" % job_file)
+        time.sleep(0.5)
         count_ += 1
 
 
