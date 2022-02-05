@@ -156,10 +156,13 @@ def main(name=None,
          parallel=10,
          enable_check=True,
          section='genbank',
-         group='bacteria'):
+         group='bacteria',
+         dry_run=False):
     formats = formats.split(',')
-
-    odir = realpath(odir)
+    if odir is None:
+        odir = db_dir
+    else:
+        odir = realpath(odir)
     if enable_check:
         if ids_list:
             # should be assembly ID list
@@ -180,19 +183,19 @@ def main(name=None,
                 # check whether other kinds of files have been downloaded
                 sub_aids = []
                 for acc in refseq_acc:
-                    if not glob(join(db_dir, 'refseq', d, acc, '*.fna.gz')):
+                    if not glob(join(odir, 'refseq', d, acc, '*.fna.gz')):
                         sub_aids.append(acc)
                 for acc in genbank_acc:
-                    if not glob(join(db_dir, 'genbank', d, acc, '*.fna.gz')):
+                    if not glob(join(odir, 'genbank', d, acc, '*.fna.gz')):
                         sub_aids.append(acc)
                 new_domain2aids[d] = sub_aids
             else:
                 sub_aids = []
                 for acc in refseq_acc:
-                    if not glob(join(db_dir, 'refseq', d, acc)):
+                    if not glob(join(odir, 'refseq', d, acc)):
                         sub_aids.append(acc)
                 for acc in genbank_acc:
-                    if not glob(join(db_dir, 'genbank', d, acc)):
+                    if not glob(join(odir, 'genbank', d, acc)):
                         sub_aids.append(acc)
                 new_domain2aids[d] = sub_aids
             downloaded_aids.extend(new_domain2aids[d])
@@ -200,21 +203,23 @@ def main(name=None,
     elif not enable_check and ids_list:
         # disable the check and give a list of ids_list
         downloaded_aids = ids_list[::]
-
+    if dry_run:
+        with open(f'{odir}/downloaded_aids.list','w') as f1:
+            f1.write('\n'.join(downloaded_aids))
     _d = {
-        "dry_run": False,
+        "dry_run": dry_run,
         "section": section,
         "groups":group,
         "parallel": parallel,
-        "output": db_dir,  # all genomes were downloaded to db_dir
+        "output": odir, 
         "file_formats": formats}
     tqdm.write(f'params is {_d}')
     for batch_aids in tqdm(batch_iter(downloaded_aids, size_of_batch)):
         ngd.download(**{"assembly_accessions": ','.join(batch_aids),
-                        "dry_run": False,
+                        "dry_run": dry_run,
                         "section": section,
                         "parallel": parallel,
-                        "output": db_dir,  # all genomes were downloaded to db_dir
+                        "output": odir,  
                         "groups":group,  # if not assign this, it will take long time to iterate all groups
                         "file_formats": formats})
     with open(join(odir, 'metadata.csv'), 'w') as f1:
@@ -242,7 +247,9 @@ def main(name=None,
               default='genbank')
 @click.option("-g", "group", help=f"The NCBI taxonomic groups to download (default: bacteria).",
               default='bacteria')
-def cli(name, odir, taxons, formats, size_of_batch, parallel, enable_check,id_list,section,group):
+@click.option("-dry_run", "dry_run", help=f"If given, only output the id needed to be downloaded",
+              is_flag=True,default=False)
+def cli(name, odir, taxons, formats, size_of_batch, parallel, enable_check,id_list,section,group,dry_run):
     if exists(id_list):
         ids_list = [_ for _ in open(id_list).read().split('\n') if _]
     elif type(id_list) == str and id_list:
@@ -258,7 +265,7 @@ def cli(name, odir, taxons, formats, size_of_batch, parallel, enable_check,id_li
          size_of_batch=size_of_batch,
          parallel=parallel,
          enable_check=enable_check,
-         section=section,group=group
+         section=section,group=group,dry_run=dry_run
          )
 
 
