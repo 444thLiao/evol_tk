@@ -31,7 +31,15 @@ def get_genomes(genome_list,
     #     genome_list = join(indir, 'selected_genomes.txt')
     if genome_list is None:
         return
-    rows = open(genome_list, 'r').read().split('\n')
+    if ',' in genome_list:
+        list_vals = [_.strip() for _ in genome_list.split(',')]
+        if os.path.isfile(list_vals[0]):
+            rows = []
+            rows.extend(open(genome_list, 'r').read().split('\n'))
+        else:
+            return {k:k for k in list_vals}  # simple id list
+    else:
+        rows = open(genome_list, 'r').read().split('\n')
     
     final_name2grouping = defaultdict(set)
     for row in rows:
