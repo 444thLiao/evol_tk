@@ -57,22 +57,30 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
             idir = idir.strip()
             file_list.extend(glob(join(idir, f'*{suffix}')))
 
+    of2f_list = {}
+    for f in file_list:
+        n_f = join(odir, 'tmp', basename(f))
+        if n_f in of2f_list:
+            of2f_list[n_f].extend([f])
+        else:
+            of2f_list[n_f] = [f]
+
     if name2prefix is not None:
         all_prefix = [_ for k in name2prefix.values() for _ in k]
         os.makedirs(join(odir, 'tmp'), exist_ok=1)
         new_file_list = []
         tqdm.write('iterating files to collect with giving genome ids')
-        for f in tqdm(file_list):
-            records = SeqIO.parse(f, format='fasta')
+        for n_f,f_list in tqdm(of2f_list.items()):
+
+            records = [_ for f in f_list for _ in SeqIO.parse(f, format='fasta')]
             
             records = [_
                        for _ in records
                        if _.id in all_prefix]
             if (not records) or (len(records) == 1):
-                #import pdb;pdb.set_trace()
                 print(f'no available (or only one) record could be used in {f}')
                 continue
-            n_f = join(odir, 'tmp', basename(f))
+            
             if removed_gene_list is not None:
                 records = [_ for _ in records
                            if _.id not in removed_gene_list]
