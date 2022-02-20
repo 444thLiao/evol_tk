@@ -13,7 +13,7 @@ def read_table(infile,**kwargs):
         df = pd.read_csv(infile,**kwargs)
     return df
     
-def _get_tophit(gid2locus,top_hit):
+def get_tophit(gid2locus,top_hit):
                 
     if top_hit:
         gid2locus = {k:sorted(v,
@@ -28,7 +28,7 @@ def _get_tophit(gid2locus,top_hit):
                       for k,v in gid2locus.items()}
     return gid2locus
 
-def _parse_blastp(ofile,match_ids=[],top_hit = False):
+def parse_blastp(ofile,match_ids=[],top_hit = False):
     if not match_ids:
         gid2locus = defaultdict(list)
     else:
@@ -41,10 +41,10 @@ def _parse_blastp(ofile,match_ids=[],top_hit = False):
             gid2locus[sep_v[1]].append((locus,evalue))
         if not match_ids:
             gid2locus[sep_v[1]].append((locus,evalue))
-    gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
+    gid2locus = get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
-def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
+def parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
     # deal with --tblout
     gid2locus = defaultdict(list)
     for row in open(ofile, 'r'):
@@ -60,11 +60,11 @@ def _parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
             gid2locus[gene_id].append((locus_tag, evalue))
         else:
             gid2locus[gene_id].append((locus_tag, evalue))
-    gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
+    gid2locus = get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
 
 
-def _parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):
+def parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):
     # deal with --tblout
     gid2locus = defaultdict(list)
     for row in open(ofile, 'r'):
@@ -80,23 +80,8 @@ def _parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):
             gid2locus[gene_id].append((locus_tag, evalue))
         else:
             gid2locus[gene_id].append((locus_tag, evalue))
-    gid2locus = _get_tophit(gid2locus,top_hit=top_hit)
+    gid2locus = get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus
-
-
-# def _parse_hmmscan(ofile):
-#     gid2locus2ko = defaultdict(list)
-#     for row in open(ofile):
-#         if row.startswith('#'):
-#             continue
-#         r = row.split(' ')
-#         r = [_ for _ in r if _]
-#         gene_id = r[0]
-#         ko = r[2]
-#         evalue = float(r[4])
-#         gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
-#             (gene_id, ko, evalue))
-#     return gid2locus2ko
 
 def read_summary(metadata):
     metadata_df = pd.read_csv(

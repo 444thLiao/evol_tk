@@ -87,7 +87,6 @@ def generate_phy_file(outfile,
                       partition_method='genes',
                       name_convertor=None):
     """
-
     :param outfile:
     :param record_pos_info:
     :param genome_ids: should be the same format id as the record_pos_info, the transforming process should not occur there.
@@ -163,6 +162,13 @@ def generate_phy_file(outfile,
 
 
 def get_genes(indir,suffix,gene_list):
+    order_seqs = []
+    if ',' in indir:
+        for _ in [p.strip() for p in indir.split(',')]:
+            seqs = get_genes(_,suffix,gene_list)
+            order_seqs.extend(seqs)
+        return order_seqs
+
     order_seqs = sorted(glob(join(indir, f'*.{suffix}')))
     if gene_list is not None:
         _genes = open(gene_list).read().split('\n')
@@ -226,7 +232,7 @@ def concat_records(order_seqs,
 
 
 @click.command(help="For concating each aln, if it has some missing part of specific genome, it will use gap(-) to fill it")
-@click.option("-i", "indir", help="The input directory which contains all separate aln files")
+@click.option("-i", "indir", help="The input directory which contains all separate aln files; Multiple paths could be provieded and separated by comma. ")
 @click.option("-o", "outfile", default=None, help="Path of output concatenated aln file.")
 @click.option("-s", "suffix", default='aln', help="suffix for input files [aln]")
 @click.option("-gl", "genome_list", default=None, help="indicate the alternative name or path.")
@@ -278,7 +284,7 @@ def main(indir,
                                                  suffix,
                                                  simple_concat)
     print(f"Found {len([k for k,v in g2num_miss.items() if v==0])} backbone genes")
-    if outfile is None:
+    if outfile is None and ',' not in indir:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
         outphy = join(indir, 'concat_aln.phy')
