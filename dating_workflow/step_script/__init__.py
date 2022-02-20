@@ -35,7 +35,8 @@ def get_genomes(genome_list,
         list_vals = [_.strip() for _ in genome_list.split(',')]
         if os.path.isfile(list_vals[0]):
             rows = []
-            rows.extend(open(genome_list, 'r').read().split('\n'))
+            for l in list_vals:
+                rows.extend(open(l, 'r').read().split('\n'))
         else:
             return {k:k for k in list_vals}  # simple id list
     else:
