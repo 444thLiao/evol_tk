@@ -70,7 +70,7 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     
     
     # add cache to avoid iterate it again and again
-    t = ''.join(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)]))
+    t = ''.join(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)] + [str(evalue)]))
     m = hashlib.md5(t.encode())
     hash_str = m.hexdigest()
     

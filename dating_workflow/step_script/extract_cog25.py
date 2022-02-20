@@ -74,7 +74,7 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     tqdm.write('start to read/parse output files')
     cdd_anno_files = glob(join(cog_out_dir, '*.out'))
 
-    t = ''.join(sorted(cdd_anno_files + [str(top_hit)]))
+    t = ''.join(sorted(cdd_anno_files + [str(top_hit)] + [str(evalue)] ))
     m = hashlib.md5(t.encode())
     hash_str = m.hexdigest()
     cache_file = join(cog_out_dir, f'.tmp{hash_str}')
