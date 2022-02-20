@@ -30,7 +30,13 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, 
         os.makedirs(odir)
     if suffix:
         suffix = '.' + suffix
-    file_list = glob(join(in_dir, f'*{suffix}'))
+    if not ',' in in_dir:
+        file_list = glob(join(in_dir, f'*{suffix}'))
+    else:
+        file_list = []
+        for idir in in_dir.split(','):
+            idir = idir.strip()
+            file_list.extend(glob(join(idir, f'*{suffix}')))
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
     for in_file in file_list:

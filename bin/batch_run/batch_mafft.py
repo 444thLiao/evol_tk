@@ -49,7 +49,14 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
         os.makedirs(odir)
     if suffix:
         suffix = '.' + suffix
-    file_list = glob(join(in_dir, f'*{suffix}'))
+    if not ',' in in_dir:
+        file_list = glob(join(in_dir, f'*{suffix}'))
+    else:
+        file_list = []
+        for idir in in_dir.split(','):
+            idir = idir.strip()
+            file_list.extend(glob(join(idir, f'*{suffix}')))
+
     if name2prefix is not None:
         all_prefix = [_ for k in name2prefix.values() for _ in k]
         os.makedirs(join(odir, 'tmp'), exist_ok=1)
@@ -93,7 +100,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
 
 
 @click.command()
-@click.option('-i', 'indir',help="input directory which stodge files with suffix. Normally, it should contain faa files directly.  ")
+@click.option('-i', 'indir',help="input directory which stodge files with suffix. Normally, it should contain faa files directly. Multiple indir could be provided with comma-separated ")
 @click.option('-o', 'odir',help="output directory which stodge the ouput aln files.")
 @click.option('-s', 'suffix', help='suffix for files', default='faa')
 @click.option('-ns', 'new_suffix', default='aln')
