@@ -167,7 +167,9 @@ def parse_sra_xml(xml_text):
         result_bucket.append(dict(srr2info))
     return result_bucket
 
-
+def parse_ipg_xml(xml_text):
+    pass
+    
 # TODO    
 # list(soup.find('SRAFiles').children)
 # [<SRAFile cluster="public" date="2020-06-11 11:02:36" filename="Iowa24_S16_L001_R1_001.fastq" md5="15bcfc0f45b12bfb78bf63deef6cab0c" semantic_name="fastq" size="72623128" sratoolkit="0" supertype="Original"><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="GCP" url="gs://sra-pub-src-10/SRR11994766/Iowa24_S16_L001_R1_001.fastq.1"/><Alternatives access_type="Use Cloud Data Delivery" free_egress="-" org="AWS" url="s3://sra-pub-src-11/SRR11994766/Iowa24_S16_L001_R1_001.fastq.1"/></SRAFile>,

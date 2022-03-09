@@ -212,7 +212,7 @@ def concat_records(order_seqs,
         aln_record = AlignIO.read(aln_file, format='fasta')
         length_this_aln = aln_record.get_alignment_length()
         # record the partition
-        name = "part%s" % int(idx + 1)
+        name = f"{aln_file_name}"
         start, end = las_pos + 1, length_this_aln + las_pos
         las_pos = end
         record_pos_info.append((name, start, end, aln_record))

@@ -58,7 +58,7 @@ def parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
         evalue = float(r[4])
         if filter_evalue and evalue <= filter_evalue:
             gid2locus[gene_id].append((locus_tag, evalue))
-        else:
+        elif filter_evalue is None:
             gid2locus[gene_id].append((locus_tag, evalue))
     gid2locus = get_tophit(gid2locus,top_hit=top_hit)
     return gid2locus

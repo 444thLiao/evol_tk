@@ -136,6 +136,8 @@ class EntrezDownloader:
                     error = f"[STATUS {response.status_code}] An error occurred, you may see a response text here: {response.text}"
             except Exception as e:
                 error = f"[UNKNOWN ERROR] {e}"
+            except KeyboardInterrupt:
+                break
 
         if error:
             result_collector.add_failed(ids)
@@ -178,6 +180,8 @@ class EntrezDownloader:
                     error = f"[STATUS {response.status_code}] An error occurred, you may see a response text here: {response.text}"
             except Exception as e:
                 error = f"[UNKNOWN ERROR] {e}"
+            except KeyboardInterrupt:
+                break
 
         if error:
             result_collector.add_failed(ids)
@@ -213,7 +217,8 @@ class EntrezDownloader:
                     error = f"[STATUS {response.status_code}] An error occurred, you may see a response text here: {response.text}"
             except Exception as e:
                 error = f"[UNKNOWN ERROR] {e}"
-
+            except KeyboardInterrupt:
+                break
         if error:
             result_collector.add_failed(ids)
             print(error)
@@ -249,7 +254,8 @@ class EntrezDownloader:
                     error = f"[STATUS {response.status_code}] An error occurred, you may see a response text here: {response.text}"
             except Exception as e:
                 error = f"[UNKNOWN ERROR] {e}"
-
+            except KeyboardInterrupt:
+                break
         if error:
             result_collector.add_failed(ids)
             print(error)

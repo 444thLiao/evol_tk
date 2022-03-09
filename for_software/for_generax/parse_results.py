@@ -3,7 +3,6 @@ from ete3 import Tree
 from api_tools.itol_func import pie_chart
 from bs4 import BeautifulSoup
 
-
 def get_up_till_root(n):
     if n.up is not None:
         return [n.up] + get_up_till_root(n.up)

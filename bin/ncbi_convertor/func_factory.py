@@ -125,19 +125,19 @@ class NCBI_convertor:
     # def get_info():
     #     pass
 
-    def get_db_summary(self, all_GI=None, method="update"):
+    def get_db_summary(self, all_GI=None, mode="update"):
         if self.dbname in ['protein','nuccore']:
             # NCBI start to abandon GI
             all_GI = self.origin_ids
         else:
             if self.GI is None:
                 self.get_GI()
-            if method == "update":
+            if mode == "update":
                 all_GI = list(set(self.GI.values()))
                 all_GI = list(
                     set(all_GI).difference([v["GI"] for k, v in self.dbsummary.items()])
                 )
-            else:
+            elif mode == 'redo':
                 all_GI = list(set(self.GI.values()))
 
         tqdm.write("Getting summary from each one")
@@ -188,10 +188,10 @@ class NCBI_convertor:
                     info_dict["TaxId"] = info_dict["SpeciesTaxid"]
                 self.dbsummary.update(_dict)
 
-    def get_taxon(self,):
+    def get_taxon(self,mode='update'):
         if self.dbname not in tax_convertable_dbs:
             raise IOError(f"the original ID not in '{' '.join(tax_convertable_dbs)}' ")
-        self.get_db_summary()    
+        self.get_db_summary(mode)    
         for aid, result in self.dbsummary.items():
             if 'TaxId' in result:
                 self.tids[aid] = int(result["TaxId"])
@@ -204,28 +204,36 @@ class NCBI_convertor:
     def construct_taxon_info_dict(self):
         pass
 
-    def get_taxons_from_tid(self):
-        self.get_taxon()
+    def get_taxons_from_tid(self,tids):
+        if len(self.tids) == 0:
+            self.get_taxon()
+        else:
+            self.get_taxon('update')
+        if tids is None:
+            tids = self.tids
         id2taxon = {}
-        for ori_id, tid in self.tids.items():
-            taxon_dict = tax2tax_info(tid)
-            id2taxon[ori_id] = taxon_dict
+        for ori_id, tid in tqdm(tids.items()):
+            try:
+                taxon_dict = tax2tax_info(tid)
+                id2taxon[ori_id] = taxon_dict
+            except ValueError as e:
+                print(e)
         return id2taxon
 
     def update_all(self):
         # todo: update whole convertor when it add extra ID
         pass
-
+    
     def pid2assembly(self,batch_size=50):
         if self.dbname != "protein":
             raise SyntaxError("source database must be protein")
         results, failed = self.edl.efetch(
             db="protein",
             ids=self.origin_ids,
-            retmode="ipg",
-            retype="xml",
-            batch_size=batch_size,
-            result_func=lambda x: parse_ipg(x),
+            retype="ipg",
+            retmode="text",
+            batch_size= batch_size,
+            result_func= lambda x: parse_ipg(x),
         )
         pid2assembly_dict = defaultdict(dict)
         for pid, nuc_info, assembly_ID in tqdm(results):

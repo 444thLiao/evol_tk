@@ -21,9 +21,17 @@ def id2tax(id_list, redo=False, db="protein"):
 
     pid2info_dict = defaultdict(dict)
     for oid in convertor.origin_ids:
-        pid2info_dict[oid]['GI'] = convertor.GI[oid]
-        pid2info_dict[oid]['taxid'] = convertor.tids[oid]
+        if convertor.GI is not None:
+            # NCBI has removed the GI gradually. We could use the id directly instead of transfering it into GI.
+            pid2info_dict[oid]['GI'] = convertor.GI[oid]
+        pid2info_dict[oid]['taxid'] = convertor.tids.get(oid,'NA')
         pid2info_dict[oid]['accession'] = oid
+    id2taxon = convertor.get_taxons_from_tid()
+    for pid,_d in pid2info_dict.items():
+        _d.update(id2taxon.get(pid,{}))
+    for id in id_list:
+        if id not in pid2info_dict:
+            pid2info_dict[id] = {}
     access_intermedia(pid2info_dict, suffix=suffix)
     return pid2info_dict
 
