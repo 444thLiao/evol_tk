@@ -127,7 +127,7 @@ def unpack_gb(prot_t):
         if v:
             _cache_dict[f"isolation_source"] = ";".join(v)
         v = source_fea.qualifiers.get("db_xref", [])
-        v = [_ for _ in v if _]
+        v = [_ for _ in v if _ and _.startswith('taxon')]
         if v:
             _cache_dict[f"taxon"] = int(v[0].split(":")[-1])
     # above annotations
@@ -218,7 +218,7 @@ Id      Source  Nucleotide Accession    Start   Stop    Strand  Protein Protein 
 
 def get_GI(ids, db, edl, no_order=False):
     tqdm.write("Get GI......")
-    ids = list(ids)
+    ids = [str(_) for _ in ids]
     if no_order:
         results, failed = edl.esearch(
             db=db, ids=ids, result_func=lambda x: eread(x)["IdList"], batch_size=50
@@ -235,9 +235,9 @@ def get_GI(ids, db, edl, no_order=False):
     # extra
     if db == "assembly":
         remained_ids = [
-            _.replace("GCF", "GCA")
+            str(_).replace("GCF", "GCA")
             for _ in ids
-            if _.startswith("GCF") and _ not in id2gi
+            if str(_).startswith("GCF") and _ not in id2gi
         ]
         if remained_ids:
             results, failed = edl.esearch(
