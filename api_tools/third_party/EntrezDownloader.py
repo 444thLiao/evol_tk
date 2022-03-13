@@ -370,7 +370,7 @@ class EntrezDownloader:
             f = executor.submit(
                 self._general_batch,
                 db=db,
-                ids=" OR ".join(ids[start : start + num]),
+                ids=" OR ".join([str(_) for _ in ids[start : start + num]]),
                 result_collector=results,
                 result_func=result_func,
                 emode="esearch",

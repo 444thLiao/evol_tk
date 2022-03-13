@@ -35,6 +35,28 @@ def cal_HPD_CI(df,burn_in=2000):
         col2CI[colname] = az.hdi(vals,hdi_prob=.95)
     return col2CI
 
+
+def parse_row(r):
+    r = [_.strip("(),") for _ in r.split(' ') if _]
+    r = f"{r[0]}\t{r[1]}\t{r[4]}\t{r[5]}\t{r[6]}"
+    return r
+        
+    
+def read_result_CI(logfile):
+    marker ="Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width"
+    rows = open(logfile).read().split('\n')
+    idx = rows.index(marker)
+    rows = rows[idx+2:]
+    _rows = []
+    for r in rows:
+        if not r:
+            break
+        _rows.append(r)
+    rows = [parse_row(_) for _ in _rows]
+    mcmc_df = pd.read_csv(io.StringIO('\n'.join(rows)), sep='\t')
+    mcmc_df.columns=['Name','Posterior means','95%HPD CI min','95%HPD CI max','95%HPD CI width']
+    return mcmc_df
+    
 import io
 def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
     if all_col:
@@ -50,6 +72,7 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
         mcmc_df = pd.read_csv(io.StringIO(text), sep='\t', index_col=0)    
 
     if pd.isna(mcmc_df.iloc[-1,-1]):
+        # if not completed
         mcmc_df = mcmc_df.drop(mcmc_df.index[-1])
     mcmc_df = mcmc_df.loc[~mcmc_df.isna().any(1),:]
     node_names = [_ for _ in mcmc_df.columns if _.startswith('t_n')]
@@ -57,23 +80,31 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
     paras = [_ for _ in mcmc_df.columns if _.startswith('mu') or _.startswith('sigma2')]
     
     post_df = pd.DataFrame(columns=['Posterior mean time (100 Ma)',
-                                  'CI_width','CIs'],
-                          index=node_names )
+                                    'CI_width','CIs'],
+                           index=node_names )
     
     raw_n2CI = cal_HPD_CI(mcmc_df,burn_in=burn_in)
     if 'lnL' in mcmc_df.columns:
         post_df.loc['lnL',:] = 'NA'
         post_df.loc['lnL',:] = [round(mcmc_df.loc[:,'lnL'].mean(),2),
-                            round(raw_n2CI['lnL'][1]-raw_n2CI['lnL'][0] ,2),
-                            f"{round(raw_n2CI['lnL'][0],2)} - {round(raw_n2CI['lnL'][1],2)}",
-                            ]
+                                round(raw_n2CI['lnL'][1]-raw_n2CI['lnL'][0] ,2),
+                                f"{round(raw_n2CI['lnL'][0],2)} - {round(raw_n2CI['lnL'][1],2)}",
+                                ]
     
-    n2CI = {k: f"{round(v[0]*scale,2)} - {round(v[1]*scale,2)}" for k,v in raw_n2CI.items()}
-    n2mean_time = {k:round(v*scale,2) for k,v in mcmc_df.mean().to_dict().items()}
+    n2CI = {k: f"{round(v[0]*scale,2)} - {round(v[1]*scale,2)}" 
+            for k,v in raw_n2CI.items()}
+    n2mean_time = {k:round(v*scale,2) 
+                   for k,v in mcmc_df.mean().to_dict().items()}
     
-    post_df.loc[node_names,'Posterior mean time (100 Ma)'] = [n2mean_time[_] for _ in post_df.index if _ !='lnL']
-    post_df.loc[node_names,'CIs'] = [n2CI[_] for _ in post_df.index if _ !='lnL']
-    post_df.loc[node_names,'CI_width'] = [raw_n2CI[_][1]*scale-raw_n2CI[_][0]*scale for _ in post_df.index if _ !='lnL']    
+    post_df.loc[node_names,'Posterior mean time (100 Ma)'] = [n2mean_time[_] 
+                                                              for _ in post_df.index 
+                                                              if _ !='lnL']
+    post_df.loc[node_names,'CIs'] = [n2CI[_] 
+                                     for _ in post_df.index 
+                                     if _ !='lnL']
+    post_df.loc[node_names,'CI_width'] = [raw_n2CI[_][1]*scale-raw_n2CI[_][0]*scale 
+                                          for _ in post_df.index 
+                                          if _ !='lnL']    
     return post_df
     
     

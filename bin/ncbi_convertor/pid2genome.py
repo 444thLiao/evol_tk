@@ -32,11 +32,13 @@ def main(infile, ofile, force=False):
     with open(ofile, 'w') as f1:
         print('#accession ID\tGI\tassembly_ID\tnuccore ID\tstart\tend\tstrand', file=f1)
         for pid in convertor.origin_ids:
-            GI = convertor.GI[pid]
+            if convertor.GI is not None:
+                GI = convertor.GI[pid]
+            else:
+                GI = 'NA'
             _dict = pid2assembly_dict[pid]
-            assembly_id = _dict['assembly']
-            info = _dict['nuc_info']
-            print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str, info)), file=f1)
+            for assembly_id,info in zip(_dict['assembly'],_dict['nuc_info']):
+                print(f'{pid}\t{GI}\t{assembly_id}\t' + '\t'.join(map(str, info)), file=f1)
     tqdm.write('finish writing into ' + ofile)
 
 

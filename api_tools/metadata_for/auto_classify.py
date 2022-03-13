@@ -1,15 +1,40 @@
+from email.policy import default
 import pandas as pd
 from tqdm import tqdm
 from os.path import join, expanduser, dirname
-
+from collections import defaultdict
 # from api_tools.itol_func import *
 fpath = join(dirname(__file__), "keyword.csv")
 
 
 kw_df = pd.read_csv(fpath, sep="\t", index_col=0)
 kw_dict = kw_df.to_dict(orient="index")
-
-
+import re
+def simplify_cols(df):
+    ori_columns = list(df.columns)
+    ori2new = {c:re.sub("[^0-9a-zA-Z]+", '',c).lower() for c in ori_columns}
+    highly_similar_columns = defaultdict(list)
+    for o,n in ori2new.items():
+        highly_similar_columns[n].append(o)
+    
+    for new_col,old_columns in highly_similar_columns.items():
+        if len(old_columns)>1:
+            df[new_col.replace('attribute','')] = df[old_columns].apply(lambda x: ';;'.join(sorted(list(set(x.dropna().astype(str))))),
+                                                                        axis=1)
+            df.drop(columns=old_columns)
+    valuable_cols = [_ for _ in open('./useful_columns.list').read().split('\n') if _]
+    for n,o in highly_similar_columns.items():
+        if set(o).intersection(set(valuable_cols)):
+            valuable_cols+=k
+    valuable_cols = set(valuable_cols)
+    valuable_cols = [_ for _ in valuable_cols if _ in df.columns]
+    all_columns = list(df.columns)
+    idx = all_columns.index('ExclFromRefSeq') +1
+    for _ in valuable_cols:
+        all_columns.remove(_)
+        all_columns.insert(idx,_)
+    df = df.reindex(columns = all_columns)
+        
 def _classificated(ori_df):
     kw1 = "classification(auto)"
     kw3 = "matched keyword(auto)"
