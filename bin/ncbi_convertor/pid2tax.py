@@ -17,16 +17,16 @@ def id2tax(id_list, redo=False, db="protein"):
     convertor = NCBI_convertor(id_list, db)
     suffix = 'protein2GI'
     convertor.check_cache(suffix=suffix, redo=redo)
-    convertor.get_taxon()
+    tids = convertor.get_taxon()
 
     pid2info_dict = defaultdict(dict)
     for oid in convertor.origin_ids:
         if convertor.GI is not None:
             # NCBI has removed the GI gradually. We could use the id directly instead of transfering it into GI.
             pid2info_dict[oid]['GI'] = convertor.GI[oid]
-        pid2info_dict[oid]['taxid'] = convertor.tids.get(oid,'NA')
+        pid2info_dict[oid]['taxid'] = tids.get(oid,'NA')
         pid2info_dict[oid]['accession'] = oid
-    id2taxon = convertor.get_taxons_from_tid()
+    id2taxon = convertor.get_taxons_from_tid(tids)
     for pid,_d in pid2info_dict.items():
         _d.update(id2taxon.get(pid,{}))
     for id in id_list:
@@ -50,22 +50,6 @@ def main(infile, ofile, db='protein', redo=False):
             taxid = info_dict.get('taxid', '')
             print(f"{id}\t{GI}\t{taxid}\t" + '\t'.join([info_dict.get(tax, '') for tax in taxons]), file=f1)
     tqdm.write('finish writing into ' + ofile)
-
-    # if start_at == 'protein':
-    #     if isinstance(id2annotate[order_id_list[0]], dict):
-    #         # it is a dict, so it contains other information or implemented GI. it may be passed over.
-    #         if 'GI' in id2annotate[order_id_list[0]]:
-    #             print("provided file already contains `GI` column(doesn't check the validation/completeness). Giving `force` param to overwrite/implement it. ")
-    #             if not force:
-    #                 id2gi = {k: id2annotate[k]['GI'] for k in order_id_list}
-    #
-    #     else:
-    #         # no header, just a list of IDs
-    #         pass
-    # elif start_at == 'genome':
-    #     exit("Use genome2tax instead")
-    # else:
-    #     raise SyntaxError('wrong input of start_at')
 
 
 @click.command()
