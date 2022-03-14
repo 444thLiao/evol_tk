@@ -204,7 +204,7 @@ class NCBI_convertor:
     def construct_taxon_info_dict(self):
         pass
 
-    def get_taxons_from_tid(self,tids):
+    def get_taxons_from_tid(self,tids=None):
         if len(self.tids) == 0:
             self.get_taxon()
         else:
