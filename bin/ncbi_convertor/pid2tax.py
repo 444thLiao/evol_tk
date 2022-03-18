@@ -17,7 +17,7 @@ def id2tax(id_list, redo=False, db="protein"):
     convertor = NCBI_convertor(id_list, db)
     suffix = 'protein2GI'
     convertor.check_cache(suffix=suffix, redo=redo)
-    tids = convertor.get_taxon()
+    tids = convertor.get_taxon('update')
 
     pid2info_dict = defaultdict(dict)
     for oid in convertor.origin_ids:

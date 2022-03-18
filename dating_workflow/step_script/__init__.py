@@ -5,6 +5,7 @@ from subprocess import check_call
 from Bio import SeqIO
 from tqdm import tqdm
 import os
+from glob import glob
 
 def run(cmd):
     check_call(cmd,
@@ -12,7 +13,18 @@ def run(cmd):
                stdout=open('/dev/null', 'w'),
                )
 
-
+def get_files(in_path,suffix):
+    suffix = suffix.strip('.')
+    files = []
+    if ',' in in_path:
+        in_path = in_path.split(',')
+    else:
+        in_path = [in_path]
+    for _ in in_path.split(','):
+        _f = glob(join(_, '*.' + suffix.strip('.')))
+        files.extend(_f)
+    return files
+    
 def get_genomes(genome_list,
                 simple_concat=True):
 
@@ -54,16 +66,15 @@ def get_genomes(genome_list,
 
 
 def get_tophit(gid2locus, top_hit):
+    gid2locus = {k: tuple(sorted(v,key=lambda x:x[1]))
+                 for k,v in gid2locus.items()}  # ascending
     if top_hit:
-        gid2locus = {k: sorted(v,
-                               key=lambda x: x[1])
-                     for k, v in gid2locus.items()}
         gid2locus = {k: [v[0][0]]
-        if v else []
+                     if v else []
                      for k, v in gid2locus.items()}
     else:
         gid2locus = {k: [_[0] for _ in v]
-        if v else []
+                     if v else []
                      for k, v in gid2locus.items()}
     return gid2locus
 
@@ -83,6 +94,7 @@ def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, top_hit=False):
             gid2locus[sep_v[1]].append((locus, evalue))
         if not match_ids:
             gid2locus[sep_v[1]].append((locus, evalue))
+
     gid2locus = get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
 
@@ -122,8 +134,7 @@ def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, gene_pos=0):
         if filter_evalue and evalue > filter_evalue:
             continue
         gid2locus[gene_id].append((locus_tag, evalue))
-    if top_hit:
-        gid2locus = get_tophit(gid2locus, top_hit=top_hit)
+    gid2locus = get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
 
 

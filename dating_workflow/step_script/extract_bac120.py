@@ -8,7 +8,7 @@ import hashlib
 import click
 from tqdm import tqdm
 
-from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes
+from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes,get_files
 
 HOME = os.getenv("HOME")
 pfam_db = f'{HOME}/data/protein_db/bac120/Pfam.v32.sub6.hmm'
@@ -120,7 +120,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
     gids = list(get_genomes(genome_list,True))    
-    protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
+    protein_files = get_files(in_proteins,suffix.strip('.'))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
     # gids = []

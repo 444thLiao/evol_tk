@@ -11,7 +11,7 @@ import hashlib
 import click
 from tqdm import tqdm
 
-from dating_workflow.step_script import parse_blastp, run, get_seq_and_write, write_out_stats,get_genomes
+from dating_workflow.step_script import parse_blastp, run, get_seq_and_write, write_out_stats,get_genomes,get_files
 
 HOME = os.getenv("HOME")
 resource_dir = f"{HOME}/data/protein_db/dating_resource"
@@ -132,7 +132,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
     gids = list(get_genomes(genome_list,True))
-    protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
+    protein_files = get_files(in_proteins,suffix)
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
     if not protein_files:
