@@ -20,7 +20,7 @@ def get_files(in_path,suffix):
         in_path = in_path.split(',')
     else:
         in_path = [in_path]
-    for _ in in_path.split(','):
+    for _ in in_path:
         _f = glob(join(_, '*.' + suffix.strip('.')))
         files.extend(_f)
     return files
