@@ -133,7 +133,7 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     t = earse_name(t)
     # iterate each calibration in calibration_dict
     for LCA, time in calibration_dict.items():
-        if LCA.upper() == 'ROOT':
+        if LCA.upper() in ['ROOT','OROOT'] :
             LCA_node = t
         else:
             names = LCA.split('|')

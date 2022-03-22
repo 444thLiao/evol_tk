@@ -11,6 +11,7 @@ from subprocess import check_call
 import click
 from Bio import SeqIO
 from tqdm import tqdm
+from dating_workflow.step_script import get_files
 
 default_db = '/home-user/sswang/db/diamond/kegg/latest/kegg'
 
@@ -48,9 +49,7 @@ def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=defau
     new_suffix = 'tab'
     if not exists(odir):
         os.makedirs(odir)
-    if suffix:
-        suffix = '.' + suffix
-    file_list = glob(join(in_dir, f'*{suffix}'))
+    file_list = get_files(in_dir,odir)
     if gids is not None:
         gids = set(gids)
         os.makedirs(join(odir, 'tmp'), exist_ok=1)

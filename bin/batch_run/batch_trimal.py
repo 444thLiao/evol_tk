@@ -7,7 +7,7 @@ from subprocess import check_call
 
 import click
 from tqdm import tqdm
-
+from dating_workflow.step_script import get_files
 command_template = "trimal -in {in_file} -out {o_file} -automated1 -resoverlap {resoverlap} -seqoverlap {seqoverlap}"
 
 
@@ -28,15 +28,8 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, 
     new_suffix = new_suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
-    if suffix:
-        suffix = '.' + suffix
-    if not ',' in in_dir:
-        file_list = glob(join(in_dir, f'*{suffix}'))
-    else:
-        file_list = []
-        for idir in in_dir.split(','):
-            idir = idir.strip()
-            file_list.extend(glob(join(idir, f'*{suffix}')))
+
+    file_list = get_files(in_dir,suffix)
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
     for in_file in file_list:

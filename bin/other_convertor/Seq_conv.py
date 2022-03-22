@@ -5,22 +5,35 @@ from os.path import *
 import os
 
 
-def gbk2faa(in_gbk,out_faa):
-    records = SeqIO.parse(in_gbk,format='genbank')
-    
+def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False):
+    records = SeqIO.parse(in_gbk, format="genbank")
+
     faa_list = []
     for contig in records:
+        idx = 1
         for fea in contig.features:
-            if fea.type == 'CDS':
-                seq = SeqRecord(seq=Seq(fea.qualifiers['translation'][0]),
-                            id=fea.qualifiers['locus_tag'][0],
-                            name=fea.qualifiers.get('gene',[''])[0],
-                            description=fea.qualifiers['product'][0])
+            if prefix:
+                seq_name = f"{prefix}_" + "{:05d}".format(idx)
+            else:
+                seq_name = fea.qualifiers.get("locus_tag", [""])[0]
+            if include_tRNA:
+                type_list = ["CDS", "tRNA"]
+            else:
+                type_list = ["CDS"]
+            if fea.type in type_list:
+                seq = SeqRecord(
+                    seq=Seq(fea.qualifiers["translation"][0]),
+                    id=seq_name,
+                    name=fea.qualifiers.get("gene", [""])[0],
+                    description=fea.qualifiers["product"][0],
+                )
                 faa_list.append(seq)
+                idx += 1
     if not exists(dirname(out_faa)):
         os.mkdir(dirname(out_faa))
-    with open(out_faa,'w') as f1:
-        SeqIO.write(faa_list,f1,'fasta-2line')
+    with open(out_faa, "w") as f1:
+        SeqIO.write(faa_list, f1, "fasta-2line")
+
 
 # for gbk in glob('./*.gbff'):
 #     name = gbk.split('/')[-1].split('_ASM')[0]

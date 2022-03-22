@@ -12,6 +12,11 @@ def run(cmd):
                shell=True,
                stdout=open('/dev/null', 'w'),
                )
+def refresh_tmp(tmpdir):
+    if not exists(tmpdir):
+        os.system(f"mkdir -p {tmpdir}")
+    else:
+        os.system(f"rm -rf {tmpdir}/*")
 
 def get_files(in_path,suffix):
     suffix = suffix.strip('.')
