@@ -12,6 +12,8 @@ from subprocess import check_call
 import click
 from tqdm import tqdm
 
+from dating_workflow.step_script import get_files
+
 command_template = '`which checkm` taxonomy_wf -t 10 {extra_option} -x {infile} {tax} {indir} {odir}'
 
 
@@ -30,13 +32,11 @@ def unit_run(infile, indir, tax, odir, extra_option):
 
 
 def main(indir, odir, tax, use_fa, num_parellel, suffix='', force=False, genome_list=None):
-    suffix = suffix.strip('.')
+    suffix = '.'+suffix.strip('.') # format it
     if not exists(odir):
         os.makedirs(odir)
-    if suffix:
-        suffix = '.' + suffix
-    file_list = glob(join(indir, f'*{suffix}'))
-
+    file_list = get_files(indir,suffix)
+    
     subset_names = []
     if genome_list is not None:
         subset_names = [_ for _ in open(genome_list).read().split('\n') if _]

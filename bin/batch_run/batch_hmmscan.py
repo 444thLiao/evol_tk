@@ -11,7 +11,7 @@ from subprocess import check_call
 import click
 from Bio import SeqIO
 from tqdm import tqdm
-
+from dating_workflow.step_script import get_files
 default_db = '/home-db/pub/protein_db/TIGRFAM/14.0_release/TIGRFAM.HMM'
 command_template = '/home-user/thliao/anaconda3/bin/hmmscan --tblout {o_file} --acc --noali --notextw --cpu 20 {db} {in_file} > /dev/null 2>&1'
 
@@ -43,13 +43,11 @@ def convert_genome_ID_rev(genome_ID):
 
 
 def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=default_db, **kwarg):
-    suffix = suffix.strip('.')
-    new_suffix = 'tab'
+    suffix = '.' + suffix.strip('.')
+    new_suffix = '.tab'
     if not exists(odir):
         os.makedirs(odir)
-    if suffix:
-        suffix = '.' + suffix
-    file_list = glob(join(in_dir, f'*{suffix}'))
+    file_list = get_files(in_dir,suffix)
     if gids is not None:
         gids = set(gids)
         os.makedirs(join(odir, 'tmp'), exist_ok=1)
@@ -78,7 +76,7 @@ def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=defau
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
-                                                   '.' + new_suffix))
+                                                   new_suffix))
         else:
             ofile = join(odir,
                          basename(in_file))

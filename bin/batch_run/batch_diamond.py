@@ -45,8 +45,8 @@ def convert_genome_ID_rev(genome_ID):
 
 
 def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=default_db, **kwarg):
-    suffix = suffix.strip('.')
-    new_suffix = 'tab'
+    suffix = '.'+suffix.strip('.')
+    new_suffix = '.tab'
     if not exists(odir):
         os.makedirs(odir)
     file_list = get_files(in_dir,odir)
@@ -78,7 +78,7 @@ def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=defau
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
-                                                   '.' + new_suffix))
+                                                   new_suffix))
         else:
             ofile = join(odir,
                          basename(in_file))

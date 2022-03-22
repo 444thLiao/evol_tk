@@ -24,11 +24,10 @@ def unit_run(in_file, o_file, resoverlap, seqoverlap):
 
 
 def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, seqoverlap=60, **kwarg):
-    suffix = suffix.strip('.')
-    new_suffix = new_suffix.strip('.')
+    suffix = '.'+suffix.strip('.')
+    new_suffix = '.'+new_suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
-
     file_list = get_files(in_dir,suffix)
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
@@ -36,7 +35,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='', resoverlap=0.55, 
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
-                                                   '.' + new_suffix))
+                                                   new_suffix))
         else:
             ofile = join(odir,
                          basename(in_file))

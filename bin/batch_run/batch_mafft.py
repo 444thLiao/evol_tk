@@ -45,13 +45,13 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
          name2prefix=None, force=False, 
          mode=default_mode,
          gene_list=None,remove3rd=False):
-    suffix = suffix.strip('.')
-    new_suffix = new_suffix.strip('.')
+    suffix = '.'+suffix.strip('.')
+    new_suffix = '.'+new_suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
     file_list = get_files(in_dir,suffix)
     if gene_list:
-        file_list = [_ for _ in file_list if basename(_).replace(f".{suffix}",'') in gene_list]
+        file_list = [_ for _ in file_list if basename(_).replace(f"{suffix}",'') in gene_list]
         
     # prepare the tmp files which has been subsampled
     of2f_list = {}
@@ -86,7 +86,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
-                                                   '.' + new_suffix))
+                                                   new_suffix))
         else:
             ofile = join(odir,
                          basename(in_file))
@@ -107,7 +107,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
                    "It could be None. If you provided, you could use it to subset the aln sequences by indicate names.")
 @click.option('-m', 'mode_mafft', default='ginsi',help="the mode of mafft you want to use. You could choose mafft, ginsi, einsi, linsi. You could find the detailed descriptions of them at the help of mafft. ")
 @click.option('-f', 'force', help='overwrite?', default=False, required=False, is_flag=True)
-@click.option('-gene_l', 'gene_list', help='list of removed gene?')
+@click.option('-gene_l', 'gene_list', help='list of retained genes')
 @click.option('-r3', 'remove3rd', help='remove 3rd codon', default=False, required=False, is_flag=True)
 def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_mafft, gene_list,remove3rd):
     
