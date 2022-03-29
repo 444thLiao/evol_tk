@@ -5,6 +5,8 @@ from os.path import *
 import pandas as pd
 from ete3 import Tree
 import arviz as az
+from tqdm import tqdm
+import os,io
 
 def cal_ESS(df,burn_in=2000):
     """
@@ -37,14 +39,56 @@ def cal_HPD_CI(df,burn_in=2000):
 
 
 def parse_row(r):
-    r = [_.strip("(),") for _ in r.split(' ') if _]
+    r = [_.strip("(),") for _ in r.split(' ') if _.strip("(),")]
     r = f"{r[0]}\t{r[1]}\t{r[4]}\t{r[5]}\t{r[6]}"
     return r
-        
     
+def read_mcmc(mcmc,all_col=False):
+    if type(mcmc) != str:
+        return mcmc
+    if all_col:
+        mcmc_df = pd.read_csv(mcmc, sep='\t', index_col=0)
+    else:
+        f1 = open(mcmc)
+        header = [_ for _ in next(f1).strip().split('\t')]
+        r_header = [_ for _ in header if not _.startswith('r_g')]
+        # normally it need to iterate rows and ignore the columns representing rates
+        text = '\t'.join(r_header)+'\n'
+        r_header=set(r_header)
+        for row in f1:
+            text += '\t'.join([r for r,h in zip(row.strip().split('\t'),header) if h in r_header])+'\n'  
+        mcmc_df = pd.read_csv(io.StringIO(text), sep='\t', index_col=0)   
+    return mcmc_df
+
+def read_multi_mcmc(mcmc_list,
+                    rename_f=lambda x: basename(dirname(x)).replace('_prior', '').split('_')[-1]):
+    df_list = []
+    CIs_dict = {}
+    for mcmc in tqdm(mcmc_list):
+        line = os.popen(f"wc -l {mcmc}").read().split(' ')[0]
+        if line!='20002':
+            continue
+        name = rename_f(mcmc)
+        _df = read_mcmc(mcmc)
+        _df = _df.reindex(columns=[_ for _ in _df.columns if _.startswith('t_n')])
+        df_list.append((name, _df))
+        CIs_dict[name] = get_posterior_df(_df,scale=100)
+    df_dict = dict(df_list)
+    return df_dict, CIs_dict
+
+def get_tre(mcmc):
+    each_dir = dirname(mcmc)
+    logfile = glob(join(each_dir, '*.log'))
+    logfile = [_ for _ in logfile if 'slurm' not in _][0]
+    t = get_node_name_from_log(logfile)  # get the tree with internal node name     
+    return t
+
 def read_result_CI(logfile):
     marker ="Posterior means (95% Equal-tail CI) (95% HPD CI) HPD-CI-width"
     rows = open(logfile).read().split('\n')
+    if marker not in rows:
+        print(f"{logfile} doesn't finished")
+        return
     idx = rows.index(marker)
     rows = rows[idx+2:]
     _rows = []
@@ -57,20 +101,9 @@ def read_result_CI(logfile):
     mcmc_df.columns=['Name','Posterior means','95%HPD CI min','95%HPD CI max','95%HPD CI width']
     return mcmc_df
     
-import io
-def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
-    if all_col:
-        mcmc_df = pd.read_csv(mcmc, sep='\t', index_col=0)
-    else:
-        f1 = open(mcmc)
-        header = [_ for _ in next(f1).strip().split('\t')]
-        r_header = [_ for _ in header if not _.startswith('r_g')]
-        text = '\t'.join(r_header)+'\n'
-        r_header=set(r_header)
-        for row in f1:
-            text += '\t'.join([r for r,h in zip(row.strip().split('\t'),header) if h in r_header])+'\n'  
-        mcmc_df = pd.read_csv(io.StringIO(text), sep='\t', index_col=0)    
 
+def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
+    mcmc_df = read_mcmc(mcmc,all_col=all_col)
     if pd.isna(mcmc_df.iloc[-1,-1]):
         # if not completed
         mcmc_df = mcmc_df.drop(mcmc_df.index[-1])
@@ -82,7 +115,6 @@ def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
     post_df = pd.DataFrame(columns=['Posterior mean time (100 Ma)',
                                     'CI_width','CIs'],
                            index=node_names )
-    
     raw_n2CI = cal_HPD_CI(mcmc_df,burn_in=burn_in)
     if 'lnL' in mcmc_df.columns:
         post_df.loc['lnL',:] = 'NA'

@@ -216,8 +216,7 @@ class NCBI_convertor:
     def get_taxons_from_tid(self,tids=None):
         if tids is None:
             tids = self.tids
-        else:
-            tids = self.get_taxon('get')
+            # tids = self.get_taxon('get')
         # tqdm.write('get tid info using NCBITaxa')
         id2taxon = {}
         for ori_id, tid in tqdm(tids.items()):

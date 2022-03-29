@@ -5,9 +5,8 @@ from os.path import *
 import os
 
 
-def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False):
-    records = SeqIO.parse(in_gbk, format="genbank")
-
+def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False,return_DNA=False):
+    records = list(SeqIO.parse(in_gbk, format="genbank"))
     faa_list = []
     for contig in records:
         idx = 1
@@ -20,14 +19,19 @@ def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False):
                 type_list = ["CDS", "tRNA"]
             else:
                 type_list = ["CDS"]
+
             if fea.type in type_list:
-                seq = SeqRecord(
-                    seq=Seq(fea.qualifiers["translation"][0]),
+                if return_DNA:
+                    _seq = Seq(str(fea.extract(contig).seq))
+                else:
+                    _seq = Seq(fea.qualifiers.get("translation",[''])[0])
+                new_record = SeqRecord(
+                    seq=_seq,
                     id=seq_name,
                     name=fea.qualifiers.get("gene", [""])[0],
                     description=fea.qualifiers["product"][0],
                 )
-                faa_list.append(seq)
+                faa_list.append(new_record)
                 idx += 1
     if not exists(dirname(out_faa)):
         os.mkdir(dirname(out_faa))
