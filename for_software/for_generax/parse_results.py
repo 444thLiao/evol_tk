@@ -49,11 +49,13 @@ def get_tree_from_xml(xml_file):
     DFS_get_tree(root,tre)      
     return tre
 
-def get_p2node(xml_file,stree,key=''):
+def get_p2node(xml_file,stree=None,key=''):
     p2node = {}
     p2node_transfer_receptor = {}
-    stree = Tree(stree,format=3)
-    
+    if stree is None:
+        stree = get_tree_from_xml(xml_file)
+    else:
+        stree = Tree(stree,format=3)
     name2node = {} # children to parent
     for n in stree.traverse():
         if n.name:

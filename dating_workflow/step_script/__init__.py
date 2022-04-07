@@ -84,21 +84,32 @@ def get_tophit(gid2locus, top_hit):
     return gid2locus
 
 
-def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, top_hit=False):
+def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, 
+                 seq2length=None,
+                 pos_location = [8,9,1,1,0],cov=80, top_hit=False):
+    # pos_location should contain the index of specific cols
+    # start, end, id of `seq2length`, unique id, mapped id.
+    start,end,_pid,unique_id,mapped_id = pos_location
     if not match_ids:
         gid2locus = defaultdict(list)
     else:
         gid2locus = {k: [] for k in match_ids}
     for row in open(ofile, 'r'):
         sep_v = row.split('\t')
-        locus = sep_v[0]
+        locus = sep_v[mapped_id]
         evalue = float(sep_v[10])
+        if seq2length:
+            s,e = sep_v[start],sep_v[end]
+            pid = sep_v[_pid]
+            align_cov = abs(int(e)-int(s))/seq2length[pid]*100
+            if align_cov <= cov:
+                continue
         if filter_evalue and evalue > filter_evalue:
             continue
-        if sep_v[1] in match_ids:
-            gid2locus[sep_v[1]].append((locus, evalue))
+        if sep_v[unique_id] in match_ids:
+            gid2locus[sep_v[unique_id]].append((locus, evalue))
         if not match_ids:
-            gid2locus[sep_v[1]].append((locus, evalue))
+            gid2locus[sep_v[unique_id]].append((locus, evalue))
 
     gid2locus = get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
@@ -124,7 +135,9 @@ def parse_diamond(ofile, match_ids=[], filter_evalue=1e-3, cov=80,top_hit=False)
     gid2locus = get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
 
-def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, gene_pos=0):
+def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, _pos=[0,2]):
+    # _pos indicate the index of query and subject
+    q_pos,s_pos = _pos
     gid2locus = defaultdict(list)
 
     for row in open(ofile, 'r'):
@@ -132,9 +145,8 @@ def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, gene_pos=0):
             continue
         r = row.split(' ')
         r = [_ for _ in r if _]
-
-        gene_id = r[gene_pos]
-        locus_tag = r[2]
+        gene_id = r[q_pos]
+        locus_tag = r[s_pos]
         evalue = float(r[4])
         if filter_evalue and evalue > filter_evalue:
             continue

@@ -53,7 +53,7 @@ FIELD_LABELS	{field_labels}
 #SHOW_INTERNAL,0
 
 #maximum pie chart radius will be displayed with this size, others will be proportionally smaller. This setting applies to internal pie charts only.
-#MAXIMUM_SIZE,50
+MAXIMUM_SIZE	10
 
 #pie chart height factor; For external pie charts, default radius will be slightly less than the available space between leaves, but you can set a multiplication factor here to increase/decrease it (values from 0 to 1 will decrease it, values above 1 will increase it)
 #HEIGHT_FACTOR,1

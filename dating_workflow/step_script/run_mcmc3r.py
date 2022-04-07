@@ -84,10 +84,10 @@ if __name__ == '__main__':
     collect_df = pd.DataFrame(columns=['calibration set', 'model', 'Log marginal (s. d)', 'BF'])
     count = 0
     for t in target_:
-        cmd = f"""R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
+        cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
         AR = os.popen(cmd).read()
         AR_logml, AR_se = get_v(AR)
-        cmd = f"""R -e "setwd('IR_{t}'); IR<- mcmc3r::stepping.stones(); IR " """
+        cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('IR_{t}'); IR<- mcmc3r::stepping.stones(); IR " """
         IR = os.popen(cmd).read()
         IR_logml, IR_se = get_v(IR)
         c = np.array([AR_logml, IR_logml])

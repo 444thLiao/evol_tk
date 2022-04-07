@@ -134,6 +134,7 @@ def to_binary_shape(
     unfilled_other=False,
     other_params={},
     no_legend=False,
+    one_row=False,
 ):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
@@ -143,16 +144,15 @@ def to_binary_shape(
     template_text = open(dataset_binary_template).read() + "\n"
     sep = get_used_sep(template_text)
     if not manual_v:
-        all_v = list(
-            sorted(set([_ for v in ID2info.values() for _ in v if _])))
+        all_v = list(sorted(set([_ for v in ID2info.values() for _ in v if _])))
     else:
         all_v = manual_v
-
-    # if coord_cols:
-    #     extra_replace.update({'#SYMBOL_SPACING,10':"SYMBOL_SPACING\t-27"})
     if info2style is None:
         info2style = {k: {} for k in all_v}
-    unfilled_label = "-1" if unfilled_other else "0"
+    if one_row and len(set([_ for v in ID2info.values() for _ in v])) ==2: # give one_row params and only one value
+        unfilled_label = '0'
+    else:
+        unfilled_label = "-1" if unfilled_other else "0"
 
     annotate_text = []
     for ID, vset in ID2info.items():
@@ -161,20 +161,16 @@ def to_binary_shape(
         annotate_text.append(row)
     annotate_text = "\n".join(annotate_text)
 
-    legend_text = deduced_legend2(
-        info2style, all_v, sep=sep, same_colors=same_color)
     if no_legend:
         real_legend_text = ""
     else:
-        real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace(
-            "FIELD", "LEGEND"
-        )
-
+        legend_text = deduced_legend2(
+            info2style, all_v, sep=sep, same_colors=same_color)
+        real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace("FIELD", "LEGEND")
     template_text = replacing_params(template_text, other_params)
     template_text = template_text.format(
         legend_text=legend_text + "\n" + real_legend_text, dataset_label=dataset_name
     )
-
     return template_text + "\n" + annotate_text
 
 
@@ -582,7 +578,7 @@ LEGEND_LABELS{sep}{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()
     return text + "\n" + annotate_text
 
 
-def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=0.5):
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1):
     """
     :param id2cat2val:
     :param cat2style:
@@ -600,7 +596,7 @@ def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=0.5):
         cat_vals = [gid, pos, '10']
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat, "0")))
-        cat_vals = sep.join(cat_vals)
+        cat_vals = sep.join([str(_) for _ in cat_vals])
         # gid,pos = str(gid),str(pos)
         annotate_text.append(cat_vals)
 
