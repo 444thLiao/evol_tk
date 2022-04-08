@@ -70,23 +70,38 @@ def get_genomes(genome_list,
     return final_name2grouping
 
 
-def get_tophit(gid2locus, top_hit):
-    gid2locus = {k: tuple(sorted(v,key=lambda x:x[1]))
-                 for k,v in gid2locus.items()}  # ascending
+def get_tophit(a2list_b, top_hit):
+    a2list_b = {k: tuple(sorted(v,key=lambda x:x[1]))
+                 for k,v in a2list_b.items()}  # ascending, nearly unchanged
     if top_hit:
-        gid2locus = {k: [v[0][0]]
+        a2single_b = {k: [v[0][0]]
                      if v else []
-                     for k, v in gid2locus.items()}
+                     for k, v in a2list_b.items()}
+        b2_a = {}
+        for a,list_b in a2list_b.items():
+            for b,eval in list_b:
+                if b in b2_a:
+                    b2_a[b] = (a,eval) if b2_a[b][1]> eval else b2_a[b]
+                else:
+                    b2_a[b] = (a,eval)
     else:
-        gid2locus = {k: [_[0] for _ in v]
+        a2single_b = {k: [_[0] for _ in v]
                      if v else []
-                     for k, v in gid2locus.items()}
-    return gid2locus
+                     for k, v in a2list_b.items()}
+        
+        b2_a = defaultdict(list)
+        for a,list_b in a2list_b.items():
+            for b,eval in list_b:
+                b2_a[b].append((a,eval))
+        b2_a = {k: tuple(sorted(v,key=lambda x:x[1]))
+                 for k,v in b2_a.items()}  # ascending, nearly unchanged
+    return a2single_b,b2_a
 
 
 def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3, 
                  seq2length=None,
-                 pos_location = [8,9,1,1,0],cov=80, top_hit=False):
+                 pos_location = [8,9,1,1,0], cov=80, 
+                 top_hit=False):
     # pos_location should contain the index of specific cols
     # start, end, id of `seq2length`, unique id, mapped id.
     start,end,_pid,unique_id,mapped_id = pos_location
@@ -110,29 +125,38 @@ def parse_blastp(ofile, match_ids=[], filter_evalue=1e-3,
             gid2locus[sep_v[unique_id]].append((locus, evalue))
         if not match_ids:
             gid2locus[sep_v[unique_id]].append((locus, evalue))
+        # normally, the unique id should be the locus in the genome file. Thus, one locus must be only assgined to a gene (no need to adjust)
+        # However, across all the locus list, we also need to select the best aligned locus to a gene (need to adjust)
+        # Thus, the `top_hit` should be used to control top hit or not to the latter one(mapped id)
+    a2single_b,b2_a = get_tophit(gid2locus, top_hit=top_hit)
+    return a2single_b,b2_a
 
-    gid2locus = get_tophit(gid2locus, top_hit=top_hit)
-    return gid2locus
 
-
-def parse_diamond(ofile, match_ids=[], filter_evalue=1e-3, cov=80,top_hit=False):
-    if not match_ids:
-        gid2locus = defaultdict(list)
-    else:
-        gid2locus = {k: [] for k in match_ids}
-    for row in open(ofile, 'r'):
-        sep_v = row.split('\t')
-        locus = sep_v[0]
-        evalue = float(sep_v[5])
-        if filter_evalue and evalue > filter_evalue:
-            continue
-        if cov and float(sep_v[7]) <= cov:
-            continue
-        if sep_v[1] in match_ids:
-            gid2locus[sep_v[1]].append((locus, evalue))
-        if not match_ids:
-            gid2locus[sep_v[1]].append((locus, evalue))
-    gid2locus = get_tophit(gid2locus, top_hit=top_hit)
+def parse_diamond(ofile, match_ids=[], filter_evalue=1e-3, 
+                  cov=80,
+                  pos_location = [5,7],
+                  top_hit=False):
+    # raw one. be careful to use
+    # pos_location should contain the index of specific cols. The order should as following
+    # start, end, id of `seq2length`, unique id, mapped id.
+    # _pid,unique_id,mapped_id = pos_location
+    # if not match_ids:
+    #     gid2locus = defaultdict(list)
+    # else:
+    #     gid2locus = {k: [] for k in match_ids}
+    # for row in open(ofile, 'r'):
+    #     sep_v = row.split('\t')
+    #     locus = sep_v[0]
+    #     evalue = float(sep_v[5])
+    #     if filter_evalue and evalue > filter_evalue:
+    #         continue
+    #     if cov and float(sep_v[7]) <= cov:
+    #         continue
+    #     if sep_v[1] in match_ids:
+    #         gid2locus[sep_v[1]].append((locus, evalue))
+    #     if not match_ids:
+    #         gid2locus[sep_v[1]].append((locus, evalue))
+    # gid2locus = get_tophit(gid2locus, top_hit=top_hit)
     return gid2locus
 
 def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, _pos=[0,2]):
@@ -151,8 +175,8 @@ def parse_hmmscan(ofile, filter_evalue=1e-20, top_hit=False, _pos=[0,2]):
         if filter_evalue and evalue > filter_evalue:
             continue
         gid2locus[gene_id].append((locus_tag, evalue))
-    gid2locus = get_tophit(gid2locus, top_hit=top_hit)
-    return gid2locus
+    a2single_b,b2_a = get_tophit(gid2locus, top_hit=top_hit)
+    return a2single_b,b2_a
 
 
 def process_path(path):
