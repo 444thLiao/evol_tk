@@ -85,26 +85,19 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
 
     for ofile in tqdm(cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
-        locus_dict = parse_blastp(ofile=ofile,
-                                  match_ids=[],
-                                  top_hit=top_hit,
-                                  filter_evalue=evalue)
-        genome2cdd[gname].update(locus_dict)
-    genome2cdd = dict(genome2cdd)  # change it into normal dict in order to pickle it
+        locus2gene,gene2list_locus = parse_blastp(ofile=ofile,
+                                                  match_ids=[], 
+                                                  pos_location = [8,9,0,0,1],
+                                                  top_hit=top_hit,  
+                                                  filter_evalue=evalue)
+        genome2cdd[gname].update({k:[v] for k,v in gene2list_locus.items()})
+    genome2cdd = dict(genome2cdd)  
     
+    # change it into normal dict in order to pickle it
     # if not exists(cache_file):
-    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm")  # delete 2days ago cache
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm " + '{}')  # delete 2days ago cache
     with open(cache_file, 'wb') as f1:
         pickle.dump(genome2cdd, f1)
-            
-    # tigrfam annotations
-    # it doesn't need it now... all embedded into cdd
-    # tigrfam_anno_files = glob(join(cog_out_dir,'TIGRFAM','*.out'))
-    # for ofile in tqdm(tigrfam_anno_files):
-    #     gname = basename(ofile).replace('.out','')
-    #     locus_dict = _parse_hmmscan(ofile=ofile,
-    #                                top_hit=top_hit)
-    #     genome2cdd[gname].update(locus_dict)
     return genome2cdd
 
 

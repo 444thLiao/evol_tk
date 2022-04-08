@@ -84,15 +84,15 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     tqdm.write('start to read/parse output files (cdd and tigrfam)')
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
-        locus_dict = parse_hmmscan(ofile=ofile,
-                                   top_hit=top_hit,
-                                   filter_evalue=evalue,
-                                   gene_pos=1)
-        genome2annotate[gname].update(locus_dict)   
+        locus2gene,gene2list_locus = parse_hmmscan(ofile=ofile,
+                                                   top_hit=top_hit,
+                                                   filter_evalue=evalue,
+                                                   _pos = [1,2])
+        genome2annotate[gname].update({k:[v] for k,v in gene2list_locus.items()})
     genome2annotate = dict(genome2annotate)
     
     # if not exists(cache_file):  # redundant
-    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm")  # delete 2days ago cache
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm" + '{}')  # delete 2days ago cache
     with open(cache_file, 'wb') as f1:
         pickle.dump(genome2annotate, f1)
     return genome2annotate
