@@ -57,7 +57,7 @@ def get_genomes(genome_list,
         else:
             return {k:k for k in list_vals}  # simple id list
     else:
-        rows = open(genome_list, 'r').read().split('\n')
+        rows = [_ for _ in open(genome_list, 'r').read().split('\n') if _ ]
     
     final_name2grouping = defaultdict(set)
     for row in rows:
@@ -67,6 +67,7 @@ def get_genomes(genome_list,
         else:
             name = row.split('\t')[0]
             final_name2grouping[name].add(row.split('\t')[1])
+    final_name2grouping = {k:v for k,v in final_name2grouping.items() if k}
     return final_name2grouping
 
 
