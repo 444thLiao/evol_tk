@@ -188,6 +188,7 @@ def run_each_tmp(tmp_indir, odir, aaRatefile=aaRatefile, extra_cmd=None, use_nuc
         text += open(rst2).read()
     with open(join(odir, 'in.BV'), 'w') as f1:
         f1.write(text)
+    os.system(f"cp {join(odir, 'in.BV')} {tmp_indir}/out.BV")
 
 default_params = {'seqfile': '',
              'treefile': '',
@@ -307,7 +308,8 @@ def main(in_phyfile, in_treefile, total_odir,
     nodata_dir = join(total_odir, 'prior')
     mcmc_for_dir = join(total_odir, 'mcmc_for')
     tmp_odir = join(total_odir, 'tmp_files')
-
+    for f in [nodata_dir,mcmc_for_dir,tmp_odir]:
+        if not exists(f): os.makedirs(f)
     prior_cmd = run_nodata_prior(in_phyfile=in_phyfile,
                                  in_treefile=in_treefile,
                                  odir=nodata_dir,
@@ -331,9 +333,11 @@ def main(in_phyfile, in_treefile, total_odir,
                     #  extra_cmd=[prior_cmd],
                      use_nucl=use_nucl)
     elif isinstance(run_tmp, str):
-        collecting_tmp(run_tmp,
-                       tmp_odir,
-                       ali_dir=ali_dir)
+        os.system(f"cp -rf {run_tmp}/* {tmp_odir}")
+        os.system(f"cp -rf {run_tmp}/out.BV {mcmc_for_dir}/in.BV")
+        # collecting_tmp(run_tmp,
+        #                tmp_odir,
+        #                ali_dir=ali_dir)
     final_mcmctree(inBV=join(mcmc_for_dir, 'in.BV'),
                    in_phyfile=in_phyfile,
                    in_treefile=in_treefile,
