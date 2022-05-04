@@ -6,7 +6,7 @@ Only obtaining sequences using protein/nuccore assession is currently supported.
 try:
     from bin.ncbi_convertor import NCBI_convertor
 
-except ImportError:
+except ModuleNotFoundError:
     import sys
     sys.path.insert(0,'/home-user/thliao/script/evol_tk')
     from bin.ncbi_convertor import NCBI_convertor
