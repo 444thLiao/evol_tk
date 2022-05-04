@@ -8,6 +8,7 @@ import arviz as az
 from tqdm import tqdm
 import os,io
 
+
 def cal_ESS(df,burn_in=2000):
     """
     generate effective sample size (ESS) of given dataframe.
@@ -171,3 +172,11 @@ def get_node_name_from_log(f):
             l.up.name = n2father[l.name]
     return t
 
+def format_figtree(mcmc, name, tree,tree_format=8):
+    figtree = dirname(mcmc) + "/FigTree.tre"
+    ofile = f"{dirname(mcmc)}/{name}.newick"
+    if not exists(figtree) or exists(ofile):
+        return
+    tree, f = tree,tree_format
+    cmd = f"python3 ~/script/evol_tk/dating_workflow/figtree2itol.py -i {tree} -i2 {figtree} -o {ofile} -f {f} ; "
+    return cmd

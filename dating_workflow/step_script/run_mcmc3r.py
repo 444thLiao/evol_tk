@@ -83,15 +83,15 @@ if __name__ == '__main__':
 
     collect_df = pd.DataFrame(columns=['calibration set', 'model', 'Log marginal (s. d)', 'BF'])
     count = 0
-    for t in target_:
-        cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('AR_{t}'); AR<- mcmc3r::stepping.stones(); AR " """
-        AR = os.popen(cmd).read()
-        AR_logml, AR_se = get_v(AR)
-        cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('IR_{t}'); IR<- mcmc3r::stepping.stones(); IR " """
-        IR = os.popen(cmd).read()
-        IR_logml, IR_se = get_v(IR)
-        c = np.array([AR_logml, IR_logml])
-        BF = np.exp(c - np.max(c))
-        collect_df.loc[count, :] = [t, 'AR', f'{AR_logml} ({AR_se})', BF[0]]
-        collect_df.loc[count + 1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
-        count += 2
+    # for t in ['AR_sim','IR_sim']:
+    cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('./dating/sys_testing/model_selection/C9_no_euk/AR_sim'); AR<- mcmc3r::stepping.stones(); AR " """
+    AR = os.popen(cmd).read()
+    AR_logml, AR_se = get_v(AR)
+    cmd = f"""/home-user/thliao/anaconda3/envs/r_env/bin/R -e "setwd('./dating/sys_testing/model_selection/C9_no_euk/IR_sim'); IR<- mcmc3r::stepping.stones(); IR " """
+    IR = os.popen(cmd).read()
+    IR_logml, IR_se = get_v(IR)
+    c = np.array([AR_logml, IR_logml])
+    BF = np.exp(c - np.max(c))
+    collect_df.loc[count, :] = [t, 'AR', f'{AR_logml} ({AR_se})', BF[0]]
+    collect_df.loc[count + 1, :] = [t, 'IR', f'{IR_logml} ({IR_se})', BF[1]]
+    count += 2
