@@ -34,7 +34,7 @@ def cli(infile, ofile, database,without_seq):
     for k,v in dbsummary.items():
         for _k,_v in v.items():
             v[_k] = str(_v).replace('\n',' ')
-    final_df = pd.DataFrame.from_dict(dbsummary)
+    final_df = pd.DataFrame.from_dict(dbsummary).T
     final_df.to_csv(ofile,sep='\t')
 if __name__ == '__main__':
     cli()

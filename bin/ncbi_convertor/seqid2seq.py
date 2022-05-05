@@ -20,17 +20,19 @@ from os.path import *
 @click.option('-d', 'database', default='nuccore', help='default is nuccore. ')
 @click.option('-o', 'ofile', help='output fasta file')
 @click.option('-f', 'format', help='default is fasta. fasta or genbank')
-def cli(infile, ofile, database,format):
+@click.option('-s', 'size', help='default is 100')
+def cli(infile, ofile, database,format,size):
     id_list = open(infile).read().strip().split('\n')
     convertor = NCBI_convertor(id_list,database)
     if (not exists(dirname(ofile))) and '/' in ofile:
         os.system(f"mkdir -p {dirname(ofile)}")
     if format.lower()=='fasta'    :
-        seqs = convertor.get_seq(batch_size=100)
+        seqs = convertor.get_seq(batch_size=int(size))
         with open(ofile,'w') as f1:
             SeqIO.write(seqs,f1,'fasta-2line')
     elif format.lower()=='genbank':
-        seqs = convertor.get_seq(batch_size=100,preset='genbank')
+        seqs = convertor.get_seq(batch_size=int(size),
+                                 preset='genbank')
         with open(ofile,'w') as f1:
             SeqIO.write(seqs,f1,'genbank')
 if __name__ == '__main__':
