@@ -33,7 +33,7 @@ def cli(infile, ofile, database,without_seq):
             dbsummary[k].pop('sequence')
     for k,v in dbsummary.items():
         for _k,_v in v.items():
-            v[_k] = _v.replace('\n',' ')
+            v[_k] = str(_v).replace('\n',' ')
     final_df = pd.DataFrame.from_dict(dbsummary)
     final_df.to_csv(ofile,sep='\t')
 if __name__ == '__main__':
