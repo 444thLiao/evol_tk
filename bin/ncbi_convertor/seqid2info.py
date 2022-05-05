@@ -1,5 +1,5 @@
 """
-The main purpose of this script is to retrieve sequences using seq id.
+The main purpose of this script is to retrieve sequences information using seq id.
 Only obtaining sequences using protein/nuccore assession is currently supported.
 """
 
@@ -14,24 +14,24 @@ import click
 from Bio import SeqIO
 import os
 from os.path import *
+import pandas as pd
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-d', 'database', default='nuccore', help='default is nuccore. ')
 @click.option('-o', 'ofile', help='output fasta file')
-@click.option('-f', 'format', help='default is fasta. fasta or genbank')
-def cli(infile, ofile, database,format):
+@click.option('-noseq', 'without_seq', is_flag=True, default=False,help='removing the seq')
+def cli(infile, ofile, database,without_seq):
     id_list = open(infile).read().strip().split('\n')
     convertor = NCBI_convertor(id_list,database)
+    
     if (not exists(dirname(ofile))) and '/' in ofile:
         os.system(f"mkdir -p {dirname(ofile)}")
-    if format.lower()=='fasta'    :
-        seqs = convertor.get_seq(batch_size=100)
-        with open(ofile,'w') as f1:
-            SeqIO.write(seqs,f1,'fasta-2line')
-    elif format.lower()=='genbank':
-        seqs = convertor.get_seq(batch_size=100,preset='genbank')
-        with open(ofile,'w') as f1:
-            SeqIO.write(seqs,f1,'genbank')
+    dbsummary = convertor.get_db_summary()
+    if without_seq:
+        for k in dbsummary:
+            dbsummary[k].pop('sequence')
+    final_df = pd.DataFrame.from_dict(dbsummary)
+    final_df.to_csv(ofile,sep='\t')
 if __name__ == '__main__':
     cli()

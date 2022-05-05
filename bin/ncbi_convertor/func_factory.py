@@ -160,7 +160,17 @@ class NCBI_convertor:
                 result_func=lambda x: read_efetch(x),)
             for result in results:
                 self.dbsummary.update(result)
-        
+                
+        elif self.dbname == 'nuccore':
+            results, failed = self.edl.efetch(
+                db=self.dbname,
+                ids=all_GI,
+                retmode="text",
+                retype="gb",
+                result_func=lambda x: read_efetch(x),)
+            for result in results:
+                self.dbsummary.update(result)
+                
         elif self.dbname in single_return_dbs:
             results, failed = self.edl.esummary(
                 db=self.dbname,

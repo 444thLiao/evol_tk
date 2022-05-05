@@ -29,7 +29,6 @@ def eread(x):
 
 ncbi = NCBITaxa()
 taxons = ["superkingdom", "phylum", "class", "order", "family", "genus", "species"]
-
 tmp_dir = "~/.tmp_getINFO"
 tmp_dir = expanduser(tmp_dir)
 
