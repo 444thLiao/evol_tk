@@ -28,7 +28,7 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5,suffix='.fa
     params = []
     if not exists(odir):
         os.makedirs(odir)
-    
+
     size0_pfiles = []
     hmmscan = '`which hmmscan`'
     for pfile in protein_files:
@@ -63,36 +63,36 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     genome2annotate = defaultdict(lambda: defaultdict(list))
 
     # cdd annotations
-    
+
     cdd_anno_files = glob(join(odir, 'PFAM', '*.out'))
     # tigrfam annotations
     tigrfam_anno_files = glob(join(odir, 'TIGRFAM', '*.out'))
-    
-    
+
+
     # add cache to avoid iterate it again and again
     t = ''.join(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)] + [str(evalue)]))
     m = hashlib.md5(t.encode())
     hash_str = m.hexdigest()
-    
+
     cache_file = join(odir, f'.tmp{hash_str}')
     if exists(cache_file):
         genome2annotate = pickle.load(open(cache_file, 'rb'))
         genome2annotate = dict(genome2annotate)
         return genome2annotate
-    
-    
+
+
     tqdm.write('start to read/parse output files (cdd and tigrfam)')
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
         locus2gene,gene2list_locus = parse_hmmscan(ofile=ofile,
                                                    top_hit=top_hit,
                                                    filter_evalue=evalue,
-                                                   _pos = [1,2])
+                                                   _pos = [2,1])
         genome2annotate[gname].update({k:[v] for k,v in gene2list_locus.items()})
     genome2annotate = dict(genome2annotate)
-    
+
     # if not exists(cache_file):  # redundant
-    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm" + '{}')  # delete 2days ago cache
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm " + '{}')  # delete 2days ago cache
     with open(cache_file, 'wb') as f1:
         pickle.dump(genome2annotate, f1)
     return genome2annotate
@@ -119,7 +119,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     # else:
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
-    gids = list(get_genomes(genome_list,True))    
+    gids = list(get_genomes(genome_list,True))
     protein_files = get_files(in_proteins,suffix.strip('.'))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
@@ -127,13 +127,13 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     if not protein_files:
         exit(f"error input proteins dir {in_proteins}")
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
-    
+
     if not pass_annotation:
         annotate_bac120(protein_files, in_annotations, db_id='tigrfam',suffix=f'.{suffix}')
         annotate_bac120(protein_files, in_annotations, db_id='pfam', suffix=f'.{suffix}')
     if annotation_only:
         exit(f"finish annotation")
-        
+
     tqdm.write("Parsing the annotation results...")
     genome2genes = parse_annotation(in_annotations, top_hit=False)
     gene_ids = pfam_ids + tigfam_ids
@@ -141,8 +141,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
     write_out_stats(outdir,_subgenome2cdd, gene_ids)
 
-    genome2genes = parse_annotation(
-        in_annotations, top_hit=True, evalue=evalue)
+    genome2genes = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
     if gids:
         _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
     else:
