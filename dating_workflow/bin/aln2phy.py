@@ -8,7 +8,7 @@ from os.path import *
 import click
 from Bio import AlignIO
 
-from dating_workflow.bin.concat_aln import convert_genome_ID_rev
+from dating_workflow.bin.concat_aln import convert_genome_ID_rev,generate_phy_file
 
 
 @click.command()
@@ -40,7 +40,7 @@ def cli(infile, outfile, genome_list,remove_identical,fill_gaps,name_convert):
         if len(infiles) != 1:
             outfile = infile.rpartition('.')[0] + '.phy'
         aln_record = AlignIO.read(infile, format='fasta')
-        tr(outfile, 
+        generate_phy_file(outfile, 
                           [(0, 0, 0, aln_record)], 
                           gids,
                           fill_gaps=fill_gaps, 

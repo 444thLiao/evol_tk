@@ -28,18 +28,7 @@ def unit_run(in_file, o_file, db):
                stdout=open('/dev/null', 'w'),
                stderr=open('/dev/null', 'w'))
 
-
-# two function for dating workflow
-def convert_genome_ID(genome_ID):
-    # for GCA_900078535.2
-    # it will return
-    return genome_ID.split('_')[-1].replace('.', 'v')
-
-
-def convert_genome_ID_rev(genome_ID):
-    # for 900078535v2
-    # it will return
-    return 'GCA_' + genome_ID.replace('v', '.')
+from api_tools.tk import convert_genome_ID_rev,convert_genome_ID
 
 
 def main(in_dir, odir, num_parellel, suffix='', gids=None, force=False, db=default_db, **kwarg):

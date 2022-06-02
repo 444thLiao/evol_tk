@@ -1,11 +1,10 @@
 import pandas as pd
-from bin.other_convertor.classify_kos import *
 from ete3 import Tree
+from bin.other_convertor.classify_kos import *
+
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 from tqdm import tqdm
-import click
-
 
 def fe_text(g1, g2, ko_df):
     ko2tab = {}
@@ -29,6 +28,7 @@ def fe_text(g1, g2, ko_df):
                                  fe_corrected_p[1]))
     sig_ko_list = {k: v for k, v in fe_corrected_ko2p.items() if v <= 0.05}
     return ko2tab,ko2odd_ratio,ko2pvalue,sig_ko_list
+
 
 # all gene table
 tab = "/mnt/home-backup/thliao/plancto/protein_annotations/hmmsearch_merged/merged_hmm_binary.tab"
