@@ -126,7 +126,7 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
     # iterate all rows of input calibration txt
     # stodge the information into calibration_dict
     for row in open(calibration_txt):
-        if row and not row.startswith('#'):
+        if row.strip('\n') and not row.startswith('#'):
             LCA, time, _remained = row.split('\t')
             calibration_dict[LCA] = time
     # clean all internal names of input tree
