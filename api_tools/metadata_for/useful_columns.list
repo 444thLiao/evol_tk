@@ -1,0 +1,30 @@
+isolationsource
+attribute:isolation_source
+attribute:isolation-source
+attribute:isolation   source
+attribute:env_feature
+attribute:env_material
+attribute:environment (material)
+attribute:environment (feature)
+attribute:material
+attribute:feature
+attribute:metagenomic source
+attribute:environment (biome)
+attribute:environment_biome
+attribute:environment
+attribute:geo_loc_name
+attribute:geographic location (country and/or atlantic ocean)
+attribute:geographic location (region and locality)
+Habitat
+attribute:biotic_relationship
+attribute:Biotic Relationship
+attribute:rel_to_oxygen
+attribute:trophic_level
+attribute:Sporulation
+attribute:Oxygen Requirement
+attribute:Habitat
+habitat_set1(auto)
+habitat_set2(auto)
+habitat_set3(auto)
+matched keyword(auto)
+classification(auto)

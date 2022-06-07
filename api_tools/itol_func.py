@@ -26,7 +26,7 @@ dataset_gradient_template = join(indir, "dataset_gradient_template.txt")
 dataset_piechart_template = join(indir, "dataset_piechart_template.txt")
 dataset_simplebar_template = join(indir, "dataset_simplebar_template.txt")
 collapse_template = join(indir, "collapse.txt")
-
+dataset_connections_template = join(indir, "dataset_connections_template.txt")
 
 
 
@@ -124,6 +124,31 @@ def to_simple_bar(id2val, dataset_name="Value", other_params={}):
     template_text = replacing_params(template_text, other_params)
     return template_text + "\n".join(c)
 
+def to_connections(a2b_tuple_list,pair2style={},
+                   default_color="#007acc",
+                   default_width="1",
+                   default_style="normal",
+                   default_label="",
+                   dataset_name="HGT transfers",
+                   other_params={}):
+    used_template = dataset_connections_template
+    template_text = open(used_template).read() + "\n"
+    sep = get_used_sep(template_text)
+    annotate_texts = []
+    for (a,b) in a2b_tuple_list:
+        pair = (a,b)
+        width = pair2style.get(pair,{}).get('width',default_width)
+        color = pair2style.get(pair,{}).get('color',default_color)
+        style = pair2style.get(pair,{}).get('style',default_style)
+        label = pair2style.get(pair,{}).get('label',default_label)
+        annotate_texts.append(sep.join([a,b,width,color,style,label]))
+    annotate_text = '\n'.join(annotate_texts)
+    
+    template_text = template_text.format(
+        dataset_label=dataset_name, legend_text="", 
+    )
+    template_text = replacing_params(template_text, other_params)
+    return template_text + annotate_text
 
 def to_binary_shape(
     ID2info,
@@ -134,6 +159,7 @@ def to_binary_shape(
     unfilled_other=False,
     other_params={},
     no_legend=False,
+    one_row=False,
 ):
     # id2info, could be {ID:list/set}
     # info2color: could be {gene1: {shape:square,color:blabla},}
@@ -143,16 +169,15 @@ def to_binary_shape(
     template_text = open(dataset_binary_template).read() + "\n"
     sep = get_used_sep(template_text)
     if not manual_v:
-        all_v = list(
-            sorted(set([_ for v in ID2info.values() for _ in v if _])))
+        all_v = list(sorted(set([_ for v in ID2info.values() for _ in v if _])))
     else:
         all_v = manual_v
-
-    # if coord_cols:
-    #     extra_replace.update({'#SYMBOL_SPACING,10':"SYMBOL_SPACING\t-27"})
     if info2style is None:
         info2style = {k: {} for k in all_v}
-    unfilled_label = "-1" if unfilled_other else "0"
+    if one_row and len(set([_ for v in ID2info.values() for _ in v])) ==2: # give one_row params and only one value
+        unfilled_label = '0'
+    else:
+        unfilled_label = "-1" if unfilled_other else "0"
 
     annotate_text = []
     for ID, vset in ID2info.items():
@@ -161,20 +186,16 @@ def to_binary_shape(
         annotate_text.append(row)
     annotate_text = "\n".join(annotate_text)
 
-    legend_text = deduced_legend2(
-        info2style, all_v, sep=sep, same_colors=same_color)
     if no_legend:
         real_legend_text = ""
     else:
-        real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace(
-            "FIELD", "LEGEND"
-        )
-
+        legend_text = deduced_legend2(
+            info2style, all_v, sep=sep, same_colors=same_color)
+        real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace("FIELD", "LEGEND")
     template_text = replacing_params(template_text, other_params)
     template_text = template_text.format(
         legend_text=legend_text + "\n" + real_legend_text, dataset_label=dataset_name
     )
-
     return template_text + "\n" + annotate_text
 
 
@@ -581,8 +602,36 @@ LEGEND_LABELS{sep}{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()
 
     return text + "\n" + annotate_text
 
+def pie_size_chart(id2val, color='#ff0000', 
+                   dataset_name="habitat prob", pos=1):
+    template_text = open(dataset_piechart_template).read()
+    sep = get_used_sep(template_text)
+    annotate_text = []
+    
+    for gid in id2val:
+        cat_vals = [gid, pos, str(id2val.get(gid,0))]
+        cat_vals.append('1')
+        cat_vals = sep.join([str(_) for _ in cat_vals])
+        # gid,pos = str(gid),str(pos)
+        annotate_text.append(cat_vals)
 
+    field_labels = sep.join(['Size'])
+    field_colors = sep.join([color])
+    template_text = template_text.format(
+        dataset_label=dataset_name,
+        field_colors=field_colors,
+        field_labels=field_labels,
+        legend_text=''
+    )
+    final_text = template_text + "\n" + "\n".join(annotate_text)
+    return final_text
+
+
+<<<<<<< HEAD
 def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos='0.5'):
+=======
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1):
+>>>>>>> e0280164d377f7cc6fd5d7054ddbb93798cceb3a
     """
     :param id2cat2val:
     :param cat2style:
@@ -600,7 +649,7 @@ def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos='0.5'):
         cat_vals = [gid, pos, '10']
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat, "0")))
-        cat_vals = sep.join(cat_vals)
+        cat_vals = sep.join([str(_) for _ in cat_vals])
         # gid,pos = str(gid),str(pos)
         annotate_text.append(cat_vals)
 

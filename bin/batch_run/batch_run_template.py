@@ -7,6 +7,7 @@ from subprocess import check_call
 
 import click
 from tqdm import tqdm
+from dating_workflow.step_script import get_files
 
 command_template = 'mafft --maxiterate 1000 --genafpair --thread -1 {infile} > {ofile}'
 
@@ -22,20 +23,18 @@ def unit_run(infile, ofile):
 
 
 def main(indir, odir, num_parellel, suffix='', new_suffix='', force=False):
-    suffix = suffix.strip('.')
-    new_suffix = new_suffix.strip('.')
+    suffix = '.'+suffix.strip('.')
+    new_suffix = '.'+new_suffix.strip('.')
     if not exists(odir):
         os.makedirs(odir)
-    if suffix:
-        suffix = '.' + suffix
-    file_list = glob(join(indir, f'*{suffix}'))
+    file_list = get_files(indir,suffix)
     tqdm.write("start to process %s file with '%s' as suffix" % (len(file_list), suffix))
     params = []
     for in_file in tqdm(file_list):
         if new_suffix and suffix:
             ofile = join(odir,
                          basename(in_file).replace(suffix,
-                                                   '.' + new_suffix))
+                                                   new_suffix))
         else:
             ofile = join(odir,
                          basename(in_file))

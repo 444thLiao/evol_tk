@@ -1,1 +1,0 @@
-# abbreviation of genome downloader

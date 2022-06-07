@@ -1,5 +1,6 @@
 from bin.ncbi_convertor import NCBI_convertor
-
+import os
+os.chdir('/home-user/thliao/script/evol_tk/bin/ncbi_convertor/example')
 if __name__ == "__main__":
     # test
     pids = open('./protein_ids').read().split('\n')

@@ -29,7 +29,6 @@ def eread(x):
 
 ncbi = NCBITaxa()
 taxons = ["superkingdom", "phylum", "class", "order", "family", "genus", "species"]
-
 tmp_dir = "~/.tmp_getINFO"
 tmp_dir = expanduser(tmp_dir)
 
@@ -127,7 +126,7 @@ def unpack_gb(prot_t):
         if v:
             _cache_dict[f"isolation_source"] = ";".join(v)
         v = source_fea.qualifiers.get("db_xref", [])
-        v = [_ for _ in v if _]
+        v = [_ for _ in v if _ and _.startswith('taxon')]
         if v:
             _cache_dict[f"taxon"] = int(v[0].split(":")[-1])
     # above annotations
@@ -187,30 +186,38 @@ def process_path(path):
 
 def parse_ipg(t):
     """
-        parse result efetched from Identical Protein Groups(ipg)
-    23582877        INSDC   HQ650005.1      1       452     +       AEG74045.1      ammonia monooxygenase subunit alpha     uncultured bacterium
-    186872893       INSDC   MG992186.1      1       531     +       AWG96903.1      particulate methane monooxygenase subunit A     uncultured bacterium
+Id      Source  Nucleotide Accession    Start   Stop    Strand  Protein Protein Name    Organism        Strain  Assembly
+13869719        RefSeq  NC_009937.1     1166617 1168176 -       WP_012169570.1  nitrogenase molybdenum-iron protein subunit beta        Azorhizobium caulinodans ORS 571        ORS 571      GCF_000010525.1
+13869719        RefSeq  NZ_SOBM01000006.1       312912  314471  +       WP_012169570.1  nitrogenase molybdenum-iron protein subunit beta        Azorhizobium sp. AG788  AG788   GCF_004364705.1
+13869719        INSDC   AP009384.1      1166617 1168176 -       BAF87037.1      nitrogenase molybdenum-iron protein beta chain  Azorhizobium caulinodans ORS 571        ORS 571 GCA_000010525.1
+13869719        INSDC   SOBM01000006.1  312912  314471  +       TDT92758.1      Mo-nitrogenase MoFe protein subunit NifK        Azorhizobium sp. AG788  AG788   GCA_004364705.1
         :param t:
         :return:
     """
+    headers = ['Id', 'Source', 'Nucleotide Accession', 'Start', 'Stop', 'Strand',
+       'Protein', 'Protein Name', 'Organism', 'Strain', 'Assembly']
     bucket = []
-    whole_df = pd.read_csv(io.StringIO(t), sep="\t", header=None)
-    gb = whole_df.groupby(6)  # groupby the locus id
+    whole_df = pd.read_csv(io.StringIO(t), sep="\t", header=0)
+    gb = whole_df.groupby('Protein')  # groupby the locus id
     all_dfs = [gb.get_group(x) for x in gb.groups]
+    tqdm.write(f'processing {len(all_dfs)} dataframe retrieved')
     for indivi_df in all_dfs:
         indivi_df.index = range(indivi_df.shape[0])
         # aid = indivi_df.iloc[0, 6]
         indivi_df = indivi_df.fillna("")
-        pos = [(row[2], row[3], row[4], row[5]) for row in indivi_df.values]
-        gb = [row[10] for row in indivi_df.values]
-        for row in indivi_df.values:
-            bucket.append((row[6], pos, gb))
+        pos = []
+        gb = []
+        for _idx,row in indivi_df.iterrows():
+            pos.append((row['Start'], row['Stop'], row['Strand'], row['Nucleotide Accession']))
+            gb.append(row['Assembly'])
+        for _idx,row in indivi_df.iterrows():
+            bucket.append((row['Protein'], pos, gb))
     return bucket
 
 
 def get_GI(ids, db, edl, no_order=False):
     tqdm.write("Get GI......")
-    ids = list(ids)
+    ids = [str(_) for _ in ids]
     if no_order:
         results, failed = edl.esearch(
             db=db, ids=ids, result_func=lambda x: eread(x)["IdList"], batch_size=50
@@ -227,9 +234,9 @@ def get_GI(ids, db, edl, no_order=False):
     # extra
     if db == "assembly":
         remained_ids = [
-            _.replace("GCF", "GCA")
+            str(_).replace("GCF", "GCA")
             for _ in ids
-            if _.startswith("GCF") and _ not in id2gi
+            if str(_).startswith("GCF") and _ not in id2gi
         ]
         if remained_ids:
             results, failed = edl.esearch(
