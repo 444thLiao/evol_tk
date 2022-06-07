@@ -627,11 +627,7 @@ def pie_size_chart(id2val, color='#ff0000',
     return final_text
 
 
-<<<<<<< HEAD
-def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos='0.5'):
-=======
 def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1):
->>>>>>> e0280164d377f7cc6fd5d7054ddbb93798cceb3a
     """
     :param id2cat2val:
     :param cat2style:
