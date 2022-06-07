@@ -582,7 +582,7 @@ LEGEND_LABELS{sep}{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()
     return text + "\n" + annotate_text
 
 
-def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=0.5):
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos='0.5'):
     """
     :param id2cat2val:
     :param cat2style:
