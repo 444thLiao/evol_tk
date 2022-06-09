@@ -93,7 +93,7 @@ def get_eventsize(xml_file):
     return df
 
 
-def get_p2node(xml_file,stree=None,key=''):
+def get_p2node(xml_file,stree=None,key='',return_all=False):
     p2node = {}
     p2node_transfer_receptor = {}
     if stree is None:

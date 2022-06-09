@@ -5,25 +5,17 @@ import os
 import plotly
 import plotly.graph_objs as go
 from tqdm import tqdm
-
+from ete3 import Tree
 from api_tools import tree_vis, read_tree
 
-
-def get_leafs(newick):
-    t = read_tree(newick, format="auto")
-    return t.get_leaf_names()
-
-
-def get_preferred_scale(newick1, newick2):
-    t1 = read_tree(newick1, format="auto")
-    t2 = read_tree(newick2, format="auto")
-    num_1 = len(t1.get_leaf_names())
-    num_2 = len(t2.get_leaf_names())
+def get_preferred_scale(leaves1, leaves2):
+    num_1 = len(leaves1)
+    num_2 = len(leaves2)
 
     yscale = num_1 / num_2
     return 1 / yscale
 
-from ete3 import Tree
+
 def cooridinate_two_identical_trees(newick1,newick2,l2r=None):
     def sort_way(n):
         if n.is_leaf():
@@ -134,9 +126,9 @@ def tanglegram(
     left_tre = tree_vis(newick1, branch_length=True)
     right_tre = tree_vis(newick2, branch_length=True)
 
-    left_leaves = get_leafs(newick1)
-    right_leaves = get_leafs(newick2)
-    yscale = get_preferred_scale(newick1, newick2)
+    left_leaves = [_.name for _ in left_tre.tree_obj.get_terminals()]
+    right_leaves = [_.name for _ in right_tre.tree_obj.get_terminals()]
+    yscale = get_preferred_scale(left_leaves, right_leaves)
     fig = plotly.tools.make_subplots(
         rows=1, cols=3, shared_yaxes=True, horizontal_spacing=0.05 / 3
     )

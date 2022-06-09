@@ -31,6 +31,8 @@ class tree_vis(object):
     def read_newick(self, newick):
         if type(newick) == Tree:
             return Phylo.read(io.StringIO(newick.write()), "newick")
+        elif 'tree_obj' in dir(newick):
+            return newick.tree_obj
         else:
             return Phylo.read(newick, "newick")
 
@@ -84,7 +86,7 @@ class tree_vis(object):
         else:
             return [_ for _ in self.tree_obj.get_terminals() if _.name==label][0]
         
-    def get_plotly_data(self, xscale=1, yscale=1, color="#000000", width=1, x_shift=0, y_shift=0,fix_length=None,
+    def get_plotly_data(self, xscale=1, yscale=1, color="#000000", width=1, x_shift=0, y_shift=0, fix_length=None,
     ):
         """[summary]
 
