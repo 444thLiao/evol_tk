@@ -94,7 +94,7 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     genome2annotate = dict(genome2annotate)
     # if not exists(cache_file):
     
-    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm")  # delete 2days ago cache
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' -delete")  # delete 2days ago cache
     with open(cache_file, 'wb') as f1:
         pickle.dump(genome2annotate, f1)
     return genome2annotate

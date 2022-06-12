@@ -627,7 +627,7 @@ def pie_size_chart(id2val, color='#ff0000',
     return final_text
 
 
-def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1):
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1,legend=False):
     """
     :param id2cat2val:
     :param cat2style:
@@ -651,11 +651,15 @@ def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1):
 
     field_labels = sep.join(sorted_cat)
     field_colors = sep.join([cat2style.get(c) for c in sorted_cat])
+    if legend:
+        l_text = deduced_legend(cat2style, sep=sep, info_name=dataset_name)
+    else:
+        l_text = '' 
     template_text = template_text.format(
         dataset_label=dataset_name,
         field_colors=field_colors,
         field_labels=field_labels,
-        legend_text=deduced_legend(cat2style, sep=sep, info_name=dataset_name),
+        legend_text=l_text,
     )
     final_text = template_text + "\n" + "\n".join(annotate_text)
     return final_text

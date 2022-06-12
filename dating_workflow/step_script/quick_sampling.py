@@ -79,7 +79,8 @@ def get_simple_LCA(node, maximum=10, l2cluster=None, genome2cog25={}):
         return sorted_leaves
 
 
-def sampling(st, target_nodes_text, must_in=[], node2cluster=None,
+def sampling(st, target_nodes_text, 
+             must_in=[], node2cluster=None,
              up_level=3, max_num_up_each_level=3,
              max_num_down=10, genome2cog25={}):
     """

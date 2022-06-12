@@ -95,7 +95,7 @@ def parse_annotation(cog_out_dir, top_hit=False, evalue=1e-3):
     
     # change it into normal dict in order to pickle it
     # if not exists(cache_file):
-    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' | xargs rm " + '{}')  # delete 2days ago cache
+    os.system(f"find {dirname(cache_file)} -mtime +2 -name '.tmp*' -delete " + '{}')  # delete 2days ago cache
     with open(cache_file, 'wb') as f1:
         pickle.dump(genome2cdd, f1)
     return genome2cdd
@@ -124,7 +124,7 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list,
     # else:
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
-    gids = list(get_genomes(genome_list,True))
+    gids = get_genomes(genome_list,True)
     protein_files = get_files(in_proteins,suffix)
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}','') in gids]
