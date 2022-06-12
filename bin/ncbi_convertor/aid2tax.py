@@ -51,7 +51,7 @@ def rewrite_existing_tab(aid2taxon_info):
     new_num = df.shape[0]
     print(f"latest tab contain {now_num} assembly IDs, now, merged tab contain {new_num} assembly IDs")
     df = df.sort_index()
-    df.to_csv(default_taxon_tab, index=1, index_label=df.index.name)
+    df.to_csv(default_taxon_tab,sep='\t', index=1, index_label=df.index.name)
 
 
 def aid2taxon(id_list, redo=False):
