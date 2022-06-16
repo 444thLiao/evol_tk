@@ -1,8 +1,6 @@
 
 from itolapi import Itol
 import os
-
-
 apikey = os.environ.get('ITOLKEY')
 def get_itoltree(tpath,outfile='./tmp.png',name='tmp',anno_files=[]):
     os.system(f"cp -r {tpath} ./tmp.tree ")
@@ -23,6 +21,6 @@ def get_itoltree(tpath,outfile='./tmp.png',name='tmp',anno_files=[]):
     itol_exporter.set_export_param_value('dashed_lines','0')
     suffix = outfile.split('.')[-1]
     itol_exporter.set_export_param_value('format', suffix)
-    itol_exporter.export(suffix)
-    os.system(f"rm ./tmp.tree ")
+    itol_exporter.export(outfile)
+    os.system(f"rm ./tmp.tree")
     return itol_uploader.get_webpage()
