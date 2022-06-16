@@ -24,7 +24,7 @@ COLOR,#ff0000
 
 #If COLOR_BRANCHES is set to 1, branches of the tree will be colored according to the colors of the strips above the leaves.
 #When all children of a node have the same color, it will be colored the same, ie. the color will propagate inwards towards the root.
-COLOR_BRANCHES,0
+#COLOR_BRANCHES,0
 
 #each dataset can have a legend, which is defined below
 #for each row in the legend, there should be one shape, color and label
