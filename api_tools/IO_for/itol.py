@@ -7,7 +7,7 @@ def get_itoltree(tpath,outfile='./tmp.png',name='tmp',anno_files=[]):
     itol_uploader = Itol()
     itol_uploader.params['projectName'] = 'batch_access_th'
     itol_uploader.params['APIkey'] = apikey
-    itol_uploader.params['treeName'] = name
+    itol_uploader.params['treeName'] = tpath.split('/')[-1]
     itol_uploader.add_file('./tmp.tree')
     for f in anno_files:
         itol_uploader.add_file(f)
