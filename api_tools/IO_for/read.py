@@ -28,40 +28,6 @@ def get_tophit(gid2locus,top_hit):
                       for k,v in gid2locus.items()}
     return gid2locus
 
-def parse_blastp(ofile,match_ids=[],top_hit = False):
-    if not match_ids:
-        gid2locus = defaultdict(list)
-    else:
-        gid2locus = {k:[] for k in match_ids}
-    for row in open(ofile,'r'):
-        sep_v = row.split('\t')
-        locus = sep_v[0]
-        evalue = sep_v[10]
-        if sep_v[1] in match_ids:
-            gid2locus[sep_v[1]].append((locus,evalue))
-        if not match_ids:
-            gid2locus[sep_v[1]].append((locus,evalue))
-    gid2locus = get_tophit(gid2locus,top_hit=top_hit)
-    return gid2locus
-
-def parse_hmmscan(ofile,filter_evalue=None,top_hit = False):
-    # deal with --tblout
-    gid2locus = defaultdict(list)
-    for row in open(ofile, 'r'):
-        if row.startswith('#'):
-            continue
-        r = row.split(' ')
-        r = [_ for _ in r if _]
-
-        gene_id = r[0]
-        locus_tag = r[2]
-        evalue = float(r[4])
-        if filter_evalue and evalue <= filter_evalue:
-            gid2locus[gene_id].append((locus_tag, evalue))
-        elif filter_evalue is None:
-            gid2locus[gene_id].append((locus_tag, evalue))
-    gid2locus = get_tophit(gid2locus,top_hit=top_hit)
-    return gid2locus
 
 
 def parse_hmmscan_domtblout(ofile,filter_evalue=None,top_hit = False):

@@ -8,6 +8,8 @@ More pdf files into a single page should be carefully handle the layout.
 
 It mainly used in `taxon specific.ipynb of machine learning project` currently.
 
+The second section of scripts are used in anammox project
+
 """
 
 from PyPDF2 import PdfFileReader, PdfFileWriter, PdfFileMerger
@@ -61,3 +63,36 @@ def out_four(figs, ofile=None,figsize=200):
     else:
         with open(ofile, 'wb') as fh:
             pdf_write.write(fh)
+            
+            
+            
+from decimal import Decimal
+import io,os
+from PIL import ImageDraw,ImageFont,Image
+from pdf2image import convert_from_path
+os.chdir('gene_GandL/genetrees/iqtree_o_pdf/')
+Fullimage = Image.new('RGB',(625*6, 655*6),'#ffffff')
+# 625 = size of each pdf//4
+draw = ImageDraw.Draw(Fullimage)
+fillColor = "#000000"
+font = ImageFont.truetype("/home-user/thliao/.fonts/arial.ttf", 15)
+pos = (0,0)
+for f in tqdm(glob('./*_MV_rooted.pdf')):
+    images = convert_from_path(f)
+    gene = f.split('/')[-1].split('_')[0]
+    a = images[0]
+    width,height = a.size
+    a = a.resize((width//4,height//4))
+    fig_pos = (pos[0] * 625, pos[1]*(625+30))
+    Fullimage.paste(a, box= fig_pos )
+    #a.save('./tmp.png')
+    text = f"Gene {gene}"
+    position = (fig_pos[0] + 285, fig_pos[1]+630)
+    draw.text(position,text,fill=fillColor,font=font,anchor ="lb",align ='center')
+    if pos[1] == 5:
+        pos = (pos[0]+1,0)
+        continue
+    pos = (pos[0],pos[1]+1) 
+Fullimage.save('./tmp.png')
+            
+            
