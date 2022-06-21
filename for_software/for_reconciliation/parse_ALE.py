@@ -23,7 +23,6 @@ def read_rec(rec_file):
     return df,stree
 
 def format_with_reftree(df,stree,ref_tree):
-    
     reftree = Tree(ref_tree,format=3)
     all_leaves = {_.split('_')[1]:_ for _ in reftree.get_leaf_names()}
     leaves2n = {tuple(sorted(n.get_leaf_names())):n.name for n in reftree.traverse()}
