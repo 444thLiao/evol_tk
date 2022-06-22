@@ -603,13 +603,13 @@ LEGEND_LABELS{sep}{sep.join(map(str, [_[0] for _ in list(sorted(l2colors.items()
     return text + "\n" + annotate_text
 
 def pie_size_chart(id2val, color='#ff0000', 
-                   dataset_name="habitat prob", pos=1):
+                   dataset_name="habitat prob", pos=1, factor=1):
     template_text = open(dataset_piechart_template).read()
     sep = get_used_sep(template_text)
     annotate_text = []
     
     for gid in id2val:
-        cat_vals = [gid, pos, str(id2val.get(gid,0))]
+        cat_vals = [gid, pos, str(int(id2val.get(gid,0)*factor))]
         cat_vals.append('1')
         cat_vals = sep.join([str(_) for _ in cat_vals])
         # gid,pos = str(gid),str(pos)
