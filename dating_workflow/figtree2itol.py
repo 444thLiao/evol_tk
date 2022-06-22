@@ -55,7 +55,7 @@ indir = join(dirname(dirname(__file__)), 'api_tools', 'itol_template')
 dataset_symbol_template = join(indir, 'dataset_symbols_template.txt')
 
 
-def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None, tree_format=3):
+def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_annotate=None, tree_format=3,log_format='*.out'):
     tree2 = Tree(intree_ori, format=int(tree_format))
     if root_with is not None:
         tree2.set_outgroup(tree2.get_common_ancestor(root_with))
@@ -68,8 +68,8 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
             t = re.sub('\[&95%HPD=.*?\]', sub_for, t)
             t = t.replace(' ', '')
             tree = Tree(t, format=1)
-    if glob(join(dirname(mcmc_out_tree), '*.out')):
-        outfile = glob(join(dirname(mcmc_out_tree), '*.out'))[0]
+    if glob(join(dirname(mcmc_out_tree), log_format)):
+        outfile = glob(join(dirname(mcmc_out_tree), log_format))[0]
         rename_tree = get_node_name(outfile)
     else:
         rename_tree = None
@@ -153,7 +153,8 @@ def main(intree_ori, mcmc_out_tree, output_dating_result_tree, root_with, itol_a
 @click.option('-od', 'itol_annotate', default=None)
 @click.option('-r', 'root_with', default=None, help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
 @click.option('-f', 'tree_format', default=3, help='')
-def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with, tree_format):
+@click.option('-l', 'log_format', default='*.out')
+def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, root_with, tree_format,log_format):
     output_dating_result_tree = process_path(output_dating_result_tree)
     if itol_annotate is None:
         itol_annotate = dirname(output_dating_result_tree)
@@ -168,7 +169,7 @@ def cli(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate, roo
     if not os.path.exists(dirname(output_dating_result_tree)):
         os.makedirs(dirname(output_dating_result_tree))
     main(intree_ori, mcmc_out_tree, output_dating_result_tree, itol_annotate=itol_annotate, root_with=root_with,
-         tree_format=tree_format)
+         tree_format=tree_format,log_format=log_format)
 
 
 # intree_ori = ''
