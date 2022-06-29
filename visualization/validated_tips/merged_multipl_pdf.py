@@ -17,82 +17,148 @@ from PyPDF2.pdf import PageObject
 from decimal import Decimal
 import io,os
 from pdf2image import convert_from_path
+from tqdm import tqdm
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 
-def out_four(figs, ofile=None,figsize=200):
-    figs_pdf = []
-    for fig in figs:
-        r = PdfFileReader(io.BytesIO(fig.to_image('pdf')))
-        figs_pdf.append(r.getPage(0))
-    if len(figs_pdf) == 4:
-        w = figs_pdf[0].mediaBox.getWidth()
-        h = figs_pdf[0].mediaBox.getHeight()
-        aw = 2*w - Decimal(0.2)*w
-        ah = 2*h - Decimal(0.2)*h
-        translated_page = PageObject.createBlankPage(None, aw, ah)
-        # mergeScaledTranslatedPage(page2, rotation, tx, ty, expand=True)
-        translated_page.mergeScaledTranslatedPage(figs_pdf[0], 1, 0, Decimal(0.8)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[1], 1, Decimal(0.8)*w, Decimal(0.8)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[2], 1, 0, 0)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[3], 1, Decimal(0.8)*w, 0)  
-    elif len(figs_pdf) == 6:
-        w = figs_pdf[0].mediaBox.getWidth()
-        h = figs_pdf[0].mediaBox.getHeight()
-        aw = 2*w - Decimal(0.2)*w
-        ah = 3*h - Decimal(0.4)*h
-        translated_page = PageObject.createBlankPage(None, aw, ah)
-        # mergeScaledTranslatedPage(page2, rotation, tx, ty, expand=True)
-        translated_page.mergeScaledTranslatedPage(figs_pdf[0], 1, 0, Decimal(1.6)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[1], 1, Decimal(0.8)*w, Decimal(1.6)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[2], 1, 0, Decimal(0.8)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[3], 1, Decimal(0.8)*w, Decimal(0.8)*h)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[4], 1, 0, 0)  
-        translated_page.mergeScaledTranslatedPage(figs_pdf[5], 1, Decimal(0.8)*w, 0)     
-    pdf_write = PdfFileWriter()
-    pdf_write.addPage(translated_page)
-    if ofile is None:
-        ofile = './tmp.pdf'
-        with open(ofile, 'wb') as fh:
-            pdf_write.write(fh)
-        pages = convert_from_path(ofile, figsize)
-        os.system(f"rm {ofile}")
-        pages[0].save('./tmp.png','PNG')
-        
-        bytes_fig = open('./tmp.png','rb').read()
-        os.system(f"rm ./tmp.png")
-        return bytes_fig
+pdfmetrics.registerFont(TTFont('Arial-ita', '/home-user/thliao/.fonts/Arial Italic.ttf'))
+
+def merged_pdfs(pdf_list,ofile='./tmp.pdf' ,shape=3):
+    """
+    It could only merged pdf into image. like png,jpeg
+    
+     shape is either a tuple or a intergrate. If it is a intergrate, it is taken as the number of cols. The number of cols will be calculated according to the number of pdf_list
+     if it is a tuple, it shoule be (nrow,ncol)
+    """
+    if type(shape) == int:
+        suffix = 1 if len(pdf_list)%shape else 0
+        nrow = len(pdf_list)//shape + suffix
+        ncol = shape
     else:
-        with open(ofile, 'wb') as fh:
-            pdf_write.write(fh)
-            
-            
-            
+        nrow,ncol = shape
+    print(nrow,ncol)
+    figs_pdf = []
+    names = []
+    for pdf in pdf_list:
+        r = PdfFileReader(open(pdf,'rb'))
+        figs_pdf.append(r.getPage(0))
+        names.append(pdf.split('/')[-1].split('_')[0])
+    w = figs_pdf[0].mediaBox.getWidth()
+    h = figs_pdf[0].mediaBox.getHeight()
+    aw = ncol*w; ah = nrow* (h )
+    final_page = PageObject.createBlankPage(None, aw, ah)
+    pos = (0,0)  #  x,y ; width, height
+    for name,pdf_obj in tqdm(zip(names,figs_pdf)):
+        #text_in_pdf = make_pdf_text(name,size=(10,10))
+        fig_pos = (pos[0]*w, pos[1]*(h))
+        final_page.mergeScaledTranslatedPage(pdf_obj, 1, fig_pos[0],fig_pos[1])  
+        # mid_x = (w-10)/2
+        # final_page.mergeScaledTranslatedPage(text_in_pdf, 1, fig_pos[0]+mid_x,fig_pos[1]+h+50)  
+        if pos[0] == ncol-1:
+            pos = (0,pos[1]+1)
+        else:
+            pos = (pos[0]+1,pos[1]) 
+    pdf_write = PdfFileWriter()
+    pdf_write.addPage(final_page)
+    with open(ofile, 'wb') as fh:
+        pdf_write.write(fh)
+        
+def make_pdf_text(text,size=(10,10),fontsize=12):
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet,pagesize=size)
+    can.setFont("Arial-ita",fontsize)
+    can.drawCentredString(size[0]/2,size[1]/2,text)
+    can.save()
+    packet.seek(0)
+    return PdfFileReader(packet).getPage(0) 
+
+def merged_pdfs_with_texts(pdf_list,ofile='./tmp.pdf' ,shape=3,out_name=True):
+    """
+    It could only merged pdf into image. like png,jpeg
+    
+     shape is either a tuple or a intergrate. If it is a intergrate, it is taken as the number of cols. The number of cols will be calculated according to the number of pdf_list
+     if it is a tuple, it shoule be (nrow,ncol)
+    """
+    if type(shape) == int:
+        suffix = 1 if len(pdf_list)%shape else 0
+        nrow = len(pdf_list)//shape + suffix
+        ncol = shape
+    else:
+        nrow,ncol = shape
+    #print(nrow,ncol)
+    figs_pdf = []
+    names = []
+    for pdf in pdf_list:
+        r = PdfFileReader(open(pdf,'rb'))
+        figs_pdf.append(r.getPage(0))
+        names.append(pdf.split('/')[-1].split('_')[0])
+    w = figs_pdf[0].mediaBox.getWidth()
+    h = figs_pdf[0].mediaBox.getHeight()
+    text_height = 80
+    aw = ncol*w; ah = nrow* (h + text_height )
+    final_page = PageObject.createBlankPage(None, aw, ah)
+    pos = (0,0)  #  x,y ; width, height
+    for name,pdf_obj in tqdm(zip(names,figs_pdf)):
+        text_in_pdf = make_pdf_text(name,size=(float(w),text_height),fontsize=50)
+        fig_pos = (pos[0]*w, pos[1]*(h) + text_height*(pos[1]+1) )
+        final_page.mergeScaledTranslatedPage(pdf_obj, 1, fig_pos[0],fig_pos[1])  
+        
+        final_page.mergeScaledTranslatedPage(text_in_pdf, 1, fig_pos[0],fig_pos[1]-text_height)  
+        if pos[0] == ncol-1:
+            pos = (0,pos[1]+1)
+        else:
+            pos = (pos[0]+1,pos[1]) 
+    pdf_write = PdfFileWriter()
+    pdf_write.addPage(final_page)
+    with open(ofile, 'wb') as fh:
+        pdf_write.write(fh)
+         
 from decimal import Decimal
 import io,os
 from PIL import ImageDraw,ImageFont,Image
 from pdf2image import convert_from_path
 os.chdir('gene_GandL/genetrees/iqtree_o_pdf/')
-Fullimage = Image.new('RGB',(625*6, 655*6),'#ffffff')
-# 625 = size of each pdf//4
-draw = ImageDraw.Draw(Fullimage)
-fillColor = "#000000"
-font = ImageFont.truetype("/home-user/thliao/.fonts/arial.ttf", 15)
-pos = (0,0)
-for f in tqdm(glob('./*_MV_rooted.pdf')):
-    images = convert_from_path(f)
-    gene = f.split('/')[-1].split('_')[0]
-    a = images[0]
-    width,height = a.size
-    a = a.resize((width//4,height//4))
-    fig_pos = (pos[0] * 625, pos[1]*(625+30))
-    Fullimage.paste(a, box= fig_pos )
-    #a.save('./tmp.png')
-    text = f"Gene {gene}"
-    position = (fig_pos[0] + 285, fig_pos[1]+630)
-    draw.text(position,text,fill=fillColor,font=font,anchor ="lb",align ='center')
-    if pos[1] == 5:
-        pos = (pos[0]+1,0)
-        continue
-    pos = (pos[0],pos[1]+1) 
-Fullimage.save('./tmp.png')
-            
-            
+
+def get_figs(pdf_list,outfile='./tmp.png' ,shape=3,each_size=625,title_height=100):
+    """
+    It could only merged pdf into image. like png,jpeg
+    
+     shape is either a tuple or a intergrate. If it is a intergrate, it is taken as the number of cols. The number of cols will be calculated according to the number of pdf_list
+     if it is a tuple, it shoule be (nrow,ncol)
+    """
+    if type(shape) == int:
+        suffix = 1 if len(pdf_list)%shape else 0
+        nrow = len(pdf_list)//shape + suffix
+        ncol = shape
+    else:
+        nrow,ncol = shape
+    print(nrow,ncol)
+    init_bg = Image.new('RGB',
+                        (each_size*ncol, (each_size+title_height)*nrow),  # width,height
+                        '#ffffff')
+    draw = ImageDraw.Draw(init_bg)
+    fillColor = "#000000"
+    font = ImageFont.truetype("/home-user/thliao/.fonts/Arial Italic.ttf", 45)
+    pos = (0,0)  #  x,y ; width, height
+    for f in tqdm(pdf_list):
+        images = convert_from_path(f)
+        gene = f.split('/')[-1].split('_')[0]
+        a = images[0]
+        width,height = a.size
+        a = a.resize((width//4,height//4))
+        fig_pos = (pos[0] * each_size, pos[1]*(each_size+title_height))
+        init_bg.paste(a, box= fig_pos )
+        text = f"{gene}"
+        w,h = font.getsize(text)
+        mid_x = (each_size-w)/2
+        position = (fig_pos[0] + mid_x, fig_pos[1]+each_size+15)
+        draw.text(position,text,fill=fillColor,font=font,anchor ="lb",align ='center')
+        if pos[0] == nrow:
+            pos = (0,pos[1]+1)
+        else:
+            pos = (pos[0]+1,pos[1]) 
+    init_bg.save(outfile)
+
+
