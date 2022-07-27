@@ -6,11 +6,21 @@ from glob import glob
 from os.path import *
 
 import click
-from Bio import AlignIO
+from Bio import AlignIO,SeqIO
 
 from dating_workflow.bin.concat_aln import convert_genome_ID_rev,generate_phy_file
 
-
+def aln2phy(aln,phy):
+    r = {_.id:_ for _ in SeqIO.parse(aln,'fasta')}
+    num_s = len(r)
+    num_sites = len(list(r.values())[0].seq)
+    with open(phy,'w') as f1:
+        f1.write(f"{num_s} {num_sites}\n")
+        for k,v in r.items():
+            f1.write(f"{k}               {v.seq}\n")
+            
+    
+    
 @click.command()
 @click.option('-i', 'infile', help='aln file')
 @click.option('-o', 'outfile', default=None, required=None)
