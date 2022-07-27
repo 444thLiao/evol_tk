@@ -121,19 +121,3 @@ def cli(indir, odir, num_parellel, suffix, new_suffix, genome_list, force, mode_
 
 if __name__ == "__main__":
     cli()
-
-new_file_list = []
-tqdm.write('iterating files to collect with giving genome ids')
-for n_f,f_list in tqdm(of2f_list.items()):
-    records = []
-    for f in f_list:
-        with open(f) as f1:
-            for _ in SeqIO.parse(f1,format='fasta'):
-                records.append(_)
-    # records = [_
-    #             for _ in records
-    #             if _.id in all_prefix]
-    if (not records) or (len(records) == 1):
-        print(f'no available (or only one) record could be used in {f}')
-        continue
-    new_file_list.append(n_f)
