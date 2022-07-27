@@ -1,6 +1,6 @@
 from os.path import *
 from ete3 import Tree
-from for_software.for_generax.parse_results import get_p2node
+from for_software.for_reconciliation.parse_generax import get_p2node
 from dating_workflow.step_script.quick_sampling import *
 from api_tools import to_binary_shape,to_color_range,pie_chart
 

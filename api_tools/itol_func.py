@@ -627,7 +627,7 @@ def pie_size_chart(id2val, color='#ff0000',
     return final_text
 
 
-def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1,legend=False):
+def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob",scaled_radius=False, pos=1,legend=False):
     """
     :param id2cat2val:
     :param cat2style:
@@ -640,9 +640,14 @@ def pie_chart(id2cat2val, cat2style, dataset_name="habitat prob", pos=1,legend=F
     all_cat = [_k for _k, v in id2cat2val.items() for _k in v]
     all_cat = list(set(all_cat))
     sorted_cat = sorted(all_cat)
-
+    
+        
     for gid in id2cat2val:
-        cat_vals = [gid, pos, '10']
+        if not scaled_radius:
+            d = 10
+        else:
+            d = sum(id2cat2val[gid].values())
+        cat_vals = [gid, pos, str(d)]
         for cat in sorted_cat:
             cat_vals.append(str(id2cat2val[gid].get(cat, "0")))
         cat_vals = sep.join([str(_) for _ in cat_vals])
