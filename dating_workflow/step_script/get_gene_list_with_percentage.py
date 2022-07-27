@@ -36,14 +36,13 @@ def cli(indir, ofile, suffix, num_percentage, num_genomes, genome_list):
         gids = f1.read().split('\n')
     gids = [convert_genome_ID(_) for _ in gids]
 
-    if num_genomes is None and num_percentage is None:
-        num_percentage = 100
+    if num_genomes is None:
         num_genomes = len(gids)
-    elif num_genomes is None:
-        num_percentage = int(num_percentage)
-        num_genomes = len(gids) * num_percentage / 100
-    else:
-        num_genomes = int(num_genomes)
+    if num_percentage is None:
+        num_percentage = 100
+
+    num_genomes = int(num_genomes) * int(num_percentage) / 100
+
     genes = main(indir, suffix, num_genomes)
 
     ofile = process_path(ofile)
