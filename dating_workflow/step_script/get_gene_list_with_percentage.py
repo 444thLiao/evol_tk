@@ -27,8 +27,8 @@ def main(indir, suffix, num_genomes):
 @click.option("-o", "ofile", default=None, help="path of outfile.")
 @click.option('-s', 'suffix', default='aln')
 @click.option("-gl", "genome_list", default=None, help="it will read 'selected_genomes.txt', please prepare the file, or indicate the alternative name or path.")
-@click.option('-num_p', 'num_percentage', default=None, help="1-100")
-@click.option('-num', 'num_genomes', default=None)
+@click.option('-num_p', 'num_percentage', default=None, type=float, help="1-100")
+@click.option('-num', 'num_genomes', type=int, default=None)
 def cli(indir, ofile, suffix, num_percentage, num_genomes, genome_list):
     if genome_list is None:
         genome_list = join(indir, 'selected_genomes.txt')
