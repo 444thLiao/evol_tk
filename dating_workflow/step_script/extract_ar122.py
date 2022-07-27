@@ -11,7 +11,7 @@ from glob import glob
 from os.path import getsize,basename,exists,dirname,join,realpath
 
 import click
-from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes
+from dating_workflow.step_script import parse_hmmscan, run, get_seq_and_write, write_out_stats,get_genomes,get_files
 from tqdm import tqdm
 
 HOME = os.getenv("HOME")
@@ -28,7 +28,7 @@ tigfam_ids = [_.strip() for _ in id_list if _.startswith('TIGR')]
 
 # ABOVE is the default setting for luolab server.
 
-def annotate_ar120(protein_files, odir, db_id='pfam', cpu=10, num_p=5):
+def annotate_ar120(protein_files, odir, db_id='pfam', cpu=10, num_p=5, suffix='.faa'):
     params = []
     if not exists(odir):
         os.makedirs(odir)
@@ -36,7 +36,7 @@ def annotate_ar120(protein_files, odir, db_id='pfam', cpu=10, num_p=5):
     size0_pfiles = []
     hmmscan = '`which hmmscan`'
     for pfile in protein_files:
-        gname = basename(pfile).replace('.faa', '')
+        gname = basename(pfile).replace(suffix, '')
         if getsize(pfile) == 0:
             size0_pfiles.append(pfile)
             continue
@@ -86,11 +86,11 @@ def parse_annotation(odir, top_hit=False, evalue=1e-50):
     tqdm.write('start to read/parse output files (cdd and tigrfam)')
     for ofile in tqdm(tigrfam_anno_files + cdd_anno_files):
         gname = basename(ofile).replace('.out', '')
-        locus_dict = parse_hmmscan(ofile=ofile,
-                                   top_hit=top_hit,
-                                   filter_evalue=evalue,
-                                   gene_pos=1)
-        genome2annotate[gname].update(locus_dict)
+        locus2gene,gene2list_locus = parse_hmmscan(ofile=ofile,
+                                                   top_hit=top_hit,
+                                                   filter_evalue=evalue,
+                                                   _pos = [2,1])
+        genome2annotate[gname].update({k:[v] for k,v in gene2list_locus.items()})
     genome2annotate = dict(genome2annotate)
     # if not exists(cache_file):
     
@@ -121,8 +121,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     # else:
     #     gids = open(genome_list).read().split('\n')
     #     gids = list(set([_ for _ in gids if _]))
-    gids = list(get_genomes(genome_list,False))
-    protein_files = glob(join(in_proteins, '*.' + suffix.strip('.')))
+    gids = get_genomes(genome_list,True)
+    protein_files = get_files(in_proteins,suffix.strip('.'))
     if gids:
         protein_files = [_ for _ in protein_files if basename(_).replace(f'.{suffix}', '') in gids]
     # gids = []
@@ -131,8 +131,8 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     tqdm.write("Annotating these proteins, it only run once.. For tigrfam and pfam.")
 
     if not pass_annotation:
-        annotate_ar120(protein_files, in_annotations, db_id='tigrfam')
-        annotate_ar120(protein_files, in_annotations, db_id='pfam')
+        annotate_ar120(protein_files, in_annotations, db_id='tigrfam',suffix=f'.{suffix}')
+        annotate_ar120(protein_files, in_annotations, db_id='pfam', suffix=f'.{suffix}')
     if annotation_only:
         exit(f"finish annotation")
 
@@ -150,9 +150,9 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
     else:
         _subgenome2cdd = genome2genes.copy()
     if output_type.lower() in ['prot', 'protein']:
-        get_seq_and_write(outdir, _subgenome2cdd, in_proteins, genome_ids=gids, get_type='prot', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, _subgenome2cdd, protein_files, _suffix=suffix, get_type='prot', prokka_dir=prokka_dir)
     elif output_type.lower() in ['nucl', 'nucleotide']:
-        get_seq_and_write(outdir, _subgenome2cdd, in_proteins, genome_ids=gids, get_type='nuc', prokka_dir=prokka_dir)
+        get_seq_and_write(outdir, _subgenome2cdd, protein_files, _suffix=suffix, get_type='nuc', prokka_dir=prokka_dir)
     else:
         raise IOError('wrong input of output_type')
 
