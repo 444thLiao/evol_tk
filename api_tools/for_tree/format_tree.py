@@ -92,7 +92,7 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
     t = read_tree(in_tree_file, format=format)
     for n in t.traverse():
         if not n.name:
-            if not str(int(n.support)) or str(int(n.support)) == '1.0':
+            if not str(int(n.support)) or str(int(n.support)) == '1':
                 n.name = 'I%s' % (count)
             else:
                 n.name = 'I%s_S%s' % (count, str(int(n.support)))

@@ -49,7 +49,7 @@ Due to the differences of name conversion between genbank and refseq, it need to
 
 For small number of genomes, you could use the result of orthofinder to build the phylogenetic tree.
 
-`orthofinder -f raw_genome_proteins -og -a 50 -1 -s diamond`
+`orthofinder -f raw_genome_proteins -og -a 50 -1 -S diamond`
 
 ## 3.2 extract conserved protein for building phylogenetic tree
 ### a. extract proteins

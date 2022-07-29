@@ -55,6 +55,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
         new_file_list = []
         tqdm.write('iterating files to collect with giving genome ids')
         for n_f,f_list in tqdm(of2f_list.items()):
+            # this part could be more slow to get the right selected records
             records = [_ for f in f_list for _ in SeqIO.parse(f, format='fasta')]
             records = [_
                        for _ in records

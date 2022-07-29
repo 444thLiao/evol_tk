@@ -38,6 +38,8 @@ def main(indir, suffix, num_genes,not_add_prefix_ids):
 @click.option('-num', 'num_genes', default=None)
 @click.option('-not_add_prefix', 'not_add_prefix', help='provide a list of id which do not add prefix as others. ', default=None, required=False)
 def cli(indir, ofile, suffix, num_percentage, num_genes, num_total_genes,not_add_prefix):
+    if not exists(indir):
+        return exit(f"The {indir} does not exists.")
     if num_genes is None and num_percentage is None:
         num_percentage = 100
         num_genes = num_total_genes
