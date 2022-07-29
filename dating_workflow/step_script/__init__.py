@@ -6,6 +6,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 import os
 from glob import glob
+from Bio import Seq
 from api_tools.tk import run,refresh_tmp,get_files,get_genomes,get_tophit,parse_blastp,parse_hmmscan,convert_genome_ID,convert_genome_ID_rev
 
 def process_path(path):
@@ -79,6 +80,16 @@ def try_get_file_from_formatted_dir(genome_name,
         return genome2seq, collect_no_prokka_gids
     return genome2seq, collect_no_prokka_gids
 
+def remove_3rd(record,return_seq=False):
+    # inplace remove the 3rd
+    seq = str(record.seq)
+    two_partitions = [seq[::3],seq[1::3]]
+    final_seq = ''.join([''.join(_) for _ in zip(*two_partitions)])
+    #final_seq = final_seq[:-2]
+    if return_seq:
+        return final_seq
+    record.seq = Seq(final_seq)  # :-2 mean remove the lefted stop codon 
+    return record
 
 # extract protein
 def get_seq_and_write(outdir,

@@ -4,15 +4,13 @@ For easily perform mafft for some
 
 import multiprocessing as mp
 import os
-from glob import glob
 from os.path import *
 from subprocess import check_call
 
 import click
 from Bio import SeqIO
 from tqdm import tqdm
-from Bio.Seq import Seq
-from dating_workflow.step_script import convert_genome_ID_rev,get_genomes,get_files,refresh_tmp
+from dating_workflow.step_script import get_genomes,get_files,refresh_tmp, remove_3rd
 
 default_mode = 'ginsi'
 command_template = '{mode} --anysymbol --thread -1 {in_file} > {o_file} '
@@ -30,16 +28,6 @@ def unit_run(in_file, o_file, mode):
                stdout=open('/dev/null', 'w'),
                stderr=open('/dev/null', 'w'))
 
-def remove_3rd(record,return_seq=False):
-    # inplace remove the 3rd
-    seq = str(record.seq)
-    two_partitions = [seq[::3],seq[1::3]]
-    final_seq = ''.join([''.join(_) for _ in zip(*two_partitions)])
-    #final_seq = final_seq[:-2]
-    if return_seq:
-        return final_seq
-    record.seq = Seq(final_seq)  # :-2 mean remove the lefted stop codon 
-    return record
 
 def main(in_dir, odir, num_parellel, suffix='', new_suffix='', 
          name2prefix=None, force=False, 
