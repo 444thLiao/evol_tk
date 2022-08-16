@@ -1,3 +1,4 @@
+from email.policy import default
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
@@ -7,6 +8,23 @@ def get_text(x):
     else:
         return x.text.strip().strip('\n')
 
+def parse_elink_xml(xml_text):
+    soup = BeautifulSoup(xml_text, 'xml')
+    split_out = soup.find_all("LinkSet")
+    ori2aft = defaultdict(set)
+    for each_record in split_out:
+        dbfrom = each_record.find('DbFrom')
+        if dbfrom.find_next().find('Id') is not None:
+            ori_id = dbfrom.find_next().find('Id').getText().strip()
+        else:
+            continue
+        for dbto in each_record.find_all('DbTo'):
+            link_t = dbto.find_next_sibling('Link')
+            if link_t is not None:    
+                aft_id = list(link_t.children)[1].getText()
+                ori2aft[ori_id].add(aft_id)
+    return list(ori2aft.items())
+            
 def parse_bioproject_xml(xml_text):
     result_bucket = []
     soup = BeautifulSoup(xml_text, 'xml')

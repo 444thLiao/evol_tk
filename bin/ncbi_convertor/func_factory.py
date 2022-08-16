@@ -88,19 +88,23 @@ class NCBI_convertor:
         else:
             print("No cache found.")
 
-    def get_seq(self, batch_size=5, method="get",preset='seq'):
+    def get_seq(self, batch_size=5, method="get",preset='seq',mode='new'):
         # for protein
         self.check_methods(method)
-        
-        ids = self.origin_ids
         if self.dbname not in ["nucleotide", "protein", 'nuccore']:
-            raise SyntaxError
+            raise SyntaxError        
         if preset == 'seq':
             retype='fasta'
             format='fasta'
         elif preset=='genbank':
             retype='gb'
             format='genbank'
+                    
+        if mode=='new':
+            ids = self.origin_ids
+        else:
+            ids = self.get_GI(method='update')
+            
         results, failed = self.edl.efetch(
             db=self.dbname,
             ids=ids,
@@ -120,7 +124,8 @@ class NCBI_convertor:
             return self.GI
         if method == "update" and self.GI is not None:
             ids = [k for k, v in self.GI.items() if not v]
-        elif method == "get" or self.GI is not None:
+        elif method == "get" and self.GI is not None:
+            
             print(f"original values have {len(self.origin_ids)} but returns pre-existed {len(self.GI)}")
             return self.GI
         elif method == "get" or self.GI is None:
@@ -143,7 +148,9 @@ class NCBI_convertor:
     def get_db_summary(self, all_GI=None, method="update"):
         self.check_methods(method)
         if all_GI is None:
-            all_GI = list(self.get_GI().values())
+            all_GI = self.get_GI()
+            if all_GI is dict:
+                all_GI = list(all_GI.values())
         if method == 'get' and self.dbsummary is not None:
             return self.dbsummary
             

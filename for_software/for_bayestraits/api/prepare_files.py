@@ -19,7 +19,6 @@ from for_software.for_bayestraits.toolkit.construct_kit import nw2nexus, get_tag
 def cli(intree, odir):
     main(intree, odir,)
     
-
 def main(intree, odir,tree_format=3,):
     if not exists(odir):
         os.makedirs(odir)

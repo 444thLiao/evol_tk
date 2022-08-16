@@ -1,14 +1,16 @@
 """
-The main purpose of this script is to retrieve sequences using seq id.
-Only obtaining sequences using protein/nuccore assession is currently supported.
+The main purpose of this script is to convert protein id to nuccore ID
+
 """
 
 try:
-    from bin.ncbi_convertor import NCBI_convertor
+    from bin.ncbi_convertor import NCBI_convertor,edl
+    from api_tools.third_party.metadata_parser import parse_elink_xml
 except ModuleNotFoundError:
     import sys
     sys.path.insert(0,'/home-user/thliao/script/evol_tk')
-    from bin.ncbi_convertor import NCBI_convertor
+    from bin.ncbi_convertor import NCBI_convertor,edl
+    from api_tools.third_party.metadata_parser import parse_elink_xml
     
 import click
 from Bio import SeqIO
@@ -22,25 +24,28 @@ from os.path import *
 @click.option('-f', 'format', help='default is fasta. fasta or genbank')
 @click.option('-s', 'size', help='default is 100')
 def cli(infile, ofile, database,format,size):
+
     id_list = open(infile).read().strip().split('\n')
-    convertor = NCBI_convertor(id_list,database)
+    results, failed = edl.elink(
+        dbfrom="protein",
+        db="nuccore",
+        ids=id_list,
+        idtype='acc'    ,
+        result_func=lambda x: parse_elink_xml(x),
+    )
+    pid2nids = dict(results)
+    
+    
     if (not exists(dirname(ofile))) and '/' in ofile:
         os.system(f"mkdir -p {dirname(ofile)}")
     if format.lower()=='fasta'    :
         seqs = convertor.get_seq(batch_size=int(size))
         with open(ofile,'w') as f1:
             SeqIO.write(seqs,f1,'fasta-2line')
-        all_ids = [_.id for _ in seqs]
-        missing_ids = set(id_list).difference(all_ids)
-        if len(missing_ids) !=0:
-            print(f"There are {len(missing_ids)} failed downloaded. It has been writtn in log.txt ")
-            with open('./log.txt','w') as f1:
-                f1.write('\n'.join(missing_ids))
     elif format.lower()=='genbank':
         seqs = convertor.get_seq(batch_size=int(size),
                                  preset='genbank')
         with open(ofile,'w') as f1:
             SeqIO.write(seqs,f1,'genbank')
-    
 if __name__ == '__main__':
     cli()

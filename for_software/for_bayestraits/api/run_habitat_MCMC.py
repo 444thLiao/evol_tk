@@ -22,7 +22,7 @@ from for_software.for_bayestraits.toolkit.get_result import get_result, summaize
 # inmetadata = './bayesTraits_test/m2nm.txt'
 # odir = './bayestraits_habitat'
 
-bt_exe = expanduser("~/software/BayesTraitsV3.0.2-Linux/BayesTraitsV3")
+bt_exe = expanduser("~/bin/BayesTraits")
 
 def run(cmd):
     check_call(cmd, shell=True)
