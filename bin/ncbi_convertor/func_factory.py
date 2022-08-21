@@ -34,7 +34,7 @@ def read_efetch(t):
     for r in records:
         tmp[r.id] = unpack_gb(r)
     return [tmp]
-    
+
 class NCBI_convertor:
     "prototype of function which convert ID to GI"
 
@@ -53,14 +53,14 @@ class NCBI_convertor:
         self.validate_methods = ['get','update']
         if self.edl.email is None:
             print("EDL you pass without an API key. If you pass a key, it could speed up 3times at most. You could use API key by set the environment parameters 'EMAIL' and 'EKEY', and then run it in new terminal. Or use the function refresh_key to update the email and api_key. " )
-    
+
     def refresh_key(self,email=None,api_key=None):
         if email is None:
             email = os.getenv('EMAIL')
             api_key = os.getenv("EKEY")
         self.edl.email = email
         self.edl.api_key = api_key
-        
+
     def load_from_file(self, infile):
         # todo:
         pass
@@ -76,7 +76,7 @@ class NCBI_convertor:
     def check_methods(self,m):
         if m not in self.validate_methods:
             raise IOError(f'method {m} is not in the validated_methods')
-        
+
     def check_cache(self, suffix, redo):
         _cache = access_intermedia(self.origin_ids, suffix=suffix, redo=redo)
         if _cache is not None:
@@ -92,19 +92,19 @@ class NCBI_convertor:
         # for protein
         self.check_methods(method)
         if self.dbname not in ["nucleotide", "protein", 'nuccore']:
-            raise SyntaxError        
+            raise SyntaxError
         if preset == 'seq':
             retype='fasta'
             format='fasta'
         elif preset=='genbank':
             retype='gb'
             format='genbank'
-                    
+
         if mode=='new':
             ids = self.origin_ids
         else:
             ids = self.get_GI(method='update')
-            
+
         results, failed = self.edl.efetch(
             db=self.dbname,
             ids=ids,
@@ -125,14 +125,14 @@ class NCBI_convertor:
         if method == "update" and self.GI is not None:
             ids = [k for k, v in self.GI.items() if not v]
         elif method == "get" and self.GI is not None:
-            
+
             print(f"original values have {len(self.origin_ids)} but returns pre-existed {len(self.GI)}")
             return self.GI
         elif method == "get" or self.GI is None:
             ids = self.origin_ids
         else:
             raise IOError('unexpected if/else')
-        
+
         id2gi, failed = get_GI(ids, self.dbname, self.edl)
         # stodge the result into intermedia file for second access.
         process_name = f"{self.dbname}2GI"
@@ -147,13 +147,15 @@ class NCBI_convertor:
 
     def get_db_summary(self, all_GI=None, method="update"):
         self.check_methods(method)
-        if all_GI is None:
+        if all_GI:
+            final_gids = list(all_GI)
+        else:
             all_GI = self.get_GI()
-            if all_GI is dict:
-                all_GI = list(all_GI.values())
+            final_gids = list(all_GI.values())
+
         if method == 'get' and self.dbsummary is not None:
             return self.dbsummary
-            
+
         tqdm.write("Getting summary from each one")
         _results = []
         if self.dbname in batch_return_dbs:
@@ -161,27 +163,27 @@ class NCBI_convertor:
         elif self.dbname == 'protein':
             results, failed = self.edl.efetch(
                 db=self.dbname,
-                ids=all_GI,
+                ids=final_gids,
                 retmode="text",
                 retype="gp",
                 result_func=lambda x: read_efetch(x),)
             for result in results:
                 self.dbsummary.update(result)
-                
+
         elif self.dbname == 'nuccore':
             results, failed = self.edl.efetch(
                 db=self.dbname,
-                ids=all_GI,
+                ids=final_gids,
                 retmode="text",
                 retype="gb",
                 result_func=lambda x: read_efetch(x),)
             for result in results:
                 self.dbsummary.update(result)
-                
+
         elif self.dbname in single_return_dbs:
             results, failed = self.edl.esummary(
                 db=self.dbname,
-                ids=all_GI,
+                ids=final_gids,
                 result_func=lambda x: eread(x),
             )
             if failed:
@@ -200,8 +202,8 @@ class NCBI_convertor:
 
         elif self.dbname == "assembly":
             results, failed = self.edl.esummary(
-                db="assembly", 
-                ids=all_GI, 
+                db="assembly",
+                ids=final_gids,
                 result_func=lambda x: parse_assembly_xml(x)
             )
             # return results is a list of defaultdict.
@@ -211,29 +213,30 @@ class NCBI_convertor:
                     info_dict["TaxId"] = info_dict["SpeciesTaxid"]
                 self.dbsummary.update(_dict)
         return self.dbsummary
-    
+
     def get_taxon(self,method='get'):
         self.check_methods(method)
         if self.dbname not in tax_convertable_dbs:
             raise IOError(f"the original ID not in '{' '.join(tax_convertable_dbs)}' ")
-        dbsummary = self.get_db_summary(method=method)    
+        dbsummary = self.get_db_summary(method=method)
         for aid, result in dbsummary.items():
             if 'TaxId' in result:
                 self.tids[aid] = int(result["TaxId"])
             elif 'taxon' in result:
                 self.tids[aid] = int(result["taxon"])
         return self.tids
-    
+
     def get_key_from_summary_results(self, retrieve_r):
         if self.dbname in ["protein", "nuccore","nucleotide"]:
             return {retrieve_r["AccessionVersion"]: retrieve_r}
     def construct_taxon_info_dict(self):
         pass
 
-    def get_taxons_from_tid(self,tids=None):
-        if tids is None:
+    def get_taxons_from_tid(self,tids={}):
+        if len(tids) == 0:
             tids = self.tids
-            # tids = self.get_taxon('get')
+            if len(tids) == 0:
+                tids = self.get_taxon('get')
         # tqdm.write('get tid info using NCBITaxa')
         id2taxon = {}
         for ori_id, tid in tqdm(tids.items()):
@@ -247,7 +250,7 @@ class NCBI_convertor:
     def update_all(self):
         # todo: update whole convertor when it add extra ID
         pass
-    
+
     def pid2assembly(self,batch_size=50):
         if self.dbname != "protein":
             raise SyntaxError("source database must be protein")
@@ -327,7 +330,7 @@ class NCBI_convertor:
 
 
 
-    
-    
+
+
 if __name__ == "__main__":
     pass
