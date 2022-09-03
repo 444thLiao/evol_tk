@@ -61,7 +61,7 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
                        for _ in records
                        if _.id in all_prefix]
             if (not records) or (len(records) == 1):
-                print(f'no available (or only one) record could be used in {f}')
+                print(f'no available (or only one) record could be used in {n_f}')
                 continue
             if remove3rd:
                 records = [remove_3rd(r)

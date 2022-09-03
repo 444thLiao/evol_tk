@@ -153,7 +153,7 @@ class NCBI_convertor:
             all_GI = self.get_GI()
             final_gids = list(all_GI.values())
 
-        if method == 'get' and self.dbsummary is not None:
+        if method == 'get' and len(self.dbsummary)!=0:
             return self.dbsummary
 
         tqdm.write("Getting summary from each one")
