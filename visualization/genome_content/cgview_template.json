@@ -1,0 +1,73 @@
+{
+    "cgview": {
+        "version": "1.3.0",
+        "created": "",
+        "updated": "",
+        "id": "",
+        "name": "",
+        "format": "circular",
+        "settings": {
+            "format": "circular",
+            "geneticCode": 11,
+            "backgroundColor": "rgba(255,255,255,1)",
+            "showShading": true,
+            "arrowHeadLength": 0.5,
+            "minArcLength": 1,
+            "initialMapThicknessProportion": 0.04,
+            "maxMapThicknessProportion": 0.1
+        },
+        "backbone": {
+            "color": "rgba(128,128,128,1)",
+            "colorAlternate": "rgba(200,200,200,1)",
+            "thickness": 11,
+            "decoration": "arrow"
+        },
+        "ruler": {
+            "font": "sans-serif,plain,10",
+            "color": "rgba(0,0,0,1)"
+        },
+        "annotation": {
+            "font": "monospace,plain,12",
+            "onlyDrawFavorites": true,
+            "visible": true
+        },
+        "dividers": {
+            "slot": {
+                "visible": true,
+                "color": "rgba(0,0,0,1)",
+                "thickness": 1,
+                "spacing": 2
+            }
+        },
+        "highlighter": {
+            "visible": true
+        },
+        "captions": [
+            {
+                "name": "None",
+                "position": "bottom-center",
+                "textAlignment": "left",
+                "font": "sans-serif,plain,24",
+                "fontColor": "rgba(255,165,0,1)",
+                "backgroundColor": "rgba(255,255,255,0.4)"
+            }
+        ],
+        "legend": {
+            "position": "top-right",
+            "textAlignment": "left",
+            "defaultFont": "sans-serif,plain,14",
+            "defaultFontColor": "rgba(0,0,0,1)",
+            "backgroundColor": "rgba(255,255,255,0.75)",
+            "items": []
+        },
+        "sequence": {
+            "font": "sans-serif,plain,14",
+            "color": "rgb(0,0,0)",
+            "contigs": []
+        },
+        "features": [],
+        "plots": [],
+        "bookmarks": [],
+        "tracks": []
+    }
+}
