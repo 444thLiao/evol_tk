@@ -62,7 +62,7 @@ class cgview(object):
         in_dict = in_dict.copy()
         if not in_dict.get('contig'):
             raise IOError('No contig information')
-        if not in_dict.get('strand'):
+        if in_dict.get('strand') not in [1,-1]:
             in_dict['strand'] = 1
         if not in_dict.get('favorite'):
             in_dict['favorite'] = False
