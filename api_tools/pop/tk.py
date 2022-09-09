@@ -22,35 +22,11 @@ from scipy.spatial.distance import pdist, squareform
 from tqdm import tqdm
 
 
-# def fix_block_df(block_df,contig2size):
-#     # since the strand would significant affect the coordinates transformation
-#     # we need to fix it in advance
-#     def _tmp(row, idx, end_col, start_col, strand_col, genome_col):
-#         if row[strand_col] == -1:
-#             c = row[genome_col].split('.')[-1]
-#             if c in contig2size:
-#                 size = contig2size[c]
-#                 forward_idx = np.arange(size+1)
-#                 reverse_idx = forward_idx[::-1]
-#                 block_df.loc[idx,
-#                              f'corrected_{start_col}'] = reverse_idx[row[start_col]]
-#                 block_df.loc[idx,
-#                              f'corrected_{end_col}'] = reverse_idx[row[end_col]]
-#         else:
-#             block_df.loc[idx, f'corrected_{start_col}'] = row[start_col]
-#             block_df.loc[idx, f'corrected_{end_col}'] = row[end_col]
-#     for idx, row in block_df.iterrows():
-#         end_col, start_col, strand_col, genome_col = [
-#             'End', 'Start', 'strand', 'Genome1']
-#         _tmp(row, idx, end_col, start_col, strand_col, genome_col)
-#         end_col, start_col, strand_col, genome_col = [
-#             'End.1', 'Start.1', 'strand.1', 'Genome2']
-#         _tmp(row, idx, end_col, start_col, strand_col, genome_col)
-#     return block_df
-
-def parse_sline(row,contig2length):
+def parse_sline(row,name2length):
     # for mugsy
     # the position of the reverse complemented sequence should be corrected.
+    # if the strand is -1, then the start will be larger than end
+    # However, the start & end should be correct and 0-coordinated
     rows = row.split(' ')
     if '\t\t' not in row:
         name = rows[1]
@@ -60,17 +36,17 @@ def parse_sline(row,contig2length):
         name, start = rows[1].split('\t\t')
         start = int(start)
         size = int(rows[2])
-    contig = name.rsplit('.')[-1]
-    length = contig2length[contig]
+    length = name2length[name]
     strand = 1 if rows[3] == '+' else -1
-    if strand == - 1:
+    if strand == -1:
         start = length-start
-    end = start + size
+        end = start - size
+    else:
+        end = start + size
     seq = rows[-1]
     return [name, start, end, strand, seq]
 
-
-def parse_maf(maf,contig2length):
+def parse_maf(maf,name2length):
     block_num = 0
     block_dict = {}
     for row in open(maf):
@@ -80,18 +56,19 @@ def parse_maf(maf,contig2length):
             block_name = f"block{block_num}"
             block_dict[block_name] = []
         if row.startswith('s '):
-            # this is a block
-            block_dict[block_name].append(parse_sline(row,contig2length))
+            block_dict[block_name].append(parse_sline(row,name2length))
     return block_dict
 
 def write_block(block_dict, ofile, odir, min_length=10000,min_genomes=100):
     # only block larger than min_length would be output
     if not exists(odir):
         os.system(f"mkdir -p {odir}")
+    else:
+        os.system(f"rm -r {odir}/*.aln")
     f_tab = open(ofile, 'w')
     text = f"Block\tGenome1\tStart\tEnd\tstrand\tGenome2\tStart\tEnd\tstrand\tNumber of diff bases\tSize\n"
     f_tab.write(text)
-    for block, info in block_dict.items():
+    for block, info in tqdm(block_dict.items()):
         if len(info) < min_genomes:
             continue
         _1 = info[0]
@@ -114,7 +91,6 @@ def write_block(block_dict, ofile, odir, min_length=10000,min_genomes=100):
             for genome, start, end, strand, seq in info:
                 f1.write(f">{genome}:{start}-{end}:{strand}\n{seq}\n")
     f_tab.close()
-
 
 def seq_compare(seq_array, start, end, window_size=1000):
     # start,end is a genomic coordiante. may be reversed since some are aligned after reverse_complement
@@ -143,7 +119,6 @@ def seq_compare(seq_array, start, end, window_size=1000):
             continue
         pos2SNP_num[coord_dict[int(pos)]] = SNP_num
     return pos2SNP_num
-
 
 def get_density(block_tab, block_in_dir, ref, ofile, genome2contig2size,min_num=None):
     # reference free
@@ -178,22 +153,20 @@ def get_density(block_tab, block_in_dir, ref, ofile, genome2contig2size,min_num=
     with open(ofile, 'w') as f1:
         f1.write(text)
 
-
-
-
 def fix_block_df(block_df,genome2contig2size):
     # since the strand would significant affect the coordinates transformation
     # For example, if the strand is -1, the start and end are the ones following reverser complemented sequence.
     # we need to fix it in advance
+    
+    ## if strand ==1, directly assign 
     block_df.loc[block_df['strand']==1,['corrected_Start','corrected_End']] = block_df.loc[block_df['strand']==1,['Start','End']].values
     block_df.loc[block_df['strand.1']==1,['corrected_Start.1','corrected_End.1']] = block_df.loc[block_df['strand.1']==1,['Start.1','End.1']].values
-
+    ## else
     def recoordinated(start,end,size):
         forward_idx = np.arange(size+1)
         reverse_idx = forward_idx[::-1]
         newstart,newend = reverse_idx[start],reverse_idx[end]
         return newstart,newend
-        
     idx_l = []
     idx1_l = []
     for idx,row in tqdm(block_df.loc[block_df.isna().any(1),:].iterrows()):
@@ -236,7 +209,6 @@ def aln_coordinate_convertor(aln, ref, pos_list):
     S1 = np.arange(num_sites) + 1
     # nogap_seq_array = seq_array[:, seq_array[ref_idx, :] != '-']
     # S2 = np.arange(seq_list.shape[1]) + 1  # pos after removing
-    
     ori_idx = 1
     pos2pos = []
     for aln_idx, bp in tqdm(zip(S1, seq_list[ref_idx]),
@@ -252,59 +224,102 @@ def aln_coordinate_convertor(aln, ref, pos_list):
     return pos2pos
 
 
-def get_fixed_block_df(block_tab,ref,genome2contig2size):
+def concat_block_aln(indir):
+    indir = realpath(abspath(indir))
+    mc = realpath(indir).split('/')[-1].replace('_block_aln','')
+    odir = f"{dirname(indir)}/{mc}_LCB"
+    assert '_block_aln' in indir
+    print(f"concat aln in {indir} to {odir}")
+    block2genome2seq = defaultdict(lambda :defaultdict(str))
+    for aln in glob(f"{indir}/*.aln"):
+        block = aln.split('/')[-1].replace('.aln','')
+        for r in SeqIO.parse(aln,'fasta'):
+            block2genome2seq[block][r.id.split('.')[0]] = str(r.seq)
+    block_order = []
+    name2seq = defaultdict(str)
+    total_genomes = set([genome for block,genome2seq in block2genome2seq.items() for genome in genome2seq ])
+    block_that_with_all_genomes = [b for b,g2s in block2genome2seq.items() if len(g2s)==len(total_genomes)]
+    # only concat the block with all genomes present
+    for block in block_that_with_all_genomes:
+        genome2seq = block2genome2seq[block]
+        block_order.append(block)
+        for genome in total_genomes:
+            seq = genome2seq[genome]   # it must be present in that dict
+            name2seq[genome] += seq
+    if not exists(odir):
+        os.system(f"mkdir {odir}")
+    with open(f'{odir}/{mc}_concat.aln', 'w') as f1:
+        for name, seq in name2seq.items():
+            f1.write(f">{name}\n{seq}\n")
+    with open(f'{odir}/block_order.list', 'w') as f1:
+        f1.write('\n'.join(block_order))
+
+def get_fixed_block_df(block_tab,ref):
     block_df = pd.read_csv(block_tab, sep='\t')
     block_df.loc[:, 'g1'] = [_.split('.')[0] for _ in block_df['Genome1']]
     block_df.loc[:, 'g2'] = [_.split('.')[0] for _ in block_df['Genome2']]
-    block_df = fix_block_df(block_df,genome2contig2size)
+    #corr_block_df = fix_block_df(block_df,genome2contig2size)
+    _b1 = block_df.loc[block_df['g1']==ref,].groupby('Block').head(1)
+    _b2 = block_df.loc[block_df['g2']==ref,].groupby('Block').head(1)
+    if set(_b1['Block']) !=set(_b2['Block']):
+        raise IOError('uncoordinated blocks')
     
-    _block_info = {}
-    for idx,row in tqdm(block_df.iterrows(),total=block_df.shape[0]):
-        b = row['Block']
-        if ref not in list(row[['g1','g2']]): continue
-        s,e = (row['corrected_Start'],row['corrected_End']) if row['g1'] == ref else (row['corrected_Start.1'],row['corrected_End.1']) 
-        if (b,s,e) not in _block_info:
-            _block_info[(b,s,e)] = row
-    # assert len(_block_info)==block_orders
-    block_df = pd.concat(_block_info.values(),axis=1).T
-    assert len(block_df['g2'].unique()) == 1
-    if ref in list(block_df['g1']):
-        block_df = block_df.drop(columns=['Genome2','g2']+[_ for _ in block_df.columns if _.endswith('.1')])
-    else:
-        block_df = block_df.drop(columns=['Genome1','g1']+[_.replace('.1','') for _ in block_df.columns if _.endswith('.1')])
-    block_df.columns = [_.replace('.1','') for _ in block_df.columns]
+    clean_block_df = _b1
+    clean_block_df = clean_block_df.drop(columns=['Genome2','g2']+[_ for _ in clean_block_df.columns if _.endswith('.1')])
+    # _block_info = {}
+    # for idx,row in tqdm(block_df.iterrows(),total=block_df.shape[0]):
+    #     b = row['Block']
+    #     if ref not in list(row[['g1','g2']]): continue
+    #     #s,e = (row['corrected_Start'],row['corrected_End']) if row['g1'] == ref else (row['corrected_Start.1'],row['corrected_End.1']) 
+    #     s,e = (row['Start'],row['End']) if row['g1'] == ref else (row['Start.1'],row['End.1']) 
+    #     if (b,s,e) not in _block_info:
+    #         _block_info[(b,s,e)] = row
+    # # assert len(_block_info)==block_orders
+    # block_df = pd.concat(_block_info.values(),axis=1).T
+    # assert len(block_df['g2'].unique()) == 1
+    # if ref in list(block_df['g1']):
+    #     block_df = block_df.drop(columns=['Genome2','g2']+[_ for _ in block_df.columns if _.endswith('.1')])
+    # else:
+    #     block_df = block_df.drop(columns=['Genome1','g1']+[_.replace('.1','') for _ in block_df.columns if _.endswith('.1')])
+    clean_block_df.columns = [_.replace('.1','') for _ in clean_block_df.columns]
     _m = {'Genome2':'Genome','Genome1':'Genome'}
-    block_df.columns = [_m.get(_,_) for _ in block_df.columns]
-    return block_df
+    clean_block_df.columns = [_m.get(_,_) for _ in clean_block_df.columns]
+    return clean_block_df
 
-def map_back_pos(pos2pos, block_order, block_tab, ref,genome2contig2size, ofile=None):
-    block_df = get_fixed_block_df(block_tab,ref,genome2contig2size)
+def map_back_pos(pos2pos, block_order, block_tab, ref, ofile=None):
+    block_df = get_fixed_block_df(block_tab,ref)
 
     block_orders = [_ for _ in open(block_order).read().split('\n') if _]
     block_df = block_df.set_index('Block')
     block_df = block_df.loc[block_orders]
 
-    block_df.loc[:, 'real_size'] = (block_df['corrected_End'] - block_df['corrected_Start']).abs()
+    #block_df.loc[:, 'real_size'] = (block_df['corrected_End'] - block_df['corrected_Start']).abs()
+    block_df.loc[:, 'real_size'] = (block_df['Start'] - block_df['End']).abs()
     block_df.loc[:, 'cumsum_pos'] = block_df['real_size'].cumsum()
 
     with open(ofile, 'w') as f1:
         new_SNP_coordinates = "concat pos\tref_chr\tpos\tblock\n"
         f1.write(new_SNP_coordinates)
         for concat_pos, ref_pos in tqdm(pos2pos):
+            if ref_pos == 'NA': continue # deletion for thie reference genome
             pos = ref_pos-1  # since the ref_pos is 1-coordinates
             row = block_df.loc[block_df.loc[:,'cumsum_pos'] > pos, :].iloc[0, :]
             contig = row['Genome'].split('.')[-1]
             # distance to relative to the end of the block
             dis = row['cumsum_pos'] - pos
-            if row['corrected_Start'] > row['corrected_End']:  # it is reversed
-                n_pos = row['corrected_End'] + dis
+            # if row['corrected_Start'] > row['corrected_End']:  # it is reversed
+            #     n_pos = row['corrected_End'] + dis
+            # else:
+            #     n_pos = row['corrected_End'] - dis
+            if row['Start'] > row['End']:  # it is reversed
+                n_pos = row['End'] + dis
             else:
-                n_pos = row['corrected_End'] - dis
+                n_pos = row['End'] - dis                
             f1.write(f"{concat_pos}\t{contig}\t{n_pos+1}\t{row.name}\n")
             # n_pos is 1-coordinated
 
 
-def summary_SNP_pos(infile, block_tab, ofile,genome2contig2size, window_size=1000):
+def summary_SNP_pos(infile, block_tab, ofile, window_size=1000):
     # start,end is a genomic coordiante
     # thus, it need to be converted prior to slicing the seqs
     snp_df = pd.read_csv(infile, sep='\t')
@@ -312,14 +327,15 @@ def summary_SNP_pos(infile, block_tab, ofile,genome2contig2size, window_size=100
     snp_df.loc[:, 'chr'] = [int(_.split('_')[-1]) for _ in snp_df['ref_chr']]
     snp_df = snp_df.sort_values(['chr', 'pos'], ascending=True)
 
-    block_df,end_col, start_col, genome_col = get_fixed_block_df(block_tab,ref,genome2contig2size)
+    block_df = get_fixed_block_df(block_tab,ref)
+    
     f1 = open(ofile, 'w')
     f1.write('ref_chr\tmid pos\tSNP\tblock_num\n')
-    for align_chr in tqdm(block_df[genome_col].unique()):
+    for align_chr in tqdm(block_df['Genome'].unique()):
         chr = align_chr.split('.')[-1]
-        sub_df = block_df.loc[block_df[genome_col] == align_chr, :]
+        sub_df = block_df.loc[block_df['Genome'] == align_chr, :]
         for idx, row in sub_df.groupby(['Start', 'End']).head(1).iterrows():
-            start, end = int(row[start_col]), int(row[end_col])
+            start, end = int(row['Start']), int(row['End'])
             if start <=end:
                 iter_range = np.arange(start, end+1, window_size)
             else:

@@ -26,11 +26,15 @@ def main(indir, ofile, clean):
     all_tsv = glob(join(indir, "*", "storage", "bin_stats_ext.tsv"))
     result = {}
     for each_f in tqdm(all_tsv):
-        text = open(each_f).read().strip("\n")
-        gid, v = text.split("\t")
-        v = eval(v)
-        v = {k: _v for k, _v in v.items() if not k.startswith("GCN")}
-        result[gid] = v
+        corr_gid = each_f.split('/')[-3]
+        v = [row.split("\t")[1]
+                for row in open(each_f).read().strip("\n").split('\n')
+                if row.split("\t")[0]==corr_gid]
+        if len(v)!=1:
+            raise IOError(f'not found {corr_gid} in {each_f}')
+        v = eval(v[0])
+        v = {k: _v for k, _v in v.items() if not k.startswith("GCN") }
+        result[corr_gid] = v
     new_df = pd.DataFrame.from_dict(result, orient="index")
     if clean:
         new_df = new_df.loc[:, remaining_columns]
