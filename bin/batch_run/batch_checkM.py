@@ -56,7 +56,8 @@ def main(indir, odir, tax, use_fa, num_parellel, suffix='', force=False, genome_
         gname = basename(in_file).replace(suffix, '')
         new_odir = join(odir,
                         gname)
-        if not exists(new_odir) or force:
+        ofile = f"{new_odir}/storage/bin_stats_ext.tsv"
+        if not exists(ofile) or force:
             params.append((basename(in_file),
                            indir,
                            tax,
