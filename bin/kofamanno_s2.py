@@ -48,7 +48,7 @@ def correct_reanno(ori_tab,odir,ori_faa=None,tmp_dir='/mnt/ivy/thliao/tmp/',exis
 @click.option('-o', 'output_dir')
 @click.option('-tmp', 'tmp_dir',default='/mnt/ivy/thliao/tmp/')
 @click.option('-faa', 'faa',default=None)
-@click.option('-k', 'keep', help='keep the tmp dir or not',default=False, required=False, is_flag=True)
+@click.option('-k', 'keep', help='keep the tmp dir or not',default=True, required=False, is_flag=True)
 @click.option('-dry_run', 'dry_run', help='run or not',default=False, required=False, is_flag=True)
 def main(input_table,output_dir,tmp_dir,keep,dry_run,faa):
     cmd = correct_reanno(input_table,output_dir,
