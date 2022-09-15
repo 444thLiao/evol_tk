@@ -5,7 +5,7 @@ from os.path import *
 import click
 
 _t = '/mnt/maple/thliao/data/NCBI/modified_data/annotations/tab.header'
-header = open(_t).read().strip()+'\n'
+header = [open(_t).read().strip()+'\n']
 
 kofamscan_exe = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko_list = '/mnt/home-backup/thliao/kofam/20190810/ko_list'
@@ -37,7 +37,7 @@ def correct_reanno(ori_tab,odir,ori_faa=None,tmp_dir='/mnt/ivy/thliao/tmp/',exis
         of = tmp_dir+f'/tabular/{k}'
         with open(of,'w') as f1:
             f1.write('\n'.join(header+rows))
-    cmd = f"{kofamscan_exe} -r -k  --tmp-dir {tmp_dir} -r -o {odir}/{gid}.kofamout -f mapper-one-line --no-report-unannotated {query_faa} "
+    cmd = f"{kofamscan_exe} -r -k {ko_list} --tmp-dir {tmp_dir} -o {odir}/{gid}.kofamout -f mapper-one-line --no-report-unannotated {query_faa} "
     if remove:
         cmds += f" ; rm -rf {tmp_dir}"
     return cmd
@@ -62,3 +62,4 @@ def main(input_table,output_dir,tmp_dir,keep,dry_run,faa):
         
 if __name__ == '__main__':
     main()
+    # 
