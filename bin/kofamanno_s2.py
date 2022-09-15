@@ -39,7 +39,7 @@ def correct_reanno(ori_tab,odir,ori_faa=None,tmp_dir='/mnt/ivy/thliao/tmp/',exis
             f1.write('\n'.join(header+rows))
     cmd = f"{kofamscan_exe} -r -k {ko_list} --tmp-dir {tmp_dir} -o {odir}/{gid}.kofamout -f mapper-one-line --no-report-unannotated {query_faa} "
     if remove:
-        cmds += f" ; rm -rf {tmp_dir}"
+        cmd += f" ; rm -rf {tmp_dir}"
     return cmd
 
 
