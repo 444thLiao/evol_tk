@@ -5,7 +5,7 @@ from os.path import *
 import click
 
 _t = '/mnt/maple/thliao/data/NCBI/modified_data/annotations/tab.header'
-header = [open(_t).read().strip()+'\n']
+header = [open(_t).read().strip()]
 
 kofamscan_exe = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko_list = '/mnt/home-backup/thliao/kofam/20190810/ko_list'
