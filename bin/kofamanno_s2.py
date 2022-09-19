@@ -1,3 +1,5 @@
+#! /env/python
+
 from collections import defaultdict
 import os
 from tqdm import tqdm

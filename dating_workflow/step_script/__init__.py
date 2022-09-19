@@ -8,6 +8,8 @@ import os
 from glob import glob
 from Bio import Seq
 from api_tools.tk import run,refresh_tmp,get_files,get_genomes,get_tophit,parse_blastp,parse_hmmscan,convert_genome_ID,convert_genome_ID_rev
+import gzip 
+
 
 def process_path(path):
     if '~' in path:
@@ -59,8 +61,12 @@ def try_get_file_from_formatted_dir(genome_name,
     else:
         raise IOError
 
-    if exists(ori_file):
-        _cache = {record.id: record
+    if exists(ori_file) or exists(ori_file+'.gz'):
+        if exists(ori_file+'.gz'):
+            _cache = {record.id: record
+                  for record in SeqIO.parse(gzip.open(ori_file,'rt'), format='fasta')}
+        else:
+            _cache = {record.id: record
                   for record in SeqIO.parse(ori_file, format='fasta')}
         try:
             seq_set = {gene: [_cache[locus]
