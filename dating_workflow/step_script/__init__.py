@@ -64,7 +64,7 @@ def try_get_file_from_formatted_dir(genome_name,
     if exists(ori_file) or exists(ori_file+'.gz'):
         if exists(ori_file+'.gz'):
             _cache = {record.id: record
-                  for record in SeqIO.parse(gzip.open(ori_file,'rt'), format='fasta')}
+                  for record in SeqIO.parse(gzip.open(ori_file+'.gz','rt'), format='fasta')}
         else:
             _cache = {record.id: record
                   for record in SeqIO.parse(ori_file, format='fasta')}
