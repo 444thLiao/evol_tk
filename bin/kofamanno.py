@@ -12,6 +12,19 @@ header = [open(_t).read().strip()]
 kofamscan_exe = '/home-user/thliao/software/kofamscan/exec_annotation'
 ko_list = '/mnt/home-backup/thliao/kofam/20190810/ko_list'
 
+default_kofamscan_exe = '/home-user/thliao/software/kofamscan/exec_annotation'
+default_odir= "/mnt/maple/thliao/data/NCBI/modified_data/annotations"
+def kofam_anno(faa_list,odir=default_odir):
+    cmds = []
+    for faa in faa_list:
+        uid = faa.split('/')[-1].replace('.faa','')
+        ofile = f"{odir}/{uid}.kofamout"
+        tmp_dir = odir+f'/{uid}_tmp/' 
+        cmd = f"/home-user/thliao/software/kofamscan/exec_annotation --tmp-dir {tmp_dir} -o {odir}/{uid}.kofamout -f mapper-one-line --no-report-unannotated {faa}; rm -rf {tmp_dir}"
+        if not exists(ofile):
+            cmds.append(cmd)
+    return cmds
+
 def correct_reanno(ori_tab,odir,ori_faa=None,tmp_dir='/mnt/ivy/thliao/tmp/',existsed_kos=None,remove=True):
     gid = ori_tab.split('/')[-1].rsplit('.',1)[0]
     if ori_faa is None:

@@ -56,18 +56,21 @@ def annotate_bac120(protein_files, odir, db_id='pfam',cpu=10,num_p=5,suffix='.fa
         r = list(tqdm(tp.imap(run, params), total=len(params)))
 
 
-def parse_annotation(odir, top_hit=False, evalue=1e-50):
+def parse_annotation(odir, sub_gids=[],top_hit=False, evalue=1e-50):
     odir = realpath(odir) # otherwise the following hashlib might be differnt
     # for cdd
     _cdd_match_ids = pfam_ids
     genome2annotate = defaultdict(lambda: defaultdict(list))
 
+    
     # cdd annotations
-
     cdd_anno_files = glob(join(odir, 'PFAM', '*.out'))
     # tigrfam annotations
     tigrfam_anno_files = glob(join(odir, 'TIGRFAM', '*.out'))
-
+    if sub_gids:
+        sub_gids = set(sub_gids)
+        cdd_anno_files = [_ for _ in cdd_anno_files if _.split('/')[-1].replace('.out','') in sub_gids]
+        tigrfam_anno_files = [_ for _ in tigrfam_anno_files if _.split('/')[-1].replace('.out','') in sub_gids]
 
     # add cache to avoid iterate it again and again
     t = ''.join(sorted(tigrfam_anno_files + cdd_anno_files + [str(top_hit)] + [str(evalue)]))
@@ -135,13 +138,13 @@ def main(in_proteins, suffix, in_annotations, outdir, evalue, genome_list, outpu
         exit(f"finish annotation")
 
     tqdm.write("Parsing the annotation results...")
-    genome2genes = parse_annotation(in_annotations, top_hit=False)
+    genome2genes = parse_annotation(in_annotations, sub_gids=gids,top_hit=False)
     gene_ids = pfam_ids + tigfam_ids
 
     _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
     write_out_stats(outdir,_subgenome2cdd, gene_ids)
 
-    genome2genes = parse_annotation(in_annotations, top_hit=True, evalue=evalue)
+    genome2genes = parse_annotation(in_annotations, sub_gids=gids, top_hit=True, evalue=evalue)
     if gids:
         _subgenome2cdd = {k: v for k, v in genome2genes.items() if k in set(gids)}
     else:
