@@ -212,6 +212,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     # for final mcmctree
     if not exists(odir):
         os.makedirs(odir)
+    ## default parameters, it will be overwritten by the `main` function
     bd_paras = '1 1 0.1'
     rgene_gamma = '1 35 1'
     sigma2_gamma = '1 10 1'
@@ -379,18 +380,18 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
             ofile.replace('.ctl', '.log'))       
 
 @click.command()
-@click.option('-i', '--in_phy', 'in_phyfile')
-@click.option('-it', '--in_tree', 'in_treefile')
+@click.option('-i', '--in_phy', 'in_phyfile',help='phylip format alignment file')
+@click.option('-it', '--in_tree', 'in_treefile',help='newick format tree with calibration information')
 @click.option('-id', '--in_ali_dir', 'in_ali_dir')
-@click.option('-o', 'odir')
+@click.option('-o', 'odir',help='')
 @click.option('-nucl', 'use_nucl', is_flag=True, default=False)
-@click.option('-no_tmp', 'run_tmp', default=True)
-@click.option('-only_prior', 'only_prior', is_flag=True, default=False)
-@click.option('-sf', 'sampfreq', default='2')
-@click.option('-p', 'print_f', default='2')
-@click.option('-rg', 'rgene_gamma', default='1 35 1')
-@click.option('-sg', 'sigma2_gamma', default='1 10 1')
-@click.option('-bd', 'bdparse', default='1 1 0.1')
+@click.option('-no_tmp', 'run_tmp', default=True,help='Provided a pre-existed `tmp_files` directory which can avoid generating `in.BV` again. ')
+@click.option('-only_prior', 'only_prior', is_flag=True, default=False,help="Not run posterior estimating step")
+@click.option('-sf', 'sampfreq', default='20',help="sample frequency  [20]")
+@click.option('-p', 'print_f', default='2',help="verbose of print  [2]")
+@click.option('-rg', 'rgene_gamma', default='1 35 1',help="rgene_gamma: prior on mutation rate   [1 35 1]")
+@click.option('-sg', 'sigma2_gamma', default='1 10 1',help="sigma2_gamma: shape and scale parameters  [1 10 1]")
+@click.option('-bd', 'bdparse', default='1 1 0.1',help="verbose of print  [2]")
 @click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model")
 def cli(in_phyfile, in_treefile, in_ali_dir,
         odir, use_nucl, 

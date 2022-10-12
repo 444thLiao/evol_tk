@@ -157,3 +157,31 @@ def get_br_info(br, kos=None):
     return infos
 
 
+
+# example codes:
+# sig_ko_list = all_kos
+# br_kos = ko_classified_br(sig_ko_list)
+# md_kos = ko_classified_module(sig_ko_list)
+# md2info = get_md_infos(md_kos.keys())
+# info_kos = get_ko_infos(sig_ko_list)
+# infos = get_br_info(br_kos)
+# df = pd.concat(infos, axis=0)
+
+# df.loc[:,'KO'] = df.index
+# dfs = []
+# for ko,subdf in df.groupby('KO'):
+#     if subdf.shape[0]==1:
+#         dfs.append(subdf)
+#     else:
+#         ndf = pd.DataFrame(columns=subdf.columns,index=[ko])
+#         for colname,col in subdf.iteritems():
+#             col = [str(_) for _ in set(col) if str(_)!='nan']
+#             ndf.loc[ko,colname] = ';'.join(sorted(col))
+#         dfs.append(ndf)
+# new_df = pd.concat(dfs,axis=0)        
+# new_df.loc[:, 'des'] = [info_kos.get(_, '') for _ in new_df.index]
+# new_df.loc[:,'order'] = [ordered_ko.index(_) for _ in new_df.index]
+# new_df.index = new_df['order']
+# c = list(range(df2.shape[0]))
+# new_df = new_df.reindex(c)
+# new_df.to_excel('./tmp.xlsx')

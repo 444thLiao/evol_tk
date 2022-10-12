@@ -17,7 +17,7 @@ db_dir = f"{HOME}/data/NCBI/"
 
 default_infile = f"{HOME}/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
 
-default_taxon_tab = f"{HOME}/.cache/ncbi-genome-download/bacteria2taxonomy.tab"
+default_taxon_tab = f"{HOME}/.cache/ncbi-genome-download/taxonomy.tab"
 
 
 def file2taxon_tab(infile):
@@ -62,10 +62,12 @@ def aid2taxon(id_list, redo=False):
     return id2taxon
 
 
-def cli():
-    aid2taxon_info = file2taxon_tab(default_infile)
+def cli(infile=default_infile):
+    aid2taxon_info = file2taxon_tab(infile)
     rewrite_existing_tab(aid2taxon_info=aid2taxon_info)
 
 
 if __name__ == '__main__':
-    cli()
+    import sys
+    for f in sys.argv[1:]:
+        cli(f)

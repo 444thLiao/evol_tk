@@ -14,13 +14,17 @@ ko_list = '/mnt/home-backup/thliao/kofam/20190810/ko_list'
 
 default_kofamscan_exe = '/home-user/thliao/software/kofamscan/exec_annotation'
 default_odir= "/mnt/maple/thliao/data/NCBI/modified_data/annotations"
-def kofam_anno(faa_list,odir=default_odir):
+def kofam_anno(faa_list,odir=default_odir,profile=None):
     cmds = []
     for faa in faa_list:
         uid = faa.split('/')[-1].replace('.faa','')
         ofile = f"{odir}/{uid}.kofamout"
         tmp_dir = odir+f'/{uid}_tmp/' 
-        cmd = f"/home-user/thliao/software/kofamscan/exec_annotation --tmp-dir {tmp_dir} -o {odir}/{uid}.kofamout -f mapper-one-line --no-report-unannotated {faa}; rm -rf {tmp_dir}"
+        if profile is None:
+            para = ''
+        else:
+            para = f" -p {profile} "
+        cmd = f"/home-user/thliao/software/kofamscan/exec_annotation {para} --tmp-dir {tmp_dir} -o {odir}/{uid}.kofamout -f mapper-one-line --no-report-unannotated {faa}; rm -rf {tmp_dir}"
         if not exists(ofile):
             cmds.append(cmd)
     return cmds

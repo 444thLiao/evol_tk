@@ -17,7 +17,7 @@ import pandas as pd
 from bioservices.kegg import KEGG
 from tqdm import tqdm
 
-locusID2kegg_list = '/home-user/thliao/data/protein_db/kegg/latest/links/genes_ko.list'
+locusID2kegg_list = '/mnt/home-db/pub/protein_db/kegg/v20220828/kofam_relative/ko_list'
 locusID2kegg_dict = dict([_.split('\t') for _ in open(locusID2kegg_list).read().split('\n') if _])
 
 
