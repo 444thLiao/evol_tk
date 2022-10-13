@@ -283,7 +283,7 @@ def main(indir,
     record_pos_info,name2record = concat_records(order_seqs,
                                                  name2prefix,
                                                  g2num_miss)
-    print(f"Found {len([k for k,v in g2num_miss.items() if v==0])} backbone genes")
+    print(f"Found {len(set(order_seqs).difference(set(order_seqs)))} backbone genes")
     if outfile is None and ',' not in indir:
         outfile = join(indir, 'concat_aln.aln')
         outpartition = join(indir, 'concat_aln.partition')
