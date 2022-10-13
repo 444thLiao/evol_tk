@@ -243,8 +243,8 @@ def concat_records(order_seqs,
               help="file containing a list of gene name (mostly the name of alignment file). If there are two columns (tab), the second should be the name of partition used for partition. If only a single column, all will be treated as a single partition. ")
 @click.option("-rm_I", "remove_identical", is_flag=True, default=False,
               help='remove identical sequence for some software like Fasttree. default is not removed')
-@click.option("-no_graph", "graph", is_flag=True, default=False,
-              help='generating a graph introducing the number of genes among all genomes. default is generating graph')
+@click.option("-graph", "graph", is_flag=True, default=False,
+              help='generating a graph introducing the number of genes among all genomes. default is not generating graph')
 @click.option("-no_fill", "fill_gaps", is_flag=True, default=True, help="fill with gaps for genomes doesn't contains this gene. default is filling ")
 @click.option("-ct", "concat_type", help='partition or phy or both', default='partition')
 @click.option("-p", "partition_method", help='partition with genes or 1st,2nd of codons... (genes|1,2) [genes]. If partition information are specificed in the gene_list, this parameter will be useless. ', default='genes')
