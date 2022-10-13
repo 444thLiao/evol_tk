@@ -215,7 +215,7 @@ def concat_records(order_seqs,
                     name2record[final_name] += str(records[0].seq)
                 else:
                     name2record[final_name] += '-' * length_this_aln
-                    g2num_miss[final_name] += 1
+                    g2num_miss[aln_file] += 1
         # init the positional information
         if not record_pos_info:
             start = 1
@@ -277,11 +277,12 @@ def main(indir,
     order_seqs = get_genes(indir,suffix,gene_list)
 
     # init parameters
-    g2num_miss = {basename(_).replace(f'.{suffix}', ''): 0 for _ in order_seqs}
+    g2num_miss = defaultdict(int)
 
     # concat seqs (according to given partitions or a single partition )
     record_pos_info,name2record = concat_records(order_seqs,
-                                                 name2prefix,g2num_miss)
+                                                 name2prefix,
+                                                 g2num_miss)
     print(f"Found {len([k for k,v in g2num_miss.items() if v==0])} backbone genes")
     if outfile is None and ',' not in indir:
         outfile = join(indir, 'concat_aln.aln')

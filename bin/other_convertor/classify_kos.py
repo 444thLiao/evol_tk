@@ -159,6 +159,7 @@ def get_br_info(br, kos=None):
 
 
 # example codes:
+# all_kos = list(df2['KO'].unique())
 # sig_ko_list = all_kos
 # br_kos = ko_classified_br(sig_ko_list)
 # md_kos = ko_classified_module(sig_ko_list)
@@ -178,10 +179,12 @@ def get_br_info(br, kos=None):
 #             col = [str(_) for _ in set(col) if str(_)!='nan']
 #             ndf.loc[ko,colname] = ';'.join(sorted(col))
 #         dfs.append(ndf)
-# new_df = pd.concat(dfs,axis=0)        
+# new_df = pd.concat(dfs,axis=0)    
+# new_df.loc[:,'KO']     = new_df.index
 # new_df.loc[:, 'des'] = [info_kos.get(_, '') for _ in new_df.index]
-# new_df.loc[:,'order'] = [ordered_ko.index(_) for _ in new_df.index]
+# ordered_ko = dict(zip(list(df2['KO']),list(range(df2.shape[0]))))
+# new_df.loc[:,'order'] = [ordered_ko[_] for _ in new_df.index]
 # new_df.index = new_df['order']
 # c = list(range(df2.shape[0]))
 # new_df = new_df.reindex(c)
-# new_df.to_excel('./tmp.xlsx')
+# new_df.to_excel('./tmp3.xlsx')
