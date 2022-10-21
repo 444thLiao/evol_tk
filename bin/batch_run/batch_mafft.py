@@ -49,17 +49,17 @@ def main(in_dir, odir, num_parellel, suffix='', new_suffix='',
             of2f_list[n_f].extend([f])
         else:
             of2f_list[n_f] = [f]
+    new_file_list = []
     if name2prefix is not None:
         all_prefix = [_ for k in name2prefix.values() for _ in k]
         refresh_tmp(join(odir, 'tmp'))
-        new_file_list = []
         tqdm.write('iterating files to collect with giving genome ids')
         for n_f,f_list in tqdm(of2f_list.items()):
             # this part could be more slow to get the right selected records
             records = [_ for f in f_list for _ in SeqIO.parse(f, format='fasta')]
             records = [_
                        for _ in records
-                       if _.id in all_prefix]
+                       if (_.id.split('_')[0] in all_prefix) or (_.id in all_prefix)]
             if (not records) or (len(records) == 1):
                 print(f'no available (or only one) record could be used in {n_f}')
                 continue
