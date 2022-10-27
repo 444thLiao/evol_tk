@@ -24,7 +24,6 @@ def precluster_based_selection(nodes, l2cluster=None):
 
 
 def get_cluster(c_file):
-
     cluster2genomes = defaultdict(list)
     for row in open(c_file).read().split('\n')[1:]:
         if not row:
@@ -68,7 +67,9 @@ def get_basal_ones(node, up_level=3, maximum_retained=3, **kwargs):
 
 def get_simple_LCA(node, maximum=10, l2cluster=None, genome2cog25={}):
     # get the necessary genomes descending from the requested node
-    match_leaves = [n for n in node.get_leaf_names() if check_cog25(n, genome2cog25=genome2cog25)]
+    match_leaves = [n for n in node.get_leaf_names() 
+                    #if check_cog25(n, genome2cog25=genome2cog25)
+                    ]
     l2dis = {n.name: node.get_distance(n, topology_only=True) for n in node.get_leaves()}
     l2dis = {k: v for k, v in l2dis.items() if k in match_leaves}
     if len(match_leaves) <= maximum:
@@ -97,7 +98,6 @@ def sampling(st, target_nodes_text,
         final_leaves += get_basal_ones(tn, up_level=up_level,
                                        maximum_retained=max_num_up_each_level,
                                        l2cluster=node2cluster, genome2cog25=genome2cog25)
-
     final_leaves = list(set(final_leaves))
     return final_leaves
 

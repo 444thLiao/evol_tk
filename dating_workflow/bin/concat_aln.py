@@ -145,15 +145,18 @@ def generate_phy_file(outfile,
 def get_genes(indir,suffix,gene_list=None):
     """
     return a dict with Gene to partition. If no paritions are assigned, each gene to each gene.
+    # todo: add codes for handling gene_list is None
     """
-    if gene_list is None:
-        order_seqs = {}
-        if ',' in indir:
-            # if multiple directories passed.
-            for _ in [p.strip() for p in indir.split(',')]:
-                seqs = get_genes(_,suffix,gene_list)
-                order_seqs.update(seqs)
-            return order_seqs
+    
+    if gene_list is not None and ',' in indir:
+        #print(indir)
+        order_seq = {}
+        # if multiple directories passed.
+        for sub_indir in [p.strip() for p in indir.split(',')]:
+            seqs = get_genes(sub_indir,suffix,gene_list)
+            order_seq.update(seqs)
+        return order_seq
+        
         ## if not gene_list, return and end
     order_seqs = {fname:basename(fname).replace(f'.{suffix}', '') for fname in sorted(glob(join(indir, f'*.{suffix}')))}
     if gene_list is not None:
@@ -163,7 +166,7 @@ def get_genes(indir,suffix,gene_list=None):
                 if '\t' in row:
                     g2p[row.split('\t')[0]] = row.split('\t')[1]
                 else:
-                    g2p[row.split('\t')[0]] = row.split('\t')[1]
+                    g2p[row.strip()] = row.strip()
 
         elif isinstance(gene_list, str) and not exists(str(gene_list)):
             g2p.update({k:k for k in gene_list.split(',')})
