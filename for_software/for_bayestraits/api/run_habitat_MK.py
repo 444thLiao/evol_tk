@@ -77,7 +77,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,number_thre
                      f"cores {number_threads}", 
                      "PriorAll exp 10", "Stones 100 1000"]
     simple_model = ["1", "2", 
-                    f"cores {number_threads}"
+                    f"cores {number_threads}",
                     "PriorAll exp 10",
                     f"RestrictAll q{random_states}", 
                     "Stones 100 1000"]
