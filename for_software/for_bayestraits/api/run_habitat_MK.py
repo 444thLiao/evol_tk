@@ -22,7 +22,9 @@ from for_software.for_bayestraits.toolkit.get_result import get_result, summaize
 # inmetadata = './bayesTraits_test/m2nm.txt'
 # odir = './bayestraits_habitat'
 
-bt_exe = expanduser("~/bin/BayesTraits")
+#bt_exe = expanduser("~/bin/BayesTraits")
+bt_exe = os.environ.get('BayesTraits')
+if not bt_exe:raise IOError('can not found bayesTraits from $PATH')
 
 def run(cmd):
     check_call(cmd, shell=True)
@@ -33,13 +35,14 @@ def run(cmd):
 @click.option('-i', 'intree',help="input tree in newick format. (should have internal node name)")
 @click.option('-im', 'inmetadata',help="input metadata which contain two columns using tab as separator. No header. First line should be the id from the input tree. The second line should be the state you want to assign. ")
 @click.option('-o', 'odir',help="output directory")
+@click.option('-nt', 'number_threads',help="number of threads. [10]",default=10)
 @click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529",help="color scheme for states. default is 'M:#0000ff;N:#D68529' . ")
 @click.option("-extra_cmd","extra_cmd",default='',help="extrac command for bayestraits.")
 def cli(intree, inmetadata, odir,color_dict,extra_cmd):
     main(intree, inmetadata, odir,color_dict,extra_cmd,3)
     
 
-def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=None):
+def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,number_threads=None):
     if not exists(odir):
         os.makedirs(odir)
     tree_prepared_file = join(odir, basename(intree))
@@ -69,8 +72,13 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
         f1.write('\n'.join(m_text))
  
     # run
-    complex_model = ["1", "2", "PriorAll exp 10", "Stones 100 1000"]
-    simple_model = ["1", "2", "PriorAll exp 10",
+    
+    complex_model = ["1", "2",
+                     f"cores {number_threads}", 
+                     "PriorAll exp 10", "Stones 100 1000"]
+    simple_model = ["1", "2", 
+                    f"cores {number_threads}"
+                    "PriorAll exp 10",
                     f"RestrictAll q{random_states}", 
                     "Stones 100 1000"]
     tags_list = get_tags(intree)
