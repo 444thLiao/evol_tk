@@ -9,8 +9,6 @@ It would consider
 
 
 from collections import defaultdict
-from email.policy import default
-from pickle import NONE
 
 
 def precluster_based_selection(nodes, l2cluster=None):
@@ -75,7 +73,8 @@ def get_simple_LCA(node, maximum=10, l2cluster=None,
         def sort_func(x): return sorted(x, key=lambda g: l2dis[g])
     if len(match_leaves) <= maximum:
         if len(match_leaves)==0:
-            raise IOError
+            print(node.name,len(node.get_leaf_names()))
+            #raise IOError
         return match_leaves
     else:
         sorted_leaves = sort_func(match_leaves)

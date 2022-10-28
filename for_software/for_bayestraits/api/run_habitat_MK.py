@@ -12,7 +12,7 @@ import os
 from os.path import *
 from subprocess import check_call
 import multiprocessing as mp
-import click
+import click,time
 from ete3 import Tree
 
 from for_software.for_bayestraits.toolkit.construct_kit import nw2nexus, get_tags
@@ -87,7 +87,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
                            [f"LF {join(odir, 'simple_m', 'bst_simple')}",
                             extra_cmd, 
                             'run']))
-    
+    t1 = time.time()
     cmd1 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'complex_m', 'params.txt')} > /dev/null"
     cmd2 = f"{bt_exe} {tree_prepared_file} {metadata_pre_file} < {join(odir, 'simple_m', 'params.txt')} > /dev/null"
     
@@ -95,7 +95,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
     cmds = [cmd1,cmd2]
     with mp.Pool(processes=2) as tp:
         r = list(tp.imap(run, cmds))
-        
+    time_usages = time.time()-t1    
     if isinstance(color_dict,str):
         cat2color = color_dict.split(';')
         cat2color = {_.split(':')[0]:_.split(':')[1] for _ in cat2color if _}
@@ -113,7 +113,7 @@ def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,threshold=N
                            key='Iteration')
     
     with open(join(odir, 'summaized_result.txt'), 'w') as f1:
-        f1.write(text+'\n'+text2)
+        f1.write(text+'\n'+text2 + f'\n Total time usages: {time_usages} seconds.')
 
 
 if __name__ == '__main__':
