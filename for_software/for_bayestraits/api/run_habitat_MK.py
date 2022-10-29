@@ -23,7 +23,7 @@ from for_software.for_bayestraits.toolkit.get_result import get_result, summaize
 # odir = './bayestraits_habitat'
 
 #bt_exe = expanduser("~/bin/BayesTraits")
-bt_exe = os.environ.get('BayesTraits')
+bt_exe = os.popen('which BayesTraits').read().strip()
 if not bt_exe:raise IOError('can not found bayesTraits from $PATH')
 
 def run(cmd):
