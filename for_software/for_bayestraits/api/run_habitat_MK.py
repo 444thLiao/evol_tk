@@ -38,8 +38,8 @@ def run(cmd):
 @click.option('-nt', 'number_threads',help="number of threads. [10]",default=10)
 @click.option('-color', 'color_dict',default="M:#0000ff;N:#D68529",help="color scheme for states. default is 'M:#0000ff;N:#D68529' . ")
 @click.option("-extra_cmd","extra_cmd",default='',help="extrac command for bayestraits.")
-def cli(intree, inmetadata, odir,color_dict,extra_cmd):
-    main(intree, inmetadata, odir,color_dict,extra_cmd,3)
+def cli(intree, inmetadata, odir,color_dict,extra_cmd,number_threads):
+    main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,number_threads=number_threads)
     
 
 def main(intree, inmetadata, odir,color_dict,extra_cmd,tree_format=3,number_threads=None):
