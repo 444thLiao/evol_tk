@@ -224,8 +224,8 @@ def concat_records(order_seqs,
             start = 1
             end = len(name2record[final_name])
         else:
-            start = record_pos_info[-1][2] +1
-            end = len(name2record[final_name]) + start
+            start = record_pos_info[-1][2] +1  # last record end +1
+            end = len(name2record[final_name]) + start - 1   # since it is closed at both ends.
         # init a alignment records
         c = ''
         for k,v in name2record.items():
@@ -318,18 +318,21 @@ def main(indir,
     if concat_type.lower() in ['both', 'phy']:
         gids = list(name2prefix)
         def name_convertor(x):
-            tmp = [k for k,v in name2prefix.items() if x.split('_')[0] in v or x in v]
-            if not tmp:
-                return
-            else:
-                return tmp[0]
+            # previous function `concat_records` has convert all the gene name into genome name using name2prefix
+            return x
+            # tmp = [k for k,v in name2prefix.items() if x.split('_')[0] in v or x in v]
+            # if not tmp:
+            #     return
+            # else:
+            #     return tmp[0]
         generate_phy_file(outphy,
                           record_pos_info,
                           gids,
                           fill_gaps=fill_gaps,
                           remove_identical=remove_identical,
                           partition_method=partition_method,
-                          name_convertor=name_convertor)
+                          name_convertor=name_convertor
+                          )
     if graph:
         generate_stats_graph(g2num_miss, total=len(gids), ofile=ograph)
 
