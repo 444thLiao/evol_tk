@@ -101,7 +101,14 @@ def read_result_CI(logfile):
     mcmc_df = pd.read_csv(io.StringIO('\n'.join(rows)), sep='\t')
     mcmc_df.columns=['Name','Posterior means','95%HPD CI min','95%HPD CI max','95%HPD CI width']
     return mcmc_df
+
+def prune_mcmc(mcmc):
+    """
+    Remove columns that represent rates and mu/sigma
     
+    """
+    read_mcmc(mcmc,)
+    pass
 
 def get_posterior_df(mcmc,burn_in=2000,scale=1,all_col=True):
     mcmc_df = read_mcmc(mcmc,all_col=all_col)

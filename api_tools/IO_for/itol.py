@@ -2,7 +2,7 @@
 from itolapi import Itol
 import os
 apikey = os.environ.get('ITOLKEY')
-def get_itoltree(tpath,outfile='./tmp.png',anno_files=[]):
+def get_itoltree(tpath,outfile='./tmp.png',anno_files=[],keys={}):
     os.system(f"cp -r {tpath} ./tmp.tree ")
     itol_uploader = Itol()
     itol_uploader.params['projectName'] = 'batch_access_th'
@@ -21,6 +21,8 @@ def get_itoltree(tpath,outfile='./tmp.png',anno_files=[]):
     itol_exporter.set_export_param_value('range_mode','2')
     itol_exporter.set_export_param_value('dashed_lines','0')
     itol_exporter.set_export_param_value('label_display','0')
+    for k,v in keys.items():
+        itol_exporter.set_export_param_value(k,v)
     suffix = outfile.split('.')[-1]
     itol_exporter.set_export_param_value('format', suffix)
     itol_exporter.export(outfile)

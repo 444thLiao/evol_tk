@@ -46,7 +46,7 @@ def env_exe(name):
     # return f
 
 
-paml_bin = dirname(env_exe("mcmctree")) 
+paml_bin = dirname(env_exe("mcmctree"))
 
 
 def modify(file, **kwargs):
@@ -206,7 +206,7 @@ default_params = {'seqfile': '',
              'nsample': '20000',
              'alpha': 0.5}
 
-def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, 
+def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={},
                    use_nucl=False,extra_cmd=None,
                    model='0'):
     # for final mcmctree
@@ -238,6 +238,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
              'burnin': burnin,
              'sampfreq': sampfreq,
              'nsample': nsample,
+             'print':'1',
              'alpha': 0.5}
     if params_dict:
         param.update(params_dict)
@@ -249,15 +250,18 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     with open(ofile, 'w') as f1:
         f1.write(text)
     tqdm.write("start running the final mcmctree. ")
-    
+
     params = [(f"cd {dirname(ofile)}; {paml_bin}/mcmctree 03_mcmctree.ctl 2>&1",
               ofile.replace('.ctl', '.log'))]
-    
+
     if extra_cmd is not None:
         params.extend(extra_cmd)
-        
-    with mp.Pool(processes=2) as tp:
-        _ = list(tp.imap(run, params))
+
+
+    while 1:
+        os.system(params+' > ' +ofile)
+        if exists(join(dirname(ofile),'FigTree.tre')):
+            break
 
 
 def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl, params_dict={}, use_nucl=False):
@@ -295,13 +299,13 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
     ofile = join(odir, 'nodata_mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-        
+
     return (f"cd {dirname(ofile)}; {paml_bin}/mcmctree nodata_mcmctree.ctl ",
             ofile.replace('.ctl', '.log'))
 
 
-def main(in_phyfile, in_treefile, total_odir, 
-         use_nucl=False, ali_dir=None, 
+def main(in_phyfile, in_treefile, total_odir,
+         use_nucl=False, ali_dir=None,
          run_tmp=True, run_prior_only=True, params_dict={}):
     if not exists(total_odir):
         os.makedirs(total_odir)
@@ -367,17 +371,17 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
     if not exists(odir):
         os.makedirs(odir)
     cmd = f'ln -sf `realpath {mcmc_for_dir}/in.BV` {odir}/'
-    check_call(cmd,shell=1)  
+    check_call(cmd,shell=1)
     existed_mcmc = glob(join(mcmc_for_dir,'*.ctl'))[0]
     text = modify(existed_mcmc,
                   **kwargs)
     ofile = join(odir, 'mcmctree.ctl')
     with open(ofile, 'w') as f1:
         f1.write(text)
-    
+
     p = realpath(dirname(ofile))
     return (f"cd {p}; {paml_bin}/mcmctree mcmctree.ctl ",
-            ofile.replace('.ctl', '.log'))       
+            ofile.replace('.ctl', '.log'))
 
 @click.command()
 @click.option('-i', '--in_phy', 'in_phyfile',help='phylip format alignment file')
@@ -394,9 +398,9 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
 @click.option('-bd', 'bdparse', default='1 1 0.1',help="verbose of print  [2]")
 @click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model")
 def cli(in_phyfile, in_treefile, in_ali_dir,
-        odir, use_nucl, 
-        run_tmp, only_prior, sampfreq, 
-        print_f, rgene_gamma, sigma2_gamma, 
+        odir, use_nucl,
+        run_tmp, only_prior, sampfreq,
+        print_f, rgene_gamma, sigma2_gamma,
         bdparse,
         clock):
     in_phyfile = process_path(in_phyfile)
@@ -410,7 +414,7 @@ def cli(in_phyfile, in_treefile, in_ali_dir,
     main(in_phyfile, in_treefile,
          use_nucl=use_nucl,
          ali_dir=in_ali_dir,
-         total_odir=odir, run_tmp=run_tmp, 
+         total_odir=odir, run_tmp=run_tmp,
          run_prior_only=only_prior, params_dict=params_dict)
 
 

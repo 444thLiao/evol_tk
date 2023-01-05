@@ -15,6 +15,8 @@ def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False,return_DNA=False):
                 seq_name = f"{prefix}_" + "{:05d}".format(idx)
             else:
                 seq_name = fea.qualifiers.get("locus_tag", [""])[0]
+                if not seq_name:
+                    seq_name = fea.qualifiers.get("protein_id", [""])[0]
             if include_tRNA:
                 type_list = ["CDS", "tRNA"]
             else:
@@ -29,7 +31,7 @@ def gbk2faa(in_gbk, out_faa, prefix="", include_tRNA=False,return_DNA=False):
                     seq=_seq,
                     id=seq_name,
                     name=fea.qualifiers.get("gene", [""])[0],
-                    description=fea.qualifiers["product"][0],
+                    description=fea.qualifiers.get("product",[""])[0],
                 )
                 faa_list.append(new_record)
                 idx += 1

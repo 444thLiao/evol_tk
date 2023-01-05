@@ -29,8 +29,10 @@ def merged_pdfs(pdf_list,ofile='./tmp.pdf' ,shape=3):
     """
     It could only merged pdf into image. like png,jpeg
     
-     shape is either a tuple or a intergrate. If it is a intergrate, it is taken as the number of cols. The number of cols will be calculated according to the number of pdf_list
-     if it is a tuple, it shoule be (nrow,ncol)
+    shape is either a tuple or a intergrate. If it is a intergrate, it is taken as the number of cols. The number of cols will be calculated according to the number of pdf_list
+    if it is a tuple, it shoule be (nrow,ncol)
+    the order of the merged figures starts from the bottom left to bottom right.
+    The also starts from 2nd row left to right
     """
     if type(shape) == int:
         suffix = 1 if len(pdf_list)%shape else 0
@@ -64,7 +66,7 @@ def merged_pdfs(pdf_list,ofile='./tmp.pdf' ,shape=3):
     pdf_write.addPage(final_page)
     with open(ofile, 'wb') as fh:
         pdf_write.write(fh)
-        
+    
 def make_pdf_text(text,size=(10,10),fontsize=12):
     packet = io.BytesIO()
     can = canvas.Canvas(packet,pagesize=size)
@@ -119,7 +121,7 @@ from decimal import Decimal
 import io,os
 from PIL import ImageDraw,ImageFont,Image
 from pdf2image import convert_from_path
-os.chdir('gene_GandL/genetrees/iqtree_o_pdf/')
+#os.chdir('gene_GandL/genetrees/iqtree_o_pdf/')
 
 def get_figs(pdf_list,outfile='./tmp.png' ,shape=3,each_size=625,title_height=100):
     """

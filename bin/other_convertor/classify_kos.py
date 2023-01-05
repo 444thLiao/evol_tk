@@ -25,7 +25,6 @@ def ko_classified_br(ko_set):
         row = row.strip('\n')
         rows = row.split('\t')
         cur_ko = rows[0].split(':')[-1]
-
         if cur_ko in ko_set:
             br2kos[rows[1].split(':')[-1]].append(cur_ko)
     # br2kos.pop('ko00001')  # the top of Brite hierarchy, useless...
@@ -68,9 +67,7 @@ def get_md_infos(mds):
 def ko2pathway(kos,max_try=50):
     if type(kos) == str:
         kos = [kos]
-
     ko2p = {}
-
     for ko in tqdm(kos):
         pathway_collect = []
         c = False
@@ -119,14 +116,16 @@ def get_br_info(br, kos=None):
         kos = br.copy()
     else:
         iter_br = list(br)
-
     infos = []
     for br in iter_br:
         if not br.startswith('br'):
             new_br = f"br:{br}"
         else:
             continue
-        hier_infos = str(kegg.http_get(f"get/{new_br}", frmt="txt")).split('\n')
+        # hier_infos = str(kegg.http_get(f"get/{new_br}", frmt="txt")).split('\n')
+        if not os.path.exists(f'/mnt/home-db/pub/protein_db/kegg/v20190810/ko/br_infos/{br}'):
+            continue
+        hier_infos = open(f'/mnt/home-db/pub/protein_db/kegg/v20190810/ko/br_infos/{br}').read().strip().split('\n')
         if not hier_infos:
             print(br)
         br_name = hier_infos[0].split('\t')[-1]
@@ -175,7 +174,7 @@ def summary_kos(all_kos):
                 col = [str(_) for _ in set(col) if str(_)!='nan']
                 ndf.loc[ko,colname] = ';'.join(sorted(col))
             dfs.append(ndf)
-    new_df = pd.concat(dfs,axis=0)    
+    new_df = pd.concat(dfs,axis=0)
     new_df.loc[:,'KO']     = new_df.index
     new_df.loc[:, 'des'] = [info_kos.get(_, '') for _ in new_df.index]
     return new_df
@@ -201,7 +200,7 @@ def summary_kos(all_kos):
 #             col = [str(_) for _ in set(col) if str(_)!='nan']
 #             ndf.loc[ko,colname] = ';'.join(sorted(col))
 #         dfs.append(ndf)
-# new_df = pd.concat(dfs,axis=0)    
+# new_df = pd.concat(dfs,axis=0)
 # new_df.loc[:,'KO']     = new_df.index
 # new_df.loc[:, 'des'] = [info_kos.get(_, '') for _ in new_df.index]
 # ordered_ko = dict(zip(list(df2['KO']),list(range(df2.shape[0]))))
