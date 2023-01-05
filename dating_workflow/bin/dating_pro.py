@@ -257,9 +257,8 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
     if extra_cmd is not None:
         params.extend(extra_cmd)
 
-
     while 1:
-        os.system(params+' > ' +ofile)
+        os.system(params[0][0]+' > ' +ofile.replace('.ctl', '.log'))
         if exists(join(dirname(ofile),'FigTree.tre')):
             break
 
