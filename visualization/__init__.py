@@ -1,0 +1,1 @@
+from .validated_tips.merged_multipl_pdf import *
