@@ -13,7 +13,7 @@ def repeat_mcmc(indir,intree,odir,params_dict={},same=True):
         os.makedirs(odir)
     ctl = glob(join(indir,'*.ctl'))[0]
     phy = glob(join(indir,'*.phy'))[0]
-    cmd = f"cp {ctl} {phy} in.BV {intree} {odir}/"
+    cmd = f"cp {ctl} {phy} {indir}/in.BV {intree} {odir}/"
     os.system(cmd)
     ofile = join(odir,basename(ctl))
     
@@ -28,11 +28,13 @@ def repeat_mcmc(indir,intree,odir,params_dict={},same=True):
     tqdm.write("start running the final mcmctree. ")            
     params = [(f"cd {odir}; mcmctree 03_mcmctree.ctl 2>&1",
               ofile.replace('.ctl', '.log'))]
-    while 1:
-        os.system(params[0][0]+' > ' +ofile.replace('.ctl', '.log'))
-        if exists(join(dirname(ofile),'FigTree.tre')):
-            break
-
+    try:
+        while 1:
+            os.system(params[0][0]+' > ' +ofile.replace('.ctl', '.log'))
+            if exists(join(dirname(ofile),'FigTree.tre')):
+                break
+    except KeyboardInterrupt:
+        print('interrupted!')
 
 @click.command()
 @click.option('-i', '--indir', 'indir',help='mcmc_for directory')
