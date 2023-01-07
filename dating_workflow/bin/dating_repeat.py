@@ -18,8 +18,9 @@ def repeat_mcmc(indir,intree,odir,params_dict={},same=True):
     ofile = join(odir,basename(ctl))
     
     if same:
-        params_dict = {}
+        params_dict = {'treefile': basename(intree)}
     if params_dict:
+        params_dict.update({'treefile': basename(intree)})
         text = modify(ctl,
                       **params_dict)
         ofile = join(odir, '03_mcmctree.ctl')
