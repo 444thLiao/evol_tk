@@ -138,9 +138,12 @@ def add_cal_api(in_tree_file, out_newick, calibration_txt, format=0):
         else:
             names = LCA.split('|')
             # get the common ancestor
-            LCA_node = t.get_common_ancestor([l
+            try:
+                LCA_node = t.get_common_ancestor([l
                                             for l in t.get_leaves()
                                             if l.name in names])
+            except:
+                continue
         # rename the common ancestor with give name
         LCA_node.name = time
     # write out the tree

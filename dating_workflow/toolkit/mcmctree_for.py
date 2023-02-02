@@ -187,3 +187,48 @@ def format_figtree(mcmc, name, tree,tree_format=8):
     tree, f = tree,tree_format
     cmd = f"python3 ~/script/evol_tk/dating_workflow/figtree2itol.py -i {tree} -i2 {figtree} -o {ofile} -f {f} ; "
     return cmd
+
+def read_outfile(outfile):
+    """
+    return: 
+    1. dictionary, {node name : time estimates}
+    2. species topology 
+    """
+    rows = open(outfile).read().strip().split("\n")
+    tree_idx = [_ for _, r in enumerate(rows) if r.startswith("tree length = ")][0]
+    t1 = rows[tree_idx + 2]
+    t3 = Tree(rows[tree_idx + 6], 8)
+    idx2name = {}
+    for _ in t3.get_leaves():
+        idx, name = _.name.split("_", 1)
+        idx2name[idx] = name
+        _.name = _.name.split("_", 1)[-1]
+    d = {}
+    for r in rows[tree_idx + 6 :]:
+        if r.startswith("Node ") and "Time" in r:
+            v = r.split("Time")[-1].strip()
+            v = [float(_.strip()) for _ in v.split("+-")]
+            nodename = r.replace("Node", "").strip().split(" ")[0]
+            d[nodename] = v
+    t = Tree(t1.replace(" ", ""), 5)
+    for _ in t.get_leaves():
+        d[idx2name[_.name]] = [_.dist, 0, _.name]
+        d[_.name] = [_.dist, 0, idx2name[_.name]]
+    return d, t3
+
+
+def get_N_by_leaves(t, leaves):
+    """
+    get internal node name with given leaves. 
+    it will return node name with containing exactly all leaves you given
+    
+    or return None
+    """
+    for n in t.traverse():
+        a = set(leaves)
+        b = set(n.get_leaf_names())
+        if b.intersection(a) == b:
+            return n.name
+        
+        
+            
