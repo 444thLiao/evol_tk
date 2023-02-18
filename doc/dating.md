@@ -96,7 +96,7 @@ concating two tree into one. And most important one is adding calibrations.
 `format_newick.py add-cal -i ./trees/final/198g_merged.newick -c ./dating_for/calibration2.txt ./dating_for/198g_3cal.newick  `
 
 ## 5. performing dating analysis
-`python3 ~/script/evolution_relative/dating_workflow/step_script/dating_pro.py -i ./dating_for/phy_files/83g_concat.phy -it ./dating_for/cal_tree/83g_set1.newick -o ./dating_for/83g/83g_set1/ -p 1 -rg '1 100 1' -sf 10 -c 3`
+`python3 /home-user/thliao/script/evol_tk/dating_workflow/bin/dating_pro.py -i ./dating_for/phy_files/83g_concat.phy -it ./dating_for/cal_tree/83g_set1.newick -o ./dating_for/83g/83g_set1/ -p 1 -rg '1 100 1' -sf 10 -c 3`
 
 details of parameters could use `python3 script.py --help` to get help.
 

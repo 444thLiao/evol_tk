@@ -394,8 +394,8 @@ def change_parameters(mcmc_for_dir,odir=None,**kwargs):
 @click.option('-p', 'print_f', default='2',help="verbose of print  [2]")
 @click.option('-rg', 'rgene_gamma', default='1 35 1',help="rgene_gamma: prior on mutation rate   [1 35 1]")
 @click.option('-sg', 'sigma2_gamma', default='1 10 1',help="sigma2_gamma: shape and scale parameters  [1 10 1]")
-@click.option('-bd', 'bdparse', default='1 1 0.1',help="verbose of print  [2]")
-@click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model")
+@click.option('-bd', 'bdparse', default='1 1 0.1',help="bdparse [1 1 0.1]")
+@click.option('-c', 'clock', default='2',help="2 indicate using IR clock model, while 3 denote AR clock model [2]")
 def cli(in_phyfile, in_treefile, in_ali_dir,
         odir, use_nucl,
         run_tmp, only_prior, sampfreq,

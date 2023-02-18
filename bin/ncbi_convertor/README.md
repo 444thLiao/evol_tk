@@ -22,9 +22,9 @@ Such as,
 `pid2basic.py` with proteins ids, it will do all three above scripts staff and combined them into one tab.
 `pid2all.py`, beside the basic information, it will do the `pid2bio.py` staffs.
 
+`python3 ncbi_convertor/pid2genome.py -i assembly_ids.list -o metadata.csv -f -redo`
 
-TODO: It doesn't try using nucleotide directly...need to test
-
+TODO: It doesn't try using nucleotide directly...need to be test
 
 
 

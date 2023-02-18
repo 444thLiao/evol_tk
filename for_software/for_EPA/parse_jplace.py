@@ -4,8 +4,6 @@ from ete3 import Tree
 def get_node_name_from_part(partial_text):
     splited_r = re.split("[,()]",partial_text)
     node_name = splited_r[-1]
-        
-        
     if "{" in node_name:
         return node_name.split('{')[0]
     return node_name
