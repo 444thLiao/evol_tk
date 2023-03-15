@@ -1,3 +1,7 @@
+# BN: calibration node based on bacterial fossils/biomarkers		
+# AN: calibration node based on animal fossils		
+# PN: calibration node based on plant fossils		
+# XN: calibration node based on animal/plant fossils		
 B	BN1 Root	ROOT
 B	BN2 Total oxygenic Cyanobacteria	GCA_000011385.1|GCA_003149345.1
 B	BN3 Total Nostocales	GCA_000760695.4|GCA_003015105.1
@@ -8,14 +12,13 @@ A	AN2 Crown Chordata	Homo_sapiens|Branchiostoma_floridae
 A	AN3 Crown Metazoa	Homo_sapiens|Amphimedon_queenslandica
 A	AN4 Total Fungi	Homo_sapiens|Ustilago_maydis
 A	AN5 Crown Dikarya	Candida_albicans|Ustilago_maydis
-P;A	XN1 Total Eudicots	Oryza_sativa|Arabidopsis_thaliana
-P	XN2 Total Embryophyta	Oryza_sativa|Mesotaenium_endlicherianum
-A	XN2 Total Embryophyta	Oryza_sativa|Physcomitrella_patens
+P;A	XN1 Total Eudicots (Crown Angiosperm)	Oryza_sativa|Arabidopsis_thaliana
+P	XN2 Crown Embryophyta	Oryza_sativa|Physcomitrium_patens
+A	XN2 Crown Embryophyta	Oryza_sativa|Physcomitrella_patens
 P;A	XN3 Total Florideophyceae	Chondrus_crispus|Porphyra_umbilicalis
 P;A	XN4 Crown Rhodophyta	Cyanidioschyzon_merolae|Porphyra_umbilicalis
-P	PN1 Total Charophyta	Klebsormidium_nitens|Palmophyllum_crassum
-P	PN2 Total Chlorophyta	Palmophyllum_crassum|Ostreococcus_tauri
-P	PN3 Total Trachaeophytes	Physcomitrium_patens|NC_010654.1
-P	PN4 Total Angiosperms	NC_010654.1|Oryza_sativa
-P	PN5 Total diatoms (Pelagophyceae)	NC_012898.1|NC_008588.1
-P	PN6 Crown diatoms	NC_008589.1|NC_008588.1
+P	PN1 Total Charophyta/Total Chlorophyta	NC_002186.1|Picocystis_salinarum
+P	PN2 Crown Chlorophyta	Picocystis_salinarum|Tetradesmus_obliquus
+P	PN3 Total Angiosperms (Crown Spermatophyta)	NC_010654.1|Oryza_sativa
+P	PN4 Total diatoms (Pelagophyceae)	NC_012898.1|NC_008588.1
+P	PN5 Crown diatoms	NC_008589.1|NC_008588.1

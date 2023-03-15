@@ -40,8 +40,7 @@ def sbatch_all(
     thread_per_tasks=1,
     fixed_cluster="",
     prefix_name="job",
-    batch_size=1,
-):
+    batch_size=1,):
 
     count_ = 0
     for batch_cmds in tqdm(batch_iter(cmds, batch_size)):

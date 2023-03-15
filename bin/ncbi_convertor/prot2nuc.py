@@ -1,6 +1,8 @@
 """
 The main purpose of this script is to convert protein id to nuccore ID
 
+
+not finished
 """
 
 try:
@@ -17,11 +19,13 @@ from Bio import SeqIO
 import os
 from os.path import *
 
+convertor = NCBI_convertor(id_list, "assembly")
+
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
 @click.option('-d', 'database', default='nuccore', help='default is nuccore. ')
 @click.option('-o', 'ofile', help='output fasta file')
-@click.option('-f', 'format', help='default is fasta. fasta or genbank')
+@click.option('-f', 'format', help='default is fasta. fasta or genbank',default='fasta')
 @click.option('-s', 'size', help='default is 100')
 def cli(infile, ofile, database,format,size):
 
@@ -34,7 +38,6 @@ def cli(infile, ofile, database,format,size):
         result_func=lambda x: parse_elink_xml(x),
     )
     pid2nids = dict(results)
-    
     
     if (not exists(dirname(ofile))) and '/' in ofile:
         os.system(f"mkdir -p {dirname(ofile)}")

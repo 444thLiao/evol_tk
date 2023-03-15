@@ -17,10 +17,10 @@ DATASET_LABEL	habitat prob
 COLOR	#ff0000
 
 #define colors for each individual field column (use hexadecimal, RGB or RGBA notation; if using RGB/RGBA, COMMA cannot be used as SEPARATOR)
-FIELD_COLORS	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900
+FIELD_COLORS	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900	#ff9900
 
 #field labels
-FIELD_LABELS	AN1 Crown Amniota	AN2 Crown Chordata	AN3 Crown Metazoa	AN4 Total Fungi	AN5 Crown Dikarya	BN1 Root	BN2 Total oxygenic Cyanobacteria	BN3 Total Nostocales	BN4 Total Pleurocapsales	BN5 Total Chromatiaceae	PN1 Total Charophyta	PN2 Total Chlorophyta	PN3 Total Trachaeophytes	PN4 Total Angiosperms	PN5 Total diatoms (Pelagophyceae)	PN6 Crown diatoms	XN1 Total Eudicots	XN2 Total Embryophyta	XN3 Total Florideophyceae	XN4 Crown Rhodophyta
+FIELD_LABELS	AN1 Crown Amniota	AN2 Crown Chordata	AN3 Crown Metazoa	AN4 Total Fungi	AN5 Crown Dikarya	BN1 Root	BN2 Total oxygenic Cyanobacteria	BN3 Total Nostocales	BN4 Total Pleurocapsales	BN5 Total Chromatiaceae	PN1 Total Charophyta	PN2 Total Chlorophyta	PN3 Total Trachaeophytes	PN5 Total diatoms (Pelagophyceae)	PN6 Crown diatoms	XN1 Total Eudicots	XN2 Total Embryophyta	XN3 Total Florideophyceae	XN4 Crown Rhodophyta
 
 #=================================================================#
 #                    OPTIONAL SETTINGS                            #
@@ -84,23 +84,23 @@ DATA
 #node 9123 will have an internal pie chart directly over the node, and with radius 50 (actual display radius will depend on other values in the dataset and the MAXIMUM_SIZE specified)
 #9132,0,50,11000,9000,120007
 
-ROOT	1	10	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-GCA_000011385.1|GCA_003149345.1	1	10	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0
-GCA_000760695.4|GCA_003015105.1	1	10	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0
-GCA_000332035.1|GCA_002355455.1	1	10	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0
-GCA_001007875.1|GCA_001469165.1	1	10	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0
-Homo_sapiens|Gallus_gallus	1	10	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-Homo_sapiens|Branchiostoma_floridae	1	10	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-Homo_sapiens|Amphimedon_queenslandica	1	10	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-Homo_sapiens|Ustilago_maydis	1	10	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-Candida_albicans|Ustilago_maydis	1	10	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
-Oryza_sativa|Arabidopsis_thaliana	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0
-Oryza_sativa|Physcomitrella_patens	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0
-Chondrus_crispus|Porphyra_umbilicalis	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0
-Cyanidioschyzon_merolae|Porphyra_umbilicalis	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1
-Klebsormidium_nitens|Palmophyllum_crassum	1	10	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0
-Palmophyllum_crassum|Ostreococcus_tauri	1	10	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0
-Physcomitrium_patens|NC_010654.1	1	10	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0
-NC_010654.1|Oryza_sativa	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0
-NC_012898.1|NC_008588.1	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0
-NC_008589.1|NC_008588.1	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0
+ROOT	1	10	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0
+GCA_000011385.1|GCA_003149345.1	1	10	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0
+GCA_000760695.4|GCA_003015105.1	1	10	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0
+GCA_000332035.1|GCA_002355455.1	1	10	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0
+GCA_001007875.1|GCA_001469165.1	1	10	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0
+Homo_sapiens|Gallus_gallus	1	10	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Homo_sapiens|Branchiostoma_floridae	1	10	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Homo_sapiens|Amphimedon_queenslandica	1	10	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Homo_sapiens|Ustilago_maydis	1	10	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Candida_albicans|Ustilago_maydis	1	10	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Oryza_sativa|Arabidopsis_thaliana	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0
+Oryza_sativa|Physcomitrium_patens	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0
+Oryza_sativa|Physcomitrella_patens	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0
+Chondrus_crispus|Porphyra_umbilicalis	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0
+Cyanidioschyzon_merolae|Porphyra_umbilicalis	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1
+NC_002186.1|Picocystis_salinarum	1	10	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0
+Picocystis_salinarum|Tetradesmus_obliquus	1	10	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0
+NC_010654.1|Oryza_sativa	1	10	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0
+NC_012898.1|NC_008588.1	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0
+NC_008589.1|NC_008588.1	1	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0

@@ -164,7 +164,8 @@ def check_not_down(formats, acc_set, domain, odir):
     genbank_acc = [_ for _ in old_d if _.startswith('GCA')]
 
     format2suffix = {'fasta': '*.fna.gz',
-                     "protein-fasta": "*.faa.gz", }
+                     "protein-fasta": "*.faa.gz",
+                     "genbank":"*.gbff.gz",}
     sub_aids_all = []
     for f in formats:
         if f in format2suffix:
