@@ -242,7 +242,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
              'alpha': 0.5}
     if params_dict:
         param.update(params_dict)
-    params_dict['burnin'] = str(int(int(params_dict['sampfreq'])*int(params_dict['nsample'])*0.1))
+    param['burnin'] = str(int(int(param['sampfreq'])*int(param['nsample'])*0.1))
     text = modify(template_ctl,
                   **param)
     if not exists(f'{odir}/in.BV'):
@@ -270,7 +270,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
     bd_paras = '1 1 0.1'
     rgene_gamma = '1 35 1'
     sigma2_gamma = '1 10 1'
-    burnin = '2000'
+    burnin = str(int(int(sampfreq)*int(nsample)*0.1))
     sampfreq = '2'
     nsample = '20000'
     seqfile_b = in_phyfile
@@ -294,6 +294,7 @@ def run_nodata_prior(in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc_ctl
              'alpha': 0.5}
     if params_dict:
         param.update(params_dict)
+    param['burnin'] = str(int(int(param['sampfreq'])*int(param['nsample'])*0.1))
     text = modify(template_ctl,
                   **param)
     ofile = join(odir, 'nodata_mcmctree.ctl')
