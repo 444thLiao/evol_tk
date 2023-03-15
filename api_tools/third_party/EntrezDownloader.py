@@ -5,7 +5,7 @@ import requests
 import io
 import threading
 import time
-
+from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from bs4 import BeautifulSoup

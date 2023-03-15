@@ -19,7 +19,7 @@ from Bio import SeqIO
 import os
 from os.path import *
 
-convertor = NCBI_convertor(id_list, "assembly")
+# convertor = NCBI_convertor(id_list, "assembly")
 
 @click.command()
 @click.option('-i', 'infile', help='input file which contains protein accession id ')
