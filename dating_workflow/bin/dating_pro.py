@@ -242,6 +242,7 @@ def final_mcmctree(inBV, in_phyfile, in_treefile, odir, ndata, template_ctl=mcmc
              'alpha': 0.5}
     if params_dict:
         param.update(params_dict)
+    params_dict['burnin'] = str(int(int(params_dict['sampfreq'])*int(params_dict['nsample'])*0.1))
     text = modify(template_ctl,
                   **param)
     if not exists(f'{odir}/in.BV'):
