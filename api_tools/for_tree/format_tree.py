@@ -169,6 +169,8 @@ def draw_cal_itol(calibration_txt, odir):
     :return:
     """
     itol_odir = odir
+    if not exists(odir):
+        os.makedirs(odir)
     size = '12'
     shape = '2'
     filled = '1'
@@ -185,7 +187,7 @@ def draw_cal_itol(calibration_txt, odir):
 
             row = '\t'.join([LCA, shape, size, color, filled, '1', time])
             rows.append(row)
-            row = '\t'.join([LCA, time, '1', '#FF0000', 'bold', '2', '0'])
+            row = '\t'.join([LCA, _remained.strip(), '1', '#FF0000', 'bold', '2', '0'])
             rows_str.append(row)
     template_text = open(dataset_symbol_template).read()
     annotate_text = '\n'.join(rows)

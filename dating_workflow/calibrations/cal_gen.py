@@ -26,7 +26,12 @@ if __name__ == '__main__':
                      {v[1]:"#ff9900" for k,v in mapping_dict.items()},)
     with open('./cal_nodes.txt','w')  as f1:
         f1.write(text)   
-        
+    from api_tools.itol_func import dataset_text_template
+    
+    template_text = open(dataset_text_template).read()
+    annotate_text = '\n'.join(rows_str)
+    with open(join(itol_odir, 'dating_tree_calibration_str.txt'), 'w') as f1:
+        f1.write(template_text + '\n' + annotate_text)
          
     df = pd.read_excel(cal_info, index_col=0)     
     df.columns = [_.split(' ')[0] for _ in df.columns]   
