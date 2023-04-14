@@ -10,8 +10,8 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from bin.ncbi_convertor import NCBI_convertor, tax2tax_info
-
+from bin.ncbi_convertor import tax2tax_info
+from api_tools.IO_for.read import read_summary
 HOME = os.getenv("HOME")
 db_dir = f"{HOME}/data/NCBI/"
 
@@ -22,22 +22,20 @@ default_taxon_tab = f"{HOME}/.cache/ncbi-genome-download/taxonomy.tab"
 
 def file2taxon_tab(infile):
     # infile = "/home-user/thliao/.cache/ncbi-genome-download/genbank_bacteria_assembly_summary.txt"
-    metadata_df = pd.read_csv(
-        infile, sep='\t', low_memory=False, comment='#', header=None)
-    f = open(infile)
-    _ = f.readline()
-    header = f.readline().strip('# \n').split('\t')
-    metadata_df.columns = header
-    metadata_df = metadata_df.set_index("assembly_accession")
+    metadata_df = read_summary(infile)
+    tax_df = pd.read_csv(default_taxon_tab, sep='\t', index_col=0)
+    missing_gids = [_ for _ in metadata_df.index if _.split('.')[0] not in tax_df.index]
+    print(len(missing_gids))
+    sub_df = metadata_df.loc[missing_gids]
     failed_tids = []
-
     aid2taxon_info = {}
-    for aid, row in tqdm(metadata_df.iterrows(), total=metadata_df.shape[0]):
+    for aid, row in tqdm(sub_df.iterrows(), total=sub_df.shape[0]):
         try:
             taxon_dict = tax2tax_info(int(row['taxid']))
             aid2taxon_info[aid] = taxon_dict
         except:
             failed_tids.append(int(row['taxid']))
+    print(f"failed taxids: {len(failed_tids)}")
     return aid2taxon_info
 
 def rewrite_existing_tab(aid2taxon_info):
@@ -54,12 +52,12 @@ def rewrite_existing_tab(aid2taxon_info):
     df.to_csv(default_taxon_tab,sep='\t', index=1, index_label=df.index.name)
 
 
-def aid2taxon(id_list, redo=False):
-    convertor = NCBI_convertor(id_list, "assembly")
-    suffix = 'protein2GI'
-    convertor.check_cache(suffix=suffix, redo=redo)
-    id2taxon = convertor.get_taxons_from_tid()
-    return id2taxon
+# def aid2taxon(id_list, redo=False):
+#     convertor = NCBI_convertor(id_list, "assembly")
+#     suffix = 'protein2GI'
+#     convertor.check_cache(suffix=suffix, redo=redo)
+#     id2taxon = convertor.get_taxons_from_tid()
+#     return id2taxon
 
 
 def cli(infile=default_infile):
