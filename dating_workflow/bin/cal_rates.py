@@ -1,5 +1,5 @@
 """
-This script is mainly used for batch estimating the rate 
+This script is mainly used for batch estimating the rate
 For  amino acids sequences
 nucleotide
 
@@ -43,9 +43,9 @@ cleandata = 0
 RateAncestor = 0
 """
 
-def prepare_cmd(aln,intree,odir):
+def prepare_cmd(aln,intree,odir,rootage=False):
     assert aln.endswith('aln')
-    gids = aln2phy(aln,aln.replace('.aln','.phylip'))   
+    gids = aln2phy(aln,aln.replace('.aln','.phylip'))
     gene = aln.split('/')[-1].replace('.aln','')
     print(gene,len(gids))
     ref_tree = read_caltree(intree)
@@ -66,7 +66,7 @@ def prepare_cmd(aln,intree,odir):
         f1.write(tre.write(format=8,format_root_node=1).replace('NoName',''))
     ctl_file = f"{odir}/{gene}/{gene}.ctl"
     with open(ctl_file,'w') as f1:
-        c = template 
+        c = template
         c += f"seqfile = " + aln.replace('.aln','.phylip') + '\n'
         c += f"treefile = " + f'{gene}.tre' + '\n'
         c += f"outfile = " + f'{gene}.out' + '\n'
@@ -78,12 +78,12 @@ if __name__ == '__main__':
     import sys
     args = sys.argv[1:]
     cmds = []
-    
-    aln = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/phy_files/P39_prot/withEuk/NP_043148.1.aln'
-    intree = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/cal/Plastid_B15.newick'
-    odir = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/phy_files/P39_prot/withEuk/rates'
+
+    # aln = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/phy_files/P39_prot/withEuk/NP_043148.1.aln'
+    # intree = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/cal/Plastid_B15.newick'
+    # odir = '/mnt/ivy/thliao/project/AOB/analysis/20210713_repeat/add_Chromatiaces/phy_files/P39_prot/withEuk/rates'
     cmd = prepare_cmd(aln,intree,odir)
-    # 
+    #
 
     # sbatch_all(cmds,reset_workdir=1,thread_per_tasks=1,prefix_name='rate',fixed_cluster='others')
 

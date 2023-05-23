@@ -21,7 +21,7 @@ import click
 from Bio import SeqIO
 from tqdm import tqdm
 
-# __file__ = '/home-user/thliao/script/evolution_relative/dating_workflow/step_script/dating_pro.py'
+# template_dir = '/home-user/thliao/script/evol_tk/dating_workflow/ctl_template'
 # template file dir
 template_dir = join(dirname(dirname(__file__)), 'ctl_template')
 mcmc_ctl = join(template_dir, 'mcmctree.ctl')

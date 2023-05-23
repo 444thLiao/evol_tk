@@ -17,7 +17,7 @@ def get_itoltree(tpath,outfile='./tmp.png',anno_files=[],keys={}):
         return
     itol_exporter = itol_uploader.get_itol_export()
     itol_exporter.set_export_param_value('datasets_visible',','.join([str(_) for _ in range(len(anno_files))]) )
-    itol_exporter.set_export_param_value('display_mode','2')
+    itol_exporter.set_export_param_value('display_mode','2') # 1,2 or 3 (1=rectangular, 2=circular, 3=unrooted)
     itol_exporter.set_export_param_value('range_mode','2')
     itol_exporter.set_export_param_value('dashed_lines','0')
     itol_exporter.set_export_param_value('label_display','0')
