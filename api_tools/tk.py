@@ -264,6 +264,6 @@ def read_hmmsearch_tbl(tblout,apply_preset_filter=False):
         keep = filter_dbcan(m)
         final_df = m.loc[keep,:]
     else:
-        final_df
+        final_df = m
     return final_df
     

@@ -84,10 +84,23 @@ def sbatch_all(
     default=None,
     help="Default would not set it. You could specify it to restrict the number of threads it used in each task.",
 )
-def cli(infile, reset_working, thread_per_tasks):
+@click.option(
+    "-bs",
+    "batch_size",
+    default=1,
+    help="Size of each batch. default each batch contains one job",
+)
+@click.option(
+    "-name",
+    "name",
+    default='job',
+    help="name of job. just for nameing",
+)
+def cli(infile, reset_working, thread_per_tasks,batch_size,name):
     cmds = open(infile).read().strip("\n").split("\n")
     sbatch_all(
-        cmds, reset_workdir=reset_working, thread_per_tasks=int(thread_per_tasks)
+        cmds, reset_workdir=reset_working, thread_per_tasks=int(thread_per_tasks),batch_size=batch_size,prefix_name=name
+        
     )
 
 
