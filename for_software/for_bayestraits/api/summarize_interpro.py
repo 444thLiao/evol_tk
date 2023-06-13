@@ -31,7 +31,7 @@ header = ['Protein Accession',
           'InterPro description']
 
 
-def retrieve_info(indir,test=False):
+def retrieve_info(indir,test=False,prefix='GCA_'):
     gid2locus2ko = defaultdict(list)
     exists_db = set()
     files_list = glob(join(indir, '*', f'*.tsv'))
@@ -55,7 +55,7 @@ def retrieve_info(indir,test=False):
             interpro_id = info_dict.get("InterPro accession", '')
             evalue = float(info_dict['Score'])
             Status = info_dict['Status']
-            gid2locus2ko[convert_genome_ID_rev(gene_id)].append(
+            gid2locus2ko[convert_genome_ID_rev(gene_id,prefix=prefix)].append(
                 (gene_id, db, sig_id, interpro_id, evalue, Status))
             exists_db.add(db)
     return gid2locus2ko, exists_db
@@ -101,7 +101,7 @@ def filtration_part(gid2locus2ko, exists_db, evalue=1e-50):
     return locus2ko, sep_l2ko
 
 
-def outut_for(l2ko, odir, name='mixed', transpose=False):
+def outut_for(l2ko, odir, name='mixed', transpose=False,prefix='GCA_'):
     if not exists(odir):
         os.makedirs(odir)
     tqdm.write('converting into locus2gene side by side table...no progress')
@@ -111,7 +111,7 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
         return
     l2ko_df.columns = ["annotated ID", "database", 'interpro ID']
     l2ko_df.loc[:, 'genome'] = [
-        convert_genome_ID_rev(_) for _ in l2ko_df.index]
+        convert_genome_ID_rev(_,prefix=prefix) for _ in l2ko_df.index]
     l2ko_df.to_csv(join(odir, f"{name}_l2ID.tab"),
                    sep='\t', index=1, index_label='locus')
 
@@ -154,19 +154,21 @@ def outut_for(l2ko, odir, name='mixed', transpose=False):
 @click.option("-e", "evalue", default=1e-20, help="threshold for filtrations")
 @click.option("-t", "transpose", default=False, is_flag=True, help="transpose the output matrix/dataframe or not. default:row is sample/genome, column is KO/annotations")
 @click.option("-test", "test", default=False, is_flag=True, help="test")
-def main(indir, odir, evalue, transpose,test):
+@click.option("-p", "prefix", default='GCA_', help='prefix of ID used. Default: GCA_  ')
+def main(indir, odir, evalue, transpose,test,prefix):
     indir = process_path(indir)
     odir = process_path(odir)
-    gid2locus2ko, exists_db = retrieve_info(indir,test=test)
+    gid2locus2ko, exists_db = retrieve_info(indir,test=test,prefix=prefix)
     locus2ko, sep_l2ko = filtration_part(gid2locus2ko, exists_db, evalue)
     tqdm.write("Complete filterations...")
     if not exists(odir):
         os.makedirs(odir)
-    outut_for(locus2ko, odir, name='mixed', transpose=transpose)
+    outut_for(locus2ko, odir, name='mixed', transpose=transpose,prefix=prefix)
     for db, l2ko in sep_l2ko.items():
         outut_for(l2ko,
                   join(odir, f'annotated_with_{db}'),
                   name=db,
+                  prefix=prefix,
                   transpose=transpose)
 
 
