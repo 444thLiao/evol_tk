@@ -149,3 +149,32 @@ if __name__ == '__main__':
     text = modify(template_mcmc,**param)
     with open(f"{odir}/mcmctree/03_mcmctree.ctl",'w') as f1:
         f1.write(text)
+
+
+
+odir,phy_file = './C60/','./p5.phy'
+iqtree_outdir = './C60/iqtree/5/'
+boottree_file = join(iqtree_outdir,'iqtree.boottrees')
+mltree_file = join(iqtree_outdir, 'iqtree.treefile')
+ref_tree_file = f"./C60/ref.tre"
+cmd = f"{NW_TOPOLOGY} -Ib {boottree_file} | {RUBY} {REORDER_NODE} -i - --ref {ref_tree_file} > {iqtree_outdir}/boot.bls"
+if not exists(f"{iqtree_outdir}/boot.bls"):
+    print(cmd)
+cmd2 = f"{RUBY} {REORDER_NODE} -i {mltree_file} --ref {ref_tree_file} > {iqtree_outdir}/ml.bls"
+if not exists(f"{iqtree_outdir}/ml.bls"):
+    print(cmd2)
+cmd3 = f"{RSCRIPT} {FROM_BS_TO_HESSIAN} {iqtree_outdir}/boot.bls {iqtree_outdir}/hessian"
+if not exists(f"{iqtree_outdir}/hessian"):
+    print(cmd3)
+mltree_file = join(iqtree_outdir, 'iqtree.treefile')
+inBV_file = join(iqtree_outdir,'in.BV')
+create_inBV(mltree_file, inBV_file, iqtree_outdir)
+
+print(f"{NW_STATS} {mltree_file} | grep '^#leaves:' | awk " + " '{print $2}' ")
+cmd = f"""echo -e "\n110\n" > {inBV_file};
+{NW_TOPOLOGY} -bI {mltree_file} >> {inBV_file}
+echo -e "\n" >> {inBV_file}
+cat {iqtree_outdir}/ml.bls >> {inBV_file}
+echo -e "\n" >> {inBV_file}"""
+print(cmd)
+

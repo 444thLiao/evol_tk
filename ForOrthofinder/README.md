@@ -48,7 +48,7 @@ Simple introduction of these scripts:
 > `-use_pattern`: use pattern to retrieve genbank/gff files
 
     * split out the duplicated genes within one Orthogroups
-        `python ~/script/evolution_relative/ForOrthofinder/bin/split_out_duplicated.py -i ./ortho_test/data/Results_Aug09/Orthogroups.csv -o ./test_splitted.csv -p ./prokka_o/ `
+        `python ~/script/evol_tk/ForOrthofinder/bin/split_out_duplicated.py -i ./ortho_test/data/Results_Aug09/Orthogroups.csv -o ./test_splitted.csv -p ./prokka_o/ `
 
 > resort_OG_with_gaps.py:
 > 
@@ -61,7 +61,7 @@ Simple introduction of these scripts:
 > `-sub`: Accept a file with genome names which is identical to the column in the table
 
 * resort the orthlogroups table
-`python ~/script/evolution_relative/ForOrthofinder/bin/resort_OG_with_gaps.py -i ./test_splitted.csv -o ./resorted.csv `
+`python ~/script/evol_tk/ForOrthofinder/bin/resort_OG_with_gaps.py -i ./test_splitted.csv -o ./resorted.csv `
 
 
 ## raw

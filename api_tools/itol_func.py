@@ -186,11 +186,12 @@ def to_binary_shape(
         annotate_text.append(row)
     annotate_text = "\n".join(annotate_text)
 
+    legend_text = deduced_legend2(
+        info2style, all_v, sep=sep, same_colors=same_color)
     if no_legend:
         real_legend_text = ""
     else:
-        legend_text = deduced_legend2(
-            info2style, all_v, sep=sep, same_colors=same_color)
+
         real_legend_text = f"LEGEND_TITLE\t{dataset_name}\n" + legend_text.replace("FIELD", "LEGEND")
     template_text = replacing_params(template_text, other_params)
     template_text = template_text.format(
@@ -473,8 +474,10 @@ def get_text_anno(id2val, other_params={}, dataset_name="numerical text"):
     )
     annotate_text = []
     for id, val in id2val.items():
-        annotate_text.append(f"{id}{sep}{val:.2f}")
-
+        try:
+            annotate_text.append(f"{id}{sep}{val:.2f}")
+        except:
+            annotate_text.append(f"{id}{sep}{val}")
     template_text = replacing_params(template_text, other_params)
     # template_text = template_text.replace("#HEIGHT_FACTOR,1","HEIGHT_FACTOR\t1.5")
     return template_text + "\n".join(annotate_text)

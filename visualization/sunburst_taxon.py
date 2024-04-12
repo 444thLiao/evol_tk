@@ -80,30 +80,19 @@ GCA_005192855     Proteobacteria  Epsilonproteobacteria  Campylobacterales  Camp
         value=[],
     )
     for idx, col in tqdm(enumerate(df.columns)):
-
-        if idx != 0:
-            pre_col = df.columns[idx - 1]
-            uniq_vals = [(_1, _2)
-                         for _1, _2 in df.loc[:, [pre_col, col]].drop_duplicates().values
-                         if _2]
-            # here I filter out the no defined names in this level
+        
+        if idx ==0:
+            for f, subdf in df.groupby(col):
+                data['character'].append(f)
+                data['parent'].append('')
+                data["value"].append(subdf.shape[0])
         else:
-            pre_col = ''
-            _uv = df[col].unique()
-            uniq_vals = zip([''] * len(_uv), _uv)
-
-        for pre_v, v in uniq_vals:
-            if idx != 0:
-                val = df.loc[(df[col] == v) & (df[pre_col] == pre_v), :].shape[0]
-            else:
-                val = df.loc[(df[col] == v), :].shape[0]
+            pre_col = df.columns[idx - 1]
+            for (p,f), subdf in df.groupby([pre_col,col]):
+                data['character'].append(f)
+                data['parent'].append(p)
+                data["value"].append(subdf.shape[0])
             
-            if idx != len(df.columns)-1:
-                v = v + f"count: {val}"
-            data['character'].append(v)
-            data['parent'].append(pre_v)
-            data["value"].append(val)
-
     fig = px.sunburst(
         data,
         names='character',
@@ -121,6 +110,51 @@ if __name__ == '__main__':
     sub_df2_renamed_filled = filled_unassigned(sub_df2_renamed)
     fig = generate_sunburst(sub_df2_renamed_filled.iloc[:, :-1])
 
+    sub_df2 = sub_df2.reindex(columns=['superkingdom', 'phylum', 'class', 'order', 'family',
+       'genus', 'species'])
+    sub_df2_renamed = rename_ambiguous(sub_df2)
+    sub_df2_renamed_filled = filled_unassigned(sub_df2_renamed)
+    fig = generate_sunburst(sub_df2_renamed_filled.iloc[:, 1:-2])
+    fig.write_html('./tmp.html')
+    
+    from glob import glob
+    for tax_tab2 in glob('*_unique_nr_pids.tsv'):
+        sub_df2 = pd.read_csv(tax_tab2, sep='\t', index_col=0)
+        d = sub_df2['cluster']
+        sub_df2 = sub_df2.reindex(columns=['superkingdom', 'phylum', 'class', 'order', 'family',
+       'genus', 'species'])
+        sub_df2_renamed = rename_ambiguous(sub_df2)
+        sub_df2_renamed_filled = filled_unassigned(sub_df2_renamed)
+        target = tax_tab2.split('_un')[0]
+        
+        sub_df2_renamed_filled.loc[:,'cluster'] = list(d)
+        locus2tax2matrix = defaultdict(lambda:defaultdict(int))
+        for i,row in tqdm(sub_df2_renamed_filled.iterrows(),total=sub_df2_renamed_filled.shape[0]):
+            tax = ';;'.join ([str(row[_]) for _ in ['superkingdom', 'phylum', 'class', 'order', 'family']])
+            for l in row['cluster'].split(';'):
+                locus2tax2matrix[l][tax] +=1
+        l2t2m = pd.DataFrame.from_dict(locus2tax2matrix).T
+        l2t2m.loc[:,'OG'] = [locus2og[_] for _ in l2t2m.index]
+
+        og2source = defaultdict()
+        for og,subsubdf in l2t2m.groupby('OG'):
+            og2source[og] = subsubdf.fillna(0).mean().sort_values().index[-1]
+        og2source = {k:v for k,v in og2source.items() if k in set(l2unique_OGs[target])}
+        og2non_alpha = [og for og,s in og2source.items() if 'Alphaproteobacteria;;' not in s]
+        unfound_OGs = set(l2unique_OGs[target]).difference(og2source)
+        d = pd.DataFrame(columns=['superkingdom', 'phylum', 'class', 'order', 'family'],index=og2non_alpha)
+        for og in og2non_alpha:
+            d.loc[og,:] = og2source[og].split(';;')
+        fig = generate_sunburst(d.iloc[:, 1:-1])
+        fig.write_html(f'./{target}_nonalpha.html')
+        fig.write_image(f'./{target}_nonalpha.pdf')
+        d = pd.DataFrame(columns=['superkingdom', 'phylum', 'class', 'order', 'family'],index=og2source)
+        for og in og2source:
+            d.loc[og,:] = og2source[og].split(';;')
+        fig = generate_sunburst(d.iloc[:, 1:-1])
+        fig.write_html(f'./{target}_all.html')
+        fig.write_image(f'./{target}_all.pdf')
+    #
     #
     # count = 0
     # c2v = {}

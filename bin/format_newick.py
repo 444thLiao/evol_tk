@@ -103,6 +103,11 @@ def sort(in_newick, out_newick, tree_format, descend):
 @click.option('-r', 'root_name', help='multiple genes could use comma to separate them. LCA would be searched and taken as outgroup')
 def reroot(in_newick, out_newick, tree_format, root_name):
     out_newick = process_IO(in_newick, out_newick)
+    if root_name.upper()=='MV':
+        cmd1 = f"FastRoot.py -i {in_newick} -m MV -o {out_newick}.MVrooted"
+        cmd2 = f"format_newick.py rename -i {out_newick}.MVrooted -o {out_newick}"
+        os.system(cmd1+';'+cmd2)
+        return
     if ',' in root_name:
         root_names = [_.strip() for _ in root_name.split(',')]
     else:

@@ -267,3 +267,32 @@ def read_hmmsearch_tbl(tblout,apply_preset_filter=False):
         final_df = m
     return final_df
     
+    
+
+from Bio import SeqIO
+from Bio.SeqFeature import SeqFeature, FeatureLocation
+def add_gene(gbk):
+    """
+    used for genbank that without gene 'type'. adding it.
+    """
+    allcontig = list(SeqIO.parse(gbk,'genbank'))
+    for contig in allcontig:
+        new_fn = []
+        contig.features = [_ for _ in contig.features if _.type!='gene']
+        for fea in contig.features:
+            if fea.type !='source' and 'locus_tag' in fea.qualifiers:
+                if 'gene' in fea.qualifiers:
+                    q = dict(locus_tag=[fea.qualifiers['locus_tag'][0]],
+                             gene=[fea.qualifiers['gene'][0]])
+                else:
+                    q = dict(locus_tag=[fea.qualifiers['locus_tag'][0]],)
+                fn = SeqFeature(FeatureLocation(fea.location.start.real, 
+                                                fea.location.end.real), 
+                                type="gene",
+                                qualifiers=q,
+                                strand=fea.strand,)
+                new_fn.append(fn)
+        contig.features.extend(new_fn)
+        contig.features = sorted(contig.features,key=lambda x:x.location.start.real)
+    return allcontig
+    

@@ -31,6 +31,7 @@ def main(og_path,odir=None):
     bin_df = og_df.applymap(lambda x: 0 if pd.isna(x) else len(x.split(',')))
     single_copy_all_og = og_df.columns[(bin_df == 1).all()]
     #print(len(single_copy_all_og))
+    # not_dup_og = og_df.columns[(bin_df >= 1).all()]
     # not_dup_og = og_df.columns[~(bin_df > 1).any()]
     #print(len(not_dup_og))
     # 17381
@@ -52,7 +53,7 @@ def main(og_path,odir=None):
     cmds = []
     for faa in glob(join(odir, '*.faa')):
         aln = faa.replace('.faa','.aln')
-        cmd = f"mafft --anysymbol --auto {faa} > {aln}; trimal -in {aln} -out {aln.replace('.aln','.trimal')} -automated1"
+        cmd = f"mafft --anysymbol --auto {faa} > {aln} && trimal -in {aln} -out {aln.replace('.aln','.trimal')} -automated1"
         cmds.append(cmd)
     sbatch_all(cmds, batch_size=10, prefix_name='mafft')
 

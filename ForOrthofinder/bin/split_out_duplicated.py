@@ -7,16 +7,16 @@ from glob import glob
 from os.path import join, dirname, basename, exists, abspath, expanduser
 
 import click
-import gffutils
+#import gffutils
 import numpy as np
 import pandas as pd
 from Bio import SeqIO
 from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
-
+import warnings; warnings.filterwarnings('ignore')
 tmp_dir = join(os.environ.get('PWD'), '.tmp')
-
+os.makedirs(tmp_dir, exist_ok=True)
 
 def process_path(path):
     if not '/' in path:
@@ -38,20 +38,31 @@ def preprocess_locus_name(locus):
     return locus
 
 
-def read_gff(gff_file, id_spec):
-    os.makedirs(tmp_dir, exist_ok=True)
-    odb_file = join(tmp_dir, basename(gff_file) + '.db')
-    if not exists(odb_file):
-        db = gffutils.create_db(gff_file,
-                                odb_file,
-                                id_spec=id_spec,
-                                force=True,
-                                sort_attribute_values=True,
-                                merge_strategy='merge')
-    else:
-        db = gffutils.FeatureDB(odb_file, keep_order=True, sort_attribute_values=True)
-    return db
+# def read_gff(gff_file, id_spec):
+#     os.makedirs(tmp_dir, exist_ok=True)
+#     odb_file = join(tmp_dir, basename(gff_file) + '.db')
+#     if not exists(odb_file):
+#         db = gffutils.create_db(gff_file,
+#                                 odb_file,
+#                                 id_spec=id_spec,
+#                                 force=True,
+#                                 sort_attribute_values=True,
+#                                 merge_strategy='merge')
+#     else:
+#         db = gffutils.FeatureDB(odb_file, keep_order=True, sort_attribute_values=True)
+#     return db
 
+
+def read_gff(gff_file):
+    import re
+    df = pd.read_csv(gff_file,comment='#',sep='\t',header=None,low_memory=False)
+    df = df.loc[~df[8].isna(),:]
+    df = df.loc[df[8].str.contains('ID='),:]
+    df.loc[:,'ID'] = [re.findall(f"ID=(\w+);",_)[0] for _ in df[8]]
+    #df = df.loc[df[2]!='gene',:]
+    df = df.set_index('ID')
+    df.columns = ['contig','soft','type','start','end','UN1','strand','UN2','des']
+    return df
 
 def get_all_gene_pos(genome_file, CDS_names=None, id_spec='ID'):
     """
@@ -66,30 +77,36 @@ def get_all_gene_pos(genome_file, CDS_names=None, id_spec='ID'):
         return None, None
     if genome_file.endswith('gbk'):
         print("warning, it might use gff to parse gbk file. please pass `-gbk`  ")
-    db = read_gff(genome_file, id_spec)
+    df = read_gff(genome_file)
     if CDS_names is None:
-        all_CDS = [_.id for _ in db.all_features()]
+        all_CDS = list(df.index)
     else:
         all_CDS = CDS_names
+        
+    # db = read_gff(genome_file, id_spec)
+    # if CDS_names is None:
+    #     all_CDS = [_.id for _ in db.all_features()]
+    # else:
+    #     all_CDS = CDS_names
     gene2pos = defaultdict(dict)
     order_contig_list = []
     last_end = None
     contig_list = []
     contig_name = ''
-    for fea_id in all_CDS:
-        fea = db[fea_id]
-        if 'gene' not in fea.id:
-            gene2pos[fea_id]['contig_name'] = fea.seqid
-            if fea.seqid != contig_name:
+    for fea_id,fea in df.iterrows():
+        # fea = db[fea_id]
+        if 'gene' not in fea_id:
+            gene2pos[fea_id]['contig_name'] = fea['contig']
+            if fea['contig'] != contig_name:
                 if contig_list:
                     order_contig_list.append(tuple(contig_list))
                 contig_list = []
-                contig_name = fea.seqid
-            gene2pos[fea_id]['strand'] = fea.strand
-            gene2pos[fea_id]['start'] = fea.start
-            gene2pos[fea_id]['end'] = fea.end
+                contig_name = fea['contig']
+            gene2pos[fea_id]['strand'] = fea['strand']
+            gene2pos[fea_id]['start'] = fea['start']
+            gene2pos[fea_id]['end'] = fea['end']
             gene2pos[fea_id]['previous end'] = last_end
-            last_end = fea.end
+            last_end = fea['end']
             contig_list.append(fea_id)
     # get final contig
     order_contig_list.append(tuple(contig_list))

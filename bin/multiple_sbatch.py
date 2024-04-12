@@ -44,7 +44,6 @@ def sbatch_all(
 
     count_ = 0
     for batch_cmds in tqdm(batch_iter(cmds, batch_size)):
-        workdir = realpath(batch_cmds[0].split(";")[0].strip().split(" ")[-1])
         job_file = os.path.join(job_directory, f"{prefix_name}{count_}.job")
         with open(job_file, "w") as fh:
             fh.writelines(f"#!{zsh_path}\n")
@@ -60,6 +59,7 @@ def sbatch_all(
                 fh.writelines(f"#SBATCH -N 1 \n")
                 
             if reset_workdir:
+                workdir = realpath(batch_cmds[0].split(";")[0].strip().split(" ")[-1])
                 fh.writelines(f"#SBATCH --workdir={workdir}\n")
             for cmd in batch_cmds:
                 fh.writelines(cmd + "\n")

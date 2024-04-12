@@ -93,9 +93,9 @@ def renamed_tree(in_tree_file, outfile=None, format=0):
     for n in t.traverse():
         if not n.name:
             if not str(int(n.support)) or str(int(n.support)) == '1':
-                n.name = 'I%s' % (count)
+                n.name = 'INODE%s' % (count)
             else:
-                n.name = 'I%s_S%s' % (count, str(int(n.support)))
+                n.name = 'INODE%s_S%s' % (count, str(int(n.support)))
             count += 1
         elif isinstance(n.name, str) and (n.name.startswith('I') and '_' in n.name ):
             S_ori = n.name.split('_')[-1]
