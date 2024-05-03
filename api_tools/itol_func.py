@@ -200,7 +200,8 @@ def to_binary_shape(
     return template_text + "\n" + annotate_text
 
 
-def to_color_strip(ID2info, info2color, dataset_name="strip", other_params={}):
+def to_color_strip(ID2info, info2color, dataset_name="strip", nolegend=False,
+                   other_params={}):
     # id2info, could be {ID: name}
     # info2color: could be {name: color,}
     ID2info = {k: str(v) for k, v in ID2info.items()}
@@ -216,6 +217,8 @@ def to_color_strip(ID2info, info2color, dataset_name="strip", other_params={}):
     dataset_name = dataset_name.replace("/", "_")
 
     template_text = replacing_params(template_text, other_params)
+    if nolegend:
+        legend_text=''
     template_text = template_text.format(
         legend_text=legend_text, dataset_label=dataset_name
     )

@@ -51,6 +51,7 @@ def from_name2ids(phylum_name,
                 if p2tid.get(_)}
 
     domain2dids = defaultdict(list)
+    
     descend_ids = []
     tid2dids = {}
     for tid in tids:
@@ -59,7 +60,8 @@ def from_name2ids(phylum_name,
         ranks = {v: k for k, v in ranks.items()}
         names = ncbi.get_taxid_translator(lineages)
         domain = names[ranks['superkingdom']]
-
+        domain2dids[domain].extend(tids)
+        descend_ids.extend(tids)
         _descend_ids = ncbi.get_descendant_taxa(tid,
                                                 intermediate_nodes=True)
         tid2dids[tid2name[tid]] = len(_descend_ids)

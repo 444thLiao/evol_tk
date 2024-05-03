@@ -22,6 +22,7 @@ for tpath in tqdm(glob(f"gene_GandL/genetrees/iqtrees/*_MV_rooted.newick")):
     itol_uploader.params['APIkey'] = 'S1kZZuDHc0d5M7J5vLnUNQ'
     itol_uploader.params['treeName'] = f"{name}_MV_rooted"
     itol_uploader.add_file('./tmp.tree')
+    ## can be renamed. But the suffix must be .tree
     itol_uploader.add_file('./gene_GandL/genetrees/all_names.txt')
     itol_uploader.add_file('./gene_GandL/genetrees/db_phy_color2.txt')
     itol_uploader.add_file('./gene_GandL/genetrees/Lineage_colorrange.txt')
